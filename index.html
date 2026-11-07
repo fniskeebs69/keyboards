@@ -140,6 +140,31 @@
   .empty .big svg { width: 42px; height: 42px; }
   .empty h2 { margin: 0 0 8px; font-size: 20px; }
   .empty p { margin: 0; color: var(--text-2); font-size: 14.5px; line-height: 1.55; }
+  .linkbtn { background: none; border: 0; padding: 0; color: var(--text-2); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; font-size: 12px; }
+  .linkbtn:hover { color: var(--text); }
+  .foot-right { display: inline-flex; gap: 16px; align-items: center; }
+
+  /* ---------- Connection test page ---------- */
+  .test-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; }
+  @media (max-width: 760px) { .test-grid { grid-template-columns: 1fr; } }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+  .card h3 { margin: 0 0 4px; font-size: 15px; }
+  .card .sub { margin: 0 0 14px; color: var(--text-2); font-size: 13px; line-height: 1.5; }
+  .btnrow { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn { border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; padding: 9px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+  .btn:hover:not(:disabled) { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); color: #111; border-color: var(--accent); }
+  .btn.danger:hover:not(:disabled) { border-color: #f87171; color: #fecaca; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .live { display: flex; gap: 12px; align-items: flex-start; }
+  .live .dot { margin-top: 5px; flex: none; }
+  .live b { display: block; font-size: 15px; margin-bottom: 4px; }
+  .kv { font-size: 12.5px; color: var(--text-2); line-height: 1.6; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; word-break: break-all; }
+  .log { margin: 0; padding: 0; list-style: none; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12.5px; max-height: 260px; overflow: auto; }
+  .log li { padding: 6px 0; border-bottom: 1px solid var(--line); color: var(--text-2); }
+  .log li.ok { color: #86efac; } .log li.err { color: #fca5a5; }
+  .log li span { color: var(--text-3); margin-right: 8px; }
+  .howto { font-size: 13px; color: var(--text-2); line-height: 1.6; margin: 0; padding-left: 18px; }
   .empty .note { margin-top: 18px; display: inline-block; font-size: 12px; color: var(--text-3);
     border: 1px dashed var(--line); border-radius: 10px; padding: 8px 12px; }
 </style>
@@ -160,7 +185,7 @@
   </div>
   <div class="wrap foot">
     <span class="status"><span class="dot" id="fbDot"></span><span id="fbText">Checking…</span></span>
-    <span id="verText"></span>
+    <span class="foot-right"><button class="linkbtn" id="openTest">Connection test</button><span id="verText"></span></span>
   </div>
 </section>
 
@@ -184,8 +209,11 @@
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.1.0';
-const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2). Not used until Step 1.2.
+const APP_VERSION = 'v0.2.0';
+const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
+/* Layout: keyboard_collection/main/<type>/<itemId>, e.g. keyboard_collection/main/keyboards/abc123 */
+const ROOT_DOC = 'main';
+const TEST_DOC_ID = '_connection_test';
 
 /* Firebase config baked in (guardrail). Same project as the Keycap Collection app (D2). */
 const firebaseConfig = {
@@ -265,9 +293,11 @@ function renderPage(p) {
 }
 
 function route() {
-  const id = (location.hash.match(/^#\/([a-z]+)/) || [])[1];
+  const id = (location.hash.match(/^#\/([a-z-]+)/) || [])[1];
   const p = PAGES.find(x => x.id === id);
-  if (p) { renderPage(p); show(pageView); }
+  stopTestListener();
+  if (id === 'connection-test') { renderTestPage(); show(pageView); }
+  else if (p) { renderPage(p); show(pageView); }
   else {
     document.documentElement.style.setProperty('--accent', 'var(--kb)');
     document.title = 'Keyboard Collection';
@@ -276,6 +306,7 @@ function route() {
 }
 let openedFromHome = false; // true when a tile was tapped, so Back = history.back()
 tilesEl.addEventListener('click', () => { openedFromHome = true; });
+document.getElementById('openTest').addEventListener('click', () => { openedFromHome = true; location.hash = '#/connection-test'; });
 document.getElementById('backBtn').addEventListener('click', () => {
   if (openedFromHome) history.back();
   else location.hash = '';   // page was opened directly (bookmark or reload)
@@ -284,7 +315,6 @@ window.addEventListener('hashchange', () => {
   if (!location.hash || location.hash === '#/') openedFromHome = false;
   route();
 });
-route();
 
 /* ===================== Protocol check (guardrail: Firestore rejects file://) ===================== */
 const warn = document.getElementById('protoWarn');
@@ -306,12 +336,124 @@ try {
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
   if (isFile) { fbDot.className = 'dot bad'; fbText.textContent = 'Sync blocked (file://)'; }
-  else { fbDot.className = 'dot ok'; fbText.textContent = 'Firebase ready · sync starts in Step 1.2'; }
+  else { fbDot.className = 'dot ok'; fbText.textContent = 'Firebase ready'; }
 } catch (err) {
   console.error(err);
   fbDot.className = 'dot bad';
   fbText.textContent = 'Firebase not loaded: ' + err.message;
 }
+
+/* ===================== Step 1.2: Connection test page ===================== */
+let testUnsub = null;
+function stopTestListener() { if (testUnsub) { testUnsub(); testUnsub = null; } }
+function testRef() { return db.collection(FIRESTORE_COLLECTION).doc(ROOT_DOC).collection('keyboards').doc(TEST_DOC_ID); }
+function deviceLabel() {
+  const ua = navigator.userAgent;
+  const os = /Windows/.test(ua) ? 'Windows' : /Android/.test(ua) ? 'Android' : /iPhone|iPad/.test(ua) ? 'iOS' : /Mac/.test(ua) ? 'Mac' : /Linux/.test(ua) ? 'Linux' : 'Other';
+  const br = /Edg\//.test(ua) ? 'Edge' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Browser';
+  const app = window.matchMedia('(display-mode: standalone)').matches ? 'installed app' : 'browser tab';
+  return `${br} on ${os} (${app})`;
+}
+function esc(t) { return String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function logLine(msg, kind) {
+  const ul = document.getElementById('testLog'); if (!ul) return;
+  const li = document.createElement('li'); if (kind) li.className = kind;
+  li.innerHTML = `<span>${new Date().toLocaleTimeString()}</span>${esc(msg)}`;
+  ul.prepend(li);
+}
+function explain(err) {
+  if (err && err.code === 'permission-denied') return 'Permission denied. Check that the Firestore rules include the keyboard_collection block and were published.';
+  if (err && err.code === 'unavailable') return 'Firebase is unreachable (offline?).';
+  return (err && (err.code || err.message)) || String(err);
+}
+function fmtTime(ts) {
+  if (!ts) return 'pending…';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleString();
+}
+
+function renderTestPage() {
+  document.documentElement.style.setProperty('--accent', 'var(--kb)');
+  document.getElementById('pageIco').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1"/></svg>';
+  document.getElementById('pageTitle').textContent = 'Connection test';
+  document.title = 'Connection test · Keyboard Collection';
+  document.getElementById('pageFootLeft').textContent = 'Path: ' + FIRESTORE_COLLECTION + '/' + ROOT_DOC + '/keyboards/' + TEST_DOC_ID;
+  const ready = !!db && !isFile;
+  document.getElementById('pageBody').innerHTML = `
+    <div class="test-grid">
+      <div class="card">
+        <h3>Test record, live</h3>
+        <p class="sub">Updates by itself when the record changes on any device.</p>
+        <div class="live"><span class="dot" id="liveDot"></span><div><b id="liveTitle">Connecting…</b><div class="kv" id="liveInfo"></div></div></div>
+      </div>
+      <div class="card">
+        <h3>Actions</h3>
+        <p class="sub">Write one dummy keyboard, read it back from the server, then delete it.</p>
+        <div class="btnrow">
+          <button class="btn primary" id="btnWrite" ${ready ? '' : 'disabled'}>Write test keyboard</button>
+          <button class="btn" id="btnRead" ${ready ? '' : 'disabled'}>Read from server</button>
+          <button class="btn danger" id="btnDelete" ${ready ? '' : 'disabled'}>Delete test keyboard</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>How to run the test</h3>
+        <ol class="howto">
+          <li>On this PC, click <b>Write test keyboard</b>.</li>
+          <li>Open this page on a second device or browser (phone, laptop, or another browser on this PC). The live card should show the record.</li>
+          <li>Click <b>Delete test keyboard</b> on either one. Both live cards should switch to "No test record".</li>
+        </ol>
+      </div>
+      <div class="card">
+        <h3>Log</h3>
+        <ul class="log" id="testLog"></ul>
+      </div>
+    </div>`;
+  if (!ready) {
+    document.getElementById('liveDot').className = 'dot bad';
+    document.getElementById('liveTitle').textContent = isFile ? 'Blocked: opened from a file' : 'Firebase not loaded';
+    return;
+  }
+  testUnsub = testRef().onSnapshot(snap => {
+    const dot = document.getElementById('liveDot'); if (!dot) return;
+    if (snap.exists) {
+      const d = snap.data();
+      dot.className = 'dot ok';
+      document.getElementById('liveTitle').textContent = 'Test record exists';
+      document.getElementById('liveInfo').innerHTML =
+        `name: ${esc(d.name)}<br>written by: ${esc(d.writtenBy)}<br>written at: ${esc(fmtTime(d.createdAt))}<br>` +
+        `from server: ${snap.metadata.fromCache ? 'not yet (local copy)' : 'yes'}`;
+    } else {
+      dot.className = 'dot';
+      document.getElementById('liveTitle').textContent = 'No test record';
+      document.getElementById('liveInfo').textContent = snap.metadata.fromCache ? '(checking server…)' : 'Server confirms it is not there.';
+    }
+  }, err => {
+    const dot = document.getElementById('liveDot'); if (dot) dot.className = 'dot bad';
+    const t = document.getElementById('liveTitle'); if (t) t.textContent = 'Listener error';
+    logLine('Live listener: ' + explain(err), 'err');
+  });
+  document.getElementById('btnWrite').onclick = async () => {
+    try {
+      await testRef().set({
+        name: 'Connection Test Board', brand: 'TEST', isTest: true,
+        writtenBy: deviceLabel(), appVersion: APP_VERSION,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      logLine('Write OK: test keyboard saved to the server.', 'ok');
+    } catch (e) { logLine('Write failed: ' + explain(e), 'err'); }
+  };
+  document.getElementById('btnRead').onclick = async () => {
+    try {
+      const snap = await testRef().get({ source: 'server' });
+      logLine(snap.exists ? 'Read OK: server has "' + snap.data().name + '" written by ' + snap.data().writtenBy + '.' : 'Read OK: server has no test record.', 'ok');
+    } catch (e) { logLine('Read failed: ' + explain(e), 'err'); }
+  };
+  document.getElementById('btnDelete').onclick = async () => {
+    try { await testRef().delete(); logLine('Delete OK: test keyboard removed from the server.', 'ok'); }
+    catch (e) { logLine('Delete failed: ' + explain(e), 'err'); }
+  };
+}
+route(); // first render, after Firebase setup so a direct link to a page works
 </script>
 </body>
 </html>
