@@ -261,6 +261,22 @@
   .star button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 4px; }
   .rate .val { font-size: 12.5px; color: var(--text-2); min-width: 64px; font-variant-numeric: tabular-nums; }
   .rate .clr { font-size: 11.5px; color: var(--text-3); background: none; border: 0; cursor: pointer; text-decoration: underline; padding: 0; }
+  .alist { display: grid; gap: 6px; margin-bottom: 10px; }
+  .arow { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; font-size: 13px; padding: 6px 8px; border-radius: 8px; background: var(--bg-2); border: 1px solid var(--line); }
+  .arow span { font-variant-numeric: tabular-nums; color: var(--text-2); }
+  .arow .btn { padding: 2px 7px; font-size: 11px; }
+  .aadd { display: grid; grid-template-columns: 1fr auto; gap: 6px; }
+  .aadd .select { grid-column: 1 / -1; }
+  .aadd .select, .aadd .input { padding: 7px 8px; font-size: 12.5px; min-width: 0; }
+  .kit { border: 1px solid var(--line); border-radius: 12px; padding: 10px; background: var(--bg-2); margin-bottom: 10px; }
+  .kit-top { display: grid; grid-template-columns: 1fr 170px 70px auto; gap: 8px; }
+  .kit .bad { border-color: #f87171 !important; }
+  .kit-more summary { cursor: pointer; font-size: 12.5px; color: var(--text-2); margin-top: 8px; }
+  .kit-more .k-total { color: var(--text); font-weight: 650; font-variant-numeric: tabular-nums; }
+  .kit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 12px; margin-top: 10px; }
+  .kit-grid label { font-size: 11.5px; color: var(--text-3); display: grid; gap: 4px; }
+  .kit-grid .wide { grid-column: 1 / -1; }
+  .kit-grid .input { padding: 7px 9px; font-size: 13px; }
   .formerr { display: none; margin-bottom: 14px; padding: 10px 12px; border-radius: 10px; background: #3a1d22; border: 1px solid #7a2e3a; color: #ffd7dc; }
   .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); opacity: 0; pointer-events: none;
     background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 12px; padding: 10px 16px; transition: .2s; z-index: 50; box-shadow: 0 12px 30px -10px #000; }
@@ -295,7 +311,7 @@
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.15.0';
+const APP_VERSION = 'v0.19.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -356,7 +372,7 @@ const SECTIONS = [
   { group: 'COLLECTION' },
   { id: 'keyboards',   title: 'Keyboards',   color: 'var(--kb)',  built: true,  singular: 'keyboard' },
   { id: 'switches',    title: 'Switches',    color: 'var(--sw)',  built: true,  singular: 'switches' },
-  { id: 'keycaps',     title: 'Keycaps',     color: 'var(--kc)',  built: false, singular: 'keycap set', when: 'Phase 5' },
+  { id: 'keycaps',     title: 'Keycaps',     color: 'var(--kc)',  built: true,  singular: 'keycap set' },
   { id: 'pcbs',        title: 'PCBs',        color: 'var(--pcb)', built: false, singular: 'PCB', when: 'Phase 6' },
   { id: 'accessories', title: 'Accessories', color: 'var(--ac)',  built: false, singular: 'accessory', when: 'Phase 6' },
   { id: 'artisans',    title: 'Artisans',    color: 'var(--ar)',  built: false, singular: 'artisan', when: 'Phase 6' },
@@ -401,7 +417,13 @@ function refreshIfShowing() {
   if (id === 'dashboard') route();
   else if (id === 'import') { drawImportPreview(); drawReconcile(); }
   else if (id === 'switches' && document.getElementById('swResults')) drawSwitchResults();
-  else if (id === 'switches' && document.getElementById('swDetailFor')) { if (formDirty) toast('These switches changed on another device. Save or discard to see it.'); else route(); }
+  else if (id === 'keycaps' && document.getElementById('kcResults')) drawKeycapResults();
+  else if (id === 'keycaps' && document.getElementById('kcDetailFor')) { if (formDirty) toast('This set changed on another device. Save or discard to see it.'); else route(); }
+  else if (id === 'switches' && document.getElementById('swDetailFor')) {
+    const w = savedSwitches.find(x => x.id === editing?.id), c = document.getElementById('allocCard');
+    if (formDirty && w && c) { c.outerHTML = installedOnCardHtml(w); wireInstalledOn(w); }
+    else if (formDirty) toast('These switches changed on another device. Save or discard to see it.'); else route();
+  }
   else if (id === 'keyboards' && document.getElementById('kbResults')) drawKeyboardResults();
   else if (id === 'keyboards' && document.getElementById('kbDetailFor')) {
     if (formDirty) toast('This keyboard changed on another device. Save or discard to see it.');
@@ -434,6 +456,9 @@ function route() {
   else if (sec.id === 'switches' && parts[1] === 'new') renderSwitchForm();
   else if (sec.id === 'switches' && parts[1]) { const sw = savedSwitches.find(x => x.id === parts[1]); if (sw) renderSwitchForm(sw); else view.innerHTML = `<a class="crumb" href="#/switches">${I.back}Switches</a><div class="card empty" id="swDetailFor"><h2>${db && !isFile && !swLoaded ? 'Loading…' : 'Switches not found'}</h2><p>${db && !isFile && !swLoaded ? 'Fetching from Firebase.' : 'They may have been deleted.'}</p></div>`; }
   else if (sec.id === 'switches') renderSwitches();
+  else if (sec.id === 'keycaps' && parts[1] === 'new') renderKeycapForm();
+  else if (sec.id === 'keycaps' && parts[1]) { const ks = savedKeycaps.find(x => x.id === parts[1]); if (ks) renderKeycapForm(ks); else view.innerHTML = `<a class="crumb" href="#/keycaps">${I.back}Keycaps</a><div class="card empty" id="kcDetailFor"><h2>${db && !isFile && !kcLoaded ? 'Loading…' : 'Keycap set not found'}</h2><p>${db && !isFile && !kcLoaded ? 'Fetching from Firebase.' : 'It may have been deleted.'}</p></div>`; }
+  else if (sec.id === 'keycaps') renderKeycaps();
   else if (sec.id === 'settings') renderSettings();
   else if (sec.id === 'import') renderImport();
   else view.innerHTML = comingLaterHtml(sec);
@@ -462,43 +487,44 @@ function spendFor(period) {
   const now = new Date(); let from = null;
   const months = { '1m': 1, '3m': 3, '6m': 6, '1y': 12 }[period];
   if (months) { from = new Date(now); from.setMonth(from.getMonth() - months); }
-  return allKeyboards().concat(savedSwitches).filter(k => {
+  return allKeyboards().concat(savedSwitches, savedKeycaps.flatMap(kitsOf)).filter(k => {
     if (!from) return true;
     const [y, m, d] = (k.datePurchased || '').split('-').map(Number);
     return y && new Date(y, m - 1, d) >= from;
   }).reduce((s, k) => s + kbTotal(k), 0);
 }
 function dashboardHtml() {
-  const kbs = allKeyboards(), sws = savedSwitches;
+  const kbs = allKeyboards(), sws = savedSwitches, kcs = savedKeycaps;
   const sizes = {}; kbs.forEach(k => { sizes[k.size || 'Unknown'] = (sizes[k.size || 'Unknown'] || 0) + 1; });
   const maxSize = Math.max(1, ...Object.values(sizes));
-  const recent = kbs.map(k => Object.assign({ _t: 'keyboards' }, k)).concat(sws.map(w => Object.assign({ _t: 'switches' }, w)))
+  const recent = kbs.map(k => Object.assign({ _t: 'keyboards' }, k)).concat(sws.map(w => Object.assign({ _t: 'switches' }, w)), kcs.map(c => Object.assign({ _t: 'keycaps', datePurchased: c._date }, c)))
     .sort((a, b) => sortDate(b).localeCompare(sortDate(a))).slice(0, 5);
-  const mix = SECTIONS.filter(s => s.singular).map(s => ({ s, n: s.id === 'keyboards' ? kbs.length : s.id === 'switches' ? sws.length : 0 }));
+  const mix = SECTIONS.filter(s => s.singular).map(s => ({ s, n: s.id === 'keyboards' ? kbs.length : s.id === 'switches' ? sws.length : s.id === 'keycaps' ? kcs.length : 0 }));
   const total = mix.reduce((a, m) => a + m.n, 0) || 1;
   const comingTile = (title, icon, color, when) => `<div class="card tile" style="--c:${color}"><span class="ic">${icon}</span><div><div class="lbl">${title}</div><div class="big" style="color:var(--text-3)">—</div><div class="hint">Coming in ${when}</div></div></div>`;
   return `
   <div class="pagehead"><div><h1>Dashboard</h1><p>Your keyboard collection at a glance.</p></div></div>
   ${activeSamples().length ? '<div class="note">Includes the 5 sample keyboards from your v18 workbook (marked "Sample"). They go away when you import your Excel list (Import page).</div>' : ''}
   <div class="dash-grid">
-    <a class="card tile" href="#/keyboards" style="--c:var(--kb)" title="Keyboards and switches"><span class="ic">${I.boxes}</span><div><div class="lbl">Total items</div><div class="big">${kbs.length + sws.length}</div><div class="hint">${kbs.length} keyboards · ${sws.length} switch entries</div></div></a>
+    <a class="card tile" href="#/keyboards" style="--c:var(--kb)" title="Keyboards and switches"><span class="ic">${I.boxes}</span><div><div class="lbl">Total items</div><div class="big">${kbs.length + sws.length + kcs.length}</div><div class="hint">${kbs.length} keyboards · ${sws.length} switch entries · ${kcs.length} keycap set${kcs.length === 1 ? '' : 's'}</div></div></a>
     <div class="card tile" style="--c:var(--kc)"><span class="ic">${I.wallet}</span><div><div class="lbl">Total spent</div>
       <div class="big ${spendHidden ? 'blur' : ''}" id="spendAmt">${money(spendFor(spendPeriod))}</div>
       <select class="select" id="spendPeriod" aria-label="Spend period">${Object.entries(PERIODS).map(([v, t]) => `<option value="${v}"${v === spendPeriod ? ' selected' : ''}>${t}</option>`).join('')}</select>
       <div class="hint" style="margin-top:6px">${spendHidden ? 'Amount hidden.' : 'Price + tax + shipping − discounts.'}</div></div>
       <button class="btn eye" id="spendEye" aria-label="${spendHidden ? 'Show' : 'Hide'} amount">${I.eye}</button></div>
-    ${comingTile('Boards in use', I.pulse, '#34d399', 'Step 5.4')}
-    ${comingTile('Unallocated kits', I.keycaps, 'var(--kc)', 'Phase 5')}
-    ${comingTile('Loose switches', I.switches, 'var(--sw)', 'Step 4.5')}
+    <a class="card tile" href="#/keyboards" style="--c:#34d399"><span class="ic">${I.pulse}</span><div><div class="lbl">Boards in use</div><div class="big">${kbs.filter(k => switchesOn(k.id).length).length}</div><div class="hint ${kbs.some(k => switchesOn(k.id).length) ? 'good' : ''}">With switches installed${kbs.length ? ` · of ${kbs.length}` : ''}</div></div></a>
+    ${comingTile('Unallocated kits', I.keycaps, 'var(--kc)', 'Step 5.4')}
+    <a class="card tile" href="#/switches" style="--c:var(--sw)"><span class="ic">${I.switches}</span><div><div class="lbl">Loose switches</div><div class="big">${sws.reduce((s, w) => s + (looseCount(w) || 0), 0).toLocaleString()}</div><div class="hint">Not installed on a board${sws.some(w => w.totalCount == null) ? ` · ${sws.filter(w => w.totalCount == null).length} entries have no count` : ''}</div></div></a>
   </div>
   <div class="card" style="margin-top:16px"><h3>Add to your vault</h3><p class="sub">Save a new item. You can fill in the details later.</p>
     <div class="addrow">${SECTIONS.filter(s => s.singular).map(s => s.id === 'keyboards'
       ? `<a class="btn" style="--c:${s.color}" href="#/keyboards/new">${I[s.id]}Add keyboard</a>`
       : s.id === 'switches' ? `<a class="btn" style="--c:${s.color}" href="#/switches/new">${I[s.id]}Add switches</a>`
+      : s.id === 'keycaps' ? `<a class="btn" style="--c:${s.color}" href="#/keycaps/new">${I[s.id]}Add keycap set</a>`
       : `<button class="btn" style="--c:${s.color}" disabled title="Coming in ${s.when}">${I[s.id]}Add ${esc(s.singular)}</button>`).join('')}</div>
     <p class="sub" style="margin:10px 0 0">The other types follow page by page.</p></div>
   <div class="card" style="margin-top:16px"><div class="sec-title"><h3>Recent items</h3><span class="sub" style="margin:0">Latest 5 by purchase date (or date added)</span></div>
-    <div class="recent" style="margin-top:10px">${recent.map(k => `<a href="#/${k._t}/${esc(k.id)}" style="--c:var(${k._t === 'switches' ? '--sw' : '--kb'})"><span class="th">${k.coverThumb ? `<img src="${k.coverThumb}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px">` : I[k._t]}</span><div><b>${esc(k.name)}</b><span>${esc(k.brand || k.manufacturer || '')}</span></div></a>`).join('')}</div></div>
+    <div class="recent" style="margin-top:10px">${recent.map(k => `<a href="#/${k._t}/${esc(k.id)}" style="--c:var(${k._t === 'switches' ? '--sw' : k._t === 'keycaps' ? '--kc' : '--kb'})"><span class="th">${k.coverThumb ? `<img src="${k.coverThumb}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px">` : I[k._t]}</span><div><b>${esc(k.name)}</b><span>${esc(k.brand || k.manufacturer || '')}</span></div></a>`).join('')}</div></div>
   <div class="two" style="margin-top:16px">
     <div class="card"><h3>Keyboard sizes</h3><p class="sub">Distribution of keyboards by size.</p><div class="bars">${Object.entries(sizes).sort((a, b) => b[1] - a[1]).map(([s, n]) => `<div class="bar"><span>${esc(s)}</span><span class="track"><span class="fill" style="width:${n / maxSize * 100}%"></span></span><span class="n">${n}</span></div>`).join('')}</div></div>
     <div class="card"><h3>Inventory mix</h3><p class="sub">Items by category.</p><div class="bars">${mix.map(m => `<div class="bar" style="--c:${m.s.color}"><span>${m.s.title}</span><span class="track"><span class="fill" style="width:${m.n / total * 100}%"></span></span><span class="n">${m.n} · ${(m.n / total * 100).toFixed(0)}%</span></div>`).join('')}</div></div>
@@ -735,7 +761,7 @@ ${purchasePanelHtml(savedKeyboards)}
       </div>
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
-        ${k ? photoCardHtml(k) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the keyboard first, then drop photos on its page.</p></div>'}
+        ${k ? photoCardHtml(k) + switchesOnKeyboardCardHtml(k) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the keyboard first, then drop photos on its page.</p></div>'}
         <div class="card side-card stack">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${k ? 'Save changes' : 'Save keyboard'}</button>
           <button class="btn" id="btnCancel">${k ? 'Discard changes' : 'Cancel'}</button>
@@ -766,11 +792,11 @@ ${purchasePanelHtml(savedKeyboards)}
   formEl.addEventListener('input', e => { onEdit(e); if (e.target.name && document.querySelector(`.fld.bad[data-for="${e.target.name}"]`)) clearFieldError(e.target.name); });
   formEl.addEventListener('change', onEdit);
   if (k) {
-    fillKeyboardForm(k); setEditState(false); wirePhotos(k);
+    fillKeyboardForm(k); setEditState(false); wirePhotos(k); wireSwitchesOnKeyboard(k);
     document.getElementById('btnCancel').onclick = () => { formDirty = false; renderKeyboardForm(savedKeyboards.find(x => x.id === k.id) || k); toast('Changes discarded'); };
     document.getElementById('btnDelete').onclick = async () => {
       if (!confirm(`Delete "${k.name}" and its photos? This cannot be undone.`)) return;
-      try { await withTimeout(deletePhotosOf(k.id), 30000); await withTimeout(kbCol().doc(k.id).delete()); formDirty = false; toast('Keyboard deleted'); location.hash = '#/keyboards'; }
+      try { await withTimeout(deletePhotosOf(k.id), 30000); await withTimeout(removeKeyboardFromAllocations(k.id), 30000); await withTimeout(kbCol().doc(k.id).delete()); formDirty = false; toast('Keyboard deleted'); location.hash = '#/keyboards'; }
       catch (e) { toast('Delete failed: ' + explain(e)); }
     };
   } else {
@@ -1199,7 +1225,11 @@ function startSwitchListener() {
   if (!db || isFile) return;
   swCol().onSnapshot(snap => {
     savedSwitches = snap.docs.map(d => Object.assign({}, d.data(), { id: d.id, createdIso: isoFromTs(d.data().createdAt) }));
-    swLoaded = true; refreshIfShowing();
+    swLoaded = true;
+    // on a keyboard's page, only its "Installed switches" card depends on switches
+    const c = document.getElementById('kbSwCard'), k = editing && savedKeyboards.find(x => x.id === editing.id);
+    if (c && k && location.hash.startsWith('#/keyboards/')) { c.outerHTML = switchesOnKeyboardCardHtml(k); wireSwitchesOnKeyboard(k); }
+    else refreshIfShowing();
   }, err => { console.error(err); toast('Could not load switches: ' + explain(err)); });
 }
 
@@ -1234,10 +1264,12 @@ function drawSwitchResults() {
   const box = document.getElementById('swResults'); if (!box) return;
   const all = savedSwitches, list = sortSwitches(all.filter(w => swMatches(w, swQuery.trim())));
   const count = all.reduce((s, w) => s + (Number(w.totalCount) || 0), 0);
-  document.getElementById('swCount').textContent = (swQuery.trim() ? `${list.length} of ${all.length} entries` : `${all.length} entr${all.length === 1 ? 'y' : 'ies'}`) + ` · ${count.toLocaleString()} switches in total` + (db && !isFile && !swLoaded ? ' · loading…' : '');
+  const unknown = all.filter(w => w.totalCount == null).length;
+  const inst = all.reduce((s, w) => s + installedCount(w), 0);
+  document.getElementById('swCount').textContent = (swQuery.trim() ? `${list.length} of ${all.length} entries` : `${all.length} entr${all.length === 1 ? 'y' : 'ies'}`) + ` · ${count.toLocaleString()} switches in total · ${inst.toLocaleString()} installed` + (unknown ? ` (${unknown} entr${unknown === 1 ? 'y' : 'ies'} without a count)` : '') + (db && !isFile && !swLoaded ? ' · loading…' : '');
   if (!all.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.switches}</div><h2>No switches yet</h2><p>Add your first switches, or import them from Excel later in Phase 4.</p><p style="margin-top:14px"><a class="btn primary" href="#/switches/new">${I.plus}Add switches</a></p></div>`; return; }
   if (!list.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.search}</div><h2>No matches</h2><p>Nothing matches "${esc(swQuery)}".</p></div>`; return; }
-  const sub = w => [w.manufacturer, w.totalCount != null ? `${Number(w.totalCount).toLocaleString()} pcs` : ''].filter(Boolean).join(' · ');
+  const sub = w => [w.manufacturer, w.totalCount != null ? `${w.countApprox ? '~' : ''}${Number(w.totalCount).toLocaleString()} pcs` : 'count ?'].filter(Boolean).join(' · ');
   if (swView === 'gallery') {
     box.innerHTML = `<div class="gallery">${list.map(w => `
       <a class="kcard" href="#/switches/${esc(w.id)}">
@@ -1246,9 +1278,9 @@ function drawSwitchResults() {
           <button class="fav${w.isFavorite ? ' on' : ''}" data-fav="${esc(w.id)}" aria-label="${w.isFavorite ? 'Remove from' : 'Add to'} favorites">${w.isFavorite ? I.starFill : I.star}</button></div>
         <div class="meta"><b>${esc(w.name)}</b><span>${esc(sub(w))}</span></div></a>`).join('')}</div>`;
   } else {
-    box.innerHTML = `<table class="list"><thead><tr><th style="width:44px"></th><th>Name</th><th>Maker</th><th>Type</th><th style="text-align:right">Count</th><th>Purchased</th></tr></thead><tbody>${list.map(w => `
+    box.innerHTML = `<table class="list"><thead><tr><th style="width:44px"></th><th>Name</th><th>Maker</th><th>Type</th><th style="text-align:right">Count</th><th style="text-align:right">Loose</th><th>Purchased</th></tr></thead><tbody>${list.map(w => `
       <tr class="row" data-href="#/switches/${esc(w.id)}"><td><button class="fav${w.isFavorite ? ' on' : ''}" style="position:static;width:28px;height:28px" data-fav="${esc(w.id)}" aria-label="Favorite">${w.isFavorite ? I.starFill : I.star}</button></td>
-      <td><b>${esc(w.name)}</b></td><td>${esc(w.manufacturer || '')}</td><td>${esc(w.switchType || '')}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${w.totalCount != null ? Number(w.totalCount).toLocaleString() : '—'}</td><td>${esc(fmtDate(w.datePurchased)) || '<span style="color:var(--text-3)">—</span>'}</td></tr>`).join('')}</tbody></table>`;
+      <td><b>${esc(w.name)}</b></td><td>${esc(w.manufacturer || '')}</td><td>${esc(w.switchType || '')}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${w.totalCount != null ? (w.countApprox ? '~' : '') + Number(w.totalCount).toLocaleString() : '<span style="color:#fbbf24">?</span>'}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${looseCount(w) == null ? '—' : looseCount(w).toLocaleString()}</td><td>${esc(fmtDate(w.datePurchased)) || '<span style="color:var(--text-3)">—</span>'}</td></tr>`).join('')}</tbody></table>`;
   }
   box.onclick = async e => {
     const f = e.target.closest('[data-fav]');
@@ -1325,7 +1357,7 @@ function renderSwitchForm(w = null) {
       </div>
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
-        <div class="card side-card"><h3>Installed on</h3><p class="sub" style="margin:0">Allocating switches to keyboards (and the loose count) arrives in Step 4.5.</p></div>
+        ${w ? installedOnCardHtml(w) : '<div class="card side-card"><h3>Installed on</h3><p class="sub" style="margin:0">Save first, then install these switches on your keyboards.</p></div>'}
         <div class="card side-card stack">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${w ? 'Save changes' : 'Save switches'}</button>
           ${w ? '<button class="btn" id="btnCancel">Discard changes</button>' : '<a class="btn" href="#/switches" id="btnCancelNew">Cancel</a>'}
@@ -1353,7 +1385,7 @@ function renderSwitchForm(w = null) {
   document.getElementById('taxQuick').onclick = e => { const b = e.target.closest('[data-tax]'); if (!b) return; const t = document.getElementById('f_taxRatePct'); t.value = b.dataset.tax; t.dispatchEvent(new Event('input', { bubbles: true })); };
   document.getElementById('btnSave').onclick = saveSwitch;
   if (w) {
-    fillSwitchForm(w); setEditState(false);
+    fillSwitchForm(w); setEditState(false); wireInstalledOn(w);
     document.getElementById('btnCancel').onclick = () => { formDirty = false; renderSwitchForm(savedSwitches.find(x => x.id === w.id) || w); toast('Changes discarded'); };
     document.getElementById('btnDelete').onclick = async () => {
       if (!confirm(`Delete "${w.name}"? This cannot be undone.`)) return;
@@ -1376,6 +1408,8 @@ function fillSwitchForm(w) {
   });
   applyState(st);
   document.getElementById('f_preLubed').checked = !!w.preLubed;
+  const hint = document.querySelector('.fld[data-for="totalCount"] .hint');
+  if (hint && w.typeExcel) hint.textContent = `Excel Type: "${w.typeExcel}"${w.countApprox ? ' (count is approximate)' : ''}`;
   if (w.mechanism || w.pins) document.getElementById('moreDetails').open = true;
   const specCount = SW_SPEC_FIELDS.filter(f => w[f[0]]).length;
   const tab = document.querySelector('.tabs [data-tab="specs"]'); if (tab && specCount) tab.textContent = `Specs (${specCount})`;
@@ -1392,8 +1426,8 @@ async function saveSwitch() {
   const nums = { price: numOrNull('price'), taxRatePct: numOrNull('taxRatePct'), shipping: numOrNull('shipping'), discounts: numOrNull('discounts'), totalCount: numOrNull('totalCount') };
   const problems = [];
   if (!data.name) problems.push(['name', 'Name is required']);
-  if (nums.totalCount === null) problems.push(['totalCount', 'Enter how many switches']);
-  else if (!Number.isInteger(nums.totalCount) || nums.totalCount < 0) problems.push(['totalCount', 'Enter a whole number of 0 or more']);
+  if (nums.totalCount === null && !(editing && editing.totalCount == null)) problems.push(['totalCount', 'Enter how many switches']);   // imported entries may stay blank until known
+  else if (nums.totalCount !== null && (!Number.isInteger(nums.totalCount) || nums.totalCount < 0)) problems.push(['totalCount', 'Enter a whole number of 0 or more']);
   ['price', 'shipping', 'discounts'].forEach(k => { if (nums[k] !== null && (!isFinite(nums[k]) || nums[k] < 0)) problems.push([k, 'Enter an amount of 0 or more']); });
   if (nums.taxRatePct !== null && (!isFinite(nums.taxRatePct) || nums.taxRatePct < 0 || nums.taxRatePct > 30)) problems.push(['taxRatePct', 'Enter a percent between 0 and 30']);
   if (data.datePurchased && data.dateReceived && data.dateReceived < data.datePurchased) problems.push(['dateReceived', 'Received date is before the purchase date']);
@@ -1436,36 +1470,448 @@ function swSpecsPanelHtml() {
     + SW_SPEC_FIELDS.filter(f => f[3] === 'text' && f[4].length).map(([n, , , , opts]) => `<datalist id="dl_${n}">${uniq(opts.concat(savedSwitches.map(w => w[n]))).map(o => `<option value="${esc(o)}">`).join('')}</datalist>`).join('');
 }
 
-/* ===================== Step 3.2: Import from Excel (one-way, D6) =====================
-   You pick the import file made from a copy of the workbook; nothing is written until you click Import.
-   Matching uses importKey (brand|model|color|date). A re-import only changes the fields that come from Excel. */
+/* ===================== Phase 5: Keycaps (a set with kits) =====================
+   keyboard_collection/main/keycaps/<id>: one record per set; kits: [{ id, name, kitType, quantity, purchase fields… }].
+   Each kit keeps its own price, tax, shipping and discounts (Excel has one row per kit). */
+const KIT_TYPES = ['Base', 'Alphas', 'Modifiers', 'International', 'Novelties', 'Spacebars', 'Numpad', 'Extensions', 'Full set', 'Partial set', 'Other'];
+const KC_PROFILES = ['Cherry', 'OEM', 'SA', 'DSA', 'XDA', 'KAT', 'KAM', 'MT3', 'ASA', 'OSA', 'MDA', 'DCS', 'Low profile', 'Other'];
+const KC_MATERIALS = ['ABS', 'PBT', 'POM', 'PC', 'Ceramic', 'Metal', 'Resin', 'Other'];
+const KC_LEGENDS = ['Doubleshot', 'Dye-sub', 'Printed', 'UV printed', 'Lasered', 'Blank', 'Other'];
+const PRELOADED_KC_MAKERS = ['GMK', 'Drop', 'PBTfans', 'ePBT', 'Keychron', 'Akko', 'Cerakeys', 'KKB', 'Infinikey', 'NovelKeys', 'Signature Plastics', 'CannonKeys', 'Domikey', 'JTK', 'Keykobo', 'MT3 (Drop)', 'SA (Signature Plastics)'];
+let savedKeycaps = [], kcLoaded = false;
+function kcCol() { return db.collection(FIRESTORE_COLLECTION).doc(ROOT_DOC).collection('keycaps'); }
+function kitsOf(s) { return Array.isArray(s.kits) ? s.kits : []; }
+function setTotal(s) { return kitsOf(s).reduce((t, k) => t + kbTotal(k), 0); }
+function setDate(s) { return kitsOf(s).map(k => k.datePurchased || '').filter(Boolean).sort().pop() || s.createdIso || ''; }
+function startKeycapListener() {
+  if (!db || isFile) return;
+  kcCol().onSnapshot(snap => {
+    savedKeycaps = snap.docs.map(d => { const s = Object.assign({}, d.data(), { id: d.id, createdIso: isoFromTs(d.data().createdAt) }); s._date = setDate(s); return s; });
+    kcLoaded = true; refreshIfShowing();
+  }, err => { console.error(err); toast('Could not load keycaps: ' + explain(err)); });
+}
+/* ---------- list ---------- */
+let kcSort = 'newest', kcView = 'gallery', kcQuery = '';
+function kcMatches(s, q) {
+  if (!q) return true;
+  const hay = [s.name, s.manufacturer, s.designer, s.profile, s.colorsText, s.material, s.notes, s.location].concat(kitsOf(s).map(k => k.name + ' ' + (k.kitType || ''))).join(' ').toLowerCase();
+  return q.toLowerCase().split(/\s+/).every(t => hay.includes(t));
+}
+function sortKeycaps(list) {
+  const by = (f, dir) => (a, b) => dir * String(f(a) || '').localeCompare(String(f(b) || ''), 'en', { sensitivity: 'base' });
+  return [...list].sort({ newest: by(s => s._date, -1), oldest: by(s => s._date, 1), nameAZ: by(s => s.name, 1), nameZA: by(s => s.name, -1), brandAZ: by(s => s.manufacturer, 1), brandZA: by(s => s.manufacturer, -1) }[kcSort]);
+}
+function renderKeycaps() {
+  document.getElementById('view').innerHTML = `
+    <div class="pagehead"><div><h1>Keycaps</h1><p id="kcCount"></p></div>
+      <div class="tools">
+        <select class="select" id="kcSort" aria-label="Sort">${Object.entries(SORTS).map(([v, t]) => `<option value="${v}"${v === kcSort ? ' selected' : ''}>${t.replace('Brand', 'Maker')}</option>`).join('')}</select>
+        <div class="seg" role="group" aria-label="View"><button id="kcGal" class="${kcView === 'gallery' ? 'on' : ''}">${I.grid}Gallery</button><button id="kcList" class="${kcView === 'list' ? 'on' : ''}">${I.list}List</button></div>
+        <a class="btn primary" href="#/keycaps/new">${I.plus}Add keycap set</a>
+      </div></div>
+    <div class="tools" style="margin-bottom:16px"><label class="search">${I.search}<input class="input" id="kcSearch" placeholder="Search by set, maker, designer, profile, colors or kit" value="${esc(kcQuery)}"></label></div>
+    <div id="kcResults"></div>`;
+  document.getElementById('kcSort').onchange = e => { kcSort = e.target.value; drawKeycapResults(); };
+  document.getElementById('kcGal').onclick = () => { kcView = 'gallery'; renderKeycaps(); };
+  document.getElementById('kcList').onclick = () => { kcView = 'list'; renderKeycaps(); };
+  document.getElementById('kcSearch').oninput = e => { kcQuery = e.target.value; drawKeycapResults(); };
+  drawKeycapResults();
+}
+function drawKeycapResults() {
+  const box = document.getElementById('kcResults'); if (!box) return;
+  const all = savedKeycaps, list = sortKeycaps(all.filter(s => kcMatches(s, kcQuery.trim())));
+  const kits = all.reduce((n, s) => n + kitsOf(s).length, 0);
+  document.getElementById('kcCount').textContent = (kcQuery.trim() ? `${list.length} of ${all.length} sets` : `${all.length} set${all.length === 1 ? '' : 's'}`) + ` · ${kits} kit${kits === 1 ? '' : 's'}` + (db && !isFile && !kcLoaded ? ' · loading…' : '');
+  if (!all.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.keycaps}</div><h2>No keycap sets yet</h2><p>Add a set with its kits, or import your Excel Keycaps tab on the Import page.</p><p style="margin-top:14px"><a class="btn primary" href="#/keycaps/new">${I.plus}Add keycap set</a></p></div>`; return; }
+  if (!list.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.search}</div><h2>No matches</h2><p>Nothing matches "${esc(kcQuery)}".</p></div>`; return; }
+  const sub = s => [s.manufacturer, `${kitsOf(s).length} kit${kitsOf(s).length === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
+  if (kcView === 'gallery') {
+    box.innerHTML = `<div class="gallery">${list.map(s => `
+      <a class="kcard" href="#/keycaps/${esc(s.id)}">
+        <div class="ph">${s.coverThumb ? `<img src="${s.coverThumb}" alt="" loading="lazy">` : I.keycaps.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}
+          ${s.profile ? `<span class="badge chip">${esc(s.profile)}</span>` : ''}
+          <button class="fav${s.isFavorite ? ' on' : ''}" data-fav="${esc(s.id)}" aria-label="${s.isFavorite ? 'Remove from' : 'Add to'} favorites">${s.isFavorite ? I.starFill : I.star}</button></div>
+        <div class="meta"><b>${esc(s.name)}</b><span>${esc(sub(s))}</span></div></a>`).join('')}</div>`;
+  } else {
+    box.innerHTML = `<table class="list"><thead><tr><th style="width:44px"></th><th>Set</th><th>Maker</th><th>Profile</th><th style="text-align:right">Kits</th><th>Latest purchase</th></tr></thead><tbody>${list.map(s => `
+      <tr class="row" data-href="#/keycaps/${esc(s.id)}"><td><button class="fav${s.isFavorite ? ' on' : ''}" style="position:static;width:28px;height:28px" data-fav="${esc(s.id)}" aria-label="Favorite">${s.isFavorite ? I.starFill : I.star}</button></td>
+      <td><b>${esc(s.name)}</b></td><td>${esc(s.manufacturer || '')}</td><td>${esc(s.profile || '')}</td><td style="text-align:right">${kitsOf(s).length}</td><td>${esc(fmtDate(s._date)) || '<span style="color:var(--text-3)">—</span>'}</td></tr>`).join('')}</tbody></table>`;
+  }
+  box.onclick = async e => {
+    const f = e.target.closest('[data-fav]');
+    if (f) { e.preventDefault(); e.stopPropagation(); const s = savedKeycaps.find(x => x.id === f.dataset.fav); if (!s) return;
+      try { await kcCol().doc(s.id).update({ isFavorite: !s.isFavorite, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); } catch (err) { toast('Could not update favorite: ' + explain(err)); } return; }
+    const r = e.target.closest('tr[data-href]'); if (r) location.hash = r.dataset.href;
+  };
+}
+/* ---------- add / edit a set ---------- */
+function newKitId() { return 'k' + Math.random().toString(36).slice(2, 10); }
+function kitRowHtml(k, i) {
+  const tax = k.taxRate != null ? String(Math.round(k.taxRate * 1e8) / 1e6) : '';
+  const val = v => v != null ? esc(String(v)) : '';
+  return `<div class="kit" data-kit="${esc(k.id)}">
+    <div class="kit-top">
+      <input class="input k-name" placeholder="Kit name, e.g. Base kit" value="${val(k.name)}" aria-label="Kit name">
+      <select class="select k-type" aria-label="Kit type"><option value="">Kit type</option>${KIT_TYPES.concat(k.kitType && !KIT_TYPES.includes(k.kitType) ? [k.kitType] : []).map(t => `<option${t === k.kitType ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select>
+      <input class="input k-qty" type="number" min="1" step="1" value="${val(k.quantity ?? 1)}" aria-label="Quantity" title="Quantity">
+      <button type="button" class="btn danger k-del" aria-label="Remove kit">✕</button>
+    </div>
+    <details class="kit-more"${i === -1 ? ' open' : ''}><summary>Purchase details · <span class="k-total">${money(kbTotal(k))}</span>${k.datePurchased ? ' · ' + esc(fmtDate(k.datePurchased)) : ''}${k.purchasedFrom ? ' · ' + esc(k.purchasedFrom) : ''}</summary>
+      <div class="kit-grid">
+        <label>Date purchased<input class="input k-date" type="date" value="${val(k.datePurchased)}"></label>
+        <label>Purchased from<input class="input k-from" list="dlSellers" value="${val(k.purchasedFrom)}"></label>
+        <label>Price ($)<input class="input k-price k-num" type="number" min="0" step="0.01" value="${val(k.price)}"></label>
+        <label>Tax rate (%)<input class="input k-tax k-num" type="number" min="0" max="30" step="0.001" value="${tax}"></label>
+        <label>Shipping ($)<input class="input k-ship k-num" type="number" min="0" step="0.01" value="${val(k.shipping)}"></label>
+        <label>Discounts ($)<input class="input k-disc k-num" type="number" min="0" step="0.01" value="${val(k.discounts)}"></label>
+        <label class="wide">Receipt<input class="input k-receipt" placeholder="Order number or link" value="${val(k.receipt)}"></label>
+        ${k.installedOnText ? `<p class="sub wide" style="margin:0">Excel "Installed On": ${esc(k.installedOnText)}</p>` : ''}
+        ${k.excelRow ? `<p class="sub wide" style="margin:0">From Excel row ${k.excelRow}${k.kitsPurchasedExcel && k.kitsPurchasedExcel !== k.name ? ` · "${esc(k.kitsPurchasedExcel)}"` : ''}</p>` : ''}
+      </div></details>
+  </div>`;
+}
+function renderKeycapForm(s = null) {
+  formDirty = false; editing = s;
+  const ready = !!db && !isFile;
+  const makers = uniq(PRELOADED_KC_MAKERS.concat(savedKeycaps.map(x => x.manufacturer)));
+  const designers = uniq(savedKeycaps.map(x => x.designer));
+  const kits = s ? kitsOf(s) : [];
+  document.getElementById('view').innerHTML = `
+    <a class="crumb" href="#/keycaps">${I.back}Keycaps</a>
+    ${s ? `<div class="pagehead" id="kcDetailFor"><div><h1>${esc(s.name)}</h1><p>${esc([s.manufacturer, s.profile, `${kits.length} kit${kits.length === 1 ? '' : 's'}`].filter(Boolean).join(' · '))}</p></div>
+        <div class="tools"><button class="btn danger" id="btnDelete">Delete</button></div></div>`
+      : `<div class="pagehead"><div><h1>Add keycap set</h1><p>Start with a name and the kits you own. Everything else can be added later.</p></div></div>`}
+    <div class="formerr" id="formErr"></div>
+    <div class="form-grid">
+      <div>
+        <div class="tabs" role="tablist">
+          <button class="on" data-tab="overview" role="tab">Overview<span class="err" id="errOverview"></span></button>
+          <button data-tab="kits" role="tab">Kits (<span id="kitCount">${kits.length}</span>)<span class="err" id="errKits"></span></button>
+          <button data-tab="notes" role="tab">Notes</button>
+        </div>
+        <div class="card" data-panel="overview">
+          <h3 style="margin-bottom:14px">Overview</h3>
+          <div class="frm">
+            ${fld('Manufacturer', inputHtml('manufacturer', 'e.g. GMK', 'dlKcMakers'), { name: 'manufacturer' })}
+            ${fld('Name', inputHtml('name', 'e.g. GMK Olivia'), { name: 'name', req: true })}
+            ${fld('Profile', selectHtml('profile', KC_PROFILES, 'Select profile'), { name: 'profile' })}
+            ${fld('Location', inputHtml('location', 'e.g. Drawer A'), { name: 'location' })}
+            <details class="more" id="moreDetails"><summary>More details</summary><div class="frm">
+              ${fld('Designer', inputHtml('designer', 'e.g. MiTo', 'dlKcDesigners'), { name: 'designer' })}
+              ${fld('Material', selectHtml('material', KC_MATERIALS, 'Select material'), { name: 'material' })}
+              ${fld('Legends', selectHtml('legends', KC_LEGENDS, 'Select legends'), { name: 'legends' })}
+              ${fld('Stem mount', inputHtml('stemMount', 'e.g. MX'), { name: 'stemMount' })}
+              ${fld('Font', inputHtml('font', 'e.g. Helvetica'), { name: 'font' })}
+              ${fld('Keycap color', inputHtml('keycapColor', 'e.g. Beige, black'), { name: 'keycapColor' })}
+              ${fld('Legend color', inputHtml('legendColor', 'e.g. White, navy'), { name: 'legendColor' })}
+              ${fld('Colors (from Excel)', '<textarea class="input" name="colorsText" id="f_colorsText" rows="2" placeholder="e.g. Pink, Black — Pink base (Black alphas)"></textarea>', { name: 'colorsText', full: true, hint: 'Color palette cards with codes arrive in Step 5.5.' })}
+            </div></details>
+          </div>
+        </div>
+        <div class="card" data-panel="kits" hidden>
+          <div class="sec-title"><h3>Kits</h3><span class="sub" style="margin:0">Set total: <b id="setTotal">${money(kits.reduce((t, k) => t + kbTotal(k), 0))}</b></span></div>
+          <p class="sub">Each kit keeps its own purchase details. Base is optional.</p>
+          <div id="kitList">${kits.map((k, i) => kitRowHtml(k, i)).join('')}</div>
+          <button type="button" class="btn" id="addKit" style="margin-top:10px">${I.plus}Add kit</button>
+        </div>
+        <div class="card" data-panel="notes" hidden>
+          <h3 style="margin-bottom:14px">Notes</h3>
+          <div class="frm">${fld('Notes', '<textarea class="input" name="notes" id="f_notes" rows="6" placeholder="Anything else worth remembering"></textarea>', { name: 'notes', full: true })}</div>
+        </div>
+      </div>
+      <div>
+        <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
+        <div class="card side-card"><h3>Installed on</h3><p class="sub" style="margin:0">Installing kits on keyboards (and unallocated kits) arrives in Step 5.4.</p></div>
+        <div class="card side-card stack">
+          <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${s ? 'Save changes' : 'Save keycap set'}</button>
+          ${s ? '<button class="btn" id="btnCancel">Discard changes</button>' : '<a class="btn" href="#/keycaps">Cancel</a>'}
+          ${ready ? '' : '<p class="sub" style="margin:0">Saving needs Firebase (open the https site).</p>'}
+        </div>
+      </div>
+    </div>
+    <datalist id="dlKcMakers">${makers.map(b => `<option value="${esc(b)}">`).join('')}</datalist>
+    <datalist id="dlKcDesigners">${designers.map(b => `<option value="${esc(b)}">`).join('')}</datalist>
+    <datalist id="dlSellers">${uniq(PRELOADED_SELLERS.concat(savedKeycaps.flatMap(x => kitsOf(x).map(k => k.purchasedFrom)))).map(o => `<option value="${esc(o)}">`).join('')}</datalist>`;
+  const view = document.getElementById('view');
+  view.querySelector('.tabs').onclick = e => {
+    const b = e.target.closest('[data-tab]'); if (!b) return;
+    lastTab = { id: s ? s.id : null, tab: b.dataset.tab };
+    view.querySelectorAll('.tabs [data-tab]').forEach(x => x.classList.toggle('on', x === b));
+    view.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== b.dataset.tab);
+  };
+  const formEl = view.querySelector('.form-grid');
+  const markDirty = () => { if (s) { formDirty = location.hash; setEditState(true); } };
+  formEl.addEventListener('input', e => {
+    if (e.target.closest('.kit')) { const k = e.target.closest('.kit'); k.querySelector('.k-total').textContent = money(kbTotal(readKitRow(k))); updateSetTotal(); }
+    if (e.target.id?.startsWith('f_') || e.target.closest('.kit')) markDirty();
+    if (e.target.name && document.querySelector(`.fld.bad[data-for="${e.target.name}"]`)) clearFieldError(e.target.name);
+    if (e.target.classList.contains('bad')) e.target.classList.remove('bad');
+  });
+  formEl.addEventListener('change', e => { if (e.target.id?.startsWith('f_') || e.target.closest('.kit')) markDirty(); });
+  document.getElementById('addKit').onclick = () => {
+    const list = document.getElementById('kitList');
+    list.insertAdjacentHTML('beforeend', kitRowHtml({ id: newKitId(), quantity: 1 }, -1));
+    list.lastElementChild.querySelector('.k-name').focus(); kitCountUpdate(); markDirty();
+  };
+  document.getElementById('kitList').addEventListener('click', e => {
+    const d = e.target.closest('.k-del'); if (!d) return;
+    const row = d.closest('.kit'), name = row.querySelector('.k-name').value.trim();
+    if (name && !confirm(`Remove the kit "${name}" from this set?`)) return;
+    row.remove(); kitCountUpdate(); updateSetTotal(); markDirty();
+  });
+  document.getElementById('btnSave').onclick = saveKeycapSet;
+  if (s) {
+    const st = { fields: {}, acq: [], fav: !!s.isFavorite };
+    ['manufacturer', 'name', 'profile', 'location', 'designer', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText', 'notes']
+      .forEach(n => { if (s[n]) st.fields['f_' + n] = String(s[n]); });
+    [['profile', KC_PROFILES], ['material', KC_MATERIALS], ['legends', KC_LEGENDS]].forEach(([n]) => {
+      const sel = document.getElementById('f_' + n), v = st.fields['f_' + n]; if (v && ![...sel.options].some(o => o.value === v)) sel.add(new Option(v + ' (saved value)', v)); });
+    Object.entries(st.fields).forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.value = val; });
+    document.getElementById('f_isFavorite').checked = st.fav;
+    if (['designer', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText'].some(n => s[n])) document.getElementById('moreDetails').open = true;
+    setEditState(false);
+    document.getElementById('btnCancel').onclick = () => { formDirty = false; renderKeycapForm(savedKeycaps.find(x => x.id === s.id) || s); toast('Changes discarded'); };
+    document.getElementById('btnDelete').onclick = async () => {
+      if (!confirm(`Delete "${s.name}" and all its kits? This cannot be undone.`)) return;
+      try { await withTimeout(kcCol().doc(s.id).delete()); formDirty = false; toast('Keycap set deleted'); location.hash = '#/keycaps'; }
+      catch (e) { toast('Delete failed: ' + explain(e)); }
+    };
+    if (lastTab.id === s.id && lastTab.tab !== 'overview') view.querySelector(`.tabs [data-tab="${lastTab.tab}"]`)?.click();
+  } else { document.getElementById('f_name').focus(); document.getElementById('addKit').click(); formDirty = false; }
+}
+function kitCountUpdate() { const n = document.querySelectorAll('#kitList .kit').length; const c = document.getElementById('kitCount'); if (c) c.textContent = n; }
+function readKitRow(row) {
+  const q = c => row.querySelector(c).value.trim(), n = c => { const v = q(c); return v === '' ? null : Number(v); };
+  return { id: row.dataset.kit, name: q('.k-name'), kitType: q('.k-type'), quantity: n('.k-qty'), datePurchased: q('.k-date'), purchasedFrom: q('.k-from'),
+    price: n('.k-price'), taxRate: n('.k-tax') == null ? null : n('.k-tax') / 100, shipping: n('.k-ship'), discounts: n('.k-disc'), receipt: q('.k-receipt') };
+}
+function updateSetTotal() { const t = [...document.querySelectorAll('#kitList .kit')].reduce((s, r) => s + kbTotal(readKitRow(r)), 0); const el = document.getElementById('setTotal'); if (el) el.textContent = money(t); }
+async function saveKeycapSet() {
+  const btn = document.getElementById('btnSave'), errBox = document.getElementById('formErr');
+  errBox.style.display = 'none';
+  const v = n => (document.getElementById('f_' + n)?.value || '').trim();
+  const data = {};
+  ['manufacturer', 'name', 'profile', 'location', 'designer', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText', 'notes'].forEach(n => { const x = v(n); if (x) data[n] = x; });
+  data.isFavorite = document.getElementById('f_isFavorite').checked;
+  const problems = []; let kitBad = null;
+  if (!data.name) problems.push(['name', 'Name is required']);
+  const old = editing ? new Map(kitsOf(editing).map(k => [k.id, k])) : new Map();
+  const kits = [...document.querySelectorAll('#kitList .kit')].map(row => {
+    const k = readKitRow(row), bad = [];
+    if (!k.name) bad.push('.k-name');
+    if (k.quantity != null && (!Number.isInteger(k.quantity) || k.quantity < 1)) bad.push('.k-qty');
+    [['price', '.k-price'], ['shipping', '.k-ship'], ['discounts', '.k-disc']].forEach(([f, c]) => { if (k[f] != null && (!isFinite(k[f]) || k[f] < 0)) bad.push(c); });
+    if (k.taxRate != null && (!isFinite(k.taxRate) || k.taxRate < 0 || k.taxRate > 0.3)) bad.push('.k-tax');
+    bad.forEach(c => row.querySelector(c).classList.add('bad'));
+    if (bad.length) { kitBad = kitBad || row; if (bad.some(c => c !== '.k-name' && c !== '.k-qty')) row.querySelector('.kit-more').open = true; }
+    // keep fields that only exist on the saved kit (Excel row, key, notes…), replace the editable ones
+    const merged = Object.assign({}, old.get(k.id) || {}, { id: k.id, name: k.name, quantity: k.quantity ?? 1 });
+    [['kitType', k.kitType], ['datePurchased', k.datePurchased], ['purchasedFrom', k.purchasedFrom], ['receipt', k.receipt]].forEach(([f, x]) => { if (x) merged[f] = x; else delete merged[f]; });
+    [['price', k.price, 100], ['taxRate', k.taxRate, 1e8], ['shipping', k.shipping, 100], ['discounts', k.discounts, 100]].forEach(([f, x, r]) => {
+      const o = old.get(k.id);
+      if (x == null) delete merged[f];
+      else if (o && o[f] != null && Math.round(o[f] * r) === Math.round(x * r)) merged[f] = o[f];   // unchanged on screen: keep Excel's full precision
+      else merged[f] = Math.round(x * r) / r; });
+    return merged;
+  });
+  if (problems.length) problems.forEach(([f, m], i) => showFieldError(f, m, i === 0));
+  if (kitBad) { document.getElementById('errKits').textContent = '· check kits'; if (!problems.length) { document.querySelector('.tabs [data-tab="kits"]').click(); kitBad.querySelector('.bad')?.focus(); } }
+  else document.getElementById('errKits').textContent = '';
+  if (problems.length || kitBad) return;
+  data.kits = kits;
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const now = firebase.firestore.FieldValue.serverTimestamp();
+  if (editing) {
+    const s = editing, del = firebase.firestore.FieldValue.delete(), upd = {};
+    ['manufacturer', 'name', 'profile', 'location', 'designer', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText', 'notes', 'isFavorite', 'kits']
+      .forEach(n => { if (data[n] !== undefined) upd[n] = data[n]; else if (s[n] !== undefined) upd[n] = del; });
+    Object.assign(upd, { updatedAt: now, appVersion: APP_VERSION });
+    const hash = location.hash; formDirty = false;
+    try { await withTimeout(kcCol().doc(s.id).update(upd)); toast('Changes saved'); const b2 = document.getElementById('btnSave'); if (b2) b2.textContent = 'Save changes'; }
+    catch (e) {
+      if (location.hash === hash) { renderKeycapForm(Object.assign({}, s, data)); formDirty = hash; setEditState(true);
+        const box = document.getElementById('formErr'); box.style.display = 'block'; box.textContent = 'Could not save: ' + explain(e) + ' Your changes are still here; try again.'; }
+      else toast('Could not save: ' + explain(e));
+    }
+    return;
+  }
+  try {
+    const ref = await withTimeout(kcCol().add(Object.assign(data, { createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app' })));
+    toast(`Saved "${data.name}"`); location.hash = '#/keycaps/' + ref.id;
+  } catch (e) { errBox.style.display = 'block'; errBox.textContent = 'Could not save: ' + explain(e) + ' Your entries are still here; try again.'; btn.disabled = false; btn.textContent = 'Save keycap set'; }
+}
+
+/* ===================== Step 4.5: Switches installed on keyboards =====================
+   Each switch entry keeps allocations: [{ keyboardId, count }]. Loose = total count − installed. */
+function allocsOf(w) { return Array.isArray(w.allocations) ? w.allocations : []; }
+function installedCount(w) { return allocsOf(w).reduce((s, a) => s + (Number(a.count) || 0), 0); }
+function looseCount(w) { return w.totalCount == null ? null : Math.max(0, Number(w.totalCount) - installedCount(w)); }
+function kbLabel(k) { return [k.brand, k.name].filter(Boolean).join(' ') + (k.color ? ` (${k.color})` : ''); }
+function switchesOn(kbId) { return savedSwitches.map(w => ({ w, a: allocsOf(w).find(a => a.keyboardId === kbId) })).filter(x => x.a); }
+async function setAllocation(w, kbId, count) {
+  const list = allocsOf(w).filter(a => a.keyboardId !== kbId);
+  if (count > 0) list.push({ keyboardId: kbId, count });
+  await withTimeout(swCol().doc(w.id).update({ allocations: list, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }));
+}
+function allocationProblem(w, kbId, count) {
+  if (!kbId) return 'Pick a keyboard';
+  if (!Number.isInteger(count) || count < 1) return 'Enter a whole number of 1 or more';
+  const other = allocsOf(w).filter(a => a.keyboardId !== kbId).reduce((s, a) => s + (Number(a.count) || 0), 0);
+  if (w.totalCount != null && other + count > Number(w.totalCount)) return `Only ${Math.max(0, Number(w.totalCount) - other)} of ${w.totalCount} are free`;
+  return '';
+}
+function kbOptions(selected = '') {
+  return savedKeyboards.slice().sort((a, b) => kbLabel(a).localeCompare(kbLabel(b), 'en', { sensitivity: 'base' }))
+    .map(k => `<option value="${esc(k.id)}"${k.id === selected ? ' selected' : ''}>${esc(kbLabel(k))}</option>`).join('');
+}
+/* card on a switch entry's page */
+function installedOnCardHtml(w) {
+  const allocs = allocsOf(w), loose = looseCount(w);
+  const guess = !allocs.length && w.installedOnText ? savedKeyboards.find(k => kbLabel(k).toLowerCase().includes(w.installedOnText.toLowerCase()) || (k.brand + ' ' + k.name).toLowerCase() === w.installedOnText.toLowerCase()) : null;
+  return `<div class="card side-card" id="allocCard"><h3>Installed on</h3>
+    <p class="sub" style="margin:0 0 10px">${w.totalCount == null ? 'Add a total count on the Overview tab to see how many are loose.' : `<b>${installedCount(w)}</b> installed · <b>${loose}</b> loose of ${w.totalCount}${w.countApprox ? ' (approximate)' : ''}`}</p>
+    ${allocs.length ? `<div class="alist">${allocs.map(a => { const k = savedKeyboards.find(x => x.id === a.keyboardId);
+      return `<div class="arow"><a class="lnk" href="#/keyboards/${esc(a.keyboardId)}">${esc(k ? kbLabel(k) : 'Deleted keyboard')}</a><span>${a.count}</span><button class="btn" data-unalloc="${esc(a.keyboardId)}" aria-label="Remove">✕</button></div>`; }).join('')}</div>` : ''}
+    ${w.installedOnText && !allocs.length ? `<div class="note" style="margin:8px 0">Excel says installed on <b>${esc(w.installedOnText)}</b>. ${guess ? 'Pick how many and click Add.' : 'No matching keyboard found; pick it below.'}</div>` : ''}
+    ${savedKeyboards.length ? `<div class="aadd"><select class="select" id="allocKb"><option value="">Choose a keyboard…</option>${kbOptions(guess ? guess.id : '')}</select>
+      <input class="input" id="allocN" type="number" min="1" step="1" placeholder="Count" value="${guess && loose ? loose : ''}"><button class="btn primary" id="allocAdd">Add</button></div>
+      <div class="msg" id="allocMsg" style="color:#fca5a5;font-size:12px;margin-top:6px"></div>` : '<p class="sub" style="margin:0">Add keyboards first.</p>'}
+  </div>`;
+}
+function wireInstalledOn(w) {
+  const card = document.getElementById('allocCard'); if (!card) return;
+  card.onclick = async e => {
+    const rm = e.target.closest('[data-unalloc]');
+    if (rm) { try { await setAllocation(w, rm.dataset.unalloc, 0); toast('Removed'); } catch (err) { toast('Could not update: ' + explain(err)); } return; }
+    if (e.target.id === 'allocAdd') {
+      const kbId = document.getElementById('allocKb').value, n = Number(document.getElementById('allocN').value);
+      const cur = savedSwitches.find(x => x.id === w.id) || w, prob = allocationProblem(cur, kbId, n);
+      document.getElementById('allocMsg').textContent = prob; if (prob) return;
+      try { await setAllocation(cur, kbId, n); toast('Installed'); } catch (err) { toast('Could not update: ' + explain(err)); }
+    }
+  };
+}
+/* card on a keyboard's page */
+function switchesOnKeyboardCardHtml(k) {
+  const on = switchesOn(k.id);
+  const free = savedSwitches.filter(w => !allocsOf(w).some(a => a.keyboardId === k.id) && (w.totalCount == null || looseCount(w) > 0))
+    .sort((a, b) => (a.manufacturer + a.name).localeCompare(b.manufacturer + b.name));
+  return `<div class="card side-card" id="kbSwCard"><h3>Installed switches</h3>
+    ${on.length ? `<div class="alist">${on.map(({ w, a }) => `<div class="arow"><a class="lnk" href="#/switches/${esc(w.id)}">${esc([w.manufacturer, w.name].filter(Boolean).join(' '))}</a><span>${a.count}</span><button class="btn" data-unalloc="${esc(w.id)}" aria-label="Remove">✕</button></div>`).join('')}</div>`
+      : `<p class="sub" style="margin:0 0 10px">None yet.</p>`}
+    ${savedSwitches.length ? `<div class="aadd"><select class="select" id="kbSwPick"><option value="">Choose switches…</option>${free.map(w => `<option value="${esc(w.id)}">${esc([w.manufacturer, w.name].filter(Boolean).join(' '))}${looseCount(w) != null ? ` (${looseCount(w)} loose)` : ''}</option>`).join('')}</select>
+      <input class="input" id="kbSwN" type="number" min="1" step="1" placeholder="Count"><button class="btn primary" id="kbSwAdd">Add</button></div>
+      <div class="msg" id="kbSwMsg" style="color:#fca5a5;font-size:12px;margin-top:6px"></div>` : ''}
+  </div>`;
+}
+function wireSwitchesOnKeyboard(k) {
+  const card = document.getElementById('kbSwCard'); if (!card) return;
+  const pick = document.getElementById('kbSwPick');
+  if (pick) pick.onchange = () => { const w = savedSwitches.find(x => x.id === pick.value); const n = document.getElementById('kbSwN'); if (w && looseCount(w) && !n.value) n.value = looseCount(w); };
+  card.onclick = async e => {
+    const rm = e.target.closest('[data-unalloc]');
+    if (rm) { const w = savedSwitches.find(x => x.id === rm.dataset.unalloc); try { await setAllocation(w, k.id, 0); toast('Removed'); } catch (err) { toast('Could not update: ' + explain(err)); } return; }
+    if (e.target.id === 'kbSwAdd') {
+      const w = savedSwitches.find(x => x.id === pick.value), n = Number(document.getElementById('kbSwN').value);
+      const prob = !w ? 'Pick switches' : allocationProblem(w, k.id, n);
+      document.getElementById('kbSwMsg').textContent = prob; if (prob) return;
+      try { await setAllocation(w, k.id, n); toast('Installed'); } catch (err) { toast('Could not update: ' + explain(err)); }
+    }
+  };
+}
+async function removeKeyboardFromAllocations(kbId) {
+  for (const { w } of switchesOn(kbId)) await setAllocation(w, kbId, 0);
+}
+
+/* ===================== Step 3.2 / 4.4: Import from Excel (one-way, D6) =====================
+   You pick an import file made from a copy of the workbook; nothing is written until you click Import.
+   Matching uses importKey. A re-import only changes the fields that come from Excel. */
 const EXCEL_FIELDS = ['brand', 'name', 'color', 'size', 'layout', 'connectivity', 'formFactorExcel', 'purchasedFrom', 'datePurchased', 'mods', 'receipt', 'pictureLink',
   'currentBuildText', 'price', 'taxRate', 'shipping', 'discounts', 'excelTotal', 'excelRow'];
-let importFile = null;   // parsed file waiting for confirmation
-let lastImportMsg = '';  // shown after the page redraws with the imported data
+const SW_EXCEL_FIELDS = ['manufacturer', 'name', 'typeExcel', 'switchType', 'totalCount', 'countApprox', 'preLubed', 'pins', 'topMaterial', 'bottomMaterial', 'stemMaterial',
+  'springWeight', 'actuationForce', 'bottomOutForce', 'purchasedFrom', 'datePurchased', 'receipt', 'pictureLink', 'specsText', 'installedOnText',
+  'price', 'taxRate', 'shipping', 'discounts', 'excelTotal', 'excelRow'];
+const IMPORT_TYPES = {
+  Keyboards: { key: 'keyboards', title: 'Keyboards', fields: EXCEL_FIELDS, col: () => kbCol(), saved: () => savedKeyboards, href: '#/keyboards',
+    who: x => x.brand, detail: x => (x.size || '') + (x.layout ? ' · ' + x.layout : ''), extraNew: () => ({}) },
+  Switches: { key: 'switches', title: 'Switches', fields: SW_EXCEL_FIELDS, col: () => swCol(), saved: () => savedSwitches, href: '#/switches',
+    who: x => x.manufacturer, detail: x => [x.switchType, x.totalCount != null ? (x.countApprox ? '~' : '') + x.totalCount + ' pcs' : 'count ?'].filter(Boolean).join(' · '),
+    extraNew: x => (x.importNotes ? { notes: x.importNotes } : {}) },
+  Keycaps: { key: 'keycaps', title: 'Keycaps', nested: true, col: () => kcCol(), saved: () => savedKeycaps, href: '#/keycaps',
+    who: x => x.manufacturer, detail: x => [x.profile, kitsOf(x).length + ' kit' + (kitsOf(x).length === 1 ? '' : 's')].filter(Boolean).join(' · ') }
+};
+/* ---------- Step 5.3: Keycaps import (sets with kits) ----------
+   Sets match on the lowercased set name; kits match on platform|set|kit|date.
+   Excel fields are refreshed on re-import. Profile and kit type are guesses from the name, so they are only set on new records.
+   Kits you add in the app (no importKey) and everything else you typed are kept. */
+const KC_SET_FIELDS = ['name', 'manufacturer', 'designer', 'colorsText', 'excelRows', 'excelTotal'];
+const KC_KIT_FIELDS = ['name', 'quantity', 'excelRow', 'kitsPurchasedExcel', 'purchasedFrom', 'datePurchased', 'receipt', 'pictureLink', 'price', 'taxRate', 'shipping', 'discounts', 'excelTotal', 'installedOnText'];
+function sameAny(a, b) { return Array.isArray(a) || Array.isArray(b) ? JSON.stringify(a || []) === JSON.stringify(b || []) : sameVal(a, b); }
+function blank(v) { return v === undefined || v === null || v === ''; }
+function planKeycapImport(file) {
+  const byKey = new Map(savedKeycaps.filter(s => s.importKey).map(s => [s.importKey, s]));
+  const rows = file.keycaps.map(x => {
+    const cur = byKey.get(x.importKey);
+    if (!cur) return { x, status: 'new', changes: [], newKits: x.kits.length, updKits: 0 };
+    const changes = KC_SET_FIELDS.filter(f => !sameAny(cur[f], x[f]));
+    const curKits = new Map(kitsOf(cur).filter(k => k.importKey).map(k => [k.importKey, k]));
+    let newKits = 0, updKits = 0;
+    x.kits.forEach(k => { const ck = curKits.get(k.importKey); if (!ck) newKits++; else if (KC_KIT_FIELDS.some(f => !sameAny(ck[f], k[f]))) updKits++; });
+    if (newKits) changes.push(newKits + ' new kit' + (newKits === 1 ? '' : 's'));
+    if (updKits) changes.push(updKits + ' kit' + (updKits === 1 ? '' : 's') + ' changed');
+    return { x, cur, status: changes.length ? 'update' : 'same', changes, newKits, updKits };
+  });
+  const inFile = new Set(file.keycaps.map(x => x.importKey));
+  return { rows, missing: savedKeycaps.filter(s => s.importKey && !inFile.has(s.importKey)) };
+}
+function keycapRecord(r) {
+  const del = firebase.firestore.FieldValue.delete(), x = r.x, cur = r.cur, rec = {};
+  KC_SET_FIELDS.forEach(f => { if (!blank(x[f])) rec[f] = x[f]; else if (cur && cur[f] !== undefined) rec[f] = del; });
+  if (!cur && x.profile) rec.profile = x.profile;
+  const fromFile = new Map(x.kits.map(k => [k.importKey, k])), used = new Set();
+  const kitFromExcel = (k, old) => {
+    const kit = Object.assign({}, old || { id: newKitId(), kitType: k.kitType });
+    KC_KIT_FIELDS.forEach(f => { if (!blank(k[f])) kit[f] = k[f]; else delete kit[f]; });
+    kit.importKey = k.importKey; kit.importedTotal = Math.round(kbTotal(k) * 1e6) / 1e6; kit.source = 'excel';
+    return kit;
+  };
+  const kits = (cur ? kitsOf(cur) : []).map(old => {
+    if (old.importKey && fromFile.has(old.importKey)) { used.add(old.importKey); return kitFromExcel(fromFile.get(old.importKey), old); }
+    return old;                                    // app-added kit, or a kit no longer in Excel: left as it is
+  });
+  x.kits.forEach(k => { if (!used.has(k.importKey)) kits.push(kitFromExcel(k)); });
+  rec.kits = kits;
+  return rec;
+}
+function setExcelSum(s) { return kitsOf(s).filter(k => k.source === 'excel').reduce((t, k) => t + kbTotal(k), 0); }
+
+
+let importFile = null, importType = null;   // parsed file waiting for confirmation
+let lastImportMsg = '';
 function importMetaRef() { return db.collection(FIRESTORE_COLLECTION).doc(ROOT_DOC).collection('meta').doc('imports'); }
 function sameVal(a, b) {
-  if (typeof a === 'number' || typeof b === 'number') return Math.abs((Number(a) || 0) - (Number(b) || 0)) < 1e-9;
+  if (typeof a === 'number' || typeof b === 'number') return Math.abs((Number(a) || 0) - (Number(b) || 0)) < 1e-9 && (a == null) === (b == null);
+  if (typeof a === 'boolean' || typeof b === 'boolean') return !!a === !!b;
   return (a ?? '') === (b ?? '');
 }
-function planImport(file) {
-  const byKey = new Map(savedKeyboards.filter(k => k.importKey).map(k => [k.importKey, k]));
-  const rows = file.keyboards.map(x => {
+function planImport(file, T) {
+  const saved = T.saved(), items = file[T.key];
+  const byKey = new Map(saved.filter(k => k.importKey).map(k => [k.importKey, k]));
+  const rows = items.map(x => {
     const cur = byKey.get(x.importKey);
     if (!cur) return { x, status: 'new', changes: [] };
-    const changes = EXCEL_FIELDS.filter(f => !sameVal(cur[f], x[f]));
+    const changes = T.fields.filter(f => !sameVal(cur[f], x[f]));
     return { x, cur, status: changes.length ? 'update' : 'same', changes };
   });
-  const inFile = new Set(file.keyboards.map(x => x.importKey));
-  const missing = savedKeyboards.filter(k => k.importKey && !inFile.has(k.importKey));
-  return { rows, missing };
+  const inFile = new Set(items.map(x => x.importKey));
+  return { rows, missing: saved.filter(k => k.importKey && !inFile.has(k.importKey)) };
 }
 function renderImport() {
   const ready = !!db && !isFile;
   document.getElementById('view').innerHTML = `
-    <div class="pagehead"><div><h1>Import</h1><p>Bring keyboards in from your Excel workbook. Excel stays the source of truth; the app never changes the workbook.</p></div></div>
-    <div class="card"><h3>1 · Choose the import file</h3>
-      <p class="sub">Pick the keyboards import file (for example <b>keyboards_import_v18.json</b>). Keep this file on your PC; never upload it to the GitHub repo, which is public.</p>
+    <div class="pagehead"><div><h1>Import</h1><p>Bring items in from your Excel workbook. Excel stays the source of truth; the app never changes the workbook.</p></div></div>
+    <div class="card"><h3>1 · Choose an import file</h3>
+      <p class="sub">Pick a keyboards, switches or keycaps import file (for example <b>keyboards_import_v18.json</b>, <b>switches_import_v18.json</b> or <b>keycaps_import_v18.json</b>). Keep these files on your PC; never upload them to the GitHub repo, which is public.</p>
       <label class="btn primary" style="width:max-content">Choose file…<input type="file" id="impFile" accept=".json,application/json" hidden ${ready ? '' : 'disabled'}></label>
       ${ready ? '' : '<p class="sub" style="margin:10px 0 0">Importing needs Firebase (open the https site).</p>'}
       <div id="impMsg" class="sub" style="margin:10px 0 0"></div></div>
@@ -1477,43 +1923,48 @@ function renderImport() {
     const msg = document.getElementById('impMsg');
     try {
       const data = JSON.parse(await f.text());
-      if (!Array.isArray(data.keyboards) || data.tab !== 'Keyboards') throw new Error('This is not a keyboards import file.');
-      const bad = data.keyboards.filter(x => !x.importKey || !x.name);
+      const T = IMPORT_TYPES[data.tab];
+      if (!T || !Array.isArray(data[T.key])) throw new Error('This is not a keyboards, switches or keycaps import file.');
+      if (T.nested && data[T.key].some(x => !Array.isArray(x.kits) || x.kits.some(k => !k.importKey || !k.name))) throw new Error('Some sets have kits without a name or key.');
+      const bad = data[T.key].filter(x => !x.importKey || !x.name);
       if (bad.length) throw new Error(bad.length + ' rows are missing a name or key.');
-      importFile = Object.assign(data, { fileName: f.name });
-      msg.textContent = `Loaded ${f.name}: ${data.count} keyboards from ${data.source} (exported ${data.exportedAt.replace('T', ' ')}).`;
+      importFile = Object.assign(data, { fileName: f.name }); importType = T; lastImportMsg = '';
+      msg.textContent = `Loaded ${f.name}: ${data.count} ${T.nested ? `keycap sets (${data.kitCount} kits)` : T.title.toLowerCase()} from ${data.source} (exported ${data.exportedAt.replace('T', ' ')}).`;
       drawImportPreview();
-    } catch (err) { importFile = null; msg.textContent = 'Could not read that file: ' + err.message; document.getElementById('impPreview').innerHTML = ''; }
+    } catch (err) { importFile = null; importType = null; msg.textContent = 'Could not read that file: ' + err.message; document.getElementById('impPreview').innerHTML = ''; }
   };
   drawReconcile();
 }
 function drawImportPreview() {
   const box = document.getElementById('impPreview'); if (!box || !importFile) return;
-  const { rows, missing } = planImport(importFile);
-  const n = s => rows.filter(r => r.status === s).length;
-  const fileSum = importFile.keyboards.reduce((s, x) => s + kbTotal(x), 0);
+  const T = importType, items = importFile[T.key];
+  const { rows, missing } = T.nested ? planKeycapImport(importFile) : planImport(importFile, T);
+  const rowTotal = x => T.nested ? kitsOf(x).reduce((t, k) => t + kbTotal(k), 0) : kbTotal(x);
+  const n = s => rows.filter(r => r.status === s).length, todo = n('new') + n('update');
+  const fileSum = items.reduce((s, x) => s + rowTotal(x), 0);
   const label = { new: '<span class="chip acc">New</span>', update: '<span class="chip" style="color:#fbbf24">Update</span>', same: '<span class="chip">Unchanged</span>' };
   box.innerHTML = `
-    <div class="card" style="margin-top:16px"><h3>2 · Review</h3>
+    <div class="card" style="margin-top:16px"><h3>2 · Review ${T.title.toLowerCase()}</h3>
       <p class="sub">${n('new')} new · ${n('update')} to update · ${n('same')} unchanged. Excel TOTAL row: <b>${money(importFile.excelTotal)}</b> · sum of these rows with the app's formula: <b>${money(fileSum)}</b>.</p>
-      ${(importFile.flags || []).length ? `<div class="note"><b>Please check:</b><ul style="margin:6px 0 0;padding-left:18px">${importFile.flags.map(f => `<li>Excel row ${f.excelRow}: ${esc(f.note)}</li>`).join('')}</ul></div>` : ''}
+      ${(importFile.totalMismatches || []).length ? `<div class="note"><b>Excel formula problem:</b> on ${importFile.totalMismatches.length} rows the workbook's Total does not match Price × (1 + Tax) + Shipping − Discounts on the same row (in v18 the Keycaps Total formulas point one row down). The app uses each row's own price, tax, shipping and discounts, so the totals here are ${money(fileSum)}, not the TOTAL row's ${money(importFile.excelTotal)}. Fix the formulas in the Excel chat.</div>` : ''}
+      ${(importFile.flags || []).length ? `<div class="note"><b>Please check after importing</b> (you can fix these on each item's page):<ul style="margin:6px 0 0;padding-left:18px">${importFile.flags.map(f => `<li>Excel row ${f.excelRow}: ${esc(f.note)}</li>`).join('')}</ul></div>` : ''}
       ${(importFile.picturesSameAsReceiptRows || []).length ? `<p class="sub">Pictures link left out on ${importFile.picturesSameAsReceiptRows.length} rows where it was the same as the receipt link (Excel rows ${importFile.picturesSameAsReceiptRows.join(', ')}).</p>` : ''}
-      ${missing.length ? `<div class="note"><b>In the app but not in this file:</b> ${missing.map(k => esc(k.brand + ' ' + k.name)).join(', ')}. They are left as they are (nothing is deleted).</div>` : ''}
-      <div style="max-height:420px;overflow:auto;border-radius:12px"><table class="list"><thead><tr><th>Row</th><th>Status</th><th>Brand</th><th>Name</th><th>Size</th><th>Purchased</th><th style="text-align:right">Total</th><th>Changes</th></tr></thead><tbody>
-        ${rows.map(r => `<tr><td>${r.x.excelRow}</td><td>${label[r.status]}</td><td>${esc(r.x.brand)}</td><td><b>${esc(r.x.name)}</b>${r.x.color ? ` <span style="color:var(--text-3)">${esc(r.x.color)}</span>` : ''}</td>
-          <td>${esc(r.x.size)}${r.x.layout ? ' · ' + esc(r.x.layout) : ''}</td><td>${esc(fmtDate(r.x.datePurchased))}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${money(kbTotal(r.x))}</td>
+      ${missing.length ? `<div class="note"><b>In the app but not in this file:</b> ${missing.map(k => esc((T.who(k) || '') + ' ' + k.name)).join(', ')}. They are left as they are (nothing is deleted).</div>` : ''}
+      <div style="max-height:420px;overflow:auto;border-radius:12px"><table class="list"><thead><tr><th>Row</th><th>Status</th><th>${T.key === 'keyboards' ? 'Brand' : 'Maker'}</th><th>Name</th><th>${T.key === 'switches' ? 'Type · count' : T.nested ? 'Profile · kits' : 'Size'}</th><th>Purchased</th><th style="text-align:right">Total</th><th>Changes</th></tr></thead><tbody>
+        ${rows.map(r => `<tr><td>${T.nested ? r.x.excelRows.join(', ') : r.x.excelRow}</td><td>${label[r.status]}</td><td>${esc(T.who(r.x) || '')}</td><td><b>${esc(r.x.name)}</b>${r.x.color ? ` <span style="color:var(--text-3)">${esc(r.x.color)}</span>` : ''}</td>
+          <td>${esc(T.detail(r.x))}</td><td>${esc(fmtDate(T.nested ? setDate(r.x) : r.x.datePurchased))}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${money(rowTotal(r.x))}</td>
           <td style="color:var(--text-3);font-size:12px">${r.changes.map(esc).join(', ')}</td></tr>`).join('')}
       </tbody></table></div>
       <div class="btnrow" style="margin-top:14px;align-items:center">
-        <button class="btn primary" id="impGo" ${n('new') + n('update') ? '' : 'disabled'}>Import ${n('new') + n('update')} keyboard${n('new') + n('update') === 1 ? '' : 's'}</button>
-        <span class="sub" style="margin:0" id="impStatus">${n('new') + n('update') ? 'Photos, ratings, notes and build details you added in the app are kept.' : (lastImportMsg || 'Everything is already up to date.')}</span></div>
+        <button class="btn primary" id="impGo" ${todo ? '' : 'disabled'}>Import ${todo} ${T.nested ? 'keycap set' + (todo === 1 ? '' : 's') : todo === 1 ? T.title.toLowerCase().replace(/s$/, '').replace(/che$/, 'ch') : T.title.toLowerCase()}</button>
+        <span class="sub" style="margin:0" id="impStatus">${todo ? 'Photos, ratings, notes and details you added in the app are kept.' : (lastImportMsg || 'Everything is already up to date.')}</span></div>
     </div>`;
   document.getElementById('impGo').onclick = () => runImport(rows);
 }
 async function runImport(rows) {
-  const btn = document.getElementById('impGo'), st = document.getElementById('impStatus');
+  const T = importType, btn = document.getElementById('impGo'), st = document.getElementById('impStatus');
   const todo = rows.filter(r => r.status !== 'same');
-  if (!confirm(`Import ${todo.length} keyboards into the app?`)) return;
+  if (!confirm(`Import ${todo.length} ${T.nested ? 'keycap set' + (todo.length === 1 ? '' : 's') : T.title.toLowerCase()} into the app?`)) return;
   btn.disabled = true;
   const now = firebase.firestore.FieldValue.serverTimestamp(), del = firebase.firestore.FieldValue.delete();
   let done = 0;
@@ -1521,52 +1972,85 @@ async function runImport(rows) {
     for (let i = 0; i < todo.length; i += 400) {           // Firestore batches hold up to 500 writes
       const batch = db.batch();
       todo.slice(i, i + 400).forEach(r => {
+        if (T.nested) {
+          const rec = Object.assign(keycapRecord(r), { importKey: r.x.importKey, source: 'excel', importedFrom: importFile.source, importedAt: now, updatedAt: now });
+          if (r.cur) batch.update(T.col().doc(r.cur.id), rec);
+          else batch.set(T.col().doc(), Object.assign(rec, { createdAt: now, isFavorite: false, appVersion: APP_VERSION }));
+          return;
+        }
         const rec = {};
-        EXCEL_FIELDS.forEach(f => { if (r.x[f] !== undefined && r.x[f] !== '') rec[f] = r.x[f]; else if (r.cur && r.cur[f] !== undefined) rec[f] = del; });
+        T.fields.forEach(f => { if (r.x[f] !== undefined && r.x[f] !== '' && r.x[f] !== null) rec[f] = r.x[f]; else if (r.cur && r.cur[f] !== undefined) rec[f] = del; });
         Object.assign(rec, { importKey: r.x.importKey, source: 'excel', importedFrom: importFile.source, importedAt: now, updatedAt: now });
-        if (r.cur) batch.update(kbCol().doc(r.cur.id), rec);
-        else batch.set(kbCol().doc(), Object.assign(rec, { createdAt: now, isFavorite: false, appVersion: APP_VERSION }));
+        if (r.cur) batch.update(T.col().doc(r.cur.id), rec);
+        else batch.set(T.col().doc(), Object.assign(rec, T.extraNew(r.x), { createdAt: now, isFavorite: false, appVersion: APP_VERSION }));
       });
       await withTimeout(batch.commit(), 30000);
       done += Math.min(400, todo.length - i);
       st.textContent = `Imported ${done} of ${todo.length}…`;
     }
-    await importMetaRef().set({ keyboards: { file: importFile.fileName, source: importFile.source, exportedAt: importFile.exportedAt, count: importFile.count,
-      excelTotal: importFile.excelTotal, excelTotalRow: importFile.excelTotalRow, importedAt: now } }, { merge: true });
-    toast(`Imported ${done} keyboards`);
-    lastImportMsg = `Done: ${done} keyboard${done === 1 ? '' : 's'} imported at ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}. Everything now matches this file.`;
+    await importMetaRef().set({ [T.key]: { file: importFile.fileName, source: importFile.source, exportedAt: importFile.exportedAt, count: importFile.count,
+      excelTotal: importFile.excelTotal, excelTotalRow: importFile.excelTotalRow, importedAt: now,
+      ...(T.nested ? { kitCount: importFile.kitCount, fileTotal: Math.round(importFile[T.key].reduce((t, x) => t + kitsOf(x).reduce((u, k) => u + kbTotal(k), 0), 0) * 100) / 100, formulaMismatches: (importFile.totalMismatches || []).length } : {}) } }, { merge: true });
+    const what = T.nested ? 'keycap set' + (done === 1 ? '' : 's') : T.title.toLowerCase();
+    toast(`Imported ${done} ${what}`);
+    lastImportMsg = `Done: ${done} ${what} imported at ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}. Everything now matches this file.`;
     const st2 = document.getElementById('impStatus'); if (st2) st2.textContent = lastImportMsg;
     drawReconcile();
   } catch (e) { st.textContent = `Stopped after ${done}: ${explain(e)} Run the import again to finish; nothing is duplicated.`; btn.disabled = false; }
 }
-/* ===================== Step 3.3: Reconcile with Excel ===================== */
-let lastImportMeta = null;
+
+/* ===================== Step 3.3 / 4.4: Reconcile with Excel ===================== */
 async function drawReconcile() {
   const box = document.getElementById('reconcile'); if (!box) return;
   if (!db || isFile) { box.innerHTML = ''; return; }
-  try { const snap = await importMetaRef().get(); lastImportMeta = snap.exists ? (snap.data().keyboards || null) : null; }
+  let meta = {};
+  try { const snap = await importMetaRef().get(); meta = snap.exists ? snap.data() : {}; }
   catch (e) { box.innerHTML = `<div class="card" style="margin-top:16px"><h3>3 · Check against Excel</h3><p class="sub">Could not read the last import: ${esc(explain(e))}</p></div>`; return; }
   if (!document.getElementById('reconcile')) return;
-  const m = lastImportMeta;
-  if (!m) { box.innerHTML = `<div class="card" style="margin-top:16px"><h3>3 · Check against Excel</h3><p class="sub" style="margin:0">Appears after your first import.</p></div>`; return; }
-  const imported = savedKeyboards.filter(k => k.source === 'excel');
-  const appOnly = savedKeyboards.filter(k => k.source !== 'excel');
-  const appSum = imported.reduce((s, k) => s + kbTotal(k), 0);
-  const diff = appSum - (Number(m.excelTotal) || 0);
-  const ok = Math.abs(diff) <= 0.05 && imported.length === m.count;
-  const changed = imported.filter(k => k.excelTotal != null && Math.abs(kbTotal(k) - k.excelTotal) > 0.005);
+  const parts = Object.values(IMPORT_TYPES).map(T => {
+    const m = meta[T.key];
+    if (!m) return `<div class="sec"><h4>${T.title}</h4><p class="sub" style="margin:0">Appears after your first ${T.title.toLowerCase()} import.</p></div>`;
+    if (T.nested) return keycapReconcileHtml(T, m);
+    const imported = T.saved().filter(k => k.source === 'excel'), appOnly = T.saved().filter(k => k.source !== 'excel');
+    const appSum = imported.reduce((s, k) => s + kbTotal(k), 0), diff = appSum - (Number(m.excelTotal) || 0);
+    const ok = Math.abs(diff) <= 0.05 && imported.length === m.count;
+    const changed = imported.filter(k => k.excelTotal != null && Math.abs(kbTotal(k) - k.excelTotal) > 0.005);
+    const when = m.importedAt && m.importedAt.toDate ? m.importedAt.toDate().toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+    return `<div class="sec"><h4>${T.title}</h4>
+      <p class="sub">Last import: ${esc(m.file || '')} from ${esc(m.source || '')}${when ? ' on ' + esc(when) : ''}.</p>
+      <div class="calc" style="grid-template-columns:repeat(4,1fr)">
+        <div>Excel TOTAL row<b>${money(m.excelTotal)}</b></div><div>App total (imported)<b>${money(appSum)}</b></div>
+        <div>Difference<b style="color:${Math.abs(diff) <= 0.05 ? '#86efac' : '#fca5a5'}">${money(diff)}</b></div>
+        <div class="tot">Result<b style="color:${ok ? '#86efac' : '#fca5a5'}">${ok ? '✓ Matches' : '✗ Check below'}</b></div></div>
+      <p class="sub" style="margin:12px 0 0">${m.count} rows in Excel · ${imported.length} imported in the app${imported.length === m.count ? ' ✓' : ' ✗'}. A match within $0.05 passes.</p>
+      ${changed.length ? `<div class="note" style="margin-top:12px"><b>Changed in the app since import</b> (update the workbook or re-import):<ul style="margin:6px 0 0;padding-left:18px">${changed.map(k => `<li>${esc((T.who(k) || '') + ' ' + k.name)} (Excel row ${k.excelRow}): app ${money(kbTotal(k))} vs Excel ${money(k.excelTotal)}</li>`).join('')}</ul></div>` : ''}
+      ${appOnly.length ? `<div class="note" style="margin-top:12px"><b>Added in the app, not in Excel</b> (not part of the check):<ul style="margin:6px 0 0;padding-left:18px">${appOnly.map(k => `<li>${esc(((T.who(k) || '') + ' ' + k.name).trim())}${k.price != null ? ' · ' + money(kbTotal(k)) : ''}</li>`).join('')}</ul></div>` : ''}
+    </div>`;
+  });
+  box.innerHTML = `<div class="card" style="margin-top:16px"><h3>3 · Check against Excel</h3><p class="sub">Each tab's TOTAL row in the workbook is compared with the app's own math.</p>${parts.join('')}</div>`;
+}
+
+function keycapReconcileHtml(T, m) {
+  const sets = savedKeycaps, kits = sets.flatMap(s => kitsOf(s).map(k => Object.assign({ _set: s.name }, k)));
+  const xk = kits.filter(k => k.source === 'excel'), appKits = kits.filter(k => k.source !== 'excel');
+  const appSum = xk.reduce((t, k) => t + kbTotal(k), 0), xlTotal = Number(m.excelTotal) || 0;
+  const target = m.fileTotal != null ? m.fileTotal : xlTotal;        // the rows' own math when Excel's formulas are off
+  const diffXl = appSum - xlTotal, diffRows = appSum - target;
+  const ok = Math.abs(diffXl) <= 0.05 && xk.length === m.kitCount;
+  const rowsOk = Math.abs(diffRows) <= 0.05 && xk.length === m.kitCount;
+  const changed = xk.filter(k => k.importedTotal != null && Math.abs(kbTotal(k) - k.importedTotal) > 0.005);
   const when = m.importedAt && m.importedAt.toDate ? m.importedAt.toDate().toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
-  box.innerHTML = `<div class="card" style="margin-top:16px"><h3>3 · Check against Excel</h3>
-    <p class="sub">Last import: ${esc(m.file || '')} from ${esc(m.source || '')}${when ? ' on ' + esc(when) : ''}. The Keyboards TOTAL row in that workbook is compared with the app's own math.</p>
+  const col = v => v ? '#86efac' : '#fca5a5';
+  return `<div class="sec"><h4>${T.title}</h4>
+    <p class="sub">Last import: ${esc(m.file || '')} from ${esc(m.source || '')}${when ? ' on ' + esc(when) : ''}.</p>
     <div class="calc" style="grid-template-columns:repeat(4,1fr)">
-      <div>Excel TOTAL row<b>${money(m.excelTotal)}</b></div>
-      <div>App total (imported boards)<b>${money(appSum)}</b></div>
-      <div>Difference<b style="color:${Math.abs(diff) <= 0.05 ? '#86efac' : '#fca5a5'}">${money(diff)}</b></div>
-      <div class="tot">Result<b style="color:${ok ? '#86efac' : '#fca5a5'}">${ok ? '✓ Matches' : '✗ Check below'}</b></div>
-    </div>
-    <p class="sub" style="margin:12px 0 0">Keyboards: ${m.count} rows in Excel · ${imported.length} imported boards in the app${imported.length === m.count ? ' ✓' : ' ✗'}. A match within $0.05 passes.</p>
-    ${changed.length ? `<div class="note" style="margin-top:12px"><b>Changed in the app since import</b> (Excel stays the source of truth; update the workbook or re-import):<ul style="margin:6px 0 0;padding-left:18px">${changed.map(k => `<li>${esc(k.brand + ' ' + k.name)} (Excel row ${k.excelRow}): app ${money(kbTotal(k))} vs Excel ${money(k.excelTotal)}</li>`).join('')}</ul></div>` : ''}
-    ${appOnly.length ? `<div class="note" style="margin-top:12px"><b>Added in the app, not in Excel</b> (not part of the check; add them to the workbook when you can):<ul style="margin:6px 0 0;padding-left:18px">${appOnly.map(k => `<li>${esc((k.brand ? k.brand + ' ' : '') + k.name)}${k.price != null ? ' · ' + money(kbTotal(k)) : ''}</li>`).join('')}</ul></div>` : ''}
+      <div>Excel TOTAL row<b>${money(xlTotal)}</b></div><div>App total (imported kits)<b>${money(appSum)}</b></div>
+      <div>Difference<b style="color:${col(Math.abs(diffXl) <= 0.05)}">${money(diffXl)}</b></div>
+      <div class="tot">Result<b style="color:${col(ok)}">${ok ? '✓ Matches' : '✗ Check below'}</b></div></div>
+    <p class="sub" style="margin:12px 0 0">${m.count} sets and ${m.kitCount} kit rows in Excel · ${xk.length} kits imported in the app${xk.length === m.kitCount ? ' ✓' : ' ✗'}. A match within $0.05 passes.</p>
+    ${m.formulaMismatches ? `<div class="note" style="margin-top:12px"><b>Known Excel problem:</b> ${m.formulaMismatches} Keycaps rows have a Total that does not use that row's own price, tax, shipping and discounts, so the TOTAL row is off. Using each row's own values, Excel's kits add up to <b>${money(target)}</b>; the app is <b>${money(appSum)}</b> <span style="color:${col(rowsOk)}">${rowsOk ? '✓ matches' : '✗ differs by ' + money(diffRows)}</span>. This check will pass once the formulas are fixed in the Excel chat and the tab is re-imported.</div>` : ''}
+    ${changed.length ? `<div class="note" style="margin-top:12px"><b>Changed in the app since import</b> (update the workbook or re-import):<ul style="margin:6px 0 0;padding-left:18px">${changed.map(k => `<li>${esc(k._set + ' — ' + k.name)} (Excel row ${k.excelRow}): app ${money(kbTotal(k))} vs import ${money(k.importedTotal)}</li>`).join('')}</ul></div>` : ''}
+    ${appKits.length ? `<div class="note" style="margin-top:12px"><b>Kits added in the app, not in Excel</b> (not part of the check):<ul style="margin:6px 0 0;padding-left:18px">${appKits.map(k => `<li>${esc(k._set + ' — ' + k.name)}${k.price != null ? ' · ' + money(kbTotal(k)) : ''}</li>`).join('')}</ul></div>` : ''}
   </div>`;
 }
 
@@ -1670,6 +2154,7 @@ try {
 document.getElementById('verText').textContent = APP_VERSION;
 startKeyboardListener();
 startSwitchListener();
+startKeycapListener();
 
 route();
 </script>
