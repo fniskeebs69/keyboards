@@ -322,6 +322,10 @@
   .siremember { margin-top: 4px; font-size: 13px; color: var(--text-2); }
   .usertext { display: block; font-size: 11.5px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   pre.rules { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 12px; overflow: auto; white-space: pre; margin: 0 0 12px; }
+  .gcode { display: inline-flex; align-items: center; gap: 6px; } .gcode i { width: 14px; height: 14px; border-radius: 4px; border: 1px solid rgba(255,255,255,.18); display: inline-block; }
+  .gdet h4 { font-size: 13px; color: var(--text-2); }
+  .gpick { display: grid; justify-items: start; gap: 1px; width: 100%; text-align: left; margin-bottom: 6px; padding: 7px 10px; } .gpick span { font-size: 11.5px; color: var(--text-3); font-weight: 400; }
+  .gdlg { position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,.6); display: grid; place-items: center; padding: 24px; } .gdlg > .card { width: min(760px, 100%); max-height: 86vh; overflow: auto; }
   .kinst { display: grid; gap: 10px; }
   .kirow { display: grid; gap: 4px; }
   .kirow .kn { font-size: 12.5px; color: var(--text-2); font-weight: 600; }
@@ -374,7 +378,7 @@
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.33.0';
+const APP_VERSION = 'v0.35.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -1796,6 +1800,7 @@ function renderKeycapForm(s = null) {
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
         ${s ? valueCardHtml('keycaps', s) + photoCardHtml(s, 'keycaps') : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the set first, then drop photos on its page.</p></div>'}
+        <input type="hidden" id="f_gmkRef" value="${esc(s?.gmkRef || '')}">${gmkCardHtml(s)}
         ${s ? kitInstallCardHtml(s) : '<div class="card side-card"><h3>Installed on</h3><p class="sub" style="margin:0">Save the set first, then install its kits on your keyboards.</p></div>'}
         <div class="card side-card stack">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${s ? 'Save changes' : 'Save keycap set'}</button>
@@ -1819,7 +1824,9 @@ function renderKeycapForm(s = null) {
   formEl.addEventListener('input', e => {
     if (e.target.closest('.kit')) { const k = e.target.closest('.kit'); k.querySelector('.k-total').textContent = money(kbTotal(readKitRow(k))); updateSetTotal(); }
     const pc = e.target.closest('.pcard');
+    if (pc && pc.dataset.source === 'catalog') { pc.dataset.source = 'manual'; const ch = pc.querySelector('.pfoot .chip'); if (ch) ch.textContent = 'Manual'; }   // your edit wins over the catalog
     if (pc) {
+      if (e.target.classList.contains('c-gmk') && !pc.querySelector('.c-hex').value.trim()) { const h = gmkHex({ sys: 'GMK', code: e.target.value.trim() }); if (h) { pc.querySelector('.c-hex').value = h; } }   // GMK standard code → hex
       if (e.target.classList.contains('c-pick')) pc.querySelector('.c-hex').value = e.target.value.toUpperCase();
       const h = normHex(pc.querySelector('.c-hex').value), sw = pc.querySelector('.pswatch');
       sw.style.background = h || 'transparent'; sw.innerHTML = h ? '' : '<span>' + (pc.querySelector('.c-hex').value.trim() ? 'Not a valid hex' : 'Enter a hex') + '</span>';
@@ -1873,6 +1880,9 @@ function renderKeycapForm(s = null) {
     };
     if (lastTab.id === s.id && lastTab.tab !== 'overview') view.querySelector(`.tabs [data-tab="${lastTab.tab}"]`)?.click();
   } else { document.getElementById('f_name').focus(); document.getElementById('addKit').click(); formDirty = false; }
+  wireGmkCard(s);
+  if (!gmkSets) loadGmk().then(() => { const c = document.getElementById('gmkCard'); if (c && editing === s) { c.outerHTML = gmkCardHtml(s, true); wireGmkCard(s); } }).catch(() => {});
+  document.getElementById('f_name').addEventListener('change', () => { if (!document.getElementById('f_gmkRef').value) { const c = document.getElementById('gmkCard'); if (c) { c.outerHTML = gmkCardHtml(s, true); wireGmkCard(s); } } });
 }
 function kitCountUpdate() { const n = document.querySelectorAll('#kitList .kit').length; const c = document.getElementById('kitCount'); if (c) c.textContent = n; }
 function readKitRow(row) {
@@ -1887,7 +1897,7 @@ async function saveKeycapSet() {
   errBox.style.display = 'none';
   const v = n => (document.getElementById('f_' + n)?.value || '').trim();
   const data = {};
-  ['manufacturer', 'name', 'profile', 'location', 'designer', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText', 'notes'].forEach(n => { const x = v(n); if (x) data[n] = x; });
+  ['manufacturer', 'name', 'profile', 'location', 'designer', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText', 'notes', 'gmkRef'].forEach(n => { const x = v(n); if (x) data[n] = x; });
   data.isFavorite = document.getElementById('f_isFavorite').checked;
   const problems = []; let kitBad = null;
   if (!data.name) problems.push(['name', 'Name is required']);
@@ -1920,7 +1930,7 @@ async function saveKeycapSet() {
     if (!c.name && !c.hex) bad.push('.c-name');
     if (c.hex && !h) bad.push('.c-hex');
     bad.forEach(x => el.querySelector(x).classList.add('bad')); if (bad.length) colorBad = colorBad || el;
-    const out = { id: c.id, roles: c.roles, source: 'manual' };
+    const out = { id: c.id, roles: c.roles, source: el.dataset.source === 'catalog' ? 'catalog' : 'manual' };
     if (c.name) out.name = c.name; if (h) out.hex = h; ['pantone', 'ral', 'gmk'].forEach(f => { if (c[f]) out[f] = c[f]; });
     return out;
   });
@@ -1936,7 +1946,7 @@ async function saveKeycapSet() {
   const now = firebase.firestore.FieldValue.serverTimestamp();
   if (editing) {
     const s = editing, del = firebase.firestore.FieldValue.delete(), upd = {};
-    ['manufacturer', 'name', 'profile', 'location', 'designer', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText', 'notes', 'isFavorite', 'kits', 'palette']
+    ['manufacturer', 'name', 'profile', 'location', 'designer', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText', 'notes', 'gmkRef', 'isFavorite', 'kits', 'palette']
       .forEach(n => { if (data[n] !== undefined) upd[n] = data[n]; else if (s[n] !== undefined) upd[n] = del; });
     Object.assign(upd, { updatedAt: now, appVersion: APP_VERSION });
     const hash = location.hash; formDirty = false;
@@ -2045,7 +2055,7 @@ function normHex(v) { v = String(v || '').trim().replace(/^#/, ''); if (/^[0-9a-
 function roleLabel(r) { const [g, u] = r.split('-'); return (PAL_GROUPS.find(x => x[0] === g)?.[1] || g) + ' ' + (PAL_USES.find(x => x[0] === u)?.[1] || u).toLowerCase(); }
 function colorCardHtml(c) {
   const hex = normHex(c.hex), val = v => v != null ? esc(String(v)) : '';
-  return `<div class="pcard" data-color="${esc(c.id)}">
+  return `<div class="pcard" data-color="${esc(c.id)}" data-source="${c.source === 'catalog' ? 'catalog' : 'manual'}">
     <div class="pswatch" style="background:${hex || 'transparent'}">${hex ? '' : '<span>Enter a hex</span>'}</div>
     <div class="pbody">
       <div class="pfields">
@@ -2412,16 +2422,17 @@ let catTab = 'keycaps', catQuery = '';
 function renderCatalog() {
   document.getElementById('view').innerHTML = `
     <div class="pagehead"><div><h1>Catalog</h1><p>Everything you have owned, grouped by model. Built from your records, so it grows as you add things; forms use it for suggestions.</p></div></div>
-    <div class="tabs" role="tablist" id="catTabs">${[['keycaps', 'Keycap sets'], ['switches', 'Switches'], ['keyboards', 'Keyboards'], ['makers', 'Makers & brands'], ['designers', 'Designers']].map(([v, t]) => `<button data-cat="${v}" class="${v === catTab ? 'on' : ''}">${t} <span id="catN_${v}" style="color:var(--text-3)"></span></button>`).join('')}</div>
+    <div class="tabs" role="tablist" id="catTabs">${[['keycaps', 'Keycap sets'], ['switches', 'Switches'], ['keyboards', 'Keyboards'], ['makers', 'Makers & brands'], ['designers', 'Designers'], ['gmk', 'GMK reference (private)']].map(([v, t]) => `<button data-cat="${v}" class="${v === catTab ? 'on' : ''}">${t} <span id="catN_${v}" style="color:var(--text-3)"></span></button>`).join('')}</div>
     <div class="tools" style="margin:14px 0 16px"><label class="search">${I.search}<input class="input" id="catSearch" placeholder="Search the catalog" value="${esc(catQuery)}"></label></div>
     <div id="catResults"></div>
-    <p class="sub" style="margin-top:14px">The private GMK reference catalog (531 sets, data by Matrix) is added in Step 8.0 after sign-in is set up.</p>`;
+    <p class="sub" style="margin-top:14px">GMK reference tab: private data by Matrix Zou (Keycaps Info From Matrix, CC BY-NC-ND 4.0), loaded into your locked Firebase only.</p>`;
   document.getElementById('catTabs').onclick = e => { const b = e.target.closest('[data-cat]'); if (!b) return; catTab = b.dataset.cat; renderCatalog(); };
   document.getElementById('catSearch').oninput = e => { catQuery = e.target.value; drawCatalog(); };
   drawCatalog();
 }
 function drawCatalog() {
   const box = document.getElementById('catResults'); if (!box) return;
+  if (catTab === 'gmk') { const c0 = buildCatalog(); Object.keys(c0).forEach(k => { const el = document.getElementById('catN_' + k); if (el) el.textContent = c0[k].length; }); if (gmkSets) document.getElementById('catN_gmk').textContent = gmkSets.length; drawGmkTab(box); return; }
   const c = buildCatalog(), q = catQuery.trim().toLowerCase();
   Object.keys(c).forEach(k => { const el = document.getElementById('catN_' + k); if (el) el.textContent = c[k].length; });
   const hit = (...v) => !q || q.split(/\s+/).every(w => v.join(' ').toLowerCase().includes(w));
@@ -2665,6 +2676,186 @@ function renderValue() {
   document.querySelector('#view table')?.addEventListener('click', e => { const r = e.target.closest('tr[data-href]'); if (r) location.hash = r.dataset.href; });
 }
 
+/* ===================== Step 8.0: private GMK reference catalog =====================
+   Data: "Keycaps Info From Matrix" by Matrix Zou, CC BY-NC-ND 4.0, personal private use only.
+   It is NOT in this file or the GitHub repo: it is loaded from gmk_catalog_private.json on the Import page into
+   keyboard_collection/main/gmk_catalog (readable only when signed in). Reference only: it never changes your items. */
+const GMK_CREDIT = 'GMK set data from "Keycaps Info From Matrix" by Matrix Zou (CC BY-NC-ND 4.0). Personal, private use only. Colors are screen approximations.';
+let gmkSets = null, gmkMeta = null, gmkLoading = null;
+function gmkCol() { return db.collection(FIRESTORE_COLLECTION).doc(ROOT_DOC).collection('gmk_catalog'); }
+function gmkMetaRef() { return db.collection(FIRESTORE_COLLECTION).doc(ROOT_DOC).collection('meta').doc('gmkCatalog'); }
+function loadGmk(force = false) {   // read once per visit, then reuse
+  if (!db || isFile) return Promise.resolve([]);
+  if (gmkSets && !force) return Promise.resolve(gmkSets);
+  if (gmkLoading && !force) return gmkLoading;
+  gmkLoading = Promise.all([gmkCol().get(), gmkMetaRef().get()]).then(([snap, m]) => {
+    gmkSets = snap.docs.map(d => Object.assign({}, d.data(), { id: d.id })).sort((a, b) => a.title.localeCompare(b.title, 'en', { sensitivity: 'base' }));
+    gmkMeta = m.exists ? m.data() : null; gmkLoading = null; return gmkSets;
+  }).catch(e => { gmkLoading = null; throw e; });
+  return gmkLoading;
+}
+function gmkHex(c) {   // c = { sys: GMK | RAL | Pantone | Hex, code, hex? }; RAL and Pantone have no hex in this data
+  if (!c) return null; if (c.hex) return c.hex;
+  return c.sys === 'GMK' && gmkMeta && gmkMeta.standardColors ? gmkMeta.standardColors[String(c.code).toUpperCase()] || null : null;
+}
+function gmkCodeLabel(c) { return c ? (c.sys === 'GMK' || c.sys === 'Hex' ? c.code : c.sys + ' ' + c.code) : ''; }
+function gmkKitPrice(k) { if (k.priceUsd != null) return money(k.priceUsd); const e = Object.entries(k.prices || {})[0]; return e ? `${money(e[1])} (${esc(e[0])})` : ''; }
+function gmkStripHtml(set) {
+  const seen = new Set(), sw = [];
+  (set.colors || []).flatMap(r => [r.base, r.legend]).forEach(c => { const h = gmkHex(c); if (h && !seen.has(h)) { seen.add(h); sw.push([gmkCodeLabel(c), h]); } });
+  return sw.length ? `<span class="pstrip">${sw.map(([c, h]) => `<i style="background:${h}" title="${esc(c)} ${h}"></i>`).join('')}</span>` : '';
+}
+let gmkImport = null;
+function drawGmkImportPreview() {
+  const box = document.getElementById('impPreview'); if (!box || !gmkImport) return;
+  const have = gmkSets ? gmkSets.length : null;
+  box.innerHTML = `<div class="card"><h3>Private GMK reference catalog</h3>
+    <p class="sub">${gmkImport.count} sets · ${gmkImport.gmk_catalog.reduce((n, s) => n + (s.kits || []).length, 0)} kits · ${gmkImport.gmk_catalog.filter(s => (s.colors || []).length).length} with color tables · ${Object.keys(gmkImport.standardColors || {}).length} GMK standard colors.
+      ${have != null ? `Firebase has ${have} sets now; loading again replaces them.` : ''}</p>
+    <div class="note">${esc(gmkImport.credit)} It goes into your locked Firebase only and never changes your own keycap sets. Keep the file on your PC; never upload it to the GitHub repo.</div>
+    <div class="btnrow" style="margin-top:12px"><button class="btn primary" id="gmkGo">Load ${gmkImport.count} GMK sets into Firebase</button></div>
+    <p class="sub" id="gmkStatus" style="margin:10px 0 0"></p></div>`;
+  document.getElementById('gmkGo').onclick = runGmkImport;
+}
+async function runGmkImport() {
+  const btn = document.getElementById('gmkGo'), st = document.getElementById('gmkStatus');
+  if (!confirm(`Load ${gmkImport.count} GMK reference sets into your private Firebase catalog?`)) return;
+  btn.disabled = true;
+  try {
+    const old = await gmkCol().get(), keep = new Set(gmkImport.gmk_catalog.map(s => s.id));
+    const ops = gmkImport.gmk_catalog.map(s => b => { const { id, ...rest } = s; b.set(gmkCol().doc(id), rest); })
+      .concat(old.docs.filter(d => !keep.has(d.id)).map(d => b => b.delete(gmkCol().doc(d.id))));
+    for (let i = 0; i < ops.length; i += 400) {
+      const b = db.batch(); ops.slice(i, i + 400).forEach(f => f(b)); await withTimeout(b.commit(), 60000);
+      st.textContent = `Saved ${Math.min(i + 400, ops.length)} of ${ops.length}…`;
+    }
+    await gmkMetaRef().set({ credit: gmkImport.credit, standardColors: gmkImport.standardColors || {}, count: gmkImport.count, file: gmkImport.fileName,
+      exportedAt: gmkImport.exportedAt, importedAt: firebase.firestore.FieldValue.serverTimestamp(), appVersion: APP_VERSION });
+    const n = (await loadGmk(true)).length;
+    st.textContent = `Done: ${n} GMK sets in your private catalog. Open Catalog → GMK reference.`; toast(`GMK catalog loaded: ${n} sets`);
+  } catch (e) { st.textContent = 'Could not load: ' + explain(e) + ' Nothing else was changed; you can try again.'; btn.disabled = false; }
+}
+/* Catalog page tab */
+let gmkQuery = '', gmkOpen = null;
+function drawGmkTab(box) {
+  box.innerHTML = '<p class="sub">Loading the private GMK catalog…</p>';
+  loadGmk().then(sets => {
+    if (!document.getElementById('catResults') || catTab !== 'gmk') return;
+    if (!sets.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.catalog}</div><h2>Not loaded yet</h2><p>On the Import page, choose <b>gmk_catalog_private.json</b> to load the private GMK reference catalog.</p></div>`; return; }
+    const q = catQuery.trim().toLowerCase();
+    const hit = s => !q || q.split(/\s+/).every(w => [s.title, s.titleCn, s.designer, s.profile, s.colorCodes].join(' ').toLowerCase().includes(w));
+    const list = sets.filter(hit), el = document.getElementById('catN_gmk'); if (el) el.textContent = sets.length;
+    box.innerHTML = `<p class="sub" style="margin:0 0 10px">${esc(gmkMeta?.credit || GMK_CREDIT)}</p>
+      ${list.length ? `<table class="list"><thead><tr><th>Set</th><th>Designer</th><th>Group buy</th><th>Kits</th><th>Colors</th><th>You own</th></tr></thead><tbody>${list.slice(0, 300).map(s => {
+        const own = savedKeycaps.find(k => gmkMatchScore(k.name, s) === 3);
+        return `<tr class="row" data-gmk="${esc(s.id)}"><td><b>GMK ${esc(s.title)}</b>${s.titleCn ? ` <span class="sub" style="margin:0">${esc(s.titleCn)}</span>` : ''}</td><td>${esc(s.designer || '')}</td><td>${esc([s.gbStart, s.gbEnd].filter(Boolean).join(' → '))}</td>
+          <td>${(s.kits || []).length}</td><td>${gmkStripHtml(s) || '<span style="color:var(--text-3)">—</span>'}</td><td>${own ? `<a class="chip" href="#/keycaps/${esc(own.id)}">Yes</a>` : ''}</td></tr>`; }).join('')}</tbody></table>${list.length > 300 ? `<p class="sub">Showing 300 of ${list.length}; search to narrow it down.</p>` : ''}`
+        : '<div class="card empty"><h2>No matches</h2></div>'}
+      <div id="gmkDetail"></div>`;
+    box.querySelector('tbody')?.addEventListener('click', e => { if (e.target.closest('a')) return; const r = e.target.closest('[data-gmk]'); if (r) showGmkDetail(sets.find(s => s.id === r.dataset.gmk)); });
+  }).catch(e => { box.innerHTML = `<div class="card empty"><h2>Could not load the catalog</h2><p>${esc(explain(e))}</p></div>`; });
+}
+function gmkDetailHtml(s) {
+  const sw = c => { const h = gmkHex(c); return c ? `<span class="gcode">${h ? `<i style="background:${h}"></i>` : ''}${esc(gmkCodeLabel(c))}${h ? ` <span class="mono">${h}</span>` : ''}</span>` : '—'; };
+  return `<div class="gdet"><div class="sec-title"><h3>GMK ${esc(s.title)} ${s.titleCn ? `<span class="sub" style="margin:0">${esc(s.titleCn)}</span>` : ''}</h3></div>
+    <div class="kv">Designer: ${esc(s.designer || '—')}<br>Profile: ${esc(s.profile || '—')}<br>Group buy: ${esc([s.gbStart, s.gbEnd].filter(Boolean).join(' → ') || '—')}${s.shipping ? `<br>Estimated shipping: ${esc(s.shipping)}` : ''}${s.colorCodes ? `<br>Color codes: ${esc(s.colorCodes)}` : ''}</div>
+    ${(s.kits || []).length ? `<h4 style="margin:12px 0 6px">Kits</h4><div class="chips">${s.kits.map(k => `<span class="chip">${esc(k.name)}${gmkKitPrice(k) ? ' · ' + gmkKitPrice(k) : ''}</span>`).join(' ')}</div>` : ''}
+    ${(s.colors || []).length ? `<h4 style="margin:12px 0 6px">Colors</h4><table class="list"><thead><tr><th>Group</th><th>Base</th><th>Legend</th></tr></thead><tbody>${s.colors.map(r => `<tr><td>${esc(r.group || '')}</td><td>${sw(r.base)}</td><td>${sw(r.legend)}</td></tr>`).join('')}</tbody></table>` : '<p class="sub">No color table for this set.</p>'}
+    ${(s.links || []).length ? `<p class="sub" style="margin:10px 0 0">${s.links.map(l => `<a class="lnk" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join(' · ')}</p>` : ''}
+    <p class="sub" style="margin:8px 0 0">${esc(GMK_CREDIT)}</p></div>`;
+}
+function showGmkDetail(s) { const d = document.getElementById('gmkDetail'); if (!d || !s) return; d.innerHTML = `<div class="card" style="margin-top:16px">${gmkDetailHtml(s)}</div>`; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+/* name matching between your set names and catalog titles (suggestions only) */
+function gmkNorm(t) {
+  t = String(t || '').toLowerCase(); const m = t.search(/[^\x00-\x7f]/); if (m > 0) t = t.slice(0, m);
+  return t.replace(/^gmk\s+/, '').replace(/^cyl\s+/, '').replace(/\br1\b/g, '').replace(/\biii\b/g, '3').replace(/\bii\b/g, '2').replace(/[^a-z0-9]/g, '');
+}
+function gmkMatchScore(name, s) {   // 3 exact, 2 exact ignoring round/R-number differences, 1 close, 0 none
+  const a = gmkNorm(name), b = gmkNorm(s.title); if (!a || !b) return 0;
+  if (a === b) return 3;
+  const strip = x => x.replace(/r\d+$/, '').replace(/\d+$/, '');
+  if (strip(a) === strip(b) && strip(a).length >= 3) return 2;
+  return (a.length >= 4 && b.length >= 4 && (a.includes(b) || b.includes(a))) ? 1 : 0;
+}
+
+/* ===================== Step 8.4: fill a keycap set from the GMK reference catalog =====================
+   You pick (or confirm) which catalog set this is; it is saved as gmkRef when you save the set.
+   "Fill" only writes into the form: empty fields, plus colors marked Catalog. Colors you entered or edited
+   yourself (Manual) are never replaced. Nothing is saved until you click Save. */
+const GMK_GROUPS = [[/^alpha/i, 'alpha'], [/^mod/i, 'modifier'], [/^accent/i, 'accent'], [/^space/i, 'spacebar'], [/^novel/i, 'novelty']];
+function gmkGroupRole(g) { const m = GMK_GROUPS.find(([re]) => re.test(g || '')); return m ? m[1] : null; }
+function gmkPaletteFrom(set) {
+  const map = new Map();
+  (set.colors || []).forEach(row => {
+    const grp = gmkGroupRole(row.group);
+    [['base', row.base], ['legend', row.legend]].forEach(([use, c]) => {
+      if (!c) return; const k = c.sys + '|' + String(c.code).toUpperCase();
+      if (!map.has(k)) { const hex = gmkHex(c); const e = { id: 'c' + Math.random().toString(36).slice(2, 10), name: gmkCodeLabel(c), roles: [], source: 'catalog', notes: [] };
+        if (hex) e.hex = hex.toUpperCase(); if (c.sys === 'GMK') e.gmk = c.code; if (c.sys === 'RAL') e.ral = c.code; if (c.sys === 'Pantone') e.pantone = c.code; map.set(k, e); }
+      const e = map.get(k); if (grp) { const r = grp + '-' + use; if (!e.roles.includes(r)) e.roles.push(r); } else if (row.group && !e.notes.includes(row.group)) e.notes.push(row.group);
+    });
+  });
+  return [...map.values()].map(e => { if (e.notes.length) e.name += ` (also ${e.notes.join(', ')})`; delete e.notes; return e; });
+}
+function gmkCandidates(name) {
+  if (!gmkSets) return [];
+  return gmkSets.map(s => ({ s, sc: gmkMatchScore(name, s) })).filter(x => x.sc > 0).sort((a, b) => b.sc - a.sc || a.s.title.localeCompare(b.s.title)).slice(0, 4);
+}
+function gmkCardHtml(s, live = false) {   // live = read the link and name from the form on screen; otherwise from the saved set
+  const refId = live ? (document.getElementById('f_gmkRef')?.value || '') : (s?.gmkRef || '');
+  if (!gmkSets) return `<div class="card side-card" id="gmkCard"><h3>GMK reference</h3><p class="sub" style="margin:0">Loading the private catalog…</p></div>`;
+  if (!gmkSets.length) return `<div class="card side-card" id="gmkCard"><h3>GMK reference</h3><p class="sub" style="margin:0">Load gmk_catalog_private.json on the Import page to see catalog details here.</p></div>`;
+  const ref = refId && gmkSets.find(x => x.id === refId), name = live ? (document.getElementById('f_name')?.value || '') : (s?.name || '');
+  if (ref) {
+    const owned = (s ? kitsOf(s) : []).map(k => gmkNorm(k.name));
+    return `<div class="card side-card" id="gmkCard"><h3>GMK reference</h3>
+      <p style="margin:6px 0 2px"><b>GMK ${esc(ref.title)}</b> ${gmkStripHtml(ref)}</p>
+      <p class="sub" style="margin:0">${esc([ref.designer, [ref.gbStart, ref.gbEnd].filter(Boolean).join(' → ')].filter(Boolean).join(' · '))}</p>
+      ${(ref.kits || []).length ? `<div class="chips" style="margin-top:8px">${ref.kits.map(k => { const have = owned.some(o => o && (o.includes(gmkNorm(k.name)) || gmkNorm(k.name).includes(o))); return `<span class="chip"${have ? ' style="color:#86efac"' : ''} title="${have ? 'Looks like you own this kit' : ''}">${have ? '✓ ' : ''}${esc(k.name)}</span>`; }).join(' ')}</div>` : ''}
+      <div class="btnrow" style="margin-top:10px"><button class="btn primary" id="gmkFill">Fill from catalog</button><button class="btn" id="gmkView">Details</button><button class="btn" id="gmkUnlink">Unlink</button></div>
+      <p class="sub" style="margin:8px 0 0;font-size:11px">${esc(GMK_CREDIT)}</p></div>`;
+  }
+  const cands = gmkCandidates(name);
+  return `<div class="card side-card" id="gmkCard"><h3>GMK reference</h3>
+    <p class="sub" style="margin:0 0 8px">${cands.length ? 'Is this one of these? Pick it to link this set.' : 'No catalog set looks like this name. Search for it:'}</p>
+    ${cands.map(({ s: c, sc }) => `<button class="btn gpick" data-gref="${esc(c.id)}"><b>GMK ${esc(c.title)}</b><span>${esc([c.designer, c.gbStart && c.gbStart.slice(0, 4)].filter(Boolean).join(' · '))}${sc === 3 ? ' · same name' : sc === 2 ? ' · different round?' : ''}</span></button>`).join('')}
+    <input class="input" id="gmkSearch" placeholder="Search the GMK catalog" style="margin-top:6px"><div id="gmkSearchRes"></div></div>`;
+}
+function wireGmkCard(s) {
+  const card = document.getElementById('gmkCard'); if (!card) return;
+  const redraw = () => { document.getElementById('gmkCard').outerHTML = gmkCardHtml(s, true); wireGmkCard(s); };
+  const setRef = id => { const f = document.getElementById('f_gmkRef'); f.value = id; f.dispatchEvent(new Event('change', { bubbles: true })); redraw(); };
+  card.onclick = e => {
+    const p = e.target.closest('[data-gref]'); if (p) { setRef(p.dataset.gref); toast('Linked. Save the set to keep the link.'); return; }
+    if (e.target.id === 'gmkUnlink') { setRef(''); return; }
+    if (e.target.id === 'gmkView') { const ref = gmkSets.find(x => x.id === document.getElementById('f_gmkRef').value); if (ref) openGmkDialog(ref); return; }
+    if (e.target.id === 'gmkFill') fillFromGmk(gmkSets.find(x => x.id === document.getElementById('f_gmkRef').value));
+  };
+  const q = document.getElementById('gmkSearch');
+  if (q) q.oninput = () => { const t = q.value.trim().toLowerCase(), box = document.getElementById('gmkSearchRes');
+    const hits = t.length < 2 ? [] : gmkSets.filter(x => (x.title + ' ' + (x.titleCn || '') + ' ' + (x.designer || '')).toLowerCase().includes(t)).slice(0, 6);
+    box.innerHTML = hits.map(c => `<button class="btn gpick" data-gref="${esc(c.id)}"><b>GMK ${esc(c.title)}</b><span>${esc([c.designer, c.gbStart && c.gbStart.slice(0, 4)].filter(Boolean).join(' · '))}</span></button>`).join('') || (t.length >= 2 ? '<p class="sub" style="margin:6px 0 0">No matches.</p>' : ''); };
+}
+function openGmkDialog(ref) {
+  const d = document.createElement('div'); d.className = 'gdlg'; d.innerHTML = `<div class="card">${gmkDetailHtml(ref)}<div class="btnrow" style="margin-top:12px"><button class="btn" id="gdlgClose">Close</button></div></div>`;
+  document.body.appendChild(d); d.onclick = e => { if (e.target === d || e.target.id === 'gdlgClose') d.remove(); };
+}
+function fillFromGmk(ref) {
+  if (!ref) return;
+  const filled = [], setIf = (id, v) => { const el = document.getElementById(id); if (!el || !v || el.value.trim()) return;
+    if (el.tagName === 'SELECT' && ![...el.options].some(o => o.value === v)) el.add(new Option(v, v)); el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); filled.push(id); };
+  setIf('f_manufacturer', 'GMK'); setIf('f_designer', ref.designer); setIf('f_profile', 'Cherry'); setIf('f_material', 'ABS'); setIf('f_legends', 'Doubleshot');
+  // colors: drop old Catalog colors, keep Manual ones, add catalog colors not already present by code
+  const list = document.getElementById('colorList'), keepCodes = new Set();
+  [...list.querySelectorAll('.pcard')].forEach(el => { if (el.dataset.source === 'catalog') el.remove(); else { const c = readColorCard(el); [c.gmk, c.ral, c.pantone].filter(Boolean).forEach(x => keepCodes.add(x.toUpperCase())); } });
+  const add = gmkPaletteFrom(ref).filter(c => ![c.gmk, c.ral, c.pantone].filter(Boolean).some(x => keepCodes.has(String(x).toUpperCase())));
+  add.forEach(c => list.insertAdjacentHTML('beforeend', colorCardHtml(c)));
+  document.getElementById('colorCount').textContent = list.querySelectorAll('.pcard').length;
+  if (editing) { formDirty = location.hash; setEditState(true); }
+  toast(`Filled ${filled.length} empty field${filled.length === 1 ? '' : 's'} and ${add.length} color${add.length === 1 ? '' : 's'}. Check them, then Save.`);
+  if (add.length) document.querySelector('.tabs [data-tab="colors"]').click();
+}
+
 /* ===================== Step 3.2 / 4.4: Import from Excel (one-way, D6) =====================
    You pick an import file made from a copy of the workbook; nothing is written until you click Import.
    Matching uses importKey. A re-import only changes the fields that come from Excel. */
@@ -2771,7 +2962,7 @@ function renderImport() {
   document.getElementById('view').innerHTML = `
     <div class="pagehead"><div><h1>Import</h1><p>Bring items in from your Excel workbook. Excel stays the source of truth; the app never changes the workbook.</p></div></div>
     <div class="card"><h3>1 · Choose an import file</h3>
-      <p class="sub">Pick an import file made from your workbook: ${Object.values(IMPORT_TYPES).map(T => `<b>${T.metaKey || T.key}_import_v18.json</b>`).join(', ')}. Keep these files on your PC; never upload them to the GitHub repo, which is public.</p>
+      <p class="sub">Pick an import file made from your workbook: ${Object.values(IMPORT_TYPES).map(T => `<b>${T.metaKey || T.key}_import_v18.json</b>`).join(', ')}, or the private <b>gmk_catalog_private.json</b>. Keep these files on your PC; never upload them to the GitHub repo, which is public.</p>
       <label class="btn primary" style="width:max-content">Choose file…<input type="file" id="impFile" accept=".json,application/json" hidden ${ready ? '' : 'disabled'}></label>
       ${ready ? '' : '<p class="sub" style="margin:10px 0 0">Importing needs Firebase (open the https site).</p>'}
       <div id="impMsg" class="sub" style="margin:10px 0 0"></div></div>
@@ -2783,6 +2974,13 @@ function renderImport() {
     const msg = document.getElementById('impMsg');
     try {
       const data = JSON.parse(await f.text());
+      if (data.kind === 'gmk_catalog') {   // private reference catalog (Step 8.0)
+        if (!Array.isArray(data.gmk_catalog) || data.gmk_catalog.some(x => !x.id || !x.title)) throw new Error('The GMK catalog file looks damaged.');
+        importFile = null; importType = null; gmkImport = Object.assign(data, { fileName: f.name });
+        msg.textContent = `Loaded ${f.name}: private GMK reference catalog, ${data.count} sets (exported ${String(data.exportedAt).replace('T', ' ')}).`;
+        loadGmk().catch(() => {}).then(drawGmkImportPreview); drawGmkImportPreview(); return;
+      }
+      gmkImport = null;
       const T = IMPORT_TYPES[data.tab];
       if (!T || !Array.isArray(data[T.key])) throw new Error('This is not an import file this version of the app knows.');
       if (T.nested && data[T.key].some(x => !Array.isArray(x.kits) || x.kits.some(k => !k.importKey || !k.name))) throw new Error('Some sets have kits without a name or key.');
