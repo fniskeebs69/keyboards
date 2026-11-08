@@ -301,6 +301,13 @@
   .pfoot .btn { padding: 4px 10px; font-size: 12px; }
   .pstrip { display: flex; gap: 3px; margin-top: 6px; } .pstrip i { width: 16px; height: 10px; border-radius: 3px; border: 1px solid rgba(255,255,255,.15); }
   .sec-title .pstrip { margin: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .acbox { position: absolute; z-index: 60; background: var(--surface, #181b22); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,.45); padding: 4px; max-height: 320px; overflow: auto; }
+  .acitem { padding: 7px 10px; border-radius: 7px; cursor: pointer; display: grid; gap: 1px; }
+  .acitem b { font-size: 13px; font-weight: 600; color: var(--text); } .acitem span { font-size: 11.5px; color: var(--text-3); }
+  .acitem:hover, .acitem.on { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+  .vnow { display: grid; gap: 2px; } .vnow b { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; } .vnow span { font-size: 12.5px; color: var(--text-2); }
+  .vadd { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; } .vadd #vSrc, .vadd #vAdd { grid-column: 1 / -1; } .vadd .input { padding: 7px 9px; font-size: 13px; min-width: 0; }
   .kinst { display: grid; gap: 10px; }
   .kirow { display: grid; gap: 4px; }
   .kirow .kn { font-size: 12.5px; color: var(--text-2); font-weight: 600; }
@@ -344,7 +351,7 @@
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.26.0';
+const APP_VERSION = 'v0.31.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -383,6 +390,10 @@ const I = {
   accessories:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v4M15 3v4"/><rect x="7" y="7" width="10" height="6" rx="1.5"/><path d="M12 13v3a4 4 0 0 1-4 4H5"/></svg>',
   artisans:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8z"/><path d="M18.5 14.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/></svg>',
   import:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>',
+  wish:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>',
+  wishlist:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>',
+  value:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>',
+  catalog:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>',
   settings:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
   star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>',
   starFill: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>',
@@ -409,7 +420,10 @@ const SECTIONS = [
   { id: 'pcbs',        title: 'PCBs',        color: 'var(--pcb)', built: true,  singular: 'PCB' },
   { id: 'accessories', title: 'Accessories', color: 'var(--ac)',  built: true,  singular: 'accessory' },
   { id: 'artisans',    title: 'Artisans',    color: 'var(--ar)',  built: true,  singular: 'artisan' },
+  { id: 'wishlist',    title: 'Wishlist',    color: '#f472b6', built: true },
   { group: 'TOOLS' },
+  { id: 'value',       title: 'Value',       color: '#34d399', built: true },
+  { id: 'catalog',     title: 'Catalog',     color: 'var(--text-3)', built: true },
   { id: 'import',      title: 'Import',      color: 'var(--text-3)', built: true },
   { id: 'settings',    title: 'Settings',    color: 'var(--text-3)', built: true }
 ];
@@ -447,8 +461,11 @@ function startKeyboardListener() {
 }
 function refreshIfShowing() {
   const id = (location.hash.replace(/^#\/?/, '').split('/')[0]) || 'dashboard';
+  if (formDirty && editing && VALUE_TYPES.includes(id)) { const cur = itemsOfType(id).find(x => x.id === editing.id); if (cur && swapValueCardIfOnly(id, cur)) return; }
   if (id === 'dashboard') route();
   else if (id === 'import') { drawImportPreview(); drawReconcile(); }
+  else if (id === 'catalog') drawCatalog();
+  else if (id === 'value') renderValue();
   else if (id === 'switches' && document.getElementById('swResults')) drawSwitchResults();
   else if (id === 'keycaps' && document.getElementById('kcResults')) drawKeycapResults();
   else if (PART_TYPES[id] && document.getElementById('ptResults')) drawPartResults(id);
@@ -504,6 +521,9 @@ function route() {
   }
   else if (sec.id === 'settings') renderSettings();
   else if (sec.id === 'import') renderImport();
+  else if (sec.id === 'catalog') renderCatalog();
+  else if (sec.id === 'value') renderValue();
+  else if (sec.id === 'wishlist') renderWishlist();
   else view.innerHTML = comingLaterHtml(sec);
   if (currentView !== location.hash) window.scrollTo(0, 0);
   currentView = location.hash;
@@ -577,6 +597,26 @@ function refreshDashMeta() {
   importMetaRef().get().then(snap => { const m = snap.exists ? snap.data() : {}; const changed = JSON.stringify(m) !== JSON.stringify(dashMeta); dashMeta = m;
     const c = document.getElementById('spendCard'); if (changed && c) { c.outerHTML = spendCardHtml(); } }).catch(() => {});
 }
+/* Step 7.2: board status. "Built" = switches and keycaps installed; "Partly built" = one of them; "Empty" = neither.
+   The Status field (Built, In progress, Sold…) from each keyboard's form is shown separately. */
+function buildState(k) { const sw = switchesOn(k.id).length > 0, kc = kitsOn(k.id).length > 0; return sw && kc ? 'built' : sw || kc ? 'partly' : 'empty'; }
+function boardStatusCardHtml(kbs) {
+  const real = kbs.filter(k => !k.isSample);
+  const st = { built: 0, partly: 0, empty: 0 }; real.forEach(k => st[buildState(k)]++);
+  const statusField = {}; real.forEach(k => { const v = k.status || 'Not set'; statusField[v] = (statusField[v] || 0) + 1; });
+  const n = Math.max(1, real.length);
+  const bar = (label, v, color, href = '') => `<div class="bar" style="--c:${color}"><span>${href ? `<a class="lnk" href="${href}">${label}</a>` : label}</span><span class="track"><span class="fill" style="width:${v / n * 100}%"></span></span><span class="n">${v}</span></div>`;
+  return `<div class="card" id="boardStatus"><h3>Board status</h3><p class="sub">From what is installed on each keyboard.</p>
+    <div class="bars">${bar('Built (switches + keycaps)', st.built, '#34d399')}${bar('Partly built', st.partly, '#fbbf24')}${bar('Nothing installed', st.empty, 'var(--text-3)')}</div>
+    <p class="sub" style="margin:14px 0 6px">Status field on the keyboard form</p>
+    <div class="chips">${Object.entries(statusField).sort((a, b) => b[1] - a[1]).map(([v, c]) => `<span class="chip">${esc(v)} · ${c}</span>`).join(' ')}</div></div>`;
+}
+function latestHtml(kbs, sws, kcs) {
+  const pick = (list, f) => list.slice().sort((a, b) => String(f(b) || '').localeCompare(String(f(a) || '')))[0];
+  const items = [['keyboards', pick(kbs.filter(k => !k.isSample), sortDate)], ['keycaps', pick(kcs.filter(s => kitsOf(s).some(k => k.datePurchased)), s => kitsOf(s).map(k => k.datePurchased || '').sort().pop())], ['switches', pick(sws, sortDate)]].filter(x => x[1]);
+  if (!items.length) return '<p class="sub" style="margin:0">Nothing yet.</p>';
+  return `<div class="recent">${items.map(([t, x]) => `<a href="#/${t}/${esc(x.id)}" style="--c:${SEC[t].color}"><span class="th">${x.coverThumb ? `<img src="${x.coverThumb}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px">` : I[t]}</span><div><b>${esc(x.name)}</b><span>${esc(SEC[t].title)} · ${esc(fmtDate(t === 'keycaps' ? kitsOf(x).map(k => k.datePurchased || '').sort().pop() : x.datePurchased) || 'no date')}</span></div></a>`).join('')}</div>`;
+}
 function dashboardHtml() {
   const kbs = allKeyboards(), sws = savedSwitches, kcs = savedKeycaps, pts = PART_IDS.flatMap(t => savedParts[t].map(x => Object.assign({ _t: t }, x)));
   const sizes = {}; kbs.forEach(k => { sizes[k.size || 'Unknown'] = (sizes[k.size || 'Unknown'] || 0) + 1; });
@@ -598,6 +638,9 @@ function dashboardHtml() {
       <button class="btn eye" id="spendEye" aria-label="${spendHidden ? 'Show' : 'Hide'} amount">${I.eye}</button></div>
     <a class="card tile" href="#/keyboards" style="--c:#34d399"><span class="ic">${I.pulse}</span><div><div class="lbl">Boards in use</div><div class="big">${kbs.filter(k => switchesOn(k.id).length || kitsOn(k.id).length || partsOn(k.id).length).length}</div><div class="hint ${kbs.some(k => switchesOn(k.id).length || kitsOn(k.id).length || partsOn(k.id).length) ? 'good' : ''}">With switches, keycaps or parts installed${kbs.length ? ` · of ${kbs.length}` : ''}</div></div></a>
     <a class="card tile" href="#/keycaps" style="--c:var(--kc)"><span class="ic">${I.keycaps}</span><div><div class="lbl">Unallocated kits</div><div class="big">${unallocatedKits().length}</div><div class="hint">Not installed on a board${kcs.length ? ` · of ${kcs.reduce((n, s) => n + kitsOf(s).length, 0)} kits` : ''}</div></div></a>
+    ${(() => { const r = VALUE_TYPES.flatMap(t => itemsOfType(t).filter(x => !x.isSample && currentValue(x)).map(x => ({ p: paidFor(t, x), v: currentValue(x).value })));
+      const p = r.reduce((s, x) => s + x.p, 0), v = r.reduce((s, x) => s + x.v, 0);
+      return `<a class="card tile" href="#/value" style="--c:#34d399"><span class="ic">${I.value}</span><div><div class="lbl">Market value</div><div class="big ${spendHidden ? 'blur' : ''}">${r.length ? money(v) : '—'}</div><div class="hint">${r.length ? `${deltaHtml(p, v)} on ${r.length} valued item${r.length === 1 ? '' : 's'}` : 'Add values on item pages'}</div></div></a>`; })()}
     <a class="card tile" href="#/switches" style="--c:var(--sw)"><span class="ic">${I.switches}</span><div><div class="lbl">Loose switches</div><div class="big">${sws.reduce((s, w) => s + (looseCount(w) || 0), 0).toLocaleString()}</div><div class="hint">Not installed on a board${sws.some(w => w.totalCount == null) ? ` · ${sws.filter(w => w.totalCount == null).length} entries have no count` : ''}</div></div></a>
   </div>
   ${spendCardHtml()}
@@ -611,6 +654,10 @@ function dashboardHtml() {
 </div>
   <div class="card" style="margin-top:16px"><div class="sec-title"><h3>Recent items</h3><span class="sub" style="margin:0">Latest 5 by purchase date (or date added)</span></div>
     <div class="recent" style="margin-top:10px">${recent.map(k => `<a href="#/${k._t}/${esc(k.id)}" style="--c:${SEC[k._t] ? SEC[k._t].color : 'var(--kb)'}"><span class="th">${k.coverThumb ? `<img src="${k.coverThumb}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px">` : I[k._t]}</span><div><b>${esc(k.name)}</b><span>${esc(k.brand || k.manufacturer || '')}</span></div></a>`).join('')}</div></div>
+  <div class="two" style="margin-top:16px">
+    ${boardStatusCardHtml(kbs)}
+    <div class="card"><h3>Latest in your vault</h3><p class="sub">Newest keyboard, keycap set and switches by purchase date.</p>${latestHtml(kbs, sws, kcs)}</div>
+  </div>
   <div class="two" style="margin-top:16px">
     <div class="card"><h3>Keyboard sizes</h3><p class="sub">Distribution of keyboards by size.</p><div class="bars">${Object.entries(sizes).sort((a, b) => b[1] - a[1]).map(([s, n]) => `<div class="bar"><span>${esc(s)}</span><span class="track"><span class="fill" style="width:${n / maxSize * 100}%"></span></span><span class="n">${n}</span></div>`).join('')}</div></div>
     <div class="card"><h3>Inventory mix</h3><p class="sub">Items by category.</p><div class="bars">${mix.map(m => `<div class="bar" style="--c:${m.s.color}"><span>${m.s.title}</span><span class="track"><span class="fill" style="width:${m.n / total * 100}%"></span></span><span class="n">${m.n} · ${(m.n / total * 100).toFixed(0)}%</span></div>`).join('')}</div></div>
@@ -848,7 +895,7 @@ ${purchasePanelHtml(savedKeyboards)}
       </div>
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
-        ${k ? photoCardHtml(k) + switchesOnKeyboardCardHtml(k) + keycapsOnKeyboardCardHtml(k) + partsOnKeyboardCardHtml(k) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the keyboard first, then drop photos on its page.</p></div>'}
+        ${k ? valueCardHtml('keyboards', k) + photoCardHtml(k) + switchesOnKeyboardCardHtml(k) + keycapsOnKeyboardCardHtml(k) + partsOnKeyboardCardHtml(k) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the keyboard first, then drop photos on its page.</p></div>'}
         <div class="card side-card stack">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${k ? 'Save changes' : 'Save keyboard'}</button>
           <button class="btn" id="btnCancel">${k ? 'Discard changes' : 'Cancel'}</button>
@@ -879,7 +926,7 @@ ${purchasePanelHtml(savedKeyboards)}
   formEl.addEventListener('input', e => { onEdit(e); if (e.target.name && document.querySelector(`.fld.bad[data-for="${e.target.name}"]`)) clearFieldError(e.target.name); });
   formEl.addEventListener('change', onEdit);
   if (k) {
-    fillKeyboardForm(k); setEditState(false); wirePhotos(k); wireSwitchesOnKeyboard(k); wireKeycapsOnKeyboard(k);
+    fillKeyboardForm(k); setEditState(false); wirePhotos(k); wireValueCard('keyboards', k); wireSwitchesOnKeyboard(k); wireKeycapsOnKeyboard(k); wirePartsOnKeyboard(k);
     document.getElementById('btnCancel').onclick = () => { formDirty = false; renderKeyboardForm(savedKeyboards.find(x => x.id === k.id) || k); toast('Changes discarded'); };
     document.getElementById('btnDelete').onclick = async () => {
       if (!confirm(`Delete "${k.name}" and its photos? This cannot be undone.`)) return;
@@ -980,7 +1027,7 @@ let draftTimer = null;
 function scheduleDraftSave() {
   clearTimeout(draftTimer);
   draftTimer = setTimeout(() => {
-    if (!document.getElementById('f_name')) return;
+    if (!document.getElementById('f_name') || !document.getElementById('draftHint')) return;   // left the Add keyboard form
     const st = formState();
     if (hasContent(st)) { if (lsSet(DRAFT_KEY, st)) document.getElementById('draftHint').textContent = 'Draft saved on this device at ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
     else { lsDel(DRAFT_KEY); document.getElementById('draftHint').textContent = ''; }
@@ -1016,8 +1063,8 @@ function showFieldError(name, msg, focus = true) {
   const f = document.querySelector(`.fld[data-for="${name}"]`);
   f.classList.add('bad'); if (!f.querySelector('.msg')) f.insertAdjacentHTML('beforeend', `<div class="msg">${esc(msg)}</div>`);
   const tab = tabOf(name);
-  document.getElementById(tab === 'purchase' ? 'errPurchase' : 'errOverview').textContent = '· contains errors';
-  if (focus) { document.querySelector(`.tabs [data-tab="${tab}"]`).click(); document.getElementById('f_' + name).focus(); }
+  const err = document.getElementById(tab === 'purchase' ? 'errPurchase' : 'errOverview'); if (err) err.textContent = '· contains errors';   // pages without tabs (wishlist) have no tab marker
+  if (focus) { document.querySelector(`.tabs [data-tab="${tab}"]`)?.click(); (document.getElementById('f_' + name) || document.getElementById(name))?.focus(); }
 }
 function readKeyboardForm() {
   const v = n => (document.getElementById('f_' + n)?.value || '').trim();
@@ -1447,7 +1494,7 @@ function renderSwitchForm(w = null) {
       </div>
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
-        ${w ? photoCardHtml(w, 'switches') + installedOnCardHtml(w) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save first, then drop photos on its page.</p></div><div class="card side-card"><h3>Installed on</h3><p class="sub" style="margin:0">Save first, then install these switches on your keyboards.</p></div>'}
+        ${w ? valueCardHtml('switches', w) + photoCardHtml(w, 'switches') + installedOnCardHtml(w) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save first, then drop photos on its page.</p></div><div class="card side-card"><h3>Installed on</h3><p class="sub" style="margin:0">Save first, then install these switches on your keyboards.</p></div>'}
         <div class="card side-card stack">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${w ? 'Save changes' : 'Save switches'}</button>
           ${w ? '<button class="btn" id="btnCancel">Discard changes</button>' : '<a class="btn" href="#/switches" id="btnCancelNew">Cancel</a>'}
@@ -1475,7 +1522,7 @@ function renderSwitchForm(w = null) {
   document.getElementById('taxQuick').onclick = e => { const b = e.target.closest('[data-tax]'); if (!b) return; const t = document.getElementById('f_taxRatePct'); t.value = b.dataset.tax; t.dispatchEvent(new Event('input', { bubbles: true })); };
   document.getElementById('btnSave').onclick = saveSwitch;
   if (w) {
-    fillSwitchForm(w); setEditState(false); wirePhotos(w, 'switches'); wireInstalledOn(w);
+    fillSwitchForm(w); setEditState(false); wirePhotos(w, 'switches'); wireValueCard('switches', w); wireInstalledOn(w);
     document.getElementById('btnCancel').onclick = () => { formDirty = false; renderSwitchForm(savedSwitches.find(x => x.id === w.id) || w); toast('Changes discarded'); };
     document.getElementById('btnDelete').onclick = async () => {
       if (!confirm(`Delete "${w.name}"? This cannot be undone.`)) return;
@@ -1725,7 +1772,7 @@ function renderKeycapForm(s = null) {
       </div>
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
-        ${s ? photoCardHtml(s, 'keycaps') : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the set first, then drop photos on its page.</p></div>'}
+        ${s ? valueCardHtml('keycaps', s) + photoCardHtml(s, 'keycaps') : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the set first, then drop photos on its page.</p></div>'}
         ${s ? kitInstallCardHtml(s) : '<div class="card side-card"><h3>Installed on</h3><p class="sub" style="margin:0">Save the set first, then install its kits on your keyboards.</p></div>'}
         <div class="card side-card stack">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${s ? 'Save changes' : 'Save keycap set'}</button>
@@ -1794,7 +1841,7 @@ function renderKeycapForm(s = null) {
     Object.entries(st.fields).forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.value = val; });
     document.getElementById('f_isFavorite').checked = st.fav;
     if (['designer', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText'].some(n => s[n])) document.getElementById('moreDetails').open = true;
-    setEditState(false); wirePhotos(s, 'keycaps'); wireKitInstall(s);
+    setEditState(false); wirePhotos(s, 'keycaps'); wireValueCard('keycaps', s); wireKitInstall(s);
     document.getElementById('btnCancel').onclick = () => { formDirty = false; renderKeycapForm(savedKeycaps.find(x => x.id === s.id) || s); toast('Changes discarded'); };
     document.getElementById('btnDelete').onclick = async () => {
       if (!confirm(`Delete "${s.name}" with all its kits and photos? This cannot be undone.`)) return;
@@ -2096,10 +2143,11 @@ function startPartListeners() {
     savedParts[t] = snap.docs.map(d => Object.assign({}, d.data(), { id: d.id, createdIso: isoFromTs(d.data().createdAt) }));
     partsLoaded[t] = true;
     const c = document.getElementById('kbPartsCard'), k = editing && savedKeyboards.find(x => x.id === editing.id);
-    if (c && k && location.hash.startsWith('#/keyboards/')) { c.outerHTML = partsOnKeyboardCardHtml(k); return; }
+    if (c && k && location.hash.startsWith('#/keyboards/')) { c.outerHTML = partsOnKeyboardCardHtml(k); wirePartsOnKeyboard(k); return; }
     if (location.hash.startsWith('#/' + t + '/') && document.getElementById('ptDetailFor')) {
       const cur = savedParts[t].find(x => x.id === editing?.id), card = document.getElementById('ptInstCard');
-      if (formDirty && cur && card) { card.outerHTML = partInstallCardHtml(t, cur); wirePartInstall(t, cur); }
+      if (formDirty && cur && swapValueCardIfOnly(t, cur)) {}
+      else if (formDirty && cur && card) { card.outerHTML = partInstallCardHtml(t, cur); wirePartInstall(t, cur); }
       else if (formDirty) toast('This item changed on another device. Save or discard to see it.'); else route();
       return;
     }
@@ -2178,9 +2226,20 @@ function partsOnKeyboardCardHtml(k) {
   const on = partsOn(k.id);
   if (!PART_IDS.length) return '';
   return `<div class="card side-card" id="kbPartsCard"><h3>Other parts</h3>
-    ${on.length ? `<div class="alist">${on.map(({ t, x }) => `<div class="arow" style="grid-template-columns:1fr auto"><a class="lnk" href="#/${t}/${esc(x.id)}">${esc(x.name)}</a><span class="chip">${esc(PART_TYPES[t].singular)}</span></div>`).join('')}</div>`
-      : `<p class="sub" style="margin:0">None yet. Link a ${PART_IDS.map(t => PART_TYPES[t].singular).join(', ')} from its own page.</p>`}
+    ${on.length ? `<div class="alist">${on.map(({ t, x }) => `<div class="arow" style="grid-template-columns:1fr auto auto"><a class="lnk" href="#/${t}/${esc(x.id)}">${esc(x.name)}</a><span class="chip">${esc(PART_TYPES[t].singular)}</span><button class="btn" data-ptun="${t}|${esc(x.id)}" aria-label="Remove">✕</button></div>`).join('')}</div>`
+      : '<p class="sub" style="margin:0 0 10px">None yet.</p>'}
+    ${(() => { const free = PART_IDS.flatMap(t => savedParts[t].filter(x => !x.installedOn).map(x => ({ t, x }))).sort((a, b) => a.x.name.localeCompare(b.x.name));
+      return free.length ? `<div class="aadd" style="grid-template-columns:1fr auto"><select class="select" id="kbPtPick"><option value="">Add a PCB, artisan or accessory…</option>${PART_IDS.map(t => `<optgroup label="${PART_TYPES[t].title}">${free.filter(f => f.t === t).map(f => `<option value="${t}|${esc(f.x.id)}">${esc(f.x.name)}</option>`).join('')}</optgroup>`).join('')}</select><button class="btn primary" id="kbPtAdd">Add</button></div>` : ''; })()}
   </div>`;
+}
+function wirePartsOnKeyboard(k) {
+  const card = document.getElementById('kbPartsCard'); if (!card) return;
+  card.onclick = async e => {
+    const rm = e.target.closest('[data-ptun]');
+    const set = async (t, id, kb) => { try { await withTimeout(partCol(t).doc(id).update({ installedOn: kb || firebase.firestore.FieldValue.delete(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); toast(kb ? 'Added to this keyboard' : 'Removed'); } catch (err) { toast('Could not update: ' + explain(err)); } };
+    if (rm) { const [t, id] = rm.dataset.ptun.split('|'); set(t, id, ''); return; }
+    if (e.target.id === 'kbPtAdd') { const v = document.getElementById('kbPtPick').value; if (!v) return; const [t, id] = v.split('|'); set(t, id, k.id); }
+  };
 }
 async function removeKeyboardFromParts(kbId) {
   for (const { t, x } of partsOn(kbId)) await withTimeout(partCol(t).doc(x.id).update({ installedOn: firebase.firestore.FieldValue.delete() }));
@@ -2223,7 +2282,7 @@ ${purchasePanelHtml(all)}
       </div>
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
-        ${x ? photoCardHtml(x, t) + partInstallCardHtml(t, x) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save first, then drop photos on its page.</p></div>'}
+        ${x ? valueCardHtml(t, x) + photoCardHtml(x, t) + partInstallCardHtml(t, x) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save first, then drop photos on its page.</p></div>'}
         <div class="card side-card stack">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${x ? 'Save changes' : 'Save ' + P.singular}</button>
           ${x ? '<button class="btn" id="btnCancel">Discard changes</button>' : `<a class="btn" href="#/${t}">Cancel</a>`}
@@ -2256,7 +2315,7 @@ ${purchasePanelHtml(all)}
     applyState(st);
     P.checks.forEach(([n]) => { document.getElementById('f_' + n).checked = !!x[n]; });
     if (more.some(f => x[f[0]]) || P.checks.some(([n]) => x[n])) document.getElementById('moreDetails').open = true;
-    setEditState(false); wirePhotos(x, t); wirePartInstall(t, x);
+    setEditState(false); wirePhotos(x, t); wireValueCard(t, x); wirePartInstall(t, x);
     document.getElementById('btnCancel').onclick = () => { formDirty = false; renderPartForm(t, savedParts[t].find(y => y.id === x.id) || x); toast('Changes discarded'); };
     document.getElementById('btnDelete').onclick = async () => {
       if (!confirm(`Delete "${x.name}" and its photos? This cannot be undone.`)) return;
@@ -2310,6 +2369,279 @@ async function savePart(t) {
   } catch (e) { errBox.style.display = 'block'; errBox.textContent = 'Could not save: ' + explain(e) + ' Your entries are still here; try again.'; btn.disabled = false; btn.textContent = 'Save ' + P.singular; }
 }
 
+/* ===================== Step 8.1: Your own catalog, built from your records =====================
+   Nothing is stored: it is worked out from what you own, so it grows each time you add or import something.
+   The private GMK reference catalog (Step 8.0) will be added beside it later. */
+function buildCatalog() {
+  const key = s => String(s || '').trim().toLowerCase(), add = (m, k, make) => { if (!k) return; if (!m.has(k)) m.set(k, make()); return m.get(k); };
+  const kb = new Map(), sw = new Map(), kc = new Map(), makers = new Map(), designers = new Map();
+  const maker = (name, type) => { const r = add(makers, key(name), () => ({ name: String(name).trim(), types: {} })); if (r) r.types[type] = (r.types[type] || 0) + 1; };
+  savedKeyboards.forEach(k => { const r = add(kb, key(k.brand + ' ' + k.name), () => ({ brand: k.brand || '', name: k.name, sizes: new Set(), colors: new Set(), n: 0 })); r.n++; k.size && r.sizes.add(k.size); k.color && r.colors.add(k.color); maker(k.brand, 'Keyboards'); });
+  savedSwitches.forEach(w => { const r = add(sw, key(w.manufacturer + ' ' + w.name), () => ({ maker: w.manufacturer || '', name: w.name, type: w.switchType || '', specs: {}, n: 0, pcs: 0 })); r.n++; r.pcs += Number(w.totalCount) || 0;
+    SW_SPEC_FIELDS.forEach(([f]) => { if (w[f] && !r.specs[f]) r.specs[f] = w[f]; }); if (!r.type && w.switchType) r.type = w.switchType; maker(w.manufacturer, 'Switches'); });
+  savedKeycaps.forEach(s => { const r = add(kc, key(s.name), () => ({ name: s.name, platform: s.manufacturer || '', designer: s.designer || '', profile: s.profile || '', kits: new Set(), palette: paletteOf(s), n: 0 })); r.n++;
+    kitsOf(s).forEach(k => r.kits.add(k.name)); maker(s.manufacturer, 'Keycaps'); if (s.designer) { const d = add(designers, key(s.designer), () => ({ name: s.designer.trim(), sets: 0 })); d.sets++; } });
+  PART_IDS.forEach(t => savedParts[t].forEach(x => x.manufacturer && maker(x.manufacturer, PART_TYPES[t].title)));
+  const sort = (m, f) => [...m.values()].sort((a, b) => f(a).localeCompare(f(b), 'en', { sensitivity: 'base' }));
+  return { keyboards: sort(kb, r => r.brand + ' ' + r.name), switches: sort(sw, r => r.maker + ' ' + r.name), keycaps: sort(kc, r => r.name), makers: sort(makers, r => r.name), designers: sort(designers, r => r.name) };
+}
+let catTab = 'keycaps', catQuery = '';
+function renderCatalog() {
+  document.getElementById('view').innerHTML = `
+    <div class="pagehead"><div><h1>Catalog</h1><p>Everything you have owned, grouped by model. Built from your records, so it grows as you add things; forms use it for suggestions.</p></div></div>
+    <div class="tabs" role="tablist" id="catTabs">${[['keycaps', 'Keycap sets'], ['switches', 'Switches'], ['keyboards', 'Keyboards'], ['makers', 'Makers & brands'], ['designers', 'Designers']].map(([v, t]) => `<button data-cat="${v}" class="${v === catTab ? 'on' : ''}">${t} <span id="catN_${v}" style="color:var(--text-3)"></span></button>`).join('')}</div>
+    <div class="tools" style="margin:14px 0 16px"><label class="search">${I.search}<input class="input" id="catSearch" placeholder="Search the catalog" value="${esc(catQuery)}"></label></div>
+    <div id="catResults"></div>
+    <p class="sub" style="margin-top:14px">The private GMK reference catalog (531 sets, data by Matrix) is added in Step 8.0 after sign-in is set up.</p>`;
+  document.getElementById('catTabs').onclick = e => { const b = e.target.closest('[data-cat]'); if (!b) return; catTab = b.dataset.cat; renderCatalog(); };
+  document.getElementById('catSearch').oninput = e => { catQuery = e.target.value; drawCatalog(); };
+  drawCatalog();
+}
+function drawCatalog() {
+  const box = document.getElementById('catResults'); if (!box) return;
+  const c = buildCatalog(), q = catQuery.trim().toLowerCase();
+  Object.keys(c).forEach(k => { const el = document.getElementById('catN_' + k); if (el) el.textContent = c[k].length; });
+  const hit = (...v) => !q || q.split(/\s+/).every(w => v.join(' ').toLowerCase().includes(w));
+  const link = (t, text) => `<a class="lnk" href="#/${t}" onclick="${t === 'keycaps' ? 'kcQuery' : t === 'switches' ? 'swQuery' : 'kbQuery'}=${esc(JSON.stringify(text))}">${esc(text)}</a>`;
+  const table = (head, rows) => rows.length ? `<table class="list"><thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>` : `<div class="card empty"><h2>No matches</h2></div>`;
+  const tr = cells => `<tr>${cells.map(x => `<td>${x}</td>`).join('')}</tr>`;
+  if (catTab === 'keycaps') box.innerHTML = table(['Set', 'Platform', 'Designer', 'Profile', 'Kits you have owned', 'Colors'], c.keycaps.filter(r => hit(r.name, r.platform, r.designer, r.profile, [...r.kits].join(' '))).map(r =>
+    tr([`<b>${link('keycaps', r.name)}</b>`, esc(r.platform), esc(r.designer), esc(r.profile), esc([...r.kits].join(', ')), paletteStripHtml({ palette: r.palette }) || '<span style="color:var(--text-3)">—</span>'])));
+  else if (catTab === 'switches') box.innerHTML = table(['Switch', 'Maker', 'Type', 'Key specs', 'Entries · pieces'], c.switches.filter(r => hit(r.name, r.maker, r.type, Object.values(r.specs).join(' '))).map(r =>
+    tr([`<b>${link('switches', r.name)}</b>`, esc(r.maker), esc(r.type), esc([r.specs.springWeight || r.specs.actuationForce || r.specs.bottomOutForce, r.specs.stemMaterial && r.specs.stemMaterial + ' stem', r.specs.topMaterial && r.specs.topMaterial + ' top'].filter(Boolean).join(' · ')), `${r.n} · ${r.pcs.toLocaleString()}`])));
+  else if (catTab === 'keyboards') box.innerHTML = table(['Keyboard', 'Brand', 'Sizes', 'Colors you have owned', 'Owned'], c.keyboards.filter(r => hit(r.brand, r.name, [...r.colors].join(' '))).map(r =>
+    tr([`<b>${link('keyboards', r.name)}</b>`, esc(r.brand), esc([...r.sizes].join(', ')), esc([...r.colors].join(', ')), r.n])));
+  else if (catTab === 'makers') box.innerHTML = table(['Maker or brand', 'What you have from them'], c.makers.filter(r => hit(r.name)).map(r =>
+    tr([`<b>${esc(r.name)}</b>`, Object.entries(r.types).map(([t, n]) => `<span class="chip">${esc(t)} · ${n}</span>`).join(' ')])));
+  else box.innerHTML = table(['Designer', 'Keycap sets'], c.designers.filter(r => hit(r.name)).map(r => tr([`<b>${esc(r.name)}</b>`, r.sets])));
+}
+
+/* ===================== Step 8.2: Autocomplete fed by your catalog =====================
+   After two letters a list of matches opens under the field. Picking a known model also fills
+   related fields that are still empty (it never overwrites what you typed). */
+function acSources(page) {
+  const c = buildCatalog(), uniqBy = (arr, f) => { const seen = new Set(); return arr.filter(x => { const k = f(x).toLowerCase(); if (!k || seen.has(k)) return false; seen.add(k); return true; }); };
+  const makers = types => c.makers.filter(m => !types || types.some(t => m.types[t])).map(m => ({ value: m.name, sub: Object.keys(m.types).join(', ') }));
+  if (page === 'keyboards') return {
+    brand: makers(['Keyboards']).concat(PRELOADED_BRANDS.map(b => ({ value: b, sub: 'Brand list' }))),
+    name: c.keyboards.map(r => ({ value: r.name, sub: [r.brand, [...r.sizes].join('/')].filter(Boolean).join(' · '), fill: { brand: r.brand, size: [...r.sizes][0] } })),
+    manufacturer: makers(), designer: c.designers.map(d => ({ value: d.name, sub: d.sets + ' keycap sets' })) };
+  if (page === 'switches') return {
+    manufacturer: makers(['Switches']).concat(PRELOADED_SW_MAKERS.map(b => ({ value: b, sub: 'Maker list' }))),
+    name: c.switches.map(r => ({ value: r.name, sub: [r.maker, r.type].filter(Boolean).join(' · '), fill: Object.assign({ manufacturer: r.maker, switchType: r.type }, r.specs) })) };
+  if (page === 'keycaps') return {
+    manufacturer: makers(['Keycaps']).concat(PRELOADED_KC_MAKERS.map(b => ({ value: b, sub: 'Maker list' }))),
+    name: c.keycaps.map(r => ({ value: r.name, sub: [r.platform, r.designer, r.profile].filter(Boolean).join(' · '), fill: { manufacturer: r.platform, designer: r.designer, profile: r.profile } })),
+    designer: c.designers.map(d => ({ value: d.name, sub: d.sets + ' keycap sets' })) };
+  if (PART_TYPES[page]) return {
+    manufacturer: makers().concat(PART_TYPES[page].makers.map(b => ({ value: b, sub: 'Maker list' }))),
+    name: uniqBy(savedParts[page].map(x => ({ value: x.name, sub: PART_TYPES[page].sub(x), fill: { manufacturer: x.manufacturer, category: x.category } })), x => x.value) };
+  return {};
+}
+let acBox = null;
+function closeAc() { if (acBox) { acBox.remove(); acBox = null; } }
+function attachAutocomplete(input, getList) {
+  if (input.dataset.ac) return; input.dataset.ac = '1'; input.removeAttribute('list'); input.setAttribute('autocomplete', 'off');
+  let items = [], active = -1;
+  const pick = it => {
+    input.value = it.value; input.dispatchEvent(new Event('input', { bubbles: true }));
+    const filled = [];
+    Object.entries(it.fill || {}).forEach(([f, v]) => { const el = document.getElementById('f_' + f); if (!el || !v || el.value.trim()) return;
+      if (el.tagName === 'SELECT' && ![...el.options].some(o => o.value === v)) el.add(new Option(v, v));
+      el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); filled.push(f); });
+    if (filled.length) toast(`Filled ${filled.length} empty field${filled.length === 1 ? '' : 's'} from your catalog`);
+    closeAc();
+  };
+  const draw = () => {
+    const q = input.value.trim().toLowerCase(); closeAc(); active = -1;
+    if (q.length < 2 || document.activeElement !== input) return;
+    const seen = new Set();
+    items = getList().filter(it => { const v = it.value.toLowerCase(); if (seen.has(v) || !v.includes(q) || v === q) return false; seen.add(v); return true; })
+      .sort((a, b) => (b.value.toLowerCase().startsWith(q) - a.value.toLowerCase().startsWith(q)) || a.value.localeCompare(b.value)).slice(0, 8);
+    if (!items.length) return;
+    acBox = document.createElement('div'); acBox._owner = input; acBox.className = 'acbox'; acBox.setAttribute('role', 'listbox');
+    acBox.innerHTML = items.map((it, i) => `<div class="acitem" role="option" data-i="${i}"><b>${esc(it.value)}</b>${it.sub ? `<span>${esc(it.sub)}</span>` : ''}</div>`).join('');
+    const r = input.getBoundingClientRect();
+    Object.assign(acBox.style, { left: r.left + window.scrollX + 'px', top: r.bottom + window.scrollY + 4 + 'px', width: Math.max(r.width, 260) + 'px' });
+    acBox.onmousedown = e => { e.preventDefault(); const el = e.target.closest('[data-i]'); if (el) pick(items[+el.dataset.i]); };
+    document.body.appendChild(acBox);
+  };
+  const mark = () => acBox && acBox.querySelectorAll('.acitem').forEach((el, i) => el.classList.toggle('on', i === active));
+  input.addEventListener('input', e => { if (e.isTrusted) draw(); });
+  input.addEventListener('keydown', e => {
+    if (!acBox) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(items.length - 1, active + 1); mark(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(0, active - 1); mark(); }
+    else if (e.key === 'Enter' && active >= 0) { e.preventDefault(); pick(items[active]); }
+    else if (e.key === 'Escape') closeAc();
+  });
+  input.addEventListener('blur', () => setTimeout(() => { if (acBox && acBox._owner === input && document.activeElement !== input) closeAc(); }, 120));
+}
+function wireAutocomplete() {
+  const page = (location.hash.replace(/^#\/?/, '').split('/')[0]) || '';
+  if (!document.querySelector('#view .form-grid')) return;
+  const src = acSources(page);
+  Object.keys(src).forEach(f => { const el = document.getElementById('f_' + f); if (el && el.tagName === 'INPUT') attachAutocomplete(el, () => acSources(page)[f] || []); });
+}
+new MutationObserver(() => { closeAc(); wireAutocomplete(); }).observe(document.getElementById('view'), { childList: true });
+
+/* ===================== Step 9.1: Wishlist =====================
+   keyboard_collection/main/wishlist/<id>: { category, name, version, platform, estPrice, priority, notes, link, status: wanted | todo | owned | bought, boughtOn }.
+   Wishlist items are not part of totals; "Bought" keeps the row for history. */
+const WISH_STATUS = [['wanted', 'Wanted'], ['todo', 'To-do'], ['owned', 'Owned, needs price'], ['bought', 'Bought']];
+const WISH_PRIO = ['High', 'Medium', 'Low'];
+const WISH_CATS = ['Keycaps', 'Keyboards', 'Switches', 'PCBs', 'Artisans', 'Accessories'];
+let savedWish = [], wishLoaded = false, wishFilter = 'open', wishEdit = null;
+function wishCol() { return db.collection(FIRESTORE_COLLECTION).doc(ROOT_DOC).collection('wishlist'); }
+function startWishListener() {
+  if (!db || isFile) return;
+  wishCol().onSnapshot(snap => { savedWish = snap.docs.map(d => Object.assign({}, d.data(), { id: d.id, createdIso: isoFromTs(d.data().createdAt) })); wishLoaded = true;
+    if (document.getElementById('wishTable') && !document.querySelector('#wishForm.dirty')) drawWishlist(); else if (!location.hash.startsWith('#/wishlist')) refreshIfShowing(); },
+    err => toast('Could not load the wishlist: ' + explain(err)));
+}
+function wishRank(w) { const p = WISH_PRIO.indexOf(w.priority); return { wanted: 0, todo: 10, owned: 20, bought: 30 }[w.status] + (p < 0 ? 5 : p); }   // wanted by priority, then to-do, owned, bought
+function ownedSetFor(w) { if (w.category !== 'Keycaps') return null; const n = w.name.toLowerCase(); return savedKeycaps.find(s => s.name.toLowerCase() === n) || null; }
+function renderWishlist() {
+  document.getElementById('view').innerHTML = `
+    <div class="pagehead"><div><h1>Wishlist</h1><p id="wishSum">Things to complete a set or buy next. Not counted in your totals.</p></div>
+      <div class="tools"><div class="seg" role="group" aria-label="Show" id="wishSeg">${[['open', 'Open'], ['bought', 'Bought'], ['all', 'All']].map(([v, t]) => `<button data-wf="${v}" class="${v === wishFilter ? 'on' : ''}">${t}</button>`).join('')}</div>
+      <button class="btn primary" id="wishAdd">${I.plus}Add to wishlist</button></div></div>
+    <div id="wishFormBox"></div>
+    <div id="wishTable"></div>`;
+  document.getElementById('wishSeg').onclick = e => { const b = e.target.closest('[data-wf]'); if (!b) return; wishFilter = b.dataset.wf; renderWishlist(); };
+  document.getElementById('wishAdd').onclick = () => openWishForm(null);
+  drawWishlist();
+}
+function drawWishlist() {
+  const box = document.getElementById('wishTable'); if (!box) return;
+  const open = savedWish.filter(w => w.status !== 'bought');
+  const list = savedWish.filter(w => wishFilter === 'all' || (wishFilter === 'bought' ? w.status === 'bought' : w.status !== 'bought'))
+    .sort((a, b) => wishRank(a) - wishRank(b) || a.name.localeCompare(b.name) || (a.version || '').localeCompare(b.version || ''));
+  const est = open.filter(w => w.status !== 'owned').reduce((t, w) => t + (Number(w.estPrice) || 0), 0);
+  document.getElementById('wishSum').textContent = `${open.length} open item${open.length === 1 ? '' : 's'} · about ${money(est)} to buy everything wanted` + (db && !isFile && !wishLoaded ? ' · loading…' : '');
+  if (!savedWish.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.wish}</div><h2>Your wishlist is empty</h2><p>Add something, or import your Excel Wishlist tab on the Import page.</p></div>`; return; }
+  if (!list.length) { box.innerHTML = `<div class="card empty"><h2>Nothing here</h2></div>`; return; }
+  const st = w => ({ wanted: '<span class="chip acc">Wanted</span>', todo: '<span class="chip" style="color:#fbbf24">To-do</span>', owned: '<span class="chip" style="color:#86efac">Owned, needs price</span>', bought: `<span class="chip">Bought${w.boughtOn ? ' ' + esc(fmtDate(w.boughtOn)) : ''}</span>` }[w.status] || '');
+  box.innerHTML = `<table class="list"><thead><tr><th>Item</th><th>Category</th><th>Platform</th><th>Priority</th><th style="text-align:right">Est. price</th><th>Status</th><th></th></tr></thead><tbody>${list.map(w => { const own = ownedSetFor(w);
+    return `<tr><td><b>${esc(w.name)}</b>${w.version ? ` — ${esc(w.version)}` : ''}${own ? ` <a class="chip" href="#/keycaps/${esc(own.id)}" title="You own kits of this set">You own ${kitsOf(own).length} kit${kitsOf(own).length === 1 ? '' : 's'}</a>` : ''}
+      ${w.notes ? `<div class="sub" style="margin:2px 0 0">${esc(w.notes)}</div>` : ''}</td><td>${esc(w.category || '')}</td><td>${esc(w.platform || '')}</td><td>${esc(w.priority || '')}</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">${w.estPrice != null ? money(w.estPrice) : ''}</td><td>${st(w)}</td>
+      <td style="white-space:nowrap">${w.link && /^https?:/.test(w.link) ? `<a class="btn" href="${esc(w.link)}" target="_blank" rel="noopener">Open</a> ` : ''}${w.status !== 'bought' ? `<button class="btn" data-wb="${esc(w.id)}">Bought</button> ` : ''}<button class="btn" data-we="${esc(w.id)}">Edit</button></td></tr>`; }).join('')}</tbody></table>`;
+  box.onclick = async e => {
+    const eb = e.target.closest('[data-we]'); if (eb) { openWishForm(savedWish.find(w => w.id === eb.dataset.we)); return; }
+    const bb = e.target.closest('[data-wb]'); if (!bb) return;
+    const w = savedWish.find(x => x.id === bb.dataset.wb); const today = new Date(); const iso = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    try { await withTimeout(wishCol().doc(w.id).update({ status: 'bought', boughtOn: iso, statusBefore: w.status, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }));
+      toast(`Marked bought. Add it to your ${(w.category || 'collection').toLowerCase()} when it arrives.`); } catch (err) { toast('Could not update: ' + explain(err)); }
+  };
+}
+function openWishForm(w) {
+  wishEdit = w; const box = document.getElementById('wishFormBox'), v = f => w && w[f] != null ? esc(String(w[f])) : '';
+  box.innerHTML = `<div class="card" id="wishForm" style="margin-bottom:16px"><h3 style="margin-bottom:12px">${w ? 'Edit wishlist item' : 'Add to wishlist'}</h3>
+    <div class="frm">
+      ${fld('Name', `<input class="input" id="w_name" value="${v('name')}" placeholder="e.g. GMK Tribal">`, { name: 'w_name', req: true })}
+      ${fld('Kit or version', `<input class="input" id="w_version" value="${v('version')}" placeholder="e.g. Novelties Kit">`, {})}
+      ${fld('Category', `<select class="select" id="w_category">${WISH_CATS.concat(w && w.category && !WISH_CATS.includes(w.category) ? [w.category] : []).map(c => `<option${(w ? w.category : 'Keycaps') === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select>`, {})}
+      ${fld('Platform or brand', `<input class="input" id="w_platform" value="${v('platform')}" placeholder="e.g. GMK">`, {})}
+      ${fld('Est. price ($)', `<input class="input" id="w_estPrice" type="number" min="0" step="0.01" value="${v('estPrice')}">`, { name: 'w_estPrice' })}
+      ${fld('Priority', `<select class="select" id="w_priority"><option value="">—</option>${WISH_PRIO.map(p => `<option${w && w.priority === p ? ' selected' : ''}>${p}</option>`).join('')}</select>`, {})}
+      ${fld('Status', `<select class="select" id="w_status">${WISH_STATUS.map(([s, t]) => `<option value="${s}"${(w ? w.status : 'wanted') === s ? ' selected' : ''}>${t}</option>`).join('')}</select>`, {})}
+      ${fld('Link', `<input class="input" id="w_link" value="${v('link')}" placeholder="https://…">`, {})}
+      ${fld('Notes', `<textarea class="input" id="w_notes" rows="2">${v('notes')}</textarea>`, { full: true })}
+    </div>
+    <div class="btnrow" style="margin-top:12px"><button class="btn primary" id="w_save">${w ? 'Save changes' : 'Add'}</button><button class="btn" id="w_cancel">Cancel</button>${w ? '<button class="btn danger" id="w_del" style="margin-left:auto">Delete</button>' : ''}</div></div>`;
+  const form = document.getElementById('wishForm'); form.addEventListener('input', () => form.classList.add('dirty'));
+  document.getElementById('w_name').focus();
+  document.getElementById('w_cancel').onclick = () => { box.innerHTML = ''; drawWishlist(); };
+  if (w) document.getElementById('w_del').onclick = async () => { if (!confirm(`Delete "${w.name}${w.version ? ' — ' + w.version : ''}" from the wishlist?`)) return;
+    try { await withTimeout(wishCol().doc(w.id).delete()); box.innerHTML = ''; toast('Deleted'); } catch (e) { toast('Delete failed: ' + explain(e)); } };
+  document.getElementById('w_save').onclick = async () => {
+    const g = id => document.getElementById(id).value.trim(), data = {}, del = firebase.firestore.FieldValue.delete();
+    ['name', 'version', 'category', 'platform', 'priority', 'status', 'link', 'notes'].forEach(f => { const x = g('w_' + f); if (x) data[f] = x; else if (w) data[f] = del; });
+    const p = g('w_estPrice');
+    if (!g('w_name')) { showFieldError('w_name', 'Name is required'); return; }
+    if (p !== '' && (!isFinite(Number(p)) || Number(p) < 0)) { showFieldError('w_estPrice', 'Enter an amount of 0 or more'); return; }
+    if (p !== '') data.estPrice = Math.round(Number(p) * 100) / 100; else if (w) data.estPrice = del;
+    const now = firebase.firestore.FieldValue.serverTimestamp();
+    try {
+      if (w) await withTimeout(wishCol().doc(w.id).update(Object.assign(data, { updatedAt: now })));
+      else await withTimeout(wishCol().add(Object.assign(data, { createdAt: now, updatedAt: now, source: 'app' })));
+      box.innerHTML = ''; toast(w ? 'Saved' : 'Added to wishlist'); drawWishlist();
+    } catch (e) { toast('Could not save: ' + explain(e)); }
+  };
+}
+
+/* ===================== Step 9.2: Value tracking (new; the Excel Value Tracking tab has no values yet) =====================
+   Each item keeps values: [{ id, date 'YYYY-MM-DD', value, source }]. The newest date is the current market value.
+   Paid = the item's own total (a keycap set = all its kits). */
+const VALUE_TYPES = ['keyboards', 'switches', 'keycaps', 'pcbs', 'artisans', 'accessories'];
+function valuesOf(x) { return (Array.isArray(x?.values) ? x.values : []).slice().sort((a, b) => (a.date || '').localeCompare(b.date || '')); }
+function currentValue(x) { const v = valuesOf(x); return v.length ? v[v.length - 1] : null; }
+function paidFor(t, x) { return t === 'keycaps' ? setTotal(x) : kbTotal(x); }
+function itemsOfType(t) { return t === 'keyboards' ? savedKeyboards : t === 'switches' ? savedSwitches : t === 'keycaps' ? savedKeycaps : savedParts[t] || []; }
+function colOfType(t) { return t === 'keyboards' ? kbCol() : t === 'switches' ? swCol() : t === 'keycaps' ? kcCol() : partCol(t); }
+function todayIso() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function deltaHtml(paid, value) {
+  const d = value - paid, pct = paid ? d / paid * 100 : null, col = d > 0.005 ? '#86efac' : d < -0.005 ? '#fca5a5' : 'var(--text-2)';
+  return `<span style="color:${col}">${d >= 0 ? '+' : '−'}${money(Math.abs(d))}${pct != null ? ` (${d >= 0 ? '+' : '−'}${Math.abs(pct).toFixed(1)}%)` : ''}</span>`;
+}
+function trendOf(x) { const v = valuesOf(x); if (v.length < 2) return '—'; const a = v[v.length - 2].value, b = v[v.length - 1].value; return b > a ? '↑' : b < a ? '↓' : '→'; }
+function valueCardHtml(t, x) {
+  const v = valuesOf(x), cur = currentValue(x), paid = paidFor(t, x);
+  return `<div class="card side-card" id="valueCard"><h3>Market value</h3>
+    ${cur ? `<div class="vnow"><b>${money(cur.value)}</b><span>${deltaHtml(paid, cur.value)} vs ${money(paid)} paid · ${trendOf(x)}</span></div><p class="sub" style="margin:4px 0 10px">Checked ${esc(fmtDate(cur.date))}${cur.source ? ' · ' + esc(cur.source) : ''}</p>`
+      : `<p class="sub" style="margin:0 0 10px">Not valued yet. You paid ${money(paid)}.</p>`}
+    ${v.length ? `<div class="alist">${v.slice().reverse().slice(0, 6).map(e => `<div class="arow" style="grid-template-columns:auto 1fr auto"><span class="sub" style="margin:0">${esc(fmtDate(e.date))}</span><span style="text-align:right;font-variant-numeric:tabular-nums">${money(e.value)}</span><button class="btn" data-vdel="${esc(e.id)}" aria-label="Remove this value">✕</button></div>`).join('')}${v.length > 6 ? `<p class="sub" style="margin:4px 0 0">+ ${v.length - 6} older</p>` : ''}</div>` : ''}
+    <div class="vadd"><input class="input" id="vVal" type="number" min="0" step="0.01" placeholder="Value $"><input class="input" id="vDate" type="date" value="${todayIso()}"><input class="input" id="vSrc" placeholder="Source, e.g. eBay sold listings" list="dlValSrc"><button class="btn primary" id="vAdd">Add value</button></div>
+    <datalist id="dlValSrc">${['eBay sold listings', 'r/mechmarket', 'Discord market', 'Retail price', 'Estimate'].map(o => `<option value="${o}">`).join('')}</datalist>
+    <div class="msg" id="vMsg" style="color:#fca5a5;font-size:12px;margin-top:6px"></div></div>`;
+}
+function wireValueCard(t, x) {
+  const card = document.getElementById('valueCard'); if (!card) return;
+  const write = async list => { try { await withTimeout(colOfType(t).doc(x.id).update({ values: list, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); return true; } catch (e) { toast('Could not save the value: ' + explain(e)); return false; } };
+  const latest = () => itemsOfType(t).find(y => y.id === x.id) || x;
+  card.onclick = async e => {
+    const d = e.target.closest('[data-vdel]');
+    if (d) { if (!confirm('Remove this value from the history?')) return; if (await write(valuesOf(latest()).filter(v => v.id !== d.dataset.vdel))) toast('Value removed'); return; }
+    if (e.target.id !== 'vAdd') return;
+    const val = document.getElementById('vVal').value.trim(), date = document.getElementById('vDate').value, src = document.getElementById('vSrc').value.trim(), msg = document.getElementById('vMsg');
+    if (val === '' || !isFinite(Number(val)) || Number(val) < 0) { msg.textContent = 'Enter a value of 0 or more'; return; }
+    if (!date) { msg.textContent = 'Pick the date you checked'; return; }
+    if (date > todayIso()) { msg.textContent = 'The date cannot be in the future'; return; }
+    const entry = { id: 'v' + Math.random().toString(36).slice(2, 10), date, value: Math.round(Number(val) * 100) / 100 }; if (src) entry.source = src;
+    if (await write(valuesOf(latest()).concat([entry]))) toast('Value saved');
+  };
+}
+/* while a form has unsaved typing, a value change only redraws the value card */
+function swapValueCardIfOnly(t, x) {
+  const c = document.getElementById('valueCard'); if (!c || !editing || editing.id !== x.id) return false;
+  const strip = o => JSON.stringify(Object.assign({}, o, { values: null, updatedAt: null, createdIso: null, _date: null }));
+  if (strip(editing) !== strip(x)) return false;
+  c.outerHTML = valueCardHtml(t, x); wireValueCard(t, x); editing = Object.assign({}, editing, { values: x.values }); return true;
+}
+/* Value page: everything you have valued, like the Excel Value Tracking tab */
+let valFilter = 'all';
+function renderValue() {
+  const rows = VALUE_TYPES.flatMap(t => itemsOfType(t).filter(x => !x.isSample).map(x => ({ t, x, cur: currentValue(x), paid: paidFor(t, x) })));
+  const valued = rows.filter(r => r.cur), show = (valFilter === 'all' ? valued : valFilter === 'none' ? rows.filter(r => !r.cur) : valued.filter(r => r.t === valFilter));
+  const paid = valued.reduce((s, r) => s + r.paid, 0), val = valued.reduce((s, r) => s + r.cur.value, 0);
+  document.getElementById('view').innerHTML = `
+    <div class="pagehead"><div><h1>Value</h1><p>What your collection is worth today, item by item. Add a value on any item's page; each one keeps its history.</p></div></div>
+    <div class="dash-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="card tile" style="--c:var(--kc)"><span class="ic">${I.wallet}</span><div><div class="lbl">Market value</div><div class="big">${money(val)}</div><div class="hint">${valued.length} of ${rows.length} items valued</div></div></div>
+      <div class="card tile" style="--c:var(--kb)"><span class="ic">${I.wallet}</span><div><div class="lbl">Paid for those items</div><div class="big">${money(paid)}</div><div class="hint">Price + tax + shipping − discounts</div></div></div>
+      <div class="card tile" style="--c:#34d399"><span class="ic">${I.pulse}</span><div><div class="lbl">Gain or loss</div><div class="big">${valued.length ? deltaHtml(paid, val) : '—'}</div><div class="hint">On valued items only</div></div></div>
+    </div>
+    <div class="tools" style="margin:16px 0"><div class="seg" id="valSeg">${[['all', 'All valued'], ...VALUE_TYPES.map(t => [t, SEC[t].title]), ['none', 'Not valued yet']].map(([v, l]) => `<button data-vf="${v}" class="${v === valFilter ? 'on' : ''}">${l}</button>`).join('')}</div></div>
+    ${show.length ? `<table class="list"><thead><tr><th>Item</th><th>Category</th><th style="text-align:right">Paid</th><th style="text-align:right">Value</th><th style="text-align:right">Change</th><th>Trend</th><th>Checked</th><th>Source</th></tr></thead><tbody>
+      ${show.sort((a, b) => (b.cur ? b.cur.value - b.paid : -1e9) - (a.cur ? a.cur.value - a.paid : -1e9) || a.x.name.localeCompare(b.x.name)).map(r => `<tr class="row" data-href="#/${r.t}/${esc(r.x.id)}"><td><b>${esc([r.x.brand || r.x.manufacturer, r.x.name].filter(Boolean).join(' '))}</b></td><td>${esc(SEC[r.t].title)}</td>
+        <td style="text-align:right;font-variant-numeric:tabular-nums">${money(r.paid)}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${r.cur ? money(r.cur.value) : '—'}</td>
+        <td style="text-align:right">${r.cur ? deltaHtml(r.paid, r.cur.value) : ''}</td><td>${r.cur ? trendOf(r.x) : ''}</td><td>${r.cur ? esc(fmtDate(r.cur.date)) : ''}</td><td>${r.cur ? esc(r.cur.source || '') : ''}</td></tr>`).join('')}</tbody></table>`
+      : `<div class="card empty"><div class="big">${I.wallet}</div><h2>${valFilter === 'none' ? 'Everything is valued' : 'No values yet'}</h2><p>Open any keyboard, switch, keycap set or part and use the Market value card.</p></div>`}`;
+  document.getElementById('valSeg').onclick = e => { const b = e.target.closest('[data-vf]'); if (!b) return; valFilter = b.dataset.vf; renderValue(); };
+  document.querySelector('#view table')?.addEventListener('click', e => { const r = e.target.closest('tr[data-href]'); if (r) location.hash = r.dataset.href; });
+}
+
 /* ===================== Step 3.2 / 4.4: Import from Excel (one-way, D6) =====================
    You pick an import file made from a copy of the workbook; nothing is written until you click Import.
    Matching uses importKey. A re-import only changes the fields that come from Excel. */
@@ -2331,6 +2663,9 @@ const IMPORT_TYPES = {
 const PART_EXCEL_FIELDS = ['name', 'purchasedFrom', 'datePurchased', 'receipt', 'pictureLink', 'belongsToText', 'installedOnText', 'price', 'taxRate', 'shipping', 'discounts', 'excelTotal', 'excelRow'];
 if (PART_IDS.includes('pcbs')) IMPORT_TYPES.PCBs = { key: 'pcbs', title: 'PCBs', fields: PART_EXCEL_FIELDS.concat(['categoryExcel']), col: () => partCol('pcbs'), saved: () => savedParts.pcbs, href: '#/pcbs',
   who: x => x.manufacturer || '', detail: x => x.hotswap ? 'Hotswap' : '', extraNew: x => ({ hotswap: !!x.hotswap, excelTab: 'Accessories' }), singularWord: 'PCB' };
+IMPORT_TYPES.Wishlist = { key: 'wishlist', title: 'Wishlist', fields: ['category', 'name', 'version', 'platform', 'estPrice', 'priority', 'notes', 'link', 'excelRow'], col: () => wishCol(), saved: () => savedWish, href: '#/wishlist',
+  who: x => x.platform || '', detail: x => [x.version, x.status === 'owned' ? 'owned' : x.status === 'todo' ? 'to-do' : ''].filter(Boolean).join(' · '), extraNew: x => ({ status: x.status || 'wanted' }), singularWord: 'wishlist item', pluralWord: 'wishlist items',
+  total: x => x.status === 'owned' || x.status === 'bought' && x.statusBefore === 'owned' ? 0 : Number(x.estPrice) || 0 };
 if (PART_IDS.includes('accessories')) {
   IMPORT_TYPES.Accessories = { key: 'accessories', title: 'Accessories', fields: PART_EXCEL_FIELDS.concat(['category']), col: () => partCol('accessories'), saved: () => savedParts.accessories.filter(x => x.excelTab !== 'Cables'), href: '#/accessories',
     who: x => x.manufacturer || '', detail: x => x.category || '', extraNew: () => ({ excelTab: 'Accessories' }), singularWord: 'accessory' };
@@ -2385,7 +2720,7 @@ function setExcelSum(s) { return kitsOf(s).filter(k => k.source === 'excel').red
 
 function impWord(T, n) {
   if (T.nested) return 'keycap set' + (n === 1 ? '' : 's');
-  if (T.singularWord) return n === 1 ? T.singularWord : (T.title === 'PCBs' ? 'PCBs' : T.title.toLowerCase());
+  if (T.singularWord) return n === 1 ? T.singularWord : T.pluralWord || (T.title === 'PCBs' ? 'PCBs' : T.title.toLowerCase());
   return n === 1 ? T.title.toLowerCase().replace(/s$/, '').replace(/che$/, 'ch') : T.title.toLowerCase();
 }
 let importFile = null, importType = null;   // parsed file waiting for confirmation
@@ -2441,7 +2776,7 @@ function drawImportPreview() {
   const box = document.getElementById('impPreview'); if (!box || !importFile) return;
   const T = importType, items = importFile[T.key];
   const { rows, missing } = T.nested ? planKeycapImport(importFile) : planImport(importFile, T);
-  const rowTotal = x => T.nested ? kitsOf(x).reduce((t, k) => t + kbTotal(k), 0) : kbTotal(x);
+  const rowTotal = x => T.nested ? kitsOf(x).reduce((t, k) => t + kbTotal(k), 0) : T.total ? T.total(x) : kbTotal(x);
   const n = s => rows.filter(r => r.status === s).length, todo = n('new') + n('update');
   const fileSum = items.reduce((s, x) => s + rowTotal(x), 0);
   const label = { new: '<span class="chip acc">New</span>', update: '<span class="chip" style="color:#fbbf24">Update</span>', same: '<span class="chip">Unchanged</span>' };
@@ -2514,9 +2849,9 @@ async function drawReconcile() {
     if (!m) return `<div class="sec"><h4>${T.title}</h4><p class="sub" style="margin:0">Appears after your first ${T.title.toLowerCase()} import.</p></div>`;
     if (T.nested) return keycapReconcileHtml(T, m);
     const imported = T.saved().filter(k => k.source === 'excel'), appOnly = T.saved().filter(k => k.source !== 'excel');
-    const appSum = imported.reduce((s, k) => s + kbTotal(k), 0), diff = appSum - (Number(m.excelTotal) || 0);
+    const appSum = imported.reduce((s, k) => s + (T.total ? T.total(k) : kbTotal(k)), 0), diff = appSum - (Number(m.excelTotal) || 0);
     const ok = Math.abs(diff) <= 0.05 && imported.length === m.count;
-    const changed = imported.filter(k => k.excelTotal != null && Math.abs(kbTotal(k) - k.excelTotal) > 0.005);
+    const changed = T.total ? [] : imported.filter(k => k.excelTotal != null && Math.abs(kbTotal(k) - k.excelTotal) > 0.005);
     const when = m.importedAt && m.importedAt.toDate ? m.importedAt.toDate().toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
     return `<div class="sec"><h4>${T.title}</h4>
       <p class="sub">Last import: ${esc(m.file || '')} from ${esc(m.source || '')}${when ? ' on ' + esc(when) : ''}.</p>
@@ -2657,6 +2992,7 @@ startKeyboardListener();
 startSwitchListener();
 startKeycapListener();
 startPartListeners();
+startWishListener();
 
 route();
 </script>
