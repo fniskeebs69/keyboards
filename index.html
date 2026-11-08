@@ -216,6 +216,51 @@
   .calc div { font-size: 12px; color: var(--text-3); } .calc b { display: block; font-size: 17px; color: var(--text); font-variant-numeric: tabular-nums; margin-top: 2px; }
   .calc .tot b { font-size: 22px; color: var(--accent); }
   .checks { display: flex; gap: 18px; flex-wrap: wrap; padding-top: 4px; }
+  .draftbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; padding: 10px 14px; border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+  .draftbar .btnrow .btn { padding: 6px 12px; }
+  .savedhint { font-size: 11.5px; color: var(--text-3); text-align: center; }
+  textarea.input { resize: vertical; min-height: 44px; line-height: 1.5; }
+  .cover { aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; background: var(--bg-2); border: 1px solid var(--line); display: grid; place-items: center; color: var(--text-3); font-size: 12.5px; margin-bottom: 12px; }
+  .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cover span { display: grid; justify-items: center; gap: 6px; } .cover svg { width: 36px; height: 36px; }
+  .drop { border: 1.5px dashed var(--line-2); border-radius: 12px; padding: 16px 12px; text-align: center; cursor: pointer; display: grid; gap: 4px; background: var(--bg-2); outline: none; }
+  .drop b { font-size: 13px; } .drop span { font-size: 11.5px; color: var(--text-3); }
+  .drop:hover, .drop:focus-visible, .drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--bg-2)); }
+  .drop.off { cursor: default; opacity: .6; }
+  .pgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .ptile { position: relative; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--bg-2); }
+  .ptile.def { border-color: var(--accent); }
+  .ptile img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+  .pbadge { position: absolute; top: 6px; left: 6px; background: var(--bg); }
+  .pacts { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; }
+  .pacts .btn { padding: 3px 7px; font-size: 11px; border-radius: 7px; }
+  .modal-bg { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.66); display: grid; place-items: center; padding: 20px; }
+  .modal { width: min(940px, 100%); max-height: 100%; overflow: auto; background: var(--surface); border: 1px solid var(--line-2); border-radius: 16px; padding: 20px 22px; box-shadow: 0 30px 80px -20px #000; }
+  .modal h3 { margin: 0 0 4px; font-size: 17px; }
+  .crop-row { display: grid; grid-template-columns: 1fr 240px; gap: 18px; align-items: start; }
+  .cropcv { width: 100%; aspect-ratio: 4 / 3; border-radius: 10px; cursor: grab; touch-action: none; display: block; background: #000; }
+  .cropcv:active { cursor: grabbing; }
+  .croppv { width: 240px; height: 180px; border-radius: 10px; display: block; border: 1px solid var(--line); }
+  .crop-side .k { font-size: 12px; color: var(--text-3); margin-bottom: 6px; }
+  .crop-side input[type=range] { width: 100%; accent-color: var(--accent); }
+  .kcard .ph img { position: absolute; inset: 0; }
+  .lthumb { width: 44px; height: 33px; border-radius: 6px; object-fit: cover; display: block; background: var(--surface-2); }
+  .meter { height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; margin: 10px 0 6px; }
+  .meter span { display: block; height: 100%; background: var(--accent); }
+  .rates { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; }
+  .rate label { display: block; font-size: 12.5px; font-weight: 650; margin-bottom: 6px; }
+  .rate .row { display: flex; align-items: center; gap: 10px; }
+  .stars { display: inline-flex; gap: 2px; }
+  .star { position: relative; width: 26px; height: 26px; color: var(--line-2); }
+  .star svg { width: 26px; height: 26px; display: block; }
+  .star .clip { position: absolute; inset: 0; overflow: hidden; color: var(--kb); pointer-events: none; }
+  .star .clip svg { width: 26px; height: 26px; }
+  .star button { position: absolute; top: 0; bottom: 0; width: 50%; border: 0; background: none; cursor: pointer; padding: 0; z-index: 2; }
+  .star button:first-of-type { left: 0; } .star button:last-of-type { right: 0; }
+  .star button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-radius: 4px; }
+  .rate .val { font-size: 12.5px; color: var(--text-2); min-width: 64px; font-variant-numeric: tabular-nums; }
+  .rate .clr { font-size: 11.5px; color: var(--text-3); background: none; border: 0; cursor: pointer; text-decoration: underline; padding: 0; }
   .formerr { display: none; margin-bottom: 14px; padding: 10px 12px; border-radius: 10px; background: #3a1d22; border: 1px solid #7a2e3a; color: #ffd7dc; }
   .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); opacity: 0; pointer-events: none;
     background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 12px; padding: 10px 16px; transition: .2s; z-index: 50; box-shadow: 0 12px 30px -10px #000; }
@@ -250,7 +295,7 @@
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.7.0';
+const APP_VERSION = 'v0.11.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -355,7 +400,10 @@ function refreshIfShowing() {
   const id = (location.hash.replace(/^#\/?/, '').split('/')[0]) || 'dashboard';
   if (id === 'dashboard') route();
   else if (id === 'keyboards' && document.getElementById('kbResults')) drawKeyboardResults();
-  else if (id === 'keyboards' && document.getElementById('kbDetailFor')) route();
+  else if (id === 'keyboards' && document.getElementById('kbDetailFor')) {
+    if (formDirty) toast('This keyboard changed on another device. Save or discard to see it.');
+    else route();
+  }
 }
 /* Samples stay visible (marked "Sample") until the Excel import in Phase 3. */
 function allKeyboards() { return savedKeyboards.concat(SAMPLE_KEYBOARDS); }
@@ -364,10 +412,11 @@ function sortDate(k) { return k.datePurchased || k.createdIso || ''; }
 /* ===================== Router ===================== */
 let currentView = '';
 function route() {
-  stopTestListener();
+  stopTestListener(); stopPhotoListener(); stopMetaListener();
   const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   if (parts[0] === 'connection-test') { location.replace('#/settings'); return; } // old v0.2.0 link
   const id = parts[0] || 'dashboard';
+  if (parts[1] !== lastTab.id) lastTab = { id: null, tab: 'overview' }; // the tab is only remembered while staying on one keyboard
   const sec = SEC[id] || SEC.dashboard;
   document.documentElement.style.setProperty('--accent', sec.color.startsWith('var(--text') ? 'var(--kb)' : sec.color);
   renderNav(sec.id);
@@ -383,8 +432,8 @@ function route() {
   currentView = location.hash;
 }
 window.addEventListener('hashchange', () => {
-  if (formDirty && !location.hash.startsWith('#/keyboards/new')) {
-    if (!confirm('Discard the keyboard you were adding?')) { history.replaceState(null, '', '#/keyboards/new'); return; }
+  if (formDirty && location.hash !== formDirty) {
+    if (!confirm('Leave without saving your changes?')) { history.replaceState(null, '', formDirty); return; }
     formDirty = false;
   }
   route();
@@ -438,7 +487,7 @@ function dashboardHtml() {
       : `<button class="btn" style="--c:${s.color}" disabled title="Coming in ${s.when}">${I[s.id]}Add ${esc(s.singular)}</button>`).join('')}</div>
     <p class="sub" style="margin:10px 0 0">The other types follow page by page.</p></div>
   <div class="card" style="margin-top:16px"><div class="sec-title"><h3>Recent items</h3><span class="sub" style="margin:0">Latest 5 by purchase date (or date added)</span></div>
-    <div class="recent" style="margin-top:10px">${recent.map(k => `<a href="#/keyboards/${esc(k.id)}" style="--c:var(--kb)"><span class="th">${I.keyboards}</span><div><b>${esc(k.name)}</b><span>${esc(k.brand)}</span></div></a>`).join('')}</div></div>
+    <div class="recent" style="margin-top:10px">${recent.map(k => `<a href="#/keyboards/${esc(k.id)}" style="--c:var(--kb)"><span class="th">${k.coverThumb ? `<img src="${k.coverThumb}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:8px">` : I.keyboards}</span><div><b>${esc(k.name)}</b><span>${esc(k.brand)}</span></div></a>`).join('')}</div></div>
   <div class="two" style="margin-top:16px">
     <div class="card"><h3>Keyboard sizes</h3><p class="sub">Distribution of keyboards by size.</p><div class="bars">${Object.entries(sizes).sort((a, b) => b[1] - a[1]).map(([s, n]) => `<div class="bar"><span>${esc(s)}</span><span class="track"><span class="fill" style="width:${n / maxSize * 100}%"></span></span><span class="n">${n}</span></div>`).join('')}</div></div>
     <div class="card"><h3>Inventory mix</h3><p class="sub">Items by category.</p><div class="bars">${mix.map(m => `<div class="bar" style="--c:${m.s.color}"><span>${m.s.title}</span><span class="track"><span class="fill" style="width:${m.n / total * 100}%"></span></span><span class="n">${m.n} · ${(m.n / total * 100).toFixed(0)}%</span></div>`).join('')}</div></div>
@@ -466,7 +515,7 @@ async function toggleFav(id) {
 }
 function matches(k, q) {
   if (!q) return true;
-  const hay = [k.brand, k.name, k.color, k.size, k.connectivity, k.mods, k.currentBuildText, k.purchasedFrom, k.manufacturer, k.designer, k.location, k.status, k.layout]
+  const hay = [k.brand, k.name, k.color, k.size, k.connectivity, k.mods, k.notes, k.reviewText, k.currentBuildText, k.purchasedFrom, k.manufacturer, k.designer, k.location, k.status, k.layout]
     .concat(BUILD_FIELDS.map(f => k[f[0]])).join(' ').toLowerCase();
   return q.toLowerCase().split(/\s+/).every(w => hay.includes(w));
 }
@@ -498,15 +547,15 @@ function drawKeyboardResults() {
   if (kbView === 'gallery') {
     box.innerHTML = `<div class="gallery">${list.map(k => `
       <a class="kcard" href="#/keyboards/${esc(k.id)}">
-        <div class="ph">${I.keyboards.replace('<svg', '<svg class="big"')}<span class="nophoto">No photo yet</span>
+        <div class="ph">${k.coverThumb ? `<img src="${k.coverThumb}" alt="" loading="lazy">` : I.keyboards.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}
           ${k.isSample ? '<span class="badge chip">Sample</span>' : ''}
           <button class="fav${isFav(k) ? ' on' : ''}" data-fav="${esc(k.id)}" aria-label="${isFav(k) ? 'Remove from' : 'Add to'} favorites">${isFav(k) ? I.starFill : I.star}</button></div>
         <div class="meta"><b>${esc(k.name)}</b><span>${esc(k.brand)}</span></div>
       </a>`).join('')}</div>`;
   } else {
-    box.innerHTML = `<table class="list"><thead><tr><th style="width:44px"></th><th>Name</th><th>Brand</th><th>Size</th><th>Color</th><th>Purchased</th></tr></thead><tbody>${list.map(k => `
+    box.innerHTML = `<table class="list"><thead><tr><th style="width:44px"></th><th style="width:60px">Photo</th><th>Name</th><th>Brand</th><th>Size</th><th>Color</th><th>Purchased</th></tr></thead><tbody>${list.map(k => `
       <tr class="row" data-href="#/keyboards/${esc(k.id)}"><td><button class="fav${isFav(k) ? ' on' : ''}" style="position:static;width:28px;height:28px" data-fav="${esc(k.id)}" aria-label="Favorite">${isFav(k) ? I.starFill : I.star}</button></td>
-      <td><b>${esc(k.name)}</b></td><td>${esc(k.brand)}</td><td>${esc(k.size)}</td><td>${esc(k.color)}</td><td>${esc(fmtDate(k.datePurchased)) || '<span style="color:var(--text-3)">—</span>'}</td></tr>`).join('')}</tbody></table>`;
+      <td>${k.coverThumb ? `<img class="lthumb" src="${k.coverThumb}" alt="">` : '<span class="lthumb"></span>'}</td><td><b>${esc(k.name)}</b></td><td>${esc(k.brand)}</td><td>${esc(k.size)}</td><td>${esc(k.color)}</td><td>${esc(fmtDate(k.datePurchased)) || '<span style="color:var(--text-3)">—</span>'}</td></tr>`).join('')}</tbody></table>`;
   }
   box.onclick = e => {
     const f = e.target.closest('[data-fav]');
@@ -532,13 +581,13 @@ function renderKeyboardDetail(id) {
   const k = allKeyboards().find(x => x.id === id);
   const view = document.getElementById('view');
   if (!k) { view.innerHTML = `<a class="crumb" href="#/keyboards">${I.back}Keyboards</a><div class="card empty" id="kbDetailFor"><h2>${db && !isFile && !kbLoaded ? 'Loading…' : 'Keyboard not found'}</h2><p>${db && !isFile && !kbLoaded ? 'Fetching your keyboards from Firebase.' : 'It may have been deleted.'}</p></div>`; return; }
-  if (!k.isSample) { renderSavedKeyboardDetail(k); return; }
+  if (!k.isSample) { renderKeyboardForm(k); return; }
   const priceTax = (Number(k.price) || 0) * (1 + (Number(k.taxRate) || 0));
   const mods = k.mods ? k.mods.split(/,\s*(?![^()]*\))/).map(m => m.trim()).filter(Boolean) : [];
   view.innerHTML = `
     <a class="crumb" href="#/keyboards">${I.back}Keyboards</a>
     <div class="pagehead"><div><h1>${esc(k.name)}</h1><p>${esc(k.brand)}</p></div>
-      <div class="tools">${k.isSample ? `<span class="chip">Sample · Excel row ${k.excelRow}</span>` : ''}<button class="btn" disabled title="Editing arrives in Step 2.6">Edit</button></div></div>
+      <div class="tools"><span class="chip">Sample · Excel row ${k.excelRow} · read only</span></div></div>
     <div class="detail-grid">
       <div class="card">
         <div class="sec"><h4>Overview</h4><div class="fields">
@@ -561,50 +610,10 @@ function renderKeyboardDetail(id) {
     </div>`;
 }
 
-function renderSavedKeyboardDetail(k) {
-  const opt = (list, v) => v || '';
-  document.getElementById('view').innerHTML = `
-    <a class="crumb" href="#/keyboards">${I.back}Keyboards</a>
-    <div class="pagehead" id="kbDetailFor"><div><h1>${esc(k.name)}</h1><p>${esc(k.brand || 'No brand')}</p></div>
-      <div class="tools"><button class="btn${k.isFavorite ? ' on' : ''}" id="dFav">${k.isFavorite ? I.starFill : I.star}${k.isFavorite ? 'Favorite' : 'Add to favorites'}</button>
-        <button class="btn" disabled title="Editing arrives in Step 2.6">Edit</button>
-        <button class="btn danger" id="dDel">Delete</button></div></div>
-    <div class="detail-grid">
-      <div class="card">
-        <div class="sec"><h4>Overview</h4><div class="fields">
-          ${fieldHtml('Keyboard type', KB_TYPES[k.keyboardType] || k.keyboardType)}${fieldHtml('Brand', k.brand)}${fieldHtml('Name', k.name)}
-          ${fieldHtml('Manufacturer', k.manufacturer)}${fieldHtml('Size', k.size)}${fieldHtml('Location', k.location)}</div></div>
-        <div class="sec"><h4>More details</h4><div class="fields">
-          ${fieldHtml('Model number', k.modelNumber)}${fieldHtml('Serial number', k.serialNumber)}${fieldHtml('Designer', k.designer)}
-          ${fieldHtml('Layout', k.layout)}${fieldHtml('Color', k.color)}${fieldHtml('Connectivity', k.connectivity)}
-          ${fieldHtml('Connector', k.connector)}${fieldHtml('Status', k.status)}${fieldHtml('Typing angle', k.typingAngle)}
-          ${fieldHtml('Front height', k.frontHeight)}${fieldHtml('Weight', k.weight)}</div></div>
-        <div class="sec"><h4>Build</h4><div class="fields">
-          ${BUILD_FIELDS.map(([n, label]) => fieldHtml(label, k[n])).join('')}
-          ${fieldHtml('Current build', k.currentBuildText, { wide: true })}</div></div>
-        <div class="sec"><h4>Purchase</h4><div class="fields">
-          ${fieldHtml('Purchased from', k.purchasedFrom)}${fieldHtml('Date purchased', fmtDate(k.datePurchased))}${fieldHtml('Date received', fmtDate(k.dateReceived))}
-          ${fieldHtml('Price', k.price != null ? money(k.price) : '')}${fieldHtml('Tax rate', k.taxRate != null ? pct(k.taxRate) : '')}
-          ${fieldHtml('Price + tax', k.price != null ? money((Number(k.price) || 0) * (1 + (Number(k.taxRate) || 0))) : '')}
-          ${fieldHtml('Shipping', k.shipping != null ? money(k.shipping) : '')}${fieldHtml('Discounts', k.discounts != null ? money(k.discounts) : '')}
-          ${fieldHtml('Acquisition', (k.acquisition || []).map(a => (ACQUISITION.find(x => x[0] === a) || [a, a])[1]).join(', '))}
-          ${fieldHtml('Receipt', linkOrText(/^https?:\/\//.test(k.receipt || '') ? k.receipt : '', k.receipt, 'Open receipt'), { html: true, wide: true })}
-          ${fieldHtml('Pictures', linkOrText(k.pictureLink, '', 'Open pictures'), { html: true, wide: true })}</div>
-          ${k.price != null ? `<div class="total-row"><span style="color:var(--text-2)">Total paid</span><span class="t">${money(kbTotal(k))}</span></div>` : ''}</div>
-        <div class="sec"><h4>Notes</h4><p class="sub" style="margin:0">Mods and notes arrive in Step 2.5.</p></div>
-        <div class="sec"><p class="sub" style="margin:0">Added ${esc(fmtDate(k.createdIso)) || 'just now'}${k.appVersion ? ' · saved by app ' + esc(k.appVersion) : ''}</p></div>
-      </div>
-      <div class="card"><h3>Primary photo</h3><p class="sub">The cover photo shown on the gallery card.</p>
-        <div class="photo-box">${I.keyboards.replace('<svg', '<svg style="width:40px;height:40px;display:block;margin:0 auto 8px"')}Drag-and-drop photos with crop and "Set as default" arrive in Step 2.7.</div></div>
-    </div>`;
-  document.getElementById('dFav').onclick = () => toggleFav(k.id);
-  document.getElementById('dDel').onclick = async () => {
-    if (!confirm(`Delete "${k.name}"? This cannot be undone.`)) return;
-    try { await withTimeout(kbCol().doc(k.id).delete()); toast('Keyboard deleted'); location.hash = '#/keyboards'; }
-    catch (e) { toast('Delete failed: ' + explain(e)); }
-  };
+function modsHtml(mods) {
+  const list = mods ? mods.split(/,\s*(?![^()]*\))/).map(m => m.trim()).filter(Boolean) : [];
+  return list.length > 1 ? '<ul class="modlist">' + list.map(m => '<li>' + esc(m) + '</li>').join('') + '</ul>' : esc(mods || '');
 }
-
 /* ===================== Step 2.2: Add keyboard form (Overview tab) ===================== */
 const KB_TYPES = { custom: 'Custom keyboard', oem: 'OEM keyboard', vintage: 'Vintage keyboard' };
 const KB_SIZES = ['Macropad', 'Numpad', '40%', '60%', '65%', '75%', 'TKL (80%)', '96%', '1800', 'Full Size (100%)', 'Other'];
@@ -624,6 +633,7 @@ const BUILD_FIELDS = [ // [field, label, placeholder, suggestions]
   ['weightsAccents', 'Weights / accents', 'e.g. Brass weight', []],
   ['builtBy', 'Built by', 'e.g. Me', ['Me', 'Factory']]
 ];
+const RATINGS = [['ratingOverall', 'Overall'], ['ratingBuildQuality', 'Build quality'], ['ratingTypingFeel', 'Typing feel'], ['ratingSound', 'Sound'], ['ratingBuildExperience', 'Build experience'], ['ratingAesthetics', 'Aesthetics']];
 const PRELOADED_BRANDS = ["8BitDo", "Akko", "CannonKeys", "Drop", "Drop + Tokyo Keyboard", "Drop × Keydous", "Ducky", "Freebird", "GeekElite", "Geonworks", "HHKB", "Ikki68", "KBDcraft", "KBDfans", "Keebfront", "Keebmonkey", "Keychron", "Keydous", "Leopold", "Lofree", "Megalodon", "Mekanisk", "Meletrix", "Mode", "Monsgeek", "NovelKeys", "OLKB", "Omnitype", "Owlab", "Qwertykeys", "Rama Works", "Redragon", "Skyloone", "TGR", "Varmilo", "Voice", "WOBKEY", "Wooting", "Wuque Studio"];
 const PRELOADED_SELLERS = ["Amazon", "CannonKeys", "Divinikey", "Drop", "eBay", "eBay + PayPal", "Included with Keyboard", "KBDfans", "NuPhy", "Omnitype", "PayPal", "PayPal P2P"]; // "Purchased From" values in your v18 workbook
 const ACQUISITION = [['groupBuy', 'Group buy'], ['inStock', 'In stock purchase'], ['used', 'Used']];
@@ -638,8 +648,10 @@ function selectHtml(name, opts, ph, val = '') {
 function inputHtml(name, ph = '', list = '') { return `<input class="input" name="${name}" id="f_${name}" placeholder="${esc(ph)}" autocomplete="off"${list ? ` list="${list}"` : ''}>`; }
 function fld(label, control, opts = {}) { return `<div class="fld${opts.full ? ' full' : ''}" data-for="${opts.name || ''}"><label for="f_${opts.name || ''}">${esc(label)}${opts.req ? ' <span class="req">*</span>' : ''}</label>${control}${opts.hint ? `<div class="hint">${esc(opts.hint)}</div>` : ''}</div>`; }
 
-function renderKeyboardForm() {
-  formDirty = false;
+let editing = null; // the saved keyboard being edited, or null when adding
+let lastTab = { id: null, tab: 'overview' }; // keeps the open tab when the edit page redraws
+function renderKeyboardForm(k = null) {
+  formDirty = false; editing = k;
   const saved = savedKeyboards;
   const brands = uniq(PRELOADED_BRANDS.concat(saved.map(k => k.brand), SAMPLE_KEYBOARDS.map(k => k.brand)));
   const makers = uniq(brands.concat(saved.map(k => k.manufacturer)));
@@ -649,13 +661,16 @@ function renderKeyboardForm() {
   const ready = !!db && !isFile;
   document.getElementById('view').innerHTML = `
     <a class="crumb" href="#/keyboards">${I.back}Keyboards</a>
-    <div class="pagehead"><div><h1>Add keyboard</h1><p>Save the basics now. Notes and photos come in the next steps.</p></div></div>
+    ${k ? `<div class="pagehead" id="kbDetailFor"><div><h1>${esc(k.name)}</h1><p>${esc(k.brand || 'No brand')}${k.size ? ' · ' + esc(k.size) : ''}</p></div>
+        <div class="tools"><button class="btn danger" id="btnDelete">Delete</button></div></div>`
+      : `<div class="pagehead"><div><h1>Add keyboard</h1><p>Save the basics now. Your entries are kept as a draft on this device until you save.</p></div></div>`}
+    <div id="draftBar"></div>
     <div class="formerr" id="formErr"></div>
     <div class="form-grid">
       <div>
         <div class="tabs" role="tablist">
           <button class="on" data-tab="overview" role="tab">Overview<span class="err" id="errOverview"></span></button>
-          <button data-tab="build" role="tab">Build</button><button data-tab="purchase" role="tab">Purchase<span class="err" id="errPurchase"></span></button><button data-tab="notes" role="tab">Notes</button>
+          <button data-tab="build" role="tab">Build</button><button data-tab="purchase" role="tab">Purchase<span class="err" id="errPurchase"></span></button><button data-tab="notes" role="tab">Notes</button><button data-tab="review" role="tab">Review</button>
         </div>
         <div class="card" data-panel="overview">
           <h3 style="margin-bottom:14px">Overview</h3>
@@ -706,14 +721,30 @@ function renderKeyboardForm() {
           </div>
           <datalist id="dlSellers">${uniq(PRELOADED_SELLERS.concat(savedKeyboards.map(k => k.purchasedFrom))).map(o => `<option value="${esc(o)}">`).join('')}</datalist>
         </div>
-        <div class="card" data-panel="notes" hidden><div class="empty" style="padding:30px 10px"><h2>Notes</h2><p>Mods and notes arrive in Step 2.5, with automatic drafts.</p></div></div>
+        <div class="card" data-panel="notes" hidden>
+          <h3 style="margin-bottom:14px">Notes</h3>
+          <div class="frm">
+            ${fld('Mods', '<textarea class="input" name="mods" id="f_mods" rows="4" placeholder="e.g. Tape mod, PE foam, Durock V2 stabs"></textarea>', { name: 'mods', full: true, hint: 'Mods done or on hand. Separate with commas to show them as a list.' })}
+            ${fld('Notes', '<textarea class="input" name="notes" id="f_notes" rows="6" placeholder="Anything else worth remembering"></textarea>', { name: 'notes', full: true })}
+          </div>
+        </div>
+        <div class="card" data-panel="review" hidden>
+          <h3>Review</h3><p class="sub">Your own ratings. All are optional; click the left half of a star for a half star.</p>
+          <div class="rates">${RATINGS.map(([n, label]) => `<div class="rate"><label>${label}</label><div class="row">
+            <span class="stars" data-rate="${n}">${[1, 2, 3, 4, 5].map(i => `<span class="star">${I.star}<span class="clip">${I.starFill}</span>
+              <button type="button" data-v="${i - 0.5}" aria-label="${label}: ${i - 0.5} stars"></button><button type="button" data-v="${i}" aria-label="${label}: ${i} star${i > 1 ? 's' : ''}"></button></span>`).join('')}</span>
+            <span class="val" id="v_${n}">Not rated</span><button type="button" class="clr" data-clear="${n}">Clear</button>
+            <input type="hidden" id="f_${n}" name="${n}"></div></div>`).join('')}</div>
+          <div class="frm" style="margin-top:18px">${fld('Your review', '<textarea class="input" name="reviewText" id="f_reviewText" rows="6" placeholder="Build, typing feel, sound, design, or anything else that stands out"></textarea>', { name: 'reviewText', full: true })}</div>
+        </div>
       </div>
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
-        <div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the keyboard first. Drag-and-drop photos arrive in Step 2.7.</p></div>
+        ${k ? photoCardHtml(k) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the keyboard first, then drop photos on its page.</p></div>'}
         <div class="card side-card stack">
-          <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>Save keyboard</button>
-          <a class="btn" href="#/keyboards" id="btnCancel">Cancel</a>
+          <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${k ? 'Save changes' : 'Save keyboard'}</button>
+          <button class="btn" id="btnCancel">${k ? 'Discard changes' : 'Cancel'}</button>
+          <div class="savedhint" id="draftHint">${k ? 'Added ' + esc(fmtDate(k.createdIso) || '') + (k.updatedAt && k.updatedAt.toDate ? ' · last saved ' + esc(k.updatedAt.toDate().toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) : '') : ''}</div>
           ${ready ? '' : '<p class="sub" style="margin:0">Saving needs Firebase (open the https site).</p>'}
         </div>
       </div>
@@ -728,19 +759,118 @@ function renderKeyboardForm() {
   const view = document.getElementById('view');
   view.querySelector('.tabs').onclick = e => {
     const b = e.target.closest('[data-tab]'); if (!b) return;
+    lastTab = { id: k ? k.id : null, tab: b.dataset.tab };
     view.querySelectorAll('.tabs [data-tab]').forEach(x => x.classList.toggle('on', x === b));
     view.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== b.dataset.tab);
   };
   const formEl = view.querySelector('.form-grid');   // replaced on every render, so listeners never pile up
-  formEl.addEventListener('input', e => { formDirty = true; if (e.target.name && document.querySelector(`.fld.bad[data-for="${e.target.name}"]`)) clearFieldError(e.target.name); });
-  formEl.addEventListener('change', () => { formDirty = true; });
+  const onEdit = e => {
+    if (!e.target.id || !e.target.id.startsWith('f_') && e.target.name !== 'acq') return;   // only real form fields (not the photo picker)
+    if (k) { formDirty = location.hash; setEditState(true); } else scheduleDraftSave();
+  };
+  formEl.addEventListener('input', e => { onEdit(e); if (e.target.name && document.querySelector(`.fld.bad[data-for="${e.target.name}"]`)) clearFieldError(e.target.name); });
+  formEl.addEventListener('change', onEdit);
+  if (k) {
+    fillKeyboardForm(k); setEditState(false); wirePhotos(k);
+    document.getElementById('btnCancel').onclick = () => { formDirty = false; renderKeyboardForm(savedKeyboards.find(x => x.id === k.id) || k); toast('Changes discarded'); };
+    document.getElementById('btnDelete').onclick = async () => {
+      if (!confirm(`Delete "${k.name}" and its photos? This cannot be undone.`)) return;
+      try { await withTimeout(deletePhotosOf(k.id), 30000); await withTimeout(kbCol().doc(k.id).delete()); formDirty = false; toast('Keyboard deleted'); location.hash = '#/keyboards'; }
+      catch (e) { toast('Delete failed: ' + explain(e)); }
+    };
+  } else {
+    document.getElementById('btnCancel').onclick = () => {
+      if (hasContent(formState()) && !confirm('Cancel and throw away this keyboard?')) return;
+      clearTimeout(draftTimer); lsDel(DRAFT_KEY); location.hash = '#/keyboards';
+    };
+    offerDraft();
+  }
   document.getElementById('f_name').addEventListener('input', () => clearFieldError('name'));
   document.getElementById('btnSave').onclick = saveKeyboard;
+  view.querySelector('[data-panel="review"]').addEventListener('click', e => {
+    const b = e.target.closest('.stars button, [data-clear]'); if (!b) return;
+    const name = b.dataset.clear || b.closest('[data-rate]').dataset.rate;
+    const inp = document.getElementById('f_' + name);
+    inp.value = b.dataset.clear ? '' : b.dataset.v;
+    drawStars(); inp.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  drawStars();
   ['price', 'taxRatePct', 'shipping', 'discounts'].forEach(n => document.getElementById('f_' + n).addEventListener('input', updateCalc));
   document.getElementById('taxQuick').onclick = e => { const b = e.target.closest('[data-tax]'); if (!b) return; const t = document.getElementById('f_taxRatePct'); t.value = b.dataset.tax; t.dispatchEvent(new Event('input', { bubbles: true })); };
   updateCalc();
-  document.getElementById('f_name').focus();
+  if (!k) document.getElementById('f_name').focus();
+  else if (lastTab.id === k.id && lastTab.tab !== 'overview') view.querySelector(`.tabs [data-tab="${lastTab.tab}"]`).click();
 }
+function drawStars() {
+  RATINGS.forEach(([n]) => {
+    const inp = document.getElementById('f_' + n); if (!inp) return;
+    const v = inp.value === '' ? 0 : Number(inp.value);
+    document.querySelectorAll(`[data-rate="${n}"] .star .clip`).forEach((c, i) => { c.style.width = Math.max(0, Math.min(1, v - i)) * 100 + '%'; });
+    document.getElementById('v_' + n).textContent = v ? v.toFixed(1) + ' / 5' : 'Not rated';
+  });
+}
+function setEditState(dirty) {
+  const s = document.getElementById('btnSave'), c = document.getElementById('btnCancel');
+  if (!s || !editing) return;
+  s.disabled = !dirty || !db || isFile; c.disabled = !dirty;
+}
+function fillKeyboardForm(k) {
+  const st = { fields: {}, acq: k.acquisition || [], fav: !!k.isFavorite };
+  ['keyboardType', 'brand', 'name', 'manufacturer', 'size', 'location', 'modelNumber', 'serialNumber', 'designer', 'layout', 'color', 'connectivity', 'connector', 'status',
+   'typingAngle', 'frontHeight', 'weight', 'currentBuildText', 'datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'pictureLink', 'mods', 'notes', 'reviewText']
+    .concat(BUILD_FIELDS.map(f => f[0]), RATINGS.map(r => r[0])).forEach(n => { if (k[n] != null && k[n] !== '') st.fields['f_' + n] = String(k[n]); });
+  ['price', 'shipping', 'discounts'].forEach(n => { if (k[n] != null) st.fields['f_' + n] = String(k[n]); });
+  if (k.taxRate != null) st.fields.f_taxRatePct = String(Math.round(k.taxRate * 1e8) / 1e6);
+  // a saved value that is not in a dropdown's list is added so it is never lost
+  [['size', KB_SIZES], ['layout', KB_LAYOUTS], ['connectivity', KB_CONN], ['status', KB_STATUS]].forEach(([n]) => {
+    const sel = document.getElementById('f_' + n), v = st.fields['f_' + n];
+    if (v && ![...sel.options].some(o => o.value === v)) sel.add(new Option(v + ' (saved value)', v));
+  });
+  applyState(st);
+}
+/* ---------- Step 2.5: automatic drafts (new keyboard only, kept on this device) ---------- */
+const DRAFT_KEY = 'kbc_draft_new_keyboard';
+function lsGet(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+function formState() {
+  const st = { fields: {}, acq: [], fav: document.getElementById('f_isFavorite').checked, savedAt: Date.now() };
+  document.querySelectorAll('.form-grid [id^="f_"]').forEach(el => { if (el.type !== 'checkbox' && el.value !== '') st.fields[el.id] = el.value; });
+  st.acq = [...document.querySelectorAll('input[name="acq"]:checked')].map(c => c.value);
+  return st;
+}
+function hasContent(st) { return st && (Object.keys(st.fields).some(k => k !== 'f_keyboardType' || st.fields[k] !== 'custom') || st.acq.length || st.fav); }
+function applyState(st) {
+  Object.entries(st.fields || {}).forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.value = val; });
+  document.querySelectorAll('input[name="acq"]').forEach(c => { c.checked = (st.acq || []).includes(c.value); });
+  document.getElementById('f_isFavorite').checked = !!st.fav;
+  drawStars();
+  if (Object.keys(st.fields || {}).some(k => ['f_modelNumber', 'f_serialNumber', 'f_designer', 'f_layout', 'f_color', 'f_connectivity', 'f_connector', 'f_status', 'f_typingAngle', 'f_frontHeight', 'f_weight'].includes(k)))
+    document.getElementById('moreDetails').open = true;
+  updateCalc();
+}
+let draftTimer = null;
+function scheduleDraftSave() {
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(() => {
+    if (!document.getElementById('f_name')) return;
+    const st = formState();
+    if (hasContent(st)) { if (lsSet(DRAFT_KEY, st)) document.getElementById('draftHint').textContent = 'Draft saved on this device at ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
+    else { lsDel(DRAFT_KEY); document.getElementById('draftHint').textContent = ''; }
+  }, 400);
+}
+function offerDraft() {
+  const st = lsGet(DRAFT_KEY);
+  if (!hasContent(st)) return;
+  const name = st.fields.f_name ? `"${st.fields.f_name}"` : 'an unnamed keyboard';
+  const when = new Date(st.savedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  const bar = document.getElementById('draftBar');
+  bar.innerHTML = `<div class="draftbar"><span>You have an unfinished keyboard, ${esc(name)}, from ${esc(when)}.</span>
+    <span class="btnrow"><button class="btn primary" id="draftResume">Resume draft</button><button class="btn" id="draftFresh">Start fresh</button></span></div>`;
+  document.getElementById('draftResume').onclick = () => { applyState(st); bar.innerHTML = ''; document.getElementById('draftHint').textContent = 'Draft restored'; };
+  document.getElementById('draftFresh').onclick = () => { lsDel(DRAFT_KEY); bar.innerHTML = ''; };
+}
+
 function num(id) { const v = document.getElementById(id)?.value; return v === '' || v == null ? 0 : Number(v); }
 function updateCalc() {
   const k = { price: num('f_price'), taxRate: num('f_taxRatePct') / 100, shipping: num('f_shipping'), discounts: num('f_discounts') };
@@ -769,7 +899,8 @@ function readKeyboardForm() {
     .concat(BUILD_FIELDS.map(f => f[0]))
     .forEach(n => { const x = v(n); if (x) data[n] = x; });
   data.isFavorite = document.getElementById('f_isFavorite').checked;
-  ['datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'pictureLink'].forEach(n => { const x = v(n); if (x) data[n] = x; });
+  ['datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'pictureLink', 'mods', 'notes', 'reviewText'].forEach(n => { const x = v(n); if (x) data[n] = x; });
+  RATINGS.forEach(([n]) => { const x = v(n); if (x !== '') data[n] = Number(x); });
   const n = id => { const x = v(id); return x === '' ? null : Number(x); };
   const price = n('price'), tax = n('taxRatePct'), ship = n('shipping'), disc = n('discounts');
   data._numbers = { price, taxRatePct: tax, shipping: ship, discounts: disc };
@@ -793,16 +924,254 @@ async function saveKeyboard() {
   if (!data.name) problems.unshift(['name', 'Name is required']);
   if (problems.length) { problems.forEach(([f, m], i) => showFieldError(f, m, i === 0)); return; }
   btn.disabled = true; btn.textContent = 'Saving…';
+  if (editing) return saveEdits(data, btn, errBox);
   try {
     const now = firebase.firestore.FieldValue.serverTimestamp();
     const ref = await withTimeout(kbCol().add(Object.assign(data, { createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app' })));
-    formDirty = false;
+    clearTimeout(draftTimer); lsDel(DRAFT_KEY);
     toast(`Saved "${data.name}"`);
     location.hash = '#/keyboards/' + ref.id;
   } catch (e) {
     errBox.style.display = 'block'; errBox.textContent = 'Could not save: ' + explain(e) + ' Your entries are still here; try again.';
     btn.disabled = false; btn.textContent = 'Save keyboard';
   }
+}
+
+const EDITABLE = ['keyboardType', 'brand', 'name', 'manufacturer', 'size', 'location', 'modelNumber', 'serialNumber', 'designer', 'layout', 'color', 'connectivity', 'connector', 'status',
+  'typingAngle', 'frontHeight', 'weight', 'currentBuildText', 'datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'pictureLink', 'mods', 'notes',
+  'price', 'taxRate', 'shipping', 'discounts', 'acquisition', 'isFavorite', 'reviewText'].concat(RATINGS.map(r => r[0]));
+async function saveEdits(data, btn, errBox) {
+  const k = editing, upd = {};
+  const del = firebase.firestore.FieldValue.delete();
+  EDITABLE.concat(BUILD_FIELDS.map(f => f[0])).forEach(n => {
+    if (data[n] !== undefined) upd[n] = data[n];
+    else if (k[n] !== undefined) upd[n] = del;          // field was cleared
+  });
+  upd.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+  upd.appVersion = APP_VERSION;
+  const hash = location.hash;
+  formDirty = false;   // the live listener may redraw the page with the new values as soon as the write starts
+  try {
+    await withTimeout(kbCol().doc(k.id).update(upd));
+    toast('Changes saved');
+  } catch (e) {
+    // put the unsaved values back on screen and keep the page marked as changed
+    const back = Object.assign({}, k, data);
+    if (location.hash === hash) {
+      renderKeyboardForm(back); formDirty = hash; setEditState(true);
+      const box = document.getElementById('formErr');
+      box.style.display = 'block'; box.textContent = 'Could not save: ' + explain(e) + ' Your changes are still here; try again.';
+    } else toast('Could not save: ' + explain(e));
+    return;
+  }
+  const b2 = document.getElementById('btnSave'); if (b2) b2.textContent = 'Save changes';
+}
+
+/* ===================== Step 2.7: Photos (D12: stored in Firestore as WebP) =====================
+   keyboard_collection/main/photos/<photoId>: { itemType, itemId, full (WebP data URL, 4:3), thumb (small WebP data URL), bytes, width, height, fileName, createdAt }
+   The item's own record keeps coverPhotoId + coverThumb, so gallery cards need no extra reads.
+   keyboard_collection/main/meta/storage: { photoCount, photoBytes } for the Settings meter. */
+const PHOTO_FULL = { w: 1600, h: 1200, q: [0.82, 0.72, 0.6] };
+const PHOTO_THUMB = { w: 480, h: 360, q: 0.72 };
+const MAX_DOC_CHARS = 900000; // Firestore records max out at 1 MB; stay well under it
+function photoCol() { return db.collection(FIRESTORE_COLLECTION).doc(ROOT_DOC).collection('photos'); }
+function metaRef() { return db.collection(FIRESTORE_COLLECTION).doc(ROOT_DOC).collection('meta').doc('storage'); }
+let photoUnsub = null, currentPhotos = [];
+function stopPhotoListener() { if (photoUnsub) { photoUnsub(); photoUnsub = null; } currentPhotos = []; }
+
+function photoCardHtml(k) {
+  return `<div class="card side-card" id="photoCard"><h3>Primary photo</h3><p class="sub">Shown on the gallery card. Pick any photo below as the default.</p>
+    <div class="cover" id="coverBox">${k.coverThumb ? `<img src="${k.coverThumb}" alt="${esc(k.name)}">` : `<span>${I.keyboards}No photo yet</span>`}</div>
+    <div class="drop" id="dropZone" tabindex="0" role="button" aria-label="Add photos"><b>Drop photos here or click to upload</b><span>JPG, PNG or WebP. Each one can be cropped before it is saved.</span></div>
+    <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" multiple hidden>
+    <div class="pgrid" id="photoGrid"><span class="sub">Loading photos…</span></div></div>`;
+}
+function wirePhotos(k) {
+  stopPhotoListener();
+  const zone = document.getElementById('dropZone'), input = document.getElementById('photoInput');
+  const ready = !!db && !isFile;
+  if (!ready) { zone.classList.add('off'); zone.innerHTML = '<b>Photos need Firebase</b><span>Open the https site to add photos.</span>'; document.getElementById('photoGrid').innerHTML = ''; return; }
+  zone.onclick = () => input.click();
+  zone.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } };
+  ['dragenter', 'dragover'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.remove('over'); }));
+  zone.addEventListener('drop', e => queuePhotos(k, [...(e.dataTransfer?.files || [])]));
+  input.onchange = () => { queuePhotos(k, [...input.files]); input.value = ''; };
+  photoUnsub = photoCol().where('itemId', '==', k.id).onSnapshot(snap => {
+    currentPhotos = snap.docs.map(d => Object.assign({ id: d.id }, d.data()))
+      .sort((a, b) => ((a.createdAt && a.createdAt.toDate ? a.createdAt.toDate() : 0) - (b.createdAt && b.createdAt.toDate ? b.createdAt.toDate() : 0)));
+    drawPhotoGrid(k);
+  }, err => { document.getElementById('photoGrid').innerHTML = `<span class="sub">Could not load photos: ${esc(explain(err))}</span>`; });
+}
+function drawPhotoGrid(k) {
+  const grid = document.getElementById('photoGrid'); if (!grid) return;
+  const cur = savedKeyboards.find(x => x.id === k.id) || k;
+  const cover = document.getElementById('coverBox');
+  if (cover) cover.innerHTML = cur.coverThumb ? `<img src="${cur.coverThumb}" alt="${esc(cur.name)}">` : `<span>${I.keyboards}No photo yet</span>`;
+  if (!currentPhotos.length) { grid.innerHTML = '<span class="sub">No photos yet.</span>'; return; }
+  grid.innerHTML = currentPhotos.map(p => `
+    <div class="ptile${p.id === cur.coverPhotoId ? ' def' : ''}">
+      <img src="${p.thumb}" alt="${esc(p.fileName || 'photo')}">
+      ${p.id === cur.coverPhotoId ? '<span class="chip acc pbadge">Default</span>' : ''}
+      <div class="pacts">
+        ${p.id === cur.coverPhotoId ? '' : `<button class="btn" data-pact="default" data-pid="${p.id}">Set as default</button>`}
+        <button class="btn" data-pact="crop" data-pid="${p.id}">Crop</button>
+        <button class="btn danger" data-pact="delete" data-pid="${p.id}" aria-label="Delete photo">Delete</button>
+      </div></div>`).join('') + `<p class="sub" style="margin:4px 0 0;grid-column:1/-1">${currentPhotos.length} photo${currentPhotos.length === 1 ? '' : 's'}</p>`;
+  grid.onclick = async e => {
+    const b = e.target.closest('[data-pact]'); if (!b) return;
+    const p = currentPhotos.find(x => x.id === b.dataset.pid); if (!p) return;
+    if (b.dataset.pact === 'default') setCover(k.id, p);
+    else if (b.dataset.pact === 'crop') { const img = await loadImage(p.full); const out = await cropDialog(img, p.fileName || 'photo'); if (out) replacePhoto(k, p, out); }
+    else if (b.dataset.pact === 'delete') deletePhoto(k, p);
+  };
+}
+async function setCover(itemId, p) {
+  try { await withTimeout(kbCol().doc(itemId).update({ coverPhotoId: p ? p.id : firebase.firestore.FieldValue.delete(), coverThumb: p ? p.thumb : firebase.firestore.FieldValue.delete() })); if (p) toast('Default photo set'); }
+  catch (e) { toast('Could not set default: ' + explain(e)); }
+}
+function loadImage(src) {
+  return new Promise((res, rej) => { const img = new Image(); img.onload = () => res(img); img.onerror = () => rej(new Error('This file could not be read as an image. iPhone HEIC photos need to be saved as JPG first.')); img.src = src; });
+}
+function fileToDataUrl(f) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsDataURL(f); }); }
+let photoQueueBusy = false;
+async function queuePhotos(k, files) {
+  const imgs = files.filter(f => /^image\/(jpeg|png|webp)$/.test(f.type));
+  if (files.length && !imgs.length) { toast('Only JPG, PNG or WebP images can be added.'); return; }
+  if (files.length > imgs.length) toast(`${files.length - imgs.length} file(s) skipped: only JPG, PNG or WebP.`);
+  if (photoQueueBusy) { toast('Finish the current photo first.'); return; }
+  photoQueueBusy = true;
+  try {
+    for (let i = 0; i < imgs.length; i++) {
+      const f = imgs[i];
+      let img;
+      try { img = await loadImage(await fileToDataUrl(f)); } catch (e) { toast(f.name + ': ' + e.message); continue; }
+      const out = await cropDialog(img, f.name, imgs.length > 1 ? `Photo ${i + 1} of ${imgs.length}` : '');
+      if (!out) continue;   // skipped
+      await addPhoto(k, out, f.name);
+    }
+  } finally { photoQueueBusy = false; }
+}
+async function addPhoto(k, out, fileName) {
+  try {
+    const ref = photoCol().doc();
+    await withTimeout(ref.set({ itemType: 'keyboards', itemId: k.id, full: out.full, thumb: out.thumb, bytes: out.bytes, width: out.width, height: out.height, fileName, createdAt: firebase.firestore.FieldValue.serverTimestamp() }), 30000);
+    await metaRef().set({ photoCount: firebase.firestore.FieldValue.increment(1), photoBytes: firebase.firestore.FieldValue.increment(out.bytes) }, { merge: true });
+    const cur = savedKeyboards.find(x => x.id === k.id) || k;
+    if (!cur.coverPhotoId) await setCover(k.id, { id: ref.id, thumb: out.thumb });
+    toast('Photo saved');
+  } catch (e) { toast('Photo not saved: ' + explain(e)); }
+}
+async function replacePhoto(k, p, out) {
+  try {
+    await withTimeout(photoCol().doc(p.id).update({ full: out.full, thumb: out.thumb, bytes: out.bytes, width: out.width, height: out.height }), 30000);
+    await metaRef().set({ photoBytes: firebase.firestore.FieldValue.increment(out.bytes - (p.bytes || 0)) }, { merge: true });
+    const cur = savedKeyboards.find(x => x.id === k.id) || k;
+    if (cur.coverPhotoId === p.id) await setCover(k.id, { id: p.id, thumb: out.thumb });
+    toast('Crop saved');
+  } catch (e) { toast('Crop not saved: ' + explain(e)); }
+}
+async function deletePhoto(k, p) {
+  if (!confirm('Delete this photo? This cannot be undone.')) return;
+  try {
+    await withTimeout(photoCol().doc(p.id).delete());
+    await metaRef().set({ photoCount: firebase.firestore.FieldValue.increment(-1), photoBytes: firebase.firestore.FieldValue.increment(-(p.bytes || 0)) }, { merge: true });
+    const cur = savedKeyboards.find(x => x.id === k.id) || k;
+    if (cur.coverPhotoId === p.id) { const next = currentPhotos.find(x => x.id !== p.id); await setCover(k.id, next || null); }
+    toast('Photo deleted');
+  } catch (e) { toast('Delete failed: ' + explain(e)); }
+}
+async function deletePhotosOf(itemId) {   // used when a keyboard is deleted
+  const snap = await photoCol().where('itemId', '==', itemId).get();
+  let n = 0, bytes = 0;
+  for (const d of snap.docs) { bytes += d.data().bytes || 0; n++; await d.ref.delete(); }
+  if (n) await metaRef().set({ photoCount: firebase.firestore.FieldValue.increment(-n), photoBytes: firebase.firestore.FieldValue.increment(-bytes) }, { merge: true });
+}
+
+/* ---------- Crop dialog: drag to move, zoom, rotate, live preview; output is 4:3 ---------- */
+function cropDialog(img, fileName, counter = '') {
+  return new Promise(resolve => {
+    const wrap = document.createElement('div');
+    wrap.className = 'modal-bg';
+    wrap.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Crop photo">
+      <h3>Crop photo${counter ? ` <span class="sub">· ${esc(counter)}</span>` : ''}</h3>
+      <p class="sub">Drag to move the photo and zoom so the card looks right. ${esc(fileName)}</p>
+      <div class="crop-row">
+        <canvas id="cropCv" width="640" height="480" class="cropcv"></canvas>
+        <div class="crop-side">
+          <div class="k">Card preview</div><canvas id="cropPv" width="240" height="180" class="croppv"></canvas>
+          <div class="k" style="margin-top:14px">Zoom</div><input type="range" id="cropZoom" min="1" max="4" step="0.01" value="1" aria-label="Zoom">
+          <div class="k" style="margin-top:14px">Rotate</div>
+          <div class="btnrow"><button class="btn" id="rotL" aria-label="Rotate left">⟲ Left</button><button class="btn" id="rotR" aria-label="Rotate right">⟳ Right</button></div>
+        </div>
+      </div>
+      <div class="btnrow" style="justify-content:flex-end;margin-top:16px">
+        ${counter ? '<button class="btn" id="cropSkip">Skip this photo</button>' : ''}<button class="btn" id="cropCancel">Cancel</button><button class="btn primary" id="cropSave">Save crop</button></div></div>`;
+    document.body.appendChild(wrap);
+    const cv = wrap.querySelector('#cropCv'), pv = wrap.querySelector('#cropPv'), zoomEl = wrap.querySelector('#cropZoom');
+    const st = { rot: 0, zoom: 1, x: 0, y: 0 };   // x,y = offset of image centre from frame centre, in frame pixels
+    const srcW = () => (st.rot % 180 ? img.height : img.width), srcH = () => (st.rot % 180 ? img.width : img.height);
+    const baseScale = (W, H) => Math.max(W / srcW(), H / srcH());   // "cover" fit at zoom 1
+    function clamp() {
+      const s = baseScale(cv.width, cv.height) * st.zoom, w = srcW() * s, h = srcH() * s;
+      const mx = Math.max(0, (w - cv.width) / 2), my = Math.max(0, (h - cv.height) / 2);
+      st.x = Math.min(mx, Math.max(-mx, st.x)); st.y = Math.min(my, Math.max(-my, st.y));
+    }
+    function draw(c) {
+      const W = c.width, H = c.height, f = W / cv.width, ctx = c.getContext('2d');
+      const s = baseScale(W, H) * st.zoom;
+      ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+      ctx.save(); ctx.translate(W / 2 + st.x * f, H / 2 + st.y * f); ctx.rotate(st.rot * Math.PI / 180);
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, -img.width * s / 2, -img.height * s / 2, img.width * s, img.height * s);
+      ctx.restore();
+    }
+    const redraw = () => { clamp(); draw(cv); draw(pv); };
+    let drag = null;
+    cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, sx: st.x, sy: st.y }; cv.setPointerCapture(e.pointerId); });
+    cv.addEventListener('pointermove', e => { if (!drag) return; const r = cv.width / cv.getBoundingClientRect().width; st.x = drag.sx + (e.clientX - drag.x) * r; st.y = drag.sy + (e.clientY - drag.y) * r; redraw(); });
+    cv.addEventListener('pointerup', () => { drag = null; });
+    cv.addEventListener('wheel', e => { e.preventDefault(); st.zoom = Math.min(4, Math.max(1, st.zoom * (e.deltaY < 0 ? 1.08 : 1 / 1.08))); zoomEl.value = st.zoom; redraw(); }, { passive: false });
+    zoomEl.oninput = () => { st.zoom = Number(zoomEl.value); redraw(); };
+    wrap.querySelector('#rotL').onclick = () => { st.rot = (st.rot + 270) % 360; redraw(); };
+    wrap.querySelector('#rotR').onclick = () => { st.rot = (st.rot + 90) % 360; redraw(); };
+    const close = v => { document.removeEventListener('keydown', onKey); wrap.remove(); resolve(v); };
+    const onKey = e => { if (e.key === 'Escape') close(null); };
+    document.addEventListener('keydown', onKey);
+    wrap.querySelector('#cropCancel').onclick = () => close(null);
+    if (counter) wrap.querySelector('#cropSkip').onclick = () => close(null);
+    wrap.querySelector('#cropSave').onclick = async () => {
+      const btn = wrap.querySelector('#cropSave'); btn.disabled = true; btn.textContent = 'Saving…';
+      // never upscale: the output is at most the photo's own resolution inside the frame
+      const visW = cv.width / (baseScale(cv.width, cv.height) * st.zoom);
+      const scaleW = Math.min(PHOTO_FULL.w, Math.round(visW));
+      const fw = Math.max(320, Math.min(PHOTO_FULL.w, scaleW)), fh = Math.round(fw * 3 / 4);
+      let full = '';
+      for (const sizeStep of [1, 0.8, 0.64]) {
+        const c = document.createElement('canvas'); c.width = Math.round(fw * sizeStep); c.height = Math.round(fh * sizeStep); draw(c);
+        for (const q of PHOTO_FULL.q) { full = c.toDataURL('image/webp', q); if (full.length < MAX_DOC_CHARS) break; }
+        if (full.length < MAX_DOC_CHARS) { var outW = c.width, outH = c.height; break; }
+      }
+      const t = document.createElement('canvas'); t.width = PHOTO_THUMB.w; t.height = PHOTO_THUMB.h; draw(t);
+      const thumb = t.toDataURL('image/webp', PHOTO_THUMB.q);
+      if (!full.startsWith('data:image/webp')) { toast('This browser cannot make WebP images; saving as JPEG instead.'); }
+      close({ full, thumb, bytes: Math.round((full.length + thumb.length) * 3 / 4), width: outW, height: outH });
+    };
+    redraw();
+  });
+}
+
+let metaUnsub = null;
+function stopMetaListener() { if (metaUnsub) { metaUnsub(); metaUnsub = null; } }
+function startMetaListener() {
+  const t = document.getElementById('meterText'); if (!t) return;
+  if (!db || isFile) { t.textContent = 'Needs Firebase (open the https site).'; return; }
+  metaUnsub = metaRef().onSnapshot(snap => {
+    const m = snap.exists ? snap.data() : {}; const n = m.photoCount || 0, b = Math.max(0, m.photoBytes || 0);
+    const GB = 1024 * 1024 * 1024, pctUsed = b / GB * 100;
+    document.getElementById('meterBar').style.width = Math.min(100, Math.max(n ? 0.5 : 0, pctUsed)) + '%';
+    t.innerHTML = `${n} photo${n === 1 ? '' : 's'} · ${(b / 1048576).toFixed(1)} MB of 1,024 MB (${pctUsed.toFixed(1)}%)` + (n ? `<br>About ${Math.round(b / n / 1024)} KB per photo · room for roughly ${Math.max(0, Math.floor((GB * 0.9 - b) / Math.max(1, b / n))).toLocaleString()} more` : '');
+  }, err => { t.textContent = 'Could not read storage: ' + explain(err); });
 }
 
 /* ===================== Settings (connection test moved here) ===================== */
@@ -836,7 +1205,8 @@ function renderSettings() {
     <div class="two">
       <div class="card"><h3>About this app</h3><p class="sub">Keyboard Collection ${APP_VERSION} · single user · USD</p>
         <div class="kv">Data path: ${FIRESTORE_COLLECTION}/${ROOT_DOC}/&lt;type&gt;/&lt;id&gt;<br>Firebase project: ${firebaseConfig.projectId}</div></div>
-      <div class="card"><h3>Photo storage</h3><p class="sub">A storage meter appears here once photos arrive (Step 2.7), so you can see the free limit coming.</p></div>
+      <div class="card"><h3>Photo storage</h3><p class="sub">Photos are saved in your Firebase database. The free plan includes 1 GB in total.</p>
+        <div class="meter"><span id="meterBar" style="width:0%"></span></div><div class="kv" id="meterText">Loading…</div></div>
     </div>
     <h2 style="font-size:17px;margin:26px 0 12px">Connection test</h2>
     <div class="two">
@@ -849,6 +1219,7 @@ function renderSettings() {
           <button class="btn danger" id="btnDelete" ${ready ? '' : 'disabled'}>Delete test keyboard</button></div>
         <ul class="log" id="testLog" style="margin-top:14px"></ul></div>
     </div>`;
+  startMetaListener();
   if (!ready) {
     document.getElementById('liveDot').className = 'dot bad';
     document.getElementById('liveTitle').textContent = isFile ? 'Blocked: opened from a file' : 'Firebase not loaded';
