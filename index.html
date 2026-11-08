@@ -16,6 +16,7 @@
 <!-- Firebase compat SDK: script tags only, never dynamic import() (guardrail, Section 8) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
 <style>
   :root {
@@ -308,6 +309,16 @@
   .acitem:hover, .acitem.on { background: color-mix(in srgb, var(--accent) 16%, transparent); }
   .vnow { display: grid; gap: 2px; } .vnow b { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; } .vnow span { font-size: 12.5px; color: var(--text-2); }
   .vadd { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; } .vadd #vSrc, .vadd #vAdd { grid-column: 1 / -1; } .vadd .input { padding: 7px 9px; font-size: 13px; min-width: 0; }
+  #signin { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: radial-gradient(1200px 600px at 50% -10%, color-mix(in srgb, var(--accent) 18%, transparent), transparent), var(--bg); }
+  #signin[hidden] { display: none; }
+  body.locked .shell { visibility: hidden; }
+  .sicard { width: min(420px, 90vw); text-align: center; display: grid; justify-items: center; gap: 10px; padding: 34px 30px; border: 1px solid var(--line); border-radius: 18px; background: var(--bg-2); }
+  .sicard .logo { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+  .sicard .logo svg { width: 28px; height: 28px; } .sicard h1 { font-size: 22px; margin: 6px 0 0; } .sicard p { margin: 0; color: var(--text-2); }
+  .sicard .btn { margin-top: 10px; gap: 10px; padding: 11px 18px; font-size: 14.5px; }
+  .sicard .msg { color: #fca5a5; font-size: 13px; min-height: 18px; } .sicard .fine { font-size: 12px; color: var(--text-3); }
+  .usertext { display: block; font-size: 11.5px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  pre.rules { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 12px; overflow: auto; white-space: pre; margin: 0 0 12px; }
   .kinst { display: grid; gap: 10px; }
   .kirow { display: grid; gap: 4px; }
   .kirow .kn { font-size: 12.5px; color: var(--text-2); font-weight: 600; }
@@ -333,6 +344,13 @@
 </style>
 </head>
 <body>
+  <div id="signin" hidden><div class="sicard">
+    <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 18l1.6-10.2A2 2 0 0 1 8.6 6h6.8a2 2 0 0 1 2 1.8L19 18"/><path d="M3.5 18h17"/><path d="M9 10.5h6"/></svg></span>
+    <h1>Keyboard Collection</h1><p>Faraz's vault. Sign in to see your collection.</p>
+    <button class="btn primary" id="siBtn" onclick="signInGoogle()"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#fff" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path fill="#fff" opacity=".85" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#fff" opacity=".7" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2z"/><path fill="#fff" opacity=".55" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.3 3-4.1 5.6-4.1z"/></svg>Sign in with Google</button>
+    <p class="msg" id="siMsg" role="alert"></p>
+    <p class="fine">Your data stays in your own Firebase project. You stay signed in on this device until you sign out in Settings.</p>
+  </div></div>
 <div class="shell">
   <aside class="side" aria-label="Main navigation">
     <a class="brandmark" href="#/dashboard">
@@ -342,6 +360,7 @@
     <nav id="nav"></nav>
     <div class="side-foot">
       <span class="status"><span class="dot" id="fbDot"></span><span id="fbText">Checking…</span></span>
+      <span id="userText" class="usertext"></span>
       <span id="verText"></span>
     </div>
   </aside>
@@ -351,7 +370,7 @@
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.31.0';
+const APP_VERSION = 'v0.32.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -2908,7 +2927,7 @@ function logLine(msg, kind) {
   ul.prepend(li);
 }
 function explain(err) {
-  if (err && err.code === 'permission-denied') return 'Permission denied. Check that the Firestore rules include the keyboard_collection block and were published.';
+  if (err && err.code === 'permission-denied') return currentUser ? 'Permission denied. Check that the rules in Settings → Lock your database were published with this account\'s user ID.' : 'Permission denied. Sign in first.';
   if (err && err.code === 'unavailable') return 'Firebase is unreachable (offline?).';
   if (err && err.code === 'timeout') return err.message + '.';
   return (err && (err.code || err.message)) || String(err);
@@ -2924,6 +2943,15 @@ function renderSettings() {
       <div class="card"><h3>Photo storage</h3><p class="sub">Photos are saved in your Firebase database. The free plan includes 1 GB in total.</p>
         <div class="meter"><span id="meterBar" style="width:0%"></span></div><div class="kv" id="meterText">Loading…</div></div>
     </div>
+    ${currentUser ? `<h2 style="font-size:17px;margin:26px 0 12px">Account and security</h2>
+    <div class="two">
+      <div class="card" id="acctCard"><h3>Signed in</h3><p class="sub">${esc(currentUser.displayName || '')}</p>
+        <div class="kv">Email: ${esc(currentUser.email || '—')}<br>User ID: <span class="mono" id="uidText">${esc(currentUser.uid)}</span></div>
+        <div class="btnrow" style="margin-top:12px"><button class="btn" id="btnSignOut">Sign out</button></div></div>
+      <div class="card" id="rulesCard"><h3>Lock your database</h3><p class="sub">Paste these rules in the Firebase console → Firestore Database → Rules, then Publish. After that only this Google account can read or write your collection. The Keycap Collection app's rule is kept as it is.</p>
+        <pre class="rules" id="rulesText">${esc(lockedRulesText(currentUser.uid))}</pre>
+        <div class="btnrow"><button class="btn primary" id="btnCopyRules">Copy rules</button></div></div>
+    </div>` : ''}
     <h2 style="font-size:17px;margin:26px 0 12px">Connection test</h2>
     <div class="two">
       <div class="card"><h3>Test record, live</h3><p class="sub">Updates by itself when the record changes on any device.</p>
@@ -2936,6 +2964,11 @@ function renderSettings() {
         <ul class="log" id="testLog" style="margin-top:14px"></ul></div>
     </div>`;
   startMetaListener();
+  document.getElementById('btnSignOut')?.addEventListener('click', signOutApp);
+  document.getElementById('btnCopyRules')?.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(lockedRulesText(currentUser.uid)); toast('Rules copied'); }
+    catch { const r = document.createRange(); r.selectNodeContents(document.getElementById('rulesText')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast('Press Ctrl+C to copy the selected rules'); }
+  });
   if (!ready) {
     document.getElementById('liveDot').className = 'dot bad';
     document.getElementById('liveTitle').textContent = isFile ? 'Blocked: opened from a file' : 'Firebase not loaded';
@@ -2977,6 +3010,54 @@ if (isFile || isInsecure) {
     : '<strong>Not a secure connection.</strong> Open <strong>https://fniskeebs69.github.io/keyboards/</strong> so sync and installing work.';
 }
 
+/* ===================== Sign-in (Google) =====================
+   The app opens only after you sign in with Google. Once the Firestore rules are locked to your
+   account (Settings → Lock your database), only you can read or write keyboard_collection. */
+let auth = null, currentUser = null, listenersOn = false;
+function startAllListeners() {
+  if (listenersOn) return; listenersOn = true;
+  startKeyboardListener(); startSwitchListener(); startKeycapListener(); startPartListeners(); startWishListener();
+}
+function showSignIn(msg = '') {
+  const el = document.getElementById('signin'); el.hidden = false; document.body.classList.add('locked');
+  document.getElementById('siMsg').textContent = msg;
+  document.getElementById('siBtn').disabled = false; document.getElementById('siBtn').textContent = 'Sign in with Google';
+}
+function hideSignIn() { document.getElementById('signin').hidden = true; document.body.classList.remove('locked'); }
+async function signInGoogle() {
+  const btn = document.getElementById('siBtn'), msg = document.getElementById('siMsg');
+  const provider = new firebase.auth.GoogleAuthProvider(); provider.setCustomParameters({ prompt: 'select_account' });
+  btn.disabled = true; btn.textContent = 'Opening Google…'; msg.textContent = '';
+  try { await auth.signInWithPopup(provider); }
+  catch (e) {
+    if (['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment'].includes(e.code)) {
+      msg.textContent = 'Pop-up was blocked, switching to a full-page sign-in…'; try { await auth.signInWithRedirect(provider); return; } catch (e2) { e = e2; }
+    }
+    showSignIn(e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request' ? 'Sign-in was closed before it finished.'
+      : e.code === 'auth/unauthorized-domain' ? 'This web address is not on the Firebase authorized domains list.' : 'Could not sign in: ' + (e.code || e.message));
+  }
+}
+async function signOutApp() {
+  if (!confirm('Sign out of Keyboard Collection on this device?')) return;
+  try { await auth.signOut(); } catch (e) { toast('Could not sign out: ' + (e.code || e.message)); return; }
+  location.hash = '#/dashboard'; location.reload();
+}
+function lockedRulesText(uid) {
+  return `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Keycap Collection app (keycaps/): unchanged, still open
+    match /keycap_tracker/{doc} {
+      allow read, write: if true;
+    }
+    // Keyboard Collection app (keyboards/): only Faraz's Google account
+    match /keyboard_collection/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == "${uid}";
+    }
+  }
+}`;
+}
+
 /* ===================== Firebase init ===================== */
 const fbDot = document.getElementById('fbDot'), fbText = document.getElementById('fbText');
 let db = null;
@@ -2988,13 +3069,19 @@ try {
   else { fbDot.className = 'dot ok'; fbText.textContent = 'Firebase ready'; }
 } catch (err) { console.error(err); fbDot.className = 'dot bad'; fbText.textContent = 'Firebase not loaded'; }
 document.getElementById('verText').textContent = APP_VERSION;
-startKeyboardListener();
-startSwitchListener();
-startKeycapListener();
-startPartListeners();
-startWishListener();
-
-route();
+if (db && !isFile) {
+  try {
+    if (typeof firebase.auth !== 'function') throw new Error('Sign-in did not load (offline?)');
+    auth = firebase.auth();
+    showSignIn(''); document.getElementById('siBtn').disabled = true; document.getElementById('siBtn').textContent = 'Checking sign-in…';
+    auth.getRedirectResult().catch(e => showSignIn('Could not sign in: ' + (e.code || e.message)));
+    auth.onAuthStateChanged(u => {
+      currentUser = u;
+      if (u) { hideSignIn(); document.getElementById('userText').textContent = u.email || u.displayName || 'Signed in'; startAllListeners(); route(); }
+      else { document.getElementById('userText').textContent = ''; showSignIn(document.getElementById('siMsg').textContent); }
+    });
+  } catch (err) { console.error(err); fbDot.className = 'dot bad'; fbText.textContent = 'Sign-in not loaded'; showSignIn(String(err.message || err)); }
+} else { startAllListeners(); route(); }
 </script>
 </body>
 </html>
