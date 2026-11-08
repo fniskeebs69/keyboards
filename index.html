@@ -19,200 +19,240 @@
 
 <style>
   :root {
-    --bg: #101217;
-    --bg-2: #14171d;
-    --surface: #1a1e26;
-    --surface-2: #222732;
-    --line: #2b3140;
-    --text: #e9ebf0;
-    --text-2: #a3a9b8;
-    --text-3: #6d7486;
-    --kb: #f5a524;   /* Keyboards */
-    --kc: #2dd4bf;   /* Keycaps */
-    --sw: #fb7185;   /* Switches */
-    --ac: #a78bfa;   /* Accessories */
+    --bg: #0f1115; --bg-2: #13161c; --side: #12151b;
+    --surface: #181c24; --surface-2: #20252f; --line: #282e3a; --line-2: #323949;
+    --text: #e9ebf0; --text-2: #a3a9b8; --text-3: #6d7486;
+    --kb: #f5a524; --sw: #fb7185; --kc: #2dd4bf; --pcb: #4ade80; --ac: #a78bfa; --ar: #38bdf8; --neutral: #f5a524;
     --accent: var(--kb);
-    --radius: 16px;
+    --radius: 14px;
+    --side-w: 236px;
     --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
-  body {
-    background: radial-gradient(1200px 600px at 50% -200px, #1b2030 0%, var(--bg) 60%) fixed, var(--bg);
-    color: var(--text);
+  body { background: var(--bg); color: var(--text);
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -webkit-tap-highlight-color: transparent;
-  }
-  button { font: inherit; color: inherit; }
+    -webkit-font-smoothing: antialiased; font-size: 14px; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  a { color: inherit; }
 
-  /* ---------- Protocol warning ---------- */
-  #protoWarn {
-    display: none;
-    margin: calc(12px + var(--safe-top)) 16px 0;
-    padding: 14px 16px;
-    border-radius: 12px;
-    background: #3a1d22;
-    border: 1px solid #7a2e3a;
-    color: #ffd7dc;
-    font-size: 14px;
-    line-height: 1.45;
-  }
+  /* ---------- Shell ---------- */
+  .shell { display: grid; grid-template-columns: var(--side-w) 1fr; min-height: 100vh; background: linear-gradient(to right, var(--side) var(--side-w), var(--bg) var(--side-w)); }
+  .side { position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--side); border-right: 1px solid var(--line);
+    padding: calc(16px + var(--safe-top)) 12px 16px; display: flex; flex-direction: column; }
+  .brandmark { display: flex; align-items: center; gap: 10px; padding: 4px 8px 18px; text-decoration: none; }
+  .brandmark .logo { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: color-mix(in srgb, var(--kb) 16%, transparent); color: var(--kb); }
+  .brandmark .logo svg { width: 20px; height: 20px; }
+  .brandmark b { display: block; font-size: 15px; letter-spacing: -.01em; }
+  .brandmark span { display: block; font-size: 11.5px; color: var(--text-3); }
+  .navgroup { margin: 10px 0 4px; padding: 0 10px; font-size: 11px; font-weight: 700; letter-spacing: .12em; color: var(--text-3); }
+  .navitem { display: flex; align-items: center; gap: 11px; padding: 8px 10px; border-radius: 9px; text-decoration: none; color: var(--text-2);
+    font-weight: 550; margin: 1px 0; border: 1px solid transparent; }
+  .navitem svg { width: 18px; height: 18px; color: var(--c, var(--text-3)); flex: none; }
+  .navitem:hover { background: var(--surface); color: var(--text); }
+  .navitem.on { background: color-mix(in srgb, var(--c, var(--kb)) 12%, var(--surface)); color: var(--text);
+    border-color: color-mix(in srgb, var(--c, var(--kb)) 30%, transparent); }
+  .navitem .soon { margin-left: auto; font-size: 10px; font-weight: 600; color: var(--text-3); border: 1px solid var(--line); border-radius: 6px; padding: 1px 5px; }
+  .side-foot { margin-top: auto; padding: 14px 10px 0; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--text-3); display: grid; gap: 6px; }
+  .status { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); flex: none; }
+  .dot.ok { background: #34d399; } .dot.bad { background: #f87171; }
+
+  .main { min-width: 0; }
+  .page { max-width: 1240px; margin: 0 auto; padding: calc(26px + var(--safe-top)) 32px 48px; }
+  .pagehead { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+  .pagehead h1 { margin: 0; font-size: 26px; letter-spacing: -.02em; }
+  .pagehead p { margin: 4px 0 0; color: var(--text-2); }
+  .tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+  #protoWarn { display: none; margin: 0 0 18px; padding: 12px 14px; border-radius: 12px; background: #3a1d22; border: 1px solid #7a2e3a; color: #ffd7dc; line-height: 1.45; }
   #protoWarn strong { color: #fff; }
 
-  /* ---------- Layout ---------- */
-  .view { display: none; min-height: 100vh; flex-direction: column; }
-  .view.active { display: flex; animation: enter .22s ease-out; }
-  @keyframes enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-  @media (prefers-reduced-motion: reduce) { .view.active { animation: none; } }
-  .wrap { width: 100%; max-width: 980px; margin: 0 auto; padding: 0 18px; }
-
-  /* ---------- Home ---------- */
-  .home-head { padding-top: calc(28px + var(--safe-top)); padding-bottom: 8px; }
-  .eyebrow { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-3); font-weight: 600; }
-  .home-head h1 { margin: 6px 0 4px; font-size: 30px; letter-spacing: -.02em; font-weight: 750; }
-  .home-head p { margin: 0; color: var(--text-2); font-size: 15px; }
-
-  .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 22px 0 18px; }
-  @media (min-width: 760px) { .tiles { grid-template-columns: repeat(4, 1fr); gap: 16px; } }
-  .tile {
-    position: relative; text-align: left; cursor: pointer;
-    background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
-    border: 1px solid var(--line); border-radius: var(--radius);
-    padding: 16px 16px 14px; min-height: 168px;
-    display: flex; flex-direction: column; gap: 10px;
-    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
-    overflow: hidden;
-  }
-  .tile::before {
-    content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--c);
-  }
-  .tile:hover, .tile:focus-visible { border-color: color-mix(in srgb, var(--c) 55%, var(--line)); transform: translateY(-2px);
-    box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--c) 45%, transparent); outline: none; }
-  .tile:active { transform: translateY(0) scale(.99); }
-  .tile .ico {
-    width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center;
-    background: color-mix(in srgb, var(--c) 14%, transparent); color: var(--c);
-  }
-  .tile .ico svg { width: 24px; height: 24px; }
-  .tile h2 { margin: 2px 0 0; font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
-  .tile .desc { margin: 0; font-size: 13px; color: var(--text-2); line-height: 1.4; flex: 1; }
-  .tile .meta { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-3); }
-  .pill { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--text-2); white-space: nowrap; }
-  .pill.live { color: var(--c); border-color: color-mix(in srgb, var(--c) 45%, var(--line)); background: color-mix(in srgb, var(--c) 10%, transparent); }
-  .chev { color: var(--text-3); }
-
-  .foot { margin-top: auto; padding-top: 18px; padding-bottom: calc(18px + var(--safe-bottom)); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
-    font-size: 12px; color: var(--text-3); border-top: 1px solid var(--line); background-clip: content-box; }
-  .status { display: inline-flex; align-items: center; gap: 6px; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); }
-  .dot.ok { background: #34d399; }
-  .dot.bad { background: #f87171; }
-
-  /* ---------- Category page ---------- */
-  .topbar {
-    position: sticky; top: 0; z-index: 5;
-    padding-top: var(--safe-top);
-    background: color-mix(in srgb, var(--bg) 88%, transparent);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--line);
-  }
-  .topbar .wrap { display: flex; align-items: center; gap: 10px; height: 58px; }
-  .back {
-    width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface);
-    display: grid; place-items: center; cursor: pointer;
-  }
-  .back:hover { border-color: var(--accent); }
-  .topbar .ttl { display: flex; align-items: center; gap: 10px; min-width: 0; }
-  .topbar .ttl .ico { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
-    background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
-  .topbar .ttl .ico svg { width: 18px; height: 18px; }
-  .topbar h1 { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -.01em; }
-  .accent-rule { height: 2px; background: linear-gradient(90deg, var(--accent), transparent 70%); }
-
-  .empty {
-    margin: 56px auto 40px; max-width: 420px; text-align: center; padding: 0 12px;
-  }
-  .empty .big { width: 84px; height: 84px; margin: 0 auto 18px; border-radius: 24px; display: grid; place-items: center;
-    color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent);
-    border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line)); }
-  .empty .big svg { width: 42px; height: 42px; }
-  .empty h2 { margin: 0 0 8px; font-size: 20px; }
-  .empty p { margin: 0; color: var(--text-2); font-size: 14.5px; line-height: 1.55; }
-  .linkbtn { background: none; border: 0; padding: 0; color: var(--text-2); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; font-size: 12px; }
-  .linkbtn:hover { color: var(--text); }
-  .foot-right { display: inline-flex; gap: 16px; align-items: center; }
-
-  /* ---------- Connection test page ---------- */
-  .test-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; }
-  @media (max-width: 760px) { .test-grid { grid-template-columns: 1fr; } }
+  /* ---------- Controls ---------- */
+  .btn { border: 1px solid var(--line-2); background: var(--surface-2); border-radius: 10px; padding: 8px 14px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+  .btn:hover:not(:disabled) { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #14110a; }
+  .btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+  .btn.danger:hover:not(:disabled) { border-color: #f87171; color: #fecaca; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn svg { width: 16px; height: 16px; }
+  .select, .input { background: var(--surface); border: 1px solid var(--line-2); border-radius: 10px; padding: 8px 12px; outline: none; }
+  .select:focus, .input:focus { border-color: var(--accent); }
+  .seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 10px; overflow: hidden; }
+  .seg button { background: var(--surface); border: 0; padding: 8px 12px; cursor: pointer; color: var(--text-2); display: inline-flex; gap: 6px; align-items: center; }
+  .seg button + button { border-left: 1px solid var(--line-2); }
+  .seg button.on { background: var(--surface-2); color: var(--accent); font-weight: 650; }
+  .seg svg { width: 15px; height: 15px; }
+  .search { position: relative; flex: 1; min-width: 260px; }
+  .search input { width: 100%; padding-left: 36px; }
+  .search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-3); }
+  .chip { font-size: 11px; padding: 2px 7px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line); color: var(--text-2); white-space: nowrap; }
+  .chip.acc { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
   .card h3 { margin: 0 0 4px; font-size: 15px; }
   .card .sub { margin: 0 0 14px; color: var(--text-2); font-size: 13px; line-height: 1.5; }
+  .note { font-size: 12.5px; color: var(--text-2); border: 1px dashed color-mix(in srgb, var(--accent) 40%, var(--line));
+    background: color-mix(in srgb, var(--accent) 6%, transparent); border-radius: 10px; padding: 9px 12px; margin-bottom: 16px; }
+
+  /* ---------- Dashboard ---------- */
+  .dash-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .tile { display: flex; gap: 16px; align-items: flex-start; text-decoration: none; position: relative; }
+  .tile .ic { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; flex: none;
+    background: color-mix(in srgb, var(--c) 14%, transparent); color: var(--c); }
+  .tile .ic svg { width: 24px; height: 24px; }
+  .tile .lbl { color: var(--text-2); font-size: 14px; }
+  .tile .big { font-size: 34px; font-weight: 750; letter-spacing: -.02em; margin: 2px 0; font-variant-numeric: tabular-nums; }
+  .tile .hint { color: var(--text-3); font-size: 12.5px; }
+  .tile .hint.good { color: #34d399; }
+  .tile .eye { position: absolute; right: 14px; top: 14px; }
+  .tile .blur { filter: blur(9px); user-select: none; }
+  a.tile.card:hover { border-color: color-mix(in srgb, var(--c) 45%, var(--line)); }
+  .addrow { display: flex; gap: 10px; flex-wrap: wrap; }
+  .addrow .btn svg { color: var(--c); }
+  .sec-title { display: flex; justify-content: space-between; align-items: baseline; }
+  .recent { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; }
+  .recent a { flex: none; width: 190px; text-decoration: none; display: flex; gap: 10px; align-items: center; background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px; padding: 8px; }
+  .recent a:hover { border-color: var(--line-2); }
+  .recent .th { width: 52px; height: 40px; border-radius: 8px; background: var(--surface-2); display: grid; place-items: center; color: var(--c); flex: none; }
+  .recent .th svg { width: 22px; height: 22px; }
+  .recent b { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
+  .recent span { font-size: 11.5px; color: var(--text-3); }
+  .bars { display: grid; gap: 10px; }
+  .bar { display: grid; grid-template-columns: 110px 1fr 76px; gap: 10px; align-items: center; font-size: 13px; }
+  .bar .track { display: block; height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+  .bar .fill { display: block; height: 100%; border-radius: 4px; background: var(--c, var(--kb)); }
+  .bar .n { text-align: right; color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+  /* ---------- Gallery ---------- */
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+  .kcard { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; text-decoration: none; display: block; transition: border-color .12s, transform .12s; }
+  .kcard:hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); transform: translateY(-2px); }
+  .kcard .ph { position: relative; aspect-ratio: 4 / 3; display: grid; place-items: center; color: var(--text-3);
+    background: linear-gradient(160deg, var(--surface-2), var(--bg-2)); }
+  .kcard .ph svg.big { width: 46px; height: 46px; opacity: .7; }
+  .kcard .ph .nophoto { position: absolute; bottom: 12px; font-size: 11.5px; }
+  .kcard .ph img { width: 100%; height: 100%; object-fit: cover; }
+  .fav { position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line-2);
+    background: color-mix(in srgb, var(--bg) 70%, transparent); display: grid; place-items: center; cursor: pointer; color: var(--text-2); }
+  .fav svg { width: 16px; height: 16px; }
+  .fav.on { color: var(--kb); border-color: color-mix(in srgb, var(--kb) 50%, var(--line)); }
+  .badge { position: absolute; top: 12px; left: 12px; }
+  .kcard .meta { padding: 12px 14px 14px; }
+  .kcard .meta b { display: block; font-size: 15px; }
+  .kcard .meta span { display: block; color: var(--text-2); font-size: 13px; margin-top: 2px; }
+  table.list { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  table.list th, table.list td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  table.list th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3); font-weight: 650; background: var(--bg-2); }
+  table.list tr.row { cursor: pointer; }
+  table.list tr.row:hover td { background: var(--surface-2); }
+  table.list tr:last-child td { border-bottom: 0; }
+  .empty { text-align: center; padding: 56px 20px; }
+  .empty .big { width: 76px; height: 76px; margin: 0 auto 16px; border-radius: 22px; display: grid; place-items: center;
+    color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line)); }
+  .empty .big svg { width: 38px; height: 38px; }
+  .empty h2 { margin: 0 0 6px; font-size: 19px; }
+  .empty p { margin: 0 auto; max-width: 440px; color: var(--text-2); line-height: 1.55; }
+
+  /* ---------- Detail (interim, read-only) ---------- */
+  .crumb { color: var(--text-2); text-decoration: none; font-size: 13px; display: inline-flex; gap: 6px; align-items: center; margin-bottom: 10px; }
+  .crumb:hover { color: var(--text); }
+  .crumb svg { width: 14px; height: 14px; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 340px; gap: 18px; align-items: start; }
+  .sec { border-top: 1px solid var(--line); padding: 14px 0 4px; }
+  .sec:first-child { border-top: 0; padding-top: 0; }
+  .sec h4 { margin: 0 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--accent); }
+  .fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px 18px; }
+  .f .k { font-size: 11.5px; color: var(--text-3); margin-bottom: 2px; }
+  .f .v { word-break: break-word; } .f .v.muted { color: var(--text-3); }
+  .f.wide { grid-column: 1 / -1; }
+  .total-row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
+  .total-row .t { font-size: 22px; font-weight: 750; font-variant-numeric: tabular-nums; }
+  .modlist { margin: 0; padding-left: 18px; line-height: 1.6; }
+  a.lnk { color: var(--accent); text-decoration: none; } a.lnk:hover { text-decoration: underline; }
+  .photo-box { aspect-ratio: 4 / 3; border-radius: 12px; display: grid; place-items: center; color: var(--text-3); border: 1px dashed var(--line-2); background: var(--bg-2); text-align: center; font-size: 12.5px; padding: 10px; }
+
+  /* ---------- Settings / connection test ---------- */
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .btnrow { display: flex; gap: 10px; flex-wrap: wrap; }
-  .btn { border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; padding: 9px 14px; font-size: 13.5px; font-weight: 600; cursor: pointer; }
-  .btn:hover:not(:disabled) { border-color: var(--accent); }
-  .btn.primary { background: var(--accent); color: #111; border-color: var(--accent); }
-  .btn.danger:hover:not(:disabled) { border-color: #f87171; color: #fecaca; }
-  .btn:disabled { opacity: .45; cursor: not-allowed; }
-  .live { display: flex; gap: 12px; align-items: flex-start; }
-  .live .dot { margin-top: 5px; flex: none; }
-  .live b { display: block; font-size: 15px; margin-bottom: 4px; }
+  .live { display: flex; gap: 12px; align-items: flex-start; } .live .dot { margin-top: 5px; }
+  .live b { display: block; margin-bottom: 4px; }
   .kv { font-size: 12.5px; color: var(--text-2); line-height: 1.6; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; word-break: break-all; }
-  .log { margin: 0; padding: 0; list-style: none; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12.5px; max-height: 260px; overflow: auto; }
+  .log { margin: 0; padding: 0; list-style: none; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12.5px; max-height: 220px; overflow: auto; }
   .log li { padding: 6px 0; border-bottom: 1px solid var(--line); color: var(--text-2); }
   .log li.ok { color: #86efac; } .log li.err { color: #fca5a5; }
   .log li span { color: var(--text-3); margin-right: 8px; }
-  .howto { font-size: 13px; color: var(--text-2); line-height: 1.6; margin: 0; padding-left: 18px; }
-  .empty .note { margin-top: 18px; display: inline-block; font-size: 12px; color: var(--text-3);
-    border: 1px dashed var(--line); border-radius: 10px; padding: 8px 12px; }
+
+  /* ---------- Add / edit form ---------- */
+  .form-grid { display: grid; grid-template-columns: 1fr 300px; gap: 18px; align-items: start; }
+  .tabs { display: flex; gap: 4px; padding: 5px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 14px; }
+  .tabs button { border: 0; background: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; color: var(--text-2); font-weight: 600; }
+  .tabs button.on { background: var(--accent); color: #14110a; }
+  .tabs button .err { color: #fca5a5; font-weight: 600; font-size: 12px; margin-left: 6px; }
+  .tabs button.on .err { color: #7f1d1d; }
+  .frm { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+  .frm .full { grid-column: 1 / -1; }
+  .fld label { display: block; font-size: 12.5px; font-weight: 650; margin-bottom: 6px; color: var(--text); }
+  .fld label .req { color: var(--accent); }
+  .fld .input, .fld .select { width: 100%; }
+  .fld .hint { font-size: 11.5px; color: var(--text-3); margin-top: 4px; }
+  .fld.bad .input { border-color: #f87171; }
+  .fld .msg { font-size: 12px; color: #fca5a5; margin-top: 5px; }
+  details.more { grid-column: 1 / -1; border-top: 1px solid var(--line); padding-top: 12px; margin-top: 4px; }
+  details.more summary { cursor: pointer; font-weight: 650; list-style: none; display: flex; justify-content: space-between; color: var(--text); }
+  details.more summary::after { content: '▾'; color: var(--text-3); }
+  details.more[open] summary::after { content: '▴'; }
+  details.more .frm { margin-top: 14px; }
+  .side-card + .side-card { margin-top: 14px; }
+  .check { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+  .check input { width: 16px; height: 16px; accent-color: var(--accent); }
+  .stack { display: grid; gap: 10px; }
+  .stack .btn { justify-content: center; }
+  .money-in { position: relative; } .money-in span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-3); pointer-events: none; }
+  .money-in .input { padding-left: 24px; } .pct-in .input { padding-left: 12px; padding-right: 28px; } .pct-in span { left: auto; right: 12px; }
+  .quick { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .quick button { font-size: 11.5px; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--line-2); background: var(--surface-2); color: var(--text-2); cursor: pointer; }
+  .quick button:hover { border-color: var(--accent); color: var(--text); }
+  .calc { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px 14px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line); }
+  .calc div { font-size: 12px; color: var(--text-3); } .calc b { display: block; font-size: 17px; color: var(--text); font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .calc .tot b { font-size: 22px; color: var(--accent); }
+  .checks { display: flex; gap: 18px; flex-wrap: wrap; padding-top: 4px; }
+  .formerr { display: none; margin-bottom: 14px; padding: 10px 12px; border-radius: 10px; background: #3a1d22; border: 1px solid #7a2e3a; color: #ffd7dc; }
+  .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); opacity: 0; pointer-events: none;
+    background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 12px; padding: 10px 16px; transition: .2s; z-index: 50; box-shadow: 0 12px 30px -10px #000; }
+  .toast.show { opacity: 1; transform: translateX(-50%); }
+
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 72px 1fr; }
+    .side { padding-left: 8px; padding-right: 8px; }
+    .brandmark div, .navgroup, .navitem .t, .navitem .soon, .side-foot { display: none; }
+    .navitem { justify-content: center; }
+    .dash-grid, .two, .detail-grid { grid-template-columns: 1fr; }
+    .page { padding-left: 18px; padding-right: 18px; }
+  }
 </style>
 </head>
 <body>
-
-<div id="protoWarn" role="alert"></div>
-
-<!-- ================= HOME ================= -->
-<section class="view" id="view-home" aria-label="Home">
-  <div class="wrap home-head">
-    <div class="eyebrow">Faraz's</div>
-    <h1>Keyboard Collection</h1>
-    <p>Pick a category to open its page.</p>
-  </div>
-  <div class="wrap">
-    <div class="tiles" id="tiles"></div>
-  </div>
-  <div class="wrap foot">
-    <span class="status"><span class="dot" id="fbDot"></span><span id="fbText">Checking…</span></span>
-    <span class="foot-right"><button class="linkbtn" id="openTest">Connection test</button><span id="verText"></span></span>
-  </div>
-</section>
-
-<!-- ================= CATEGORY PAGE (shared template) ================= -->
-<section class="view" id="view-page" aria-label="Category">
-  <header class="topbar">
-    <div class="wrap">
-      <button class="back" id="backBtn" aria-label="Back to home">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-      </button>
-      <div class="ttl"><span class="ico" id="pageIco"></span><h1 id="pageTitle"></h1></div>
+<div class="shell">
+  <aside class="side" aria-label="Main navigation">
+    <a class="brandmark" href="#/dashboard">
+      <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 18l1.6-10.2A2 2 0 0 1 8.6 6h6.8a2 2 0 0 1 2 1.8L19 18"/><path d="M3.5 18h17"/><path d="M9 10.5h6"/></svg></span>
+      <div><b>Keyboard Collection</b><span>Faraz's vault</span></div>
+    </a>
+    <nav id="nav"></nav>
+    <div class="side-foot">
+      <span class="status"><span class="dot" id="fbDot"></span><span id="fbText">Checking…</span></span>
+      <span id="verText"></span>
     </div>
-    <div class="accent-rule"></div>
-  </header>
-  <main class="wrap" id="pageBody"></main>
-  <div class="wrap foot">
-    <span id="pageFootLeft"></span>
-    <span id="verText2"></span>
-  </div>
-</section>
+  </aside>
+  <main class="main"><div class="page"><div id="protoWarn" role="alert"></div><div id="view"></div></div></main>
+</div>
+<div class="toast" id="toast" role="status"></div>
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.2.0';
+const APP_VERSION = 'v0.7.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
-/* Layout: keyboard_collection/main/<type>/<itemId>, e.g. keyboard_collection/main/keyboards/abc123 */
-const ROOT_DOC = 'main';
+const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
 
 /* Firebase config baked in (guardrail). Same project as the Keycap Collection app (D2). */
@@ -225,125 +265,547 @@ const firebaseConfig = {
   appId: "1:988653850561:web:f99ffc671e5be637896940"
 };
 
+/* ===================== Helpers ===================== */
+function esc(t) { return String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function money(n) {
+  const r = Math.round((Number(n) || 0) * 100) / 100;
+  return (r < 0 ? '−$' : '$') + Math.abs(r).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function pct(n) { return ((Number(n) || 0) * 100).toFixed(3).replace(/\.?0+$/, '') + '%'; }
+function fmtDate(iso) { // 'YYYY-MM-DD' read as a local date, so it never shifts a day
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600); }
+
 /* ===================== Icons ===================== */
-const ICONS = {
+const I = {
+  dashboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
   keyboards: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2.5"/><path d="M6 10h.01M9.5 10h.01M13 10h.01M16.5 10h.01M6 13.5h.01M18 10h.01M18 13.5h.01M8.5 14.5h7"/></svg>',
-  keycaps:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 18l1.6-10.2A2 2 0 0 1 8.6 6h6.8a2 2 0 0 1 2 1.8L19 18"/><path d="M3.5 18h17"/><path d="M9 10.5h6"/></svg>',
   switches:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M12 3v6M9.5 5.5h5"/><path d="M8 20v1.5M16 20v1.5"/></svg>',
-  accessories:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v4M15 3v4"/><rect x="7" y="7" width="10" height="6" rx="1.5"/><path d="M12 13v3a4 4 0 0 1-4 4H5"/></svg>'
+  keycaps:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 18l1.6-10.2A2 2 0 0 1 8.6 6h6.8a2 2 0 0 1 2 1.8L19 18"/><path d="M3.5 18h17"/><path d="M9 10.5h6"/></svg>',
+  pcbs:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></svg>',
+  accessories:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v4M15 3v4"/><rect x="7" y="7" width="10" height="6" rx="1.5"/><path d="M12 13v3a4 4 0 0 1-4 4H5"/></svg>',
+  artisans:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8z"/><path d="M18.5 14.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/></svg>',
+  import:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>',
+  settings:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>',
+  starFill: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>',
+  grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
+  list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  pulse: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>',
+  wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2.5"/><path d="M16 13h2M3 10h18"/></svg>',
+  boxes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>',
+  wifi: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1"/></svg>'
 };
 
-/* ===================== Pages ===================== */
-const PAGES = [
-  { id: 'keyboards',   title: 'Keyboards',   color: 'var(--kb)', built: true,
-    desc: 'Boards, builds, specs and what you paid.',
-    empty: 'No keyboards yet', emptyText: 'Your keyboards will appear here. Sample keyboards come in Step 2.1, and your Excel list is imported in Phase 3.' },
-  { id: 'keycaps',     title: 'Keycaps',     color: 'var(--kc)', built: false,
-    desc: 'Sets, kits and color palettes.',
-    empty: 'Keycaps page coming later', emptyText: 'Your Keycap Collection app will move in here once the Keyboards page is finished.' },
-  { id: 'switches',    title: 'Switches',    color: 'var(--sw)', built: false,
-    desc: 'Switch specs, counts and where they are installed.',
-    empty: 'Switches page coming later', emptyText: 'This page is built after Keyboards (roadmap Phase 4).' },
-  { id: 'accessories', title: 'Accessories', color: 'var(--ac)', built: false,
-    desc: 'Cables, cases, tools and the rest.',
-    empty: 'Accessories page coming later', emptyText: 'This page is built after Keycaps (roadmap Step 6.3). Cables live here as a category.' }
+/* ===================== Sections (sidebar) ===================== */
+const SECTIONS = [
+  { group: 'OVERVIEW' },
+  { id: 'dashboard',   title: 'Dashboard',   color: 'var(--neutral)', built: true },
+  { group: 'COLLECTION' },
+  { id: 'keyboards',   title: 'Keyboards',   color: 'var(--kb)',  built: true,  singular: 'keyboard' },
+  { id: 'switches',    title: 'Switches',    color: 'var(--sw)',  built: false, singular: 'switches', when: 'Phase 4' },
+  { id: 'keycaps',     title: 'Keycaps',     color: 'var(--kc)',  built: false, singular: 'keycap set', when: 'Phase 5' },
+  { id: 'pcbs',        title: 'PCBs',        color: 'var(--pcb)', built: false, singular: 'PCB', when: 'Phase 6' },
+  { id: 'accessories', title: 'Accessories', color: 'var(--ac)',  built: false, singular: 'accessory', when: 'Phase 6' },
+  { id: 'artisans',    title: 'Artisans',    color: 'var(--ar)',  built: false, singular: 'artisan', when: 'Phase 6' },
+  { group: 'TOOLS' },
+  { id: 'import',      title: 'Import',      color: 'var(--text-3)', built: false, when: 'Phase 3' },
+  { id: 'settings',    title: 'Settings',    color: 'var(--text-3)', built: true }
 ];
+const SEC = Object.fromEntries(SECTIONS.filter(s => s.id).map(s => [s.id, s]));
 
-/* ===================== Render home ===================== */
-const tilesEl = document.getElementById('tiles');
-tilesEl.innerHTML = PAGES.map(p => `
-  <button class="tile" style="--c:${p.color}" data-page="${p.id}" aria-label="Open ${p.title}">
-    <span class="ico">${ICONS[p.id]}</span>
-    <h2>${p.title}</h2>
-    <p class="desc">${p.desc}</p>
-    <span class="meta">
-      <span class="pill ${p.built ? 'live' : ''}">${p.built ? 'Building now' : 'Coming later'}</span>
-      <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-    </span>
-  </button>`).join('');
-tilesEl.addEventListener('click', e => {
-  const t = e.target.closest('.tile');
-  if (t) location.hash = '#/' + t.dataset.page;
-});
-document.getElementById('verText').textContent = APP_VERSION;
-document.getElementById('verText2').textContent = APP_VERSION;
-
-/* ===================== Router (hash based, so the phone's back gesture works) ===================== */
-const homeView = document.getElementById('view-home');
-const pageView = document.getElementById('view-page');
-
-function show(view) {
-  [homeView, pageView].forEach(v => v.classList.toggle('active', v === view));
-  window.scrollTo(0, 0);
+function renderNav(active) {
+  document.getElementById('nav').innerHTML = SECTIONS.map(s => s.group
+    ? `<div class="navgroup">${s.group}</div>`
+    : `<a class="navitem${s.id === active ? ' on' : ''}" href="#/${s.id}" style="--c:${s.color}" title="${s.title}">${I[s.id]}<span class="t">${s.title}</span>${s.built ? '' : '<span class="soon">Later</span>'}</a>`).join('');
 }
 
-function renderPage(p) {
-  document.documentElement.style.setProperty('--accent', p.color);
-  document.getElementById('pageIco').innerHTML = ICONS[p.id];
-  document.getElementById('pageTitle').textContent = p.title;
-  document.title = p.title + ' · Keyboard Collection';
-  document.getElementById('pageFootLeft').textContent = p.built ? '0 items' : 'Not built yet';
-  document.getElementById('pageBody').innerHTML = `
-    <div class="empty">
-      <div class="big">${ICONS[p.id]}</div>
-      <h2>${p.empty}</h2>
-      <p>${p.emptyText}</p>
-      ${p.built ? '<span class="note">Adding keyboards arrives in Step 2.2</span>' : ''}
+/* ===================== Data: sample keyboards (in-app only, not saved) ===================== */
+/* Five rows copied from Keyboard_Hobby_List_v18.xlsx (Keyboards tab, rows 3, 6, 7, 30, 46). Removed when real data arrives. */
+const SAMPLE_KEYBOARDS = [{"id": "sample-row3", "isSample": true, "excelRow": 3, "brand": "Keychron", "name": "Q6 Max", "color": "Space Grey", "size": "Full Size", "connectivity": "Wireless (3-Mode)", "purchasedFrom": "Amazon", "datePurchased": "2024-07-26", "mods": "", "receiptText": "C:\\Users\\17327\\OneDrive\\Documents\\Keyboards\\All Receipts\\Keyboards\\Keychron Q6 Max Order Details.pdf", "receiptUrl": null, "pictureLabel": "View Keychron Q6 Max", "pictureUrl": "https://www.keychron.com/products/keychron-q6-max-qmk-via-wireless-custom-mechanical-keyboard", "currentBuildText": "MT3 Jasmine — Base Kit + Gateron Oil King V2", "price": 239.99, "taxRate": 0.06625, "shipping": 0, "discounts": 0, "excelTotal": 255.88933749999998}, {"id": "sample-row6", "isSample": true, "excelRow": 6, "brand": "Drop", "name": "CSTM80 Barebones", "color": "Black", "size": "TKL 80%", "connectivity": "Wired", "purchasedFrom": "Ebay", "datePurchased": "2025-08-10", "mods": "Overgrowth Decorative Case, Rocky Bird Decorative Case, Neighbors Decorative Case, Aluminum Decorative Case (Black), Switch Plates (Aluminum), Switch Plates (Carbon Fiber), Base Weight (Brass), ZX Decorative Case, Base Weight (Stainless Steel Chroma Mirror PVD), Aluminum Decorative Case (Silver), Decorative Case (Laser Bright White), Decorative Case (Shinai Green), Switch Plate (Brass)", "receiptText": "C:\\Users\\17327\\OneDrive\\Documents\\Keyboards\\All Receipts\\Keyboards\\Drop CSTM80 Barebones Order details _ eBay.pdf", "receiptUrl": null, "pictureLabel": "View Drop CSTM80 Barebones", "pictureUrl": "https://drop.com/buy/drop-cstm80-mechanical-keyboard", "currentBuildText": "", "price": 79.99, "taxRate": 0.077, "shipping": 13, "discounts": 5, "excelTotal": 94.14922999999999}, {"id": "sample-row7", "isSample": true, "excelRow": 7, "brand": "Drop × Keydous", "name": "NJ-80", "color": "White", "size": "75%", "connectivity": "Wireless (3-Mode)", "purchasedFrom": "Ebay", "datePurchased": "2025-08-21", "mods": "", "receiptText": "https://d.docs.live.net/af523fed51b777c6/Documents/Keyboards/All%20Receipts/Keyboards/Keydous%20NJ80%20Order%20details%20_%20eBay.pdf", "receiptUrl": "https://d.docs.live.net/af523fed51b777c6/Documents/Keyboards/All%20Receipts/Keyboards/Keydous%20NJ80%20Order%20details%20_%20eBay.pdf", "pictureLabel": "View Drop X Keydous NJ-80", "pictureUrl": "https://drop.com/buy/drop-x-keydous-nj-80-wireless-keyboard", "currentBuildText": "", "price": 38, "taxRate": 0.0663, "shipping": 0, "discounts": 40.52, "excelTotal": -0.0005999999999986017}, {"id": "sample-row30", "isSample": true, "excelRow": 30, "brand": "Qwertykeys", "name": "Neo65 Cu", "color": "Red Anodized", "size": "65%", "connectivity": "Wired", "purchasedFrom": "PayPal", "datePurchased": "2026-01-11", "mods": "Brass + Dusk Mirror PVD Weight (Included), Aluminum Plate (Included), Solder PCB (Included)", "receiptText": "🔗 View Receipt", "receiptUrl": "https://www.paypal.com/myaccount/activities/print-details/9EJ097615K518790U", "pictureLabel": "🔗 View Receipt", "pictureUrl": "https://www.paypal.com/myaccount/activities/print-details/9EJ097615K518790U", "currentBuildText": "", "price": 170, "taxRate": 0, "shipping": 0, "discounts": 0, "excelTotal": 170}, {"id": "sample-row46", "isSample": true, "excelRow": 46, "brand": "Omnitype", "name": "Float65", "color": "Caution Orange", "size": "65%", "connectivity": "Wired", "purchasedFrom": "Omnitype", "datePurchased": "2026-02-26", "mods": "", "receiptText": "Receipt OT128828", "receiptUrl": null, "pictureLabel": "", "pictureUrl": null, "currentBuildText": "", "price": 119.99, "taxRate": 0.0663, "shipping": 14.86, "discounts": 0, "excelTotal": 142.805337}];
+const favs = new Set(); // favorite stars on samples: in memory only until saving arrives
+
+function kbTotal(k) { // Excel formula: Price x (1 + Tax Rate) + Shipping - Discounts
+  return (Number(k.price) || 0) * (1 + (Number(k.taxRate) || 0)) + (Number(k.shipping) || 0) - (Number(k.discounts) || 0);
+}
+/* Saved keyboards come live from Firestore: keyboard_collection/main/keyboards/<id> */
+let savedKeyboards = [];      // filled by the live listener
+let kbLoaded = false;         // true after the first server answer
+function kbCol() { return db.collection(FIRESTORE_COLLECTION).doc(ROOT_DOC).collection('keyboards'); }
+function isoFromTs(ts) { if (!ts || !ts.toDate) return ''; const d = ts.toDate(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function startKeyboardListener() {
+  if (!db || isFile) return;
+  kbCol().onSnapshot(snap => {
+    savedKeyboards = snap.docs.filter(d => d.id !== TEST_DOC_ID && !d.data().isTest).map(d => {
+      const k = d.data();
+      return Object.assign({}, k, { id: d.id, isSample: false, createdIso: isoFromTs(k.createdAt) });
+    });
+    kbLoaded = true;
+    refreshIfShowing();
+  }, err => { console.error(err); toast('Could not load keyboards: ' + explain(err)); });
+}
+function refreshIfShowing() {
+  const id = (location.hash.replace(/^#\/?/, '').split('/')[0]) || 'dashboard';
+  if (id === 'dashboard') route();
+  else if (id === 'keyboards' && document.getElementById('kbResults')) drawKeyboardResults();
+  else if (id === 'keyboards' && document.getElementById('kbDetailFor')) route();
+}
+/* Samples stay visible (marked "Sample") until the Excel import in Phase 3. */
+function allKeyboards() { return savedKeyboards.concat(SAMPLE_KEYBOARDS); }
+function sortDate(k) { return k.datePurchased || k.createdIso || ''; }
+
+/* ===================== Router ===================== */
+let currentView = '';
+function route() {
+  stopTestListener();
+  const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+  if (parts[0] === 'connection-test') { location.replace('#/settings'); return; } // old v0.2.0 link
+  const id = parts[0] || 'dashboard';
+  const sec = SEC[id] || SEC.dashboard;
+  document.documentElement.style.setProperty('--accent', sec.color.startsWith('var(--text') ? 'var(--kb)' : sec.color);
+  renderNav(sec.id);
+  document.title = sec.title + ' · Keyboard Collection';
+  const view = document.getElementById('view');
+  if (sec.id === 'dashboard') view.innerHTML = dashboardHtml(), wireDashboard();
+  else if (sec.id === 'keyboards' && parts[1] === 'new') renderKeyboardForm();
+  else if (sec.id === 'keyboards' && parts[1]) renderKeyboardDetail(parts[1]);
+  else if (sec.id === 'keyboards') renderKeyboards();
+  else if (sec.id === 'settings') renderSettings();
+  else view.innerHTML = comingLaterHtml(sec);
+  if (currentView !== location.hash) window.scrollTo(0, 0);
+  currentView = location.hash;
+}
+window.addEventListener('hashchange', () => {
+  if (formDirty && !location.hash.startsWith('#/keyboards/new')) {
+    if (!confirm('Discard the keyboard you were adding?')) { history.replaceState(null, '', '#/keyboards/new'); return; }
+    formDirty = false;
+  }
+  route();
+});
+window.addEventListener('beforeunload', e => { if (formDirty) { e.preventDefault(); e.returnValue = ''; } });
+
+function comingLaterHtml(sec) {
+  return `<div class="pagehead"><div><h1>${esc(sec.title)}</h1><p>${sec.id === 'import' ? 'Bring in your Excel workbook.' : 'Your ' + esc(/^[A-Z]{2,}/.test(sec.title) ? sec.title : sec.title.toLowerCase()) + ' will live here.'}</p></div></div>
+    <div class="card empty"><div class="big">${I[sec.id]}</div><h2>Coming later</h2>
+    <p>This page is built in ${esc(sec.when)} of the roadmap. Keyboards come first.</p></div>`;
+}
+
+/* ===================== Dashboard ===================== */
+let spendPeriod = 'all', spendHidden = true;
+const PERIODS = { all: 'All time', '1m': 'Last month', '3m': '3 months', '6m': '6 months', '1y': 'Last year' };
+function spendFor(period) {
+  const now = new Date(); let from = null;
+  const months = { '1m': 1, '3m': 3, '6m': 6, '1y': 12 }[period];
+  if (months) { from = new Date(now); from.setMonth(from.getMonth() - months); }
+  return allKeyboards().filter(k => {
+    if (!from) return true;
+    const [y, m, d] = (k.datePurchased || '').split('-').map(Number);
+    return y && new Date(y, m - 1, d) >= from;
+  }).reduce((s, k) => s + kbTotal(k), 0);
+}
+function dashboardHtml() {
+  const kbs = allKeyboards();
+  const sizes = {}; kbs.forEach(k => { sizes[k.size || 'Unknown'] = (sizes[k.size || 'Unknown'] || 0) + 1; });
+  const maxSize = Math.max(1, ...Object.values(sizes));
+  const recent = [...kbs].sort((a, b) => sortDate(b).localeCompare(sortDate(a))).slice(0, 5);
+  const mix = SECTIONS.filter(s => s.singular).map(s => ({ s, n: s.id === 'keyboards' ? kbs.length : 0 }));
+  const total = mix.reduce((a, m) => a + m.n, 0) || 1;
+  const comingTile = (title, icon, color, when) => `<div class="card tile" style="--c:${color}"><span class="ic">${icon}</span><div><div class="lbl">${title}</div><div class="big" style="color:var(--text-3)">—</div><div class="hint">Coming in ${when}</div></div></div>`;
+  return `
+  <div class="pagehead"><div><h1>Dashboard</h1><p>Your keyboard collection at a glance.</p></div></div>
+  <div class="note">Includes the 5 sample keyboards from your v18 workbook (marked "Sample"). They go away when your Excel list is imported in Phase 3.</div>
+  <div class="dash-grid">
+    <a class="card tile" href="#/keyboards" style="--c:var(--kb)"><span class="ic">${I.boxes}</span><div><div class="lbl">Total items</div><div class="big">${kbs.length}</div><div class="hint">Across your vault</div></div></a>
+    <div class="card tile" style="--c:var(--kc)"><span class="ic">${I.wallet}</span><div><div class="lbl">Total spent</div>
+      <div class="big ${spendHidden ? 'blur' : ''}" id="spendAmt">${money(spendFor(spendPeriod))}</div>
+      <select class="select" id="spendPeriod" aria-label="Spend period">${Object.entries(PERIODS).map(([v, t]) => `<option value="${v}"${v === spendPeriod ? ' selected' : ''}>${t}</option>`).join('')}</select>
+      <div class="hint" style="margin-top:6px">${spendHidden ? 'Amount hidden.' : 'Price + tax + shipping − discounts.'}</div></div>
+      <button class="btn eye" id="spendEye" aria-label="${spendHidden ? 'Show' : 'Hide'} amount">${I.eye}</button></div>
+    ${comingTile('Boards in use', I.pulse, '#34d399', 'Step 5.4')}
+    ${comingTile('Unallocated kits', I.keycaps, 'var(--kc)', 'Phase 5')}
+    ${comingTile('Loose switches', I.switches, 'var(--sw)', 'Step 4.5')}
+  </div>
+  <div class="card" style="margin-top:16px"><h3>Add to your vault</h3><p class="sub">Save a new item. You can fill in the details later.</p>
+    <div class="addrow">${SECTIONS.filter(s => s.singular).map(s => s.id === 'keyboards'
+      ? `<a class="btn" style="--c:${s.color}" href="#/keyboards/new">${I[s.id]}Add keyboard</a>`
+      : `<button class="btn" style="--c:${s.color}" disabled title="Coming in ${s.when}">${I[s.id]}Add ${esc(s.singular)}</button>`).join('')}</div>
+    <p class="sub" style="margin:10px 0 0">The other types follow page by page.</p></div>
+  <div class="card" style="margin-top:16px"><div class="sec-title"><h3>Recent items</h3><span class="sub" style="margin:0">Latest 5 by purchase date (or date added)</span></div>
+    <div class="recent" style="margin-top:10px">${recent.map(k => `<a href="#/keyboards/${esc(k.id)}" style="--c:var(--kb)"><span class="th">${I.keyboards}</span><div><b>${esc(k.name)}</b><span>${esc(k.brand)}</span></div></a>`).join('')}</div></div>
+  <div class="two" style="margin-top:16px">
+    <div class="card"><h3>Keyboard sizes</h3><p class="sub">Distribution of keyboards by size.</p><div class="bars">${Object.entries(sizes).sort((a, b) => b[1] - a[1]).map(([s, n]) => `<div class="bar"><span>${esc(s)}</span><span class="track"><span class="fill" style="width:${n / maxSize * 100}%"></span></span><span class="n">${n}</span></div>`).join('')}</div></div>
+    <div class="card"><h3>Inventory mix</h3><p class="sub">Items by category.</p><div class="bars">${mix.map(m => `<div class="bar" style="--c:${m.s.color}"><span>${m.s.title}</span><span class="track"><span class="fill" style="width:${m.n / total * 100}%"></span></span><span class="n">${m.n} · ${(m.n / total * 100).toFixed(0)}%</span></div>`).join('')}</div></div>
+  </div>`;
+}
+function wireDashboard() {
+  document.getElementById('spendPeriod').onchange = e => { spendPeriod = e.target.value; route(); };
+  document.getElementById('spendEye').onclick = () => { spendHidden = !spendHidden; route(); };
+}
+
+/* ===================== Keyboards: gallery / list ===================== */
+const SORTS = { newest: 'Newest first', oldest: 'Oldest first', nameAZ: 'Name A→Z', nameZA: 'Name Z→A', brandAZ: 'Brand A→Z', brandZA: 'Brand Z→A' };
+let kbSort = 'newest', kbView = 'gallery', kbQuery = '';
+function sortKeyboards(list) {
+  const by = (f, dir) => (a, b) => dir * String(f(a) || '').localeCompare(String(f(b) || ''), 'en', { sensitivity: 'base' });
+  const s = { newest: by(sortDate, -1), oldest: by(sortDate, 1), nameAZ: by(k => k.name, 1), nameZA: by(k => k.name, -1), brandAZ: by(k => k.brand, 1), brandZA: by(k => k.brand, -1) }[kbSort];
+  return [...list].sort(s);
+}
+function isFav(k) { return k.isSample ? favs.has(k.id) : !!k.isFavorite; }
+async function toggleFav(id) {
+  const k = allKeyboards().find(x => x.id === id); if (!k) return;
+  if (k.isSample) { favs.has(id) ? favs.delete(id) : favs.add(id); drawKeyboardResults(); return; }
+  try { await kbCol().doc(id).update({ isFavorite: !k.isFavorite, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); }
+  catch (e) { toast('Could not update favorite: ' + explain(e)); }
+}
+function matches(k, q) {
+  if (!q) return true;
+  const hay = [k.brand, k.name, k.color, k.size, k.connectivity, k.mods, k.currentBuildText, k.purchasedFrom, k.manufacturer, k.designer, k.location, k.status, k.layout]
+    .concat(BUILD_FIELDS.map(f => k[f[0]])).join(' ').toLowerCase();
+  return q.toLowerCase().split(/\s+/).every(w => hay.includes(w));
+}
+function renderKeyboards() {
+  const view = document.getElementById('view');
+  view.innerHTML = `
+    <div class="pagehead"><div><h1>Keyboards</h1><p id="kbCount"></p></div>
+      <div class="tools">
+        <select class="select" id="kbSort" aria-label="Sort">${Object.entries(SORTS).map(([v, t]) => `<option value="${v}"${v === kbSort ? ' selected' : ''}>${t}</option>`).join('')}</select>
+        <div class="seg" role="group" aria-label="View"><button id="vGal" class="${kbView === 'gallery' ? 'on' : ''}">${I.grid}Gallery</button><button id="vList" class="${kbView === 'list' ? 'on' : ''}">${I.list}List</button></div>
+        <a class="btn primary" href="#/keyboards/new">${I.plus}Add keyboard</a>
+      </div></div>
+    <div class="tools" style="margin-bottom:16px"><label class="search">${I.search}<input class="input" id="kbSearch" placeholder="Search by brand, name, color, size, build parts or mods" value="${esc(kbQuery)}"></label></div>
+    <div class="note">Cards marked "Sample" are 5 boards from your v18 workbook, shown in the app only. Keyboards you add are saved to Firebase and sync to all your devices.</div>
+    <div id="kbResults"></div>`;
+  document.getElementById('kbSort').onchange = e => { kbSort = e.target.value; drawKeyboardResults(); };
+  document.getElementById('vGal').onclick = () => { kbView = 'gallery'; renderKeyboards(); };
+  document.getElementById('vList').onclick = () => { kbView = 'list'; renderKeyboards(); };
+  document.getElementById('kbSearch').oninput = e => { kbQuery = e.target.value; drawKeyboardResults(); };
+  drawKeyboardResults();
+}
+function drawKeyboardResults() {
+  const all = allKeyboards();
+  const list = sortKeyboards(all.filter(k => matches(k, kbQuery.trim())));
+  const nSaved = savedKeyboards.length;
+  document.getElementById('kbCount').textContent = (kbQuery.trim() ? `${list.length} of ${all.length} keyboards` : `${all.length} keyboards`) + ` · ${nSaved} saved, ${SAMPLE_KEYBOARDS.length} samples` + (db && !isFile && !kbLoaded ? ' · loading…' : '');
+  const box = document.getElementById('kbResults');
+  if (!list.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.search}</div><h2>No matches</h2><p>Nothing matches "${esc(kbQuery)}".</p></div>`; return; }
+  if (kbView === 'gallery') {
+    box.innerHTML = `<div class="gallery">${list.map(k => `
+      <a class="kcard" href="#/keyboards/${esc(k.id)}">
+        <div class="ph">${I.keyboards.replace('<svg', '<svg class="big"')}<span class="nophoto">No photo yet</span>
+          ${k.isSample ? '<span class="badge chip">Sample</span>' : ''}
+          <button class="fav${isFav(k) ? ' on' : ''}" data-fav="${esc(k.id)}" aria-label="${isFav(k) ? 'Remove from' : 'Add to'} favorites">${isFav(k) ? I.starFill : I.star}</button></div>
+        <div class="meta"><b>${esc(k.name)}</b><span>${esc(k.brand)}</span></div>
+      </a>`).join('')}</div>`;
+  } else {
+    box.innerHTML = `<table class="list"><thead><tr><th style="width:44px"></th><th>Name</th><th>Brand</th><th>Size</th><th>Color</th><th>Purchased</th></tr></thead><tbody>${list.map(k => `
+      <tr class="row" data-href="#/keyboards/${esc(k.id)}"><td><button class="fav${isFav(k) ? ' on' : ''}" style="position:static;width:28px;height:28px" data-fav="${esc(k.id)}" aria-label="Favorite">${isFav(k) ? I.starFill : I.star}</button></td>
+      <td><b>${esc(k.name)}</b></td><td>${esc(k.brand)}</td><td>${esc(k.size)}</td><td>${esc(k.color)}</td><td>${esc(fmtDate(k.datePurchased)) || '<span style="color:var(--text-3)">—</span>'}</td></tr>`).join('')}</tbody></table>`;
+  }
+  box.onclick = e => {
+    const f = e.target.closest('[data-fav]');
+    if (f) { e.preventDefault(); e.stopPropagation(); toggleFav(f.dataset.fav); return; }
+    const r = e.target.closest('tr[data-href]'); if (r) location.hash = r.dataset.href;
+  };
+}
+
+/* ===================== Keyboard detail (interim, read-only; full edit page is Step 2.6) ===================== */
+function fieldHtml(label, value, opts = {}) {
+  const has = value !== undefined && value !== null && String(value).trim() !== '';
+  return `<div class="f${opts.wide ? ' wide' : ''}"><div class="k">${esc(label)}</div><div class="v${has ? '' : ' muted'}">${has ? (opts.html ? value : esc(value)) : '—'}</div></div>`;
+}
+function linkOrText(url, text, fallbackLabel = 'Open link') {
+  if (url && /^https?:\/\//.test(url)) {
+    const label = (!text || text === url || /^https?:\/\//.test(text)) ? fallbackLabel : text;
+    return `<a class="lnk" href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>`;
+  }
+  if (text && /^[A-Za-z]:\\/.test(text)) return esc('File on your PC: ' + text.split('\\').pop());
+  return text ? esc(text) : '';
+}
+function renderKeyboardDetail(id) {
+  const k = allKeyboards().find(x => x.id === id);
+  const view = document.getElementById('view');
+  if (!k) { view.innerHTML = `<a class="crumb" href="#/keyboards">${I.back}Keyboards</a><div class="card empty" id="kbDetailFor"><h2>${db && !isFile && !kbLoaded ? 'Loading…' : 'Keyboard not found'}</h2><p>${db && !isFile && !kbLoaded ? 'Fetching your keyboards from Firebase.' : 'It may have been deleted.'}</p></div>`; return; }
+  if (!k.isSample) { renderSavedKeyboardDetail(k); return; }
+  const priceTax = (Number(k.price) || 0) * (1 + (Number(k.taxRate) || 0));
+  const mods = k.mods ? k.mods.split(/,\s*(?![^()]*\))/).map(m => m.trim()).filter(Boolean) : [];
+  view.innerHTML = `
+    <a class="crumb" href="#/keyboards">${I.back}Keyboards</a>
+    <div class="pagehead"><div><h1>${esc(k.name)}</h1><p>${esc(k.brand)}</p></div>
+      <div class="tools">${k.isSample ? `<span class="chip">Sample · Excel row ${k.excelRow}</span>` : ''}<button class="btn" disabled title="Editing arrives in Step 2.6">Edit</button></div></div>
+    <div class="detail-grid">
+      <div class="card">
+        <div class="sec"><h4>Overview</h4><div class="fields">
+          ${fieldHtml('Brand', k.brand)}${fieldHtml('Model', k.name)}${fieldHtml('Color', k.color)}
+          ${fieldHtml('Size', k.size)}${fieldHtml('Connectivity', k.connectivity)}</div></div>
+        <div class="sec"><h4>Build</h4><div class="fields">
+          ${fieldHtml('Current build', k.currentBuildText, { wide: true })}
+          ${fieldHtml('Mods on hand', mods.length > 1 ? '<ul class="modlist">' + mods.map(m => '<li>' + esc(m) + '</li>').join('') + '</ul>' : esc(k.mods), { wide: true, html: true })}</div></div>
+        <div class="sec"><h4>Purchase</h4><div class="fields">
+          ${fieldHtml('Purchased from', k.purchasedFrom)}${fieldHtml('Date purchased', fmtDate(k.datePurchased))}
+          ${fieldHtml('Price', money(k.price))}${fieldHtml('Tax rate', pct(k.taxRate))}
+          ${fieldHtml('Price + tax', money(priceTax))}${fieldHtml('Shipping', money(k.shipping))}${fieldHtml('Discounts', money(k.discounts))}</div>
+          <div class="total-row"><span style="color:var(--text-2)">Total paid</span><span class="t">${money(kbTotal(k))}</span></div></div>
+        <div class="sec"><h4>Links</h4><div class="fields">
+          ${fieldHtml('Receipt', linkOrText(k.receiptUrl, k.receiptText, 'Open receipt'), { html: true, wide: true })}
+          ${fieldHtml('Pictures', linkOrText(k.pictureUrl, k.pictureLabel, 'Open pictures'), { html: true, wide: true })}</div></div>
+      </div>
+      <div class="card"><h3>Primary photo</h3><p class="sub">The cover photo shown on the gallery card.</p>
+        <div class="photo-box">${I.keyboards.replace('<svg', '<svg style="width:40px;height:40px;display:block;margin:0 auto 8px"')}Drag-and-drop photos with crop and "Set as default" arrive in Step 2.7.</div></div>
     </div>`;
 }
 
-function route() {
-  const id = (location.hash.match(/^#\/([a-z-]+)/) || [])[1];
-  const p = PAGES.find(x => x.id === id);
-  stopTestListener();
-  if (id === 'connection-test') { renderTestPage(); show(pageView); }
-  else if (p) { renderPage(p); show(pageView); }
-  else {
-    document.documentElement.style.setProperty('--accent', 'var(--kb)');
-    document.title = 'Keyboard Collection';
-    show(homeView);
+function renderSavedKeyboardDetail(k) {
+  const opt = (list, v) => v || '';
+  document.getElementById('view').innerHTML = `
+    <a class="crumb" href="#/keyboards">${I.back}Keyboards</a>
+    <div class="pagehead" id="kbDetailFor"><div><h1>${esc(k.name)}</h1><p>${esc(k.brand || 'No brand')}</p></div>
+      <div class="tools"><button class="btn${k.isFavorite ? ' on' : ''}" id="dFav">${k.isFavorite ? I.starFill : I.star}${k.isFavorite ? 'Favorite' : 'Add to favorites'}</button>
+        <button class="btn" disabled title="Editing arrives in Step 2.6">Edit</button>
+        <button class="btn danger" id="dDel">Delete</button></div></div>
+    <div class="detail-grid">
+      <div class="card">
+        <div class="sec"><h4>Overview</h4><div class="fields">
+          ${fieldHtml('Keyboard type', KB_TYPES[k.keyboardType] || k.keyboardType)}${fieldHtml('Brand', k.brand)}${fieldHtml('Name', k.name)}
+          ${fieldHtml('Manufacturer', k.manufacturer)}${fieldHtml('Size', k.size)}${fieldHtml('Location', k.location)}</div></div>
+        <div class="sec"><h4>More details</h4><div class="fields">
+          ${fieldHtml('Model number', k.modelNumber)}${fieldHtml('Serial number', k.serialNumber)}${fieldHtml('Designer', k.designer)}
+          ${fieldHtml('Layout', k.layout)}${fieldHtml('Color', k.color)}${fieldHtml('Connectivity', k.connectivity)}
+          ${fieldHtml('Connector', k.connector)}${fieldHtml('Status', k.status)}${fieldHtml('Typing angle', k.typingAngle)}
+          ${fieldHtml('Front height', k.frontHeight)}${fieldHtml('Weight', k.weight)}</div></div>
+        <div class="sec"><h4>Build</h4><div class="fields">
+          ${BUILD_FIELDS.map(([n, label]) => fieldHtml(label, k[n])).join('')}
+          ${fieldHtml('Current build', k.currentBuildText, { wide: true })}</div></div>
+        <div class="sec"><h4>Purchase</h4><div class="fields">
+          ${fieldHtml('Purchased from', k.purchasedFrom)}${fieldHtml('Date purchased', fmtDate(k.datePurchased))}${fieldHtml('Date received', fmtDate(k.dateReceived))}
+          ${fieldHtml('Price', k.price != null ? money(k.price) : '')}${fieldHtml('Tax rate', k.taxRate != null ? pct(k.taxRate) : '')}
+          ${fieldHtml('Price + tax', k.price != null ? money((Number(k.price) || 0) * (1 + (Number(k.taxRate) || 0))) : '')}
+          ${fieldHtml('Shipping', k.shipping != null ? money(k.shipping) : '')}${fieldHtml('Discounts', k.discounts != null ? money(k.discounts) : '')}
+          ${fieldHtml('Acquisition', (k.acquisition || []).map(a => (ACQUISITION.find(x => x[0] === a) || [a, a])[1]).join(', '))}
+          ${fieldHtml('Receipt', linkOrText(/^https?:\/\//.test(k.receipt || '') ? k.receipt : '', k.receipt, 'Open receipt'), { html: true, wide: true })}
+          ${fieldHtml('Pictures', linkOrText(k.pictureLink, '', 'Open pictures'), { html: true, wide: true })}</div>
+          ${k.price != null ? `<div class="total-row"><span style="color:var(--text-2)">Total paid</span><span class="t">${money(kbTotal(k))}</span></div>` : ''}</div>
+        <div class="sec"><h4>Notes</h4><p class="sub" style="margin:0">Mods and notes arrive in Step 2.5.</p></div>
+        <div class="sec"><p class="sub" style="margin:0">Added ${esc(fmtDate(k.createdIso)) || 'just now'}${k.appVersion ? ' · saved by app ' + esc(k.appVersion) : ''}</p></div>
+      </div>
+      <div class="card"><h3>Primary photo</h3><p class="sub">The cover photo shown on the gallery card.</p>
+        <div class="photo-box">${I.keyboards.replace('<svg', '<svg style="width:40px;height:40px;display:block;margin:0 auto 8px"')}Drag-and-drop photos with crop and "Set as default" arrive in Step 2.7.</div></div>
+    </div>`;
+  document.getElementById('dFav').onclick = () => toggleFav(k.id);
+  document.getElementById('dDel').onclick = async () => {
+    if (!confirm(`Delete "${k.name}"? This cannot be undone.`)) return;
+    try { await withTimeout(kbCol().doc(k.id).delete()); toast('Keyboard deleted'); location.hash = '#/keyboards'; }
+    catch (e) { toast('Delete failed: ' + explain(e)); }
+  };
+}
+
+/* ===================== Step 2.2: Add keyboard form (Overview tab) ===================== */
+const KB_TYPES = { custom: 'Custom keyboard', oem: 'OEM keyboard', vintage: 'Vintage keyboard' };
+const KB_SIZES = ['Macropad', 'Numpad', '40%', '60%', '65%', '75%', 'TKL (80%)', '96%', '1800', 'Full Size (100%)', 'Other'];
+const KB_LAYOUTS = ['ANSI', 'ISO', 'Alice', 'Ortholinear', 'Split / Ergonomic', 'HHKB', 'Other'];
+const KB_CONN = ['Wired', 'Wireless (3-Mode)', 'Bluetooth + Wired', '2.4 GHz + Wired'];
+const KB_STATUS = ['Built', 'In progress', 'Barebones', 'Sold'];
+const KB_CONNECTORS = ['USB-C', 'Mini-USB', 'Micro-USB', 'USB-A', 'Aviator + USB-C'];
+const BUILD_FIELDS = [ // [field, label, placeholder, suggestions]
+  ['mounting', 'Mounting', 'e.g. Gasket', ['Gasket', 'Top mount', 'Tray mount', 'Sandwich', 'Leaf spring', 'O-ring', 'Burger', 'Integrated plate', 'PCB mount', 'Bottom mount']],
+  ['plateMaterial', 'Plate material', 'e.g. Aluminum', ['Aluminum', 'Brass', 'Carbon Fiber', 'FR4', 'PC (Polycarbonate)', 'POM', 'PP', 'Steel', 'Copper', 'No plate']],
+  ['daughterboard', 'Daughterboard', 'e.g. Unified C3', ['Built-in', 'Unified C3', 'Unified C4', 'Other', 'None']],
+  ['foam', 'Foam', 'e.g. PE + case foam', ['None', 'Case foam', 'Plate foam', 'PE foam', 'Poron', 'IXPE', 'Full foam kit', 'Tape mod']],
+  ['stabilizers', 'Stabilizers', 'e.g. Durock V2', ['Durock V2', 'TX AP', 'Cherry', 'Gateron', 'Everglide Panda', 'C3 Equalz', 'Owlab', 'Factory screw-in', 'Factory plate-mount']],
+  ['stabilizerLube', 'Stabilizer lube', 'e.g. Dielectric grease', ['Dielectric grease', 'Krytox 205g0', 'Krytox GPL 205g2', 'Krytox GPL 105', 'Factory lubed', 'None']],
+  ['switchLube', 'Switch lube', 'e.g. Krytox 205g0', ['Krytox 205g0', 'Tribosys 3203', 'Tribosys 3204', 'Krytox GPL 105', 'Factory lubed', 'None']],
+  ['firmware', 'Firmware', 'e.g. QMK / VIA', ['QMK', 'VIA', 'VIAL', 'QMK / VIA', 'ZMK', 'Proprietary']],
+  ['weightsAccents', 'Weights / accents', 'e.g. Brass weight', []],
+  ['builtBy', 'Built by', 'e.g. Me', ['Me', 'Factory']]
+];
+const PRELOADED_BRANDS = ["8BitDo", "Akko", "CannonKeys", "Drop", "Drop + Tokyo Keyboard", "Drop × Keydous", "Ducky", "Freebird", "GeekElite", "Geonworks", "HHKB", "Ikki68", "KBDcraft", "KBDfans", "Keebfront", "Keebmonkey", "Keychron", "Keydous", "Leopold", "Lofree", "Megalodon", "Mekanisk", "Meletrix", "Mode", "Monsgeek", "NovelKeys", "OLKB", "Omnitype", "Owlab", "Qwertykeys", "Rama Works", "Redragon", "Skyloone", "TGR", "Varmilo", "Voice", "WOBKEY", "Wooting", "Wuque Studio"];
+const PRELOADED_SELLERS = ["Amazon", "CannonKeys", "Divinikey", "Drop", "eBay", "eBay + PayPal", "Included with Keyboard", "KBDfans", "NuPhy", "Omnitype", "PayPal", "PayPal P2P"]; // "Purchased From" values in your v18 workbook
+const ACQUISITION = [['groupBuy', 'Group buy'], ['inStock', 'In stock purchase'], ['used', 'Used']];
+const TAX_QUICK = [['6.625', 'NJ 6.625%'], ['7.604', 'KBDfans 7.604%'], ['0', 'PayPal P2P 0%']]; // your Excel tax conventions // from your v18 workbook plus common makers
+let formDirty = false;
+
+function uniq(arr) { return [...new Set(arr.filter(Boolean).map(s => String(s).trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' })); }
+function withTimeout(p, ms = 12000) { return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej({ code: 'timeout', message: 'No answer from Firebase after ' + ms / 1000 + ' seconds (offline?)' }), ms))]); }
+function selectHtml(name, opts, ph, val = '') {
+  return `<select class="select" name="${name}" id="f_${name}">${ph ? `<option value="">${esc(ph)}</option>` : ''}${opts.map(o => { const [v, t] = Array.isArray(o) ? o : [o, o]; return `<option value="${esc(v)}"${v === val ? ' selected' : ''}>${esc(t)}</option>`; }).join('')}</select>`;
+}
+function inputHtml(name, ph = '', list = '') { return `<input class="input" name="${name}" id="f_${name}" placeholder="${esc(ph)}" autocomplete="off"${list ? ` list="${list}"` : ''}>`; }
+function fld(label, control, opts = {}) { return `<div class="fld${opts.full ? ' full' : ''}" data-for="${opts.name || ''}"><label for="f_${opts.name || ''}">${esc(label)}${opts.req ? ' <span class="req">*</span>' : ''}</label>${control}${opts.hint ? `<div class="hint">${esc(opts.hint)}</div>` : ''}</div>`; }
+
+function renderKeyboardForm() {
+  formDirty = false;
+  const saved = savedKeyboards;
+  const brands = uniq(PRELOADED_BRANDS.concat(saved.map(k => k.brand), SAMPLE_KEYBOARDS.map(k => k.brand)));
+  const makers = uniq(brands.concat(saved.map(k => k.manufacturer)));
+  const locations = uniq(['Desk', 'Shelf', 'Display case', 'Storage', 'Office'].concat(saved.map(k => k.location)));
+  const designers = uniq(saved.map(k => k.designer));
+  const colors = uniq(saved.map(k => k.color).concat(SAMPLE_KEYBOARDS.map(k => k.color)));
+  const ready = !!db && !isFile;
+  document.getElementById('view').innerHTML = `
+    <a class="crumb" href="#/keyboards">${I.back}Keyboards</a>
+    <div class="pagehead"><div><h1>Add keyboard</h1><p>Save the basics now. Notes and photos come in the next steps.</p></div></div>
+    <div class="formerr" id="formErr"></div>
+    <div class="form-grid">
+      <div>
+        <div class="tabs" role="tablist">
+          <button class="on" data-tab="overview" role="tab">Overview<span class="err" id="errOverview"></span></button>
+          <button data-tab="build" role="tab">Build</button><button data-tab="purchase" role="tab">Purchase<span class="err" id="errPurchase"></span></button><button data-tab="notes" role="tab">Notes</button>
+        </div>
+        <div class="card" data-panel="overview">
+          <h3 style="margin-bottom:14px">Overview</h3>
+          <div class="frm">
+            ${fld('Keyboard type', selectHtml('keyboardType', Object.entries(KB_TYPES), '', 'custom'), { name: 'keyboardType', req: true, full: true })}
+            ${fld('Brand', inputHtml('brand', 'e.g. Keychron', 'dlBrands'), { name: 'brand' })}
+            ${fld('Name', inputHtml('name', 'e.g. Q6 Max'), { name: 'name', req: true })}
+            ${fld('Manufacturer', inputHtml('manufacturer', 'e.g. Keychron', 'dlMakers'), { name: 'manufacturer', hint: 'Who made it, if different from the brand.' })}
+            ${fld('Size', selectHtml('size', KB_SIZES, 'Select size'), { name: 'size' })}
+            ${fld('Location', inputHtml('location', 'e.g. Desk', 'dlLocations'), { name: 'location' })}
+            <details class="more" id="moreDetails"><summary>More details</summary><div class="frm">
+              ${fld('Model number', inputHtml('modelNumber', 'e.g. Q6M-M1'), { name: 'modelNumber' })}
+              ${fld('Serial number', inputHtml('serialNumber', 'e.g. SN-00123'), { name: 'serialNumber' })}
+              ${fld('Designer', inputHtml('designer', 'e.g. ai03', 'dlDesigners'), { name: 'designer' })}
+              ${fld('Layout', selectHtml('layout', KB_LAYOUTS, 'Select layout'), { name: 'layout' })}
+              ${fld('Color', inputHtml('color', 'e.g. Space Grey', 'dlColors'), { name: 'color' })}
+              ${fld('Connectivity', selectHtml('connectivity', KB_CONN, 'Select connectivity'), { name: 'connectivity' })}
+              ${fld('Connector', inputHtml('connector', 'e.g. USB-C', 'dlConnectors'), { name: 'connector' })}
+              ${fld('Status', selectHtml('status', KB_STATUS, 'Select status'), { name: 'status' })}
+              ${fld('Typing angle', inputHtml('typingAngle', 'e.g. 7°'), { name: 'typingAngle' })}
+              ${fld('Front height', inputHtml('frontHeight', 'e.g. 18 mm'), { name: 'frontHeight' })}
+              ${fld('Weight', inputHtml('weight', 'e.g. 2.1 kg'), { name: 'weight' })}
+            </div></details>
+          </div>
+        </div>
+        <div class="card" data-panel="build" hidden>
+          <h3 style="margin-bottom:14px">Build details</h3>
+          <div class="frm">
+            ${BUILD_FIELDS.map(([n, label, ph, sug]) => fld(label, inputHtml(n, ph, sug.length ? 'dl_' + n : ''), { name: n })).join('')}
+            ${fld('Current build', '<textarea class="input" name="currentBuildText" id="f_currentBuildText" rows="2" placeholder="e.g. GMK Olivia base kit + Gateron Oil King V2"></textarea>', { name: 'currentBuildText', full: true, hint: 'What is installed right now. Free text for now; it becomes links to your switches and keycaps in Phase 5.' })}
+          </div>
+          ${BUILD_FIELDS.filter(f => f[3].length).map(([n, , , sug]) => `<datalist id="dl_${n}">${uniq(sug.concat(savedKeyboards.map(k => k[n]))).map(o => `<option value="${esc(o)}">`).join('')}</datalist>`).join('')}
+        </div>
+        <div class="card" data-panel="purchase" hidden>
+          <h3 style="margin-bottom:14px">Purchase details</h3>
+          <div class="frm">
+            ${fld('Date purchased', '<input class="input" type="date" name="datePurchased" id="f_datePurchased">', { name: 'datePurchased' })}
+            ${fld('Date received', '<input class="input" type="date" name="dateReceived" id="f_dateReceived">', { name: 'dateReceived' })}
+            ${fld('Purchased from', inputHtml('purchasedFrom', 'e.g. eBay', 'dlSellers'), { name: 'purchasedFrom' })}
+            ${fld('Price', '<div class="money-in"><span>$</span><input class="input" type="number" min="0" step="0.01" inputmode="decimal" name="price" id="f_price" placeholder="0.00"></div>', { name: 'price', hint: 'Before tax, in USD.' })}
+            ${fld('Tax rate', '<div class="money-in pct-in"><input class="input" type="number" min="0" max="30" step="0.001" inputmode="decimal" name="taxRatePct" id="f_taxRatePct" placeholder="6.625"><span>%</span></div><div class="quick" id="taxQuick">' + TAX_QUICK.map(([v, t]) => `<button type="button" data-tax="${v}">${t}</button>`).join('') + '</div>', { name: 'taxRatePct' })}
+            ${fld('Shipping', '<div class="money-in"><span>$</span><input class="input" type="number" min="0" step="0.01" inputmode="decimal" name="shipping" id="f_shipping" placeholder="0.00"></div>', { name: 'shipping' })}
+            ${fld('Discounts', '<div class="money-in"><span>$</span><input class="input" type="number" min="0" step="0.01" inputmode="decimal" name="discounts" id="f_discounts" placeholder="0.00"></div>', { name: 'discounts', hint: 'Coupons, refunds or credits, as a positive amount.' })}
+            <div class="calc"><div>Price + tax<b id="cPriceTax">$0.00</b></div><div>Shipping − discounts<b id="cShipDisc">$0.00</b></div><div class="tot">Total paid<b id="cTotal">$0.00</b></div></div>
+            <div class="fld full"><label>Acquisition type</label><div class="checks">${ACQUISITION.map(([v, t]) => `<label class="check"><input type="checkbox" name="acq" value="${v}"> ${t}</label>`).join('')}</div></div>
+            ${fld('Receipt', inputHtml('receipt', 'Order number or link to the receipt'), { name: 'receipt', full: true, hint: 'A web link opens in a new tab; anything else is kept as text.' })}
+            ${fld('Pictures link', inputHtml('pictureLink', 'https://…'), { name: 'pictureLink', full: true, hint: 'Optional link to a product page or photo album.' })}
+          </div>
+          <datalist id="dlSellers">${uniq(PRELOADED_SELLERS.concat(savedKeyboards.map(k => k.purchasedFrom))).map(o => `<option value="${esc(o)}">`).join('')}</datalist>
+        </div>
+        <div class="card" data-panel="notes" hidden><div class="empty" style="padding:30px 10px"><h2>Notes</h2><p>Mods and notes arrive in Step 2.5, with automatic drafts.</p></div></div>
+      </div>
+      <div>
+        <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
+        <div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the keyboard first. Drag-and-drop photos arrive in Step 2.7.</p></div>
+        <div class="card side-card stack">
+          <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>Save keyboard</button>
+          <a class="btn" href="#/keyboards" id="btnCancel">Cancel</a>
+          ${ready ? '' : '<p class="sub" style="margin:0">Saving needs Firebase (open the https site).</p>'}
+        </div>
+      </div>
+    </div>
+    <datalist id="dlBrands">${brands.map(b => `<option value="${esc(b)}">`).join('')}</datalist>
+    <datalist id="dlMakers">${makers.map(b => `<option value="${esc(b)}">`).join('')}</datalist>
+    <datalist id="dlLocations">${locations.map(b => `<option value="${esc(b)}">`).join('')}</datalist>
+    <datalist id="dlDesigners">${designers.map(b => `<option value="${esc(b)}">`).join('')}</datalist>
+    <datalist id="dlColors">${colors.map(b => `<option value="${esc(b)}">`).join('')}</datalist>
+    <datalist id="dlConnectors">${KB_CONNECTORS.map(b => `<option value="${esc(b)}">`).join('')}</datalist>`;
+
+  const view = document.getElementById('view');
+  view.querySelector('.tabs').onclick = e => {
+    const b = e.target.closest('[data-tab]'); if (!b) return;
+    view.querySelectorAll('.tabs [data-tab]').forEach(x => x.classList.toggle('on', x === b));
+    view.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== b.dataset.tab);
+  };
+  const formEl = view.querySelector('.form-grid');   // replaced on every render, so listeners never pile up
+  formEl.addEventListener('input', e => { formDirty = true; if (e.target.name && document.querySelector(`.fld.bad[data-for="${e.target.name}"]`)) clearFieldError(e.target.name); });
+  formEl.addEventListener('change', () => { formDirty = true; });
+  document.getElementById('f_name').addEventListener('input', () => clearFieldError('name'));
+  document.getElementById('btnSave').onclick = saveKeyboard;
+  ['price', 'taxRatePct', 'shipping', 'discounts'].forEach(n => document.getElementById('f_' + n).addEventListener('input', updateCalc));
+  document.getElementById('taxQuick').onclick = e => { const b = e.target.closest('[data-tax]'); if (!b) return; const t = document.getElementById('f_taxRatePct'); t.value = b.dataset.tax; t.dispatchEvent(new Event('input', { bubbles: true })); };
+  updateCalc();
+  document.getElementById('f_name').focus();
+}
+function num(id) { const v = document.getElementById(id)?.value; return v === '' || v == null ? 0 : Number(v); }
+function updateCalc() {
+  const k = { price: num('f_price'), taxRate: num('f_taxRatePct') / 100, shipping: num('f_shipping'), discounts: num('f_discounts') };
+  document.getElementById('cPriceTax').textContent = money(k.price * (1 + k.taxRate));
+  document.getElementById('cShipDisc').textContent = money(k.shipping - k.discounts);
+  document.getElementById('cTotal').textContent = money(kbTotal(k));
+}
+function tabOf(name) { return ['datePurchased', 'dateReceived', 'purchasedFrom', 'price', 'taxRatePct', 'shipping', 'discounts', 'receipt', 'pictureLink'].includes(name) ? 'purchase' : 'overview'; }
+function clearFieldError(name) {
+  const f = document.querySelector(`.fld[data-for="${name}"]`); if (!f) return;
+  f.classList.remove('bad'); const m = f.querySelector('.msg'); if (m) m.remove();
+  const tab = tabOf(name);
+  if (!document.querySelector(`[data-panel="${tab}"] .fld.bad`)) document.getElementById(tab === 'purchase' ? 'errPurchase' : 'errOverview').textContent = '';
+}
+function showFieldError(name, msg, focus = true) {
+  const f = document.querySelector(`.fld[data-for="${name}"]`);
+  f.classList.add('bad'); if (!f.querySelector('.msg')) f.insertAdjacentHTML('beforeend', `<div class="msg">${esc(msg)}</div>`);
+  const tab = tabOf(name);
+  document.getElementById(tab === 'purchase' ? 'errPurchase' : 'errOverview').textContent = '· contains errors';
+  if (focus) { document.querySelector(`.tabs [data-tab="${tab}"]`).click(); document.getElementById('f_' + name).focus(); }
+}
+function readKeyboardForm() {
+  const v = n => (document.getElementById('f_' + n)?.value || '').trim();
+  const data = { keyboardType: v('keyboardType') || 'custom' };
+  ['brand', 'name', 'manufacturer', 'size', 'location', 'modelNumber', 'serialNumber', 'designer', 'layout', 'color', 'connectivity', 'connector', 'status', 'typingAngle', 'frontHeight', 'weight', 'currentBuildText']
+    .concat(BUILD_FIELDS.map(f => f[0]))
+    .forEach(n => { const x = v(n); if (x) data[n] = x; });
+  data.isFavorite = document.getElementById('f_isFavorite').checked;
+  ['datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'pictureLink'].forEach(n => { const x = v(n); if (x) data[n] = x; });
+  const n = id => { const x = v(id); return x === '' ? null : Number(x); };
+  const price = n('price'), tax = n('taxRatePct'), ship = n('shipping'), disc = n('discounts');
+  data._numbers = { price, taxRatePct: tax, shipping: ship, discounts: disc };
+  if (price !== null) data.price = Math.round(price * 100) / 100;
+  if (tax !== null) data.taxRate = Math.round(tax * 1e6) / 1e8;  // stored as a fraction like Excel (6.625% -> 0.06625)
+  if (ship !== null) data.shipping = Math.round(ship * 100) / 100;
+  if (disc !== null) data.discounts = Math.round(disc * 100) / 100;
+  const acq = [...document.querySelectorAll('input[name="acq"]:checked')].map(c => c.value);
+  if (acq.length) data.acquisition = acq;
+  return data;
+}
+async function saveKeyboard() {
+  const btn = document.getElementById('btnSave'), errBox = document.getElementById('formErr');
+  errBox.style.display = 'none';
+  const data = readKeyboardForm();
+  const nums = data._numbers; delete data._numbers;
+  const problems = [];
+  ['price', 'shipping', 'discounts'].forEach(k => { if (nums[k] !== null && (!isFinite(nums[k]) || nums[k] < 0)) problems.push([k, 'Enter an amount of 0 or more']); });
+  if (nums.taxRatePct !== null && (!isFinite(nums.taxRatePct) || nums.taxRatePct < 0 || nums.taxRatePct > 30)) problems.push(['taxRatePct', 'Enter a percent between 0 and 30']);
+  if (data.datePurchased && data.dateReceived && data.dateReceived < data.datePurchased) problems.push(['dateReceived', 'Received date is before the purchase date']);
+  if (!data.name) problems.unshift(['name', 'Name is required']);
+  if (problems.length) { problems.forEach(([f, m], i) => showFieldError(f, m, i === 0)); return; }
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const now = firebase.firestore.FieldValue.serverTimestamp();
+    const ref = await withTimeout(kbCol().add(Object.assign(data, { createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app' })));
+    formDirty = false;
+    toast(`Saved "${data.name}"`);
+    location.hash = '#/keyboards/' + ref.id;
+  } catch (e) {
+    errBox.style.display = 'block'; errBox.textContent = 'Could not save: ' + explain(e) + ' Your entries are still here; try again.';
+    btn.disabled = false; btn.textContent = 'Save keyboard';
   }
 }
-let openedFromHome = false; // true when a tile was tapped, so Back = history.back()
-tilesEl.addEventListener('click', () => { openedFromHome = true; });
-document.getElementById('openTest').addEventListener('click', () => { openedFromHome = true; location.hash = '#/connection-test'; });
-document.getElementById('backBtn').addEventListener('click', () => {
-  if (openedFromHome) history.back();
-  else location.hash = '';   // page was opened directly (bookmark or reload)
-});
-window.addEventListener('hashchange', () => {
-  if (!location.hash || location.hash === '#/') openedFromHome = false;
-  route();
-});
 
-/* ===================== Protocol check (guardrail: Firestore rejects file://) ===================== */
-const warn = document.getElementById('protoWarn');
-const isFile = location.protocol === 'file:';
-const isInsecure = location.protocol === 'http:' && !['localhost', '127.0.0.1'].includes(location.hostname);
-if (isFile || isInsecure) {
-  warn.style.display = 'block';
-  warn.innerHTML = isFile
-    ? '<strong>Opened from a file on this device.</strong> Sync will not work this way, because Firebase blocks file:// pages. Open <strong>https://fniskeebs69.github.io/keyboards/</strong> instead.'
-    : '<strong>Not a secure connection.</strong> Open <strong>https://fniskeebs69.github.io/keyboards/</strong> so sync and installing work.';
-}
-
-/* ===================== Firebase init (no reads or writes in v0.1.0) ===================== */
-const fbDot = document.getElementById('fbDot');
-const fbText = document.getElementById('fbText');
-let db = null;
-try {
-  if (typeof firebase === 'undefined') throw new Error('Firebase SDK did not load (offline?)');
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  db = firebase.firestore();
-  if (isFile) { fbDot.className = 'dot bad'; fbText.textContent = 'Sync blocked (file://)'; }
-  else { fbDot.className = 'dot ok'; fbText.textContent = 'Firebase ready'; }
-} catch (err) {
-  console.error(err);
-  fbDot.className = 'dot bad';
-  fbText.textContent = 'Firebase not loaded: ' + err.message;
-}
-
-/* ===================== Step 1.2: Connection test page ===================== */
+/* ===================== Settings (connection test moved here) ===================== */
 let testUnsub = null;
 function stopTestListener() { if (testUnsub) { testUnsub(); testUnsub = null; } }
 function testRef() { return db.collection(FIRESTORE_COLLECTION).doc(ROOT_DOC).collection('keyboards').doc(TEST_DOC_ID); }
@@ -354,7 +816,6 @@ function deviceLabel() {
   const app = window.matchMedia('(display-mode: standalone)').matches ? 'installed app' : 'browser tab';
   return `${br} on ${os} (${app})`;
 }
-function esc(t) { return String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function logLine(msg, kind) {
   const ul = document.getElementById('testLog'); if (!ul) return;
   const li = document.createElement('li'); if (kind) li.className = kind;
@@ -364,49 +825,29 @@ function logLine(msg, kind) {
 function explain(err) {
   if (err && err.code === 'permission-denied') return 'Permission denied. Check that the Firestore rules include the keyboard_collection block and were published.';
   if (err && err.code === 'unavailable') return 'Firebase is unreachable (offline?).';
+  if (err && err.code === 'timeout') return err.message + '.';
   return (err && (err.code || err.message)) || String(err);
 }
-function fmtTime(ts) {
-  if (!ts) return 'pending…';
-  const d = ts.toDate ? ts.toDate() : new Date(ts);
-  return d.toLocaleString();
-}
-
-function renderTestPage() {
-  document.documentElement.style.setProperty('--accent', 'var(--kb)');
-  document.getElementById('pageIco').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1"/></svg>';
-  document.getElementById('pageTitle').textContent = 'Connection test';
-  document.title = 'Connection test · Keyboard Collection';
-  document.getElementById('pageFootLeft').textContent = 'Path: ' + FIRESTORE_COLLECTION + '/' + ROOT_DOC + '/keyboards/' + TEST_DOC_ID;
+function fmtTime(ts) { if (!ts) return 'pending…'; const d = ts.toDate ? ts.toDate() : new Date(ts); return d.toLocaleString(); }
+function renderSettings() {
   const ready = !!db && !isFile;
-  document.getElementById('pageBody').innerHTML = `
-    <div class="test-grid">
-      <div class="card">
-        <h3>Test record, live</h3>
-        <p class="sub">Updates by itself when the record changes on any device.</p>
-        <div class="live"><span class="dot" id="liveDot"></span><div><b id="liveTitle">Connecting…</b><div class="kv" id="liveInfo"></div></div></div>
-      </div>
-      <div class="card">
-        <h3>Actions</h3>
-        <p class="sub">Write one dummy keyboard, read it back from the server, then delete it.</p>
+  document.getElementById('view').innerHTML = `
+    <div class="pagehead"><div><h1>Settings</h1><p>App information and tools.</p></div></div>
+    <div class="two">
+      <div class="card"><h3>About this app</h3><p class="sub">Keyboard Collection ${APP_VERSION} · single user · USD</p>
+        <div class="kv">Data path: ${FIRESTORE_COLLECTION}/${ROOT_DOC}/&lt;type&gt;/&lt;id&gt;<br>Firebase project: ${firebaseConfig.projectId}</div></div>
+      <div class="card"><h3>Photo storage</h3><p class="sub">A storage meter appears here once photos arrive (Step 2.7), so you can see the free limit coming.</p></div>
+    </div>
+    <h2 style="font-size:17px;margin:26px 0 12px">Connection test</h2>
+    <div class="two">
+      <div class="card"><h3>Test record, live</h3><p class="sub">Updates by itself when the record changes on any device.</p>
+        <div class="live"><span class="dot" id="liveDot"></span><div><b id="liveTitle">Connecting…</b><div class="kv" id="liveInfo"></div></div></div></div>
+      <div class="card"><h3>Actions</h3><p class="sub">Write one dummy keyboard, read it back from the server, then delete it. Open this page on a second device to watch it sync.</p>
         <div class="btnrow">
           <button class="btn primary" id="btnWrite" ${ready ? '' : 'disabled'}>Write test keyboard</button>
           <button class="btn" id="btnRead" ${ready ? '' : 'disabled'}>Read from server</button>
-          <button class="btn danger" id="btnDelete" ${ready ? '' : 'disabled'}>Delete test keyboard</button>
-        </div>
-      </div>
-      <div class="card">
-        <h3>How to run the test</h3>
-        <ol class="howto">
-          <li>On this PC, click <b>Write test keyboard</b>.</li>
-          <li>Open this page on a second device or browser (phone, laptop, or another browser on this PC). The live card should show the record.</li>
-          <li>Click <b>Delete test keyboard</b> on either one. Both live cards should switch to "No test record".</li>
-        </ol>
-      </div>
-      <div class="card">
-        <h3>Log</h3>
-        <ul class="log" id="testLog"></ul>
-      </div>
+          <button class="btn danger" id="btnDelete" ${ready ? '' : 'disabled'}>Delete test keyboard</button></div>
+        <ul class="log" id="testLog" style="margin-top:14px"></ul></div>
     </div>`;
   if (!ready) {
     document.getElementById('liveDot').className = 'dot bad';
@@ -416,44 +857,53 @@ function renderTestPage() {
   testUnsub = testRef().onSnapshot(snap => {
     const dot = document.getElementById('liveDot'); if (!dot) return;
     if (snap.exists) {
-      const d = snap.data();
-      dot.className = 'dot ok';
+      const d = snap.data(); dot.className = 'dot ok';
       document.getElementById('liveTitle').textContent = 'Test record exists';
-      document.getElementById('liveInfo').innerHTML =
-        `name: ${esc(d.name)}<br>written by: ${esc(d.writtenBy)}<br>written at: ${esc(fmtTime(d.createdAt))}<br>` +
-        `from server: ${snap.metadata.fromCache ? 'not yet (local copy)' : 'yes'}`;
+      document.getElementById('liveInfo').innerHTML = `name: ${esc(d.name)}<br>written by: ${esc(d.writtenBy)}<br>written at: ${esc(fmtTime(d.createdAt))}<br>from server: ${snap.metadata.fromCache ? 'not yet (local copy)' : 'yes'}`;
     } else {
       dot.className = 'dot';
       document.getElementById('liveTitle').textContent = 'No test record';
       document.getElementById('liveInfo').textContent = snap.metadata.fromCache ? '(checking server…)' : 'Server confirms it is not there.';
     }
-  }, err => {
-    const dot = document.getElementById('liveDot'); if (dot) dot.className = 'dot bad';
-    const t = document.getElementById('liveTitle'); if (t) t.textContent = 'Listener error';
-    logLine('Live listener: ' + explain(err), 'err');
-  });
+  }, err => { const t = document.getElementById('liveTitle'); if (t) t.textContent = 'Listener error'; logLine('Live listener: ' + explain(err), 'err'); });
   document.getElementById('btnWrite').onclick = async () => {
-    try {
-      await testRef().set({
-        name: 'Connection Test Board', brand: 'TEST', isTest: true,
-        writtenBy: deviceLabel(), appVersion: APP_VERSION,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      logLine('Write OK: test keyboard saved to the server.', 'ok');
-    } catch (e) { logLine('Write failed: ' + explain(e), 'err'); }
+    try { await testRef().set({ name: 'Connection Test Board', brand: 'TEST', isTest: true, writtenBy: deviceLabel(), appVersion: APP_VERSION, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      logLine('Write OK: test keyboard saved to the server.', 'ok'); } catch (e) { logLine('Write failed: ' + explain(e), 'err'); }
   };
   document.getElementById('btnRead').onclick = async () => {
-    try {
-      const snap = await testRef().get({ source: 'server' });
-      logLine(snap.exists ? 'Read OK: server has "' + snap.data().name + '" written by ' + snap.data().writtenBy + '.' : 'Read OK: server has no test record.', 'ok');
-    } catch (e) { logLine('Read failed: ' + explain(e), 'err'); }
+    try { const snap = await testRef().get({ source: 'server' });
+      logLine(snap.exists ? 'Read OK: server has "' + snap.data().name + '" written by ' + snap.data().writtenBy + '.' : 'Read OK: server has no test record.', 'ok'); } catch (e) { logLine('Read failed: ' + explain(e), 'err'); }
   };
   document.getElementById('btnDelete').onclick = async () => {
-    try { await testRef().delete(); logLine('Delete OK: test keyboard removed from the server.', 'ok'); }
-    catch (e) { logLine('Delete failed: ' + explain(e), 'err'); }
+    try { await testRef().delete(); logLine('Delete OK: test keyboard removed from the server.', 'ok'); } catch (e) { logLine('Delete failed: ' + explain(e), 'err'); }
   };
 }
-route(); // first render, after Firebase setup so a direct link to a page works
+
+/* ===================== Protocol check (guardrail: Firestore rejects file://) ===================== */
+const isFile = location.protocol === 'file:';
+const isInsecure = location.protocol === 'http:' && !['localhost', '127.0.0.1'].includes(location.hostname);
+if (isFile || isInsecure) {
+  const warn = document.getElementById('protoWarn');
+  warn.style.display = 'block';
+  warn.innerHTML = isFile
+    ? '<strong>Opened from a file on this device.</strong> Sync will not work this way, because Firebase blocks file:// pages. Open <strong>https://fniskeebs69.github.io/keyboards/</strong> instead.'
+    : '<strong>Not a secure connection.</strong> Open <strong>https://fniskeebs69.github.io/keyboards/</strong> so sync and installing work.';
+}
+
+/* ===================== Firebase init ===================== */
+const fbDot = document.getElementById('fbDot'), fbText = document.getElementById('fbText');
+let db = null;
+try {
+  if (typeof firebase === 'undefined') throw new Error('SDK did not load (offline?)');
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  if (isFile) { fbDot.className = 'dot bad'; fbText.textContent = 'Sync blocked (file://)'; }
+  else { fbDot.className = 'dot ok'; fbText.textContent = 'Firebase ready'; }
+} catch (err) { console.error(err); fbDot.className = 'dot bad'; fbText.textContent = 'Firebase not loaded'; }
+document.getElementById('verText').textContent = APP_VERSION;
+startKeyboardListener();
+
+route();
 </script>
 </body>
 </html>
