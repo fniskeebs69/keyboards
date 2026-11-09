@@ -106,7 +106,7 @@
   .tile .hint { color: var(--text-3); font-size: 12.5px; }
   .tile .hint.good { color: #34d399; }
   .tile .eye { position: absolute; right: 14px; top: 14px; }
-  .tile .blur, #spendCard .blur { filter: blur(7px); user-select: none; }
+  .tile .blur, #spendCard .blur, .gdlg .blur { filter: blur(7px); user-select: none; }
   a.tile.card:hover { border-color: color-mix(in srgb, var(--c) 45%, var(--line)); }
   .addrow { display: flex; gap: 10px; flex-wrap: wrap; }
   .addrow .btn svg { color: var(--c); }
@@ -337,6 +337,20 @@
   .xsw { display: inline-block; width: 18px; height: 14px; border-radius: 4px; margin-right: 3px; border: 1px solid rgba(255,255,255,.18); }
   .cwlist { display: grid; gap: 6px; } .cwrow { display: grid; grid-template-columns: 34px 1fr auto; gap: 8px; align-items: center; } .cwrow .btn { padding: 3px 8px; }
   .mtable td { vertical-align: top; } .mtable .msel { max-width: 320px; padding: 6px 8px; font-size: 13px; } .mtable .msearch { margin-top: 6px; max-width: 320px; padding: 6px 8px; font-size: 13px; } .mtable .gpick { max-width: 320px; margin-top: 4px; }
+  .gdlg > .share-card { width: min(980px, 100%); } .share-prev { max-height: 64vh; overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: #0b0d10; display: grid; place-items: center; min-height: 160px; }
+  .share-img { max-width: 100%; max-height: 62vh; width: auto; height: auto; display: block; }
+  .pchips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .pchip { border: 1px solid var(--line); background: var(--bg-2); color: var(--text-2); border-radius: 999px; padding: 4px 11px; font-size: 12.5px; cursor: pointer; }
+  .pchip.on { background: color-mix(in srgb, var(--kc) 22%, transparent); color: var(--text); border-color: var(--kc); }
+  .cbar { display: inline-block; width: 60px; height: 4px; border-radius: 3px; background: var(--line); overflow: hidden; vertical-align: middle; margin-right: 6px; } .cbar.wide { display: block; width: 100%; height: 6px; }
+  .cfill { display: block; height: 100%; background: linear-gradient(90deg, #34d399, #a7f3d0); }
+  .cnum { font-size: 11.5px; color: var(--text-3); } .kcard .meta .cbar { margin-top: 5px; }
+  .kitlist { display: grid; gap: 3px; margin-top: 8px; } .kitrow { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-3); }
+  .kitrow.have { color: #86efac; } .kitrow .btn { padding: 2px 8px; font-size: 11.5px; flex: none; }
+  .sgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; } .scard { border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: grid; }
+  .scard b { font-size: 22px; } .scard span { font-size: 12px; color: var(--text-3); }
+  .scols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 14px; } .scols h4 { font-size: 13px; color: var(--text-2); margin: 0 0 6px; }
+  .srow { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; border-bottom: 1px solid color-mix(in srgb, var(--line) 50%, transparent); }
   .kinst { display: grid; gap: 10px; }
   .kirow { display: grid; gap: 4px; }
   .kirow .kn { font-size: 12.5px; color: var(--text-2); font-weight: 600; }
@@ -389,7 +403,7 @@
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.39.0';
+const APP_VERSION = 'v0.41.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -737,7 +751,7 @@ function renderKeyboards() {
       <div class="tools">
         <select class="select" id="kbSort" aria-label="Sort">${Object.entries(SORTS).map(([v, t]) => `<option value="${v}"${v === kbSort ? ' selected' : ''}>${t}</option>`).join('')}</select>
         <div class="seg" role="group" aria-label="View"><button id="vGal" class="${kbView === 'gallery' ? 'on' : ''}">${I.grid}Gallery</button><button id="vList" class="${kbView === 'list' ? 'on' : ''}">${I.list}List</button></div>
-        <a class="btn primary" href="#/keyboards/new">${I.plus}Add keyboard</a>
+        ${shareListButton('keyboards')}<a class="btn primary" href="#/keyboards/new">${I.plus}Add keyboard</a>
       </div></div>
     <div class="tools" style="margin-bottom:16px"><label class="search">${I.search}<input class="input" id="kbSearch" placeholder="Search by brand, name, color, size, build parts or mods" value="${esc(kbQuery)}"></label></div>
     ${activeSamples().length ? '<div class="note">Cards marked "Sample" are 5 boards from your v18 workbook, shown in the app only. They go away when you import your Excel list.</div>' : ''}
@@ -746,11 +760,12 @@ function renderKeyboards() {
   document.getElementById('vGal').onclick = () => { kbView = 'gallery'; renderKeyboards(); };
   document.getElementById('vList').onclick = () => { kbView = 'list'; renderKeyboards(); };
   document.getElementById('kbSearch').oninput = e => { kbQuery = e.target.value; drawKeyboardResults(); };
+  wireShareList('keyboards', 'Keyboards', k => ({ name: k.name, sub: [k.brand, k.size].filter(Boolean).join(' · '), thumb: k.coverThumb, colors: shareColors(k.colorway) }));
   drawKeyboardResults();
 }
 function drawKeyboardResults() {
   const all = allKeyboards();
-  const list = sortKeyboards(all.filter(k => matches(k, kbQuery.trim())));
+  const list = lastLists.keyboards = sortKeyboards(all.filter(k => matches(k, kbQuery.trim())));
   const nSaved = savedKeyboards.length;
   document.getElementById('kbCount').textContent = (kbQuery.trim() ? `${list.length} of ${all.length} keyboards` : `${all.length} keyboards`) + (activeSamples().length ? ` · ${nSaved} saved, ${activeSamples().length} samples` : '') + (db && !isFile && !kbLoaded ? ' · loading…' : '');
   const box = document.getElementById('kbResults');
@@ -873,7 +888,7 @@ function renderKeyboardForm(k = null) {
   document.getElementById('view').innerHTML = `
     <a class="crumb" href="#/keyboards">${I.back}Keyboards</a>
     ${k ? `<div class="pagehead" id="kbDetailFor"><div><h1>${esc(k.name)}</h1><p>${esc(k.brand || 'No brand')}${k.size ? ' · ' + esc(k.size) : ''}</p></div>
-        <div class="tools"><button class="btn danger" id="btnDelete">Delete</button></div></div>`
+        <div class="tools"><button class="btn" id="btnBuildCard">Share build card</button><button class="btn danger" id="btnDelete">Delete</button></div></div>`
       : `<div class="pagehead"><div><h1>Add keyboard</h1><p>Save the basics now. Your entries are kept as a draft on this device until you save.</p></div></div>`}
     <div id="draftBar"></div>
     <div class="formerr" id="formErr"></div>
@@ -966,6 +981,7 @@ ${purchasePanelHtml(savedKeyboards)}
   formEl.addEventListener('input', e => { onEdit(e); if (e.target.name && document.querySelector(`.fld.bad[data-for="${e.target.name}"]`)) clearFieldError(e.target.name); });
   formEl.addEventListener('change', onEdit);
   if (k) {
+    document.getElementById('btnBuildCard').onclick = () => { const cur = savedKeyboards.find(x => x.id === k.id) || k; openShareDialog(`Build card · ${cur.name}`, withSpend => buildCardCanvas(cur, withSpend), { spendToggle: true, file: shareFileName('fsn-' + cur.name) }); };
     fillKeyboardForm(k); setEditState(false); wirePhotos(k); wireValueCard('keyboards', k); wireColorwayCard(k); wireSwitchesOnKeyboard(k); wireKeycapsOnKeyboard(k); wirePartsOnKeyboard(k);
     document.getElementById('btnCancel').onclick = () => { formDirty = false; renderKeyboardForm(savedKeyboards.find(x => x.id === k.id) || k); toast('Changes discarded'); };
     document.getElementById('btnDelete').onclick = async () => {
@@ -1427,7 +1443,7 @@ function renderSwitches() {
       <div class="tools">
         <select class="select" id="swSort" aria-label="Sort">${Object.entries(SORTS).map(([v, t]) => `<option value="${v}"${v === swSort ? ' selected' : ''}>${t.replace('Brand', 'Maker')}</option>`).join('')}</select>
         <div class="seg" role="group" aria-label="View"><button id="swGal" class="${swView === 'gallery' ? 'on' : ''}">${I.grid}Gallery</button><button id="swList" class="${swView === 'list' ? 'on' : ''}">${I.list}List</button></div>
-        <a class="btn primary" href="#/switches/new">${I.plus}Add switches</a>
+        ${shareListButton('switches')}<a class="btn primary" href="#/switches/new">${I.plus}Add switches</a>
       </div></div>
     <div class="tools" style="margin-bottom:16px"><label class="search">${I.search}<input class="input" id="swSearch" placeholder="Search by maker, name, type, specs or notes" value="${esc(swQuery)}"></label></div>
     <div id="swResults"></div>`;
@@ -1435,11 +1451,12 @@ function renderSwitches() {
   document.getElementById('swGal').onclick = () => { swView = 'gallery'; renderSwitches(); };
   document.getElementById('swList').onclick = () => { swView = 'list'; renderSwitches(); };
   document.getElementById('swSearch').oninput = e => { swQuery = e.target.value; drawSwitchResults(); };
+  wireShareList('switches', 'Switches', w => ({ name: w.name, sub: [w.manufacturer, w.switchType].filter(Boolean).join(' · '), thumb: w.coverThumb }));
   drawSwitchResults();
 }
 function drawSwitchResults() {
   const box = document.getElementById('swResults'); if (!box) return;
-  const all = savedSwitches, list = sortSwitches(all.filter(w => swMatches(w, swQuery.trim())));
+  const all = savedSwitches, list = lastLists.switches = sortSwitches(all.filter(w => swMatches(w, swQuery.trim())));
   const count = all.reduce((s, w) => s + (Number(w.totalCount) || 0), 0);
   const unknown = all.filter(w => w.totalCount == null).length;
   const inst = all.reduce((s, w) => s + installedCount(w), 0);
@@ -1679,18 +1696,26 @@ function kcMatches(s, q) {
 }
 function sortKeycaps(list) {
   const by = (f, dir) => (a, b) => dir * String(f(a) || '').localeCompare(String(f(b) || ''), 'en', { sensitivity: 'base' });
-  return [...list].sort({ newest: by(s => s._date, -1), oldest: by(s => s._date, 1), nameAZ: by(s => s.name, 1), nameZA: by(s => s.name, -1), brandAZ: by(s => s.manufacturer, 1), brandZA: by(s => s.manufacturer, -1) }[kcSort]);
+  const pct = s => { const c = completionOf(s); return c ? c.pct : -1; };
+  return [...list].sort({ newest: by(s => s._date, -1), oldest: by(s => s._date, 1), nameAZ: by(s => s.name, 1), nameZA: by(s => s.name, -1), brandAZ: by(s => s.manufacturer, 1), brandZA: by(s => s.manufacturer, -1),
+    completion: (a, b) => pct(b) - pct(a) || a.name.localeCompare(b.name) }[kcSort]);
 }
 function renderKeycaps() {
   document.getElementById('view').innerHTML = `
     <div class="pagehead"><div><h1>Keycaps</h1><p id="kcCount"></p></div>
       <div class="tools">
-        <select class="select" id="kcSort" aria-label="Sort">${Object.entries(SORTS).map(([v, t]) => `<option value="${v}"${v === kcSort ? ' selected' : ''}>${t.replace('Brand', 'Maker')}</option>`).join('')}</select>
+        <select class="select" id="kcSort" aria-label="Sort">${Object.entries(SORTS).concat([['completion', 'Most complete']]).map(([v, t]) => `<option value="${v}"${v === kcSort ? ' selected' : ''}>${t.replace('Brand', 'Maker')}</option>`).join('')}</select>
+        <button class="btn" id="kcStats">Stats</button>${shareListButton('keycaps')}
         <div class="seg" role="group" aria-label="View"><button id="kcGal" class="${kcView === 'gallery' ? 'on' : ''}">${I.grid}Gallery</button><button id="kcList" class="${kcView === 'list' ? 'on' : ''}">${I.list}List</button></div>
         <a class="btn primary" href="#/keycaps/new">${I.plus}Add keycap set</a>
       </div></div>
-    <div class="tools" style="margin-bottom:16px"><label class="search">${I.search}<input class="input" id="kcSearch" placeholder="Search by set, maker, designer, profile, colors or kit" value="${esc(kcQuery)}"></label></div>
+    <div class="tools" style="margin-bottom:10px"><label class="search">${I.search}<input class="input" id="kcSearch" placeholder="Search by set, maker, designer, profile, colors or kit" value="${esc(kcQuery)}"></label></div>
+    ${kcChipsHtml()}
     <div id="kcResults"></div>`;
+  wireShareList('keycaps', 'Keycaps', s => ({ name: s.name, sub: [s.manufacturer, s.profile, `${kitsOf(s).length} kit${kitsOf(s).length === 1 ? '' : 's'}`].filter(Boolean).join(' · '), thumb: s.coverThumb, colors: shareColors(paletteOf(s)) }));
+  document.getElementById('kcStats').onclick = () => (gmkSets ? Promise.resolve() : loadGmk().catch(() => {})).then(openKeycapStats);
+  document.getElementById('kcChips').onclick = e => { const b = e.target.closest('[data-kchip]'); if (!b) return; kcChip = b.dataset.kchip; document.getElementById('kcChips').outerHTML = kcChipsHtml(); renderKeycaps(); };
+  if (!gmkSets && db && !isFile) loadGmk().then(() => drawKeycapResults()).catch(() => {});
   document.getElementById('kcSort').onchange = e => { kcSort = e.target.value; drawKeycapResults(); };
   document.getElementById('kcGal').onclick = () => { kcView = 'gallery'; renderKeycaps(); };
   document.getElementById('kcList').onclick = () => { kcView = 'list'; renderKeycaps(); };
@@ -1699,11 +1724,11 @@ function renderKeycaps() {
 }
 function drawKeycapResults() {
   const box = document.getElementById('kcResults'); if (!box) return;
-  const all = savedKeycaps, list = sortKeycaps(all.filter(s => kcMatches(s, kcQuery.trim())));
+  const all = savedKeycaps, list = lastLists.keycaps = sortKeycaps(all.filter(s => kcMatches(s, kcQuery.trim()) && kcChipOk(s)));
   const kits = all.reduce((n, s) => n + kitsOf(s).length, 0);
-  document.getElementById('kcCount').textContent = (kcQuery.trim() ? `${list.length} of ${all.length} sets` : `${all.length} set${all.length === 1 ? '' : 's'}`) + ` · ${kits} kit${kits === 1 ? '' : 's'}` + (db && !isFile && !kcLoaded ? ' · loading…' : '');
+  document.getElementById('kcCount').textContent = (kcQuery.trim() || kcChip ? `${list.length} of ${all.length} sets` : `${all.length} set${all.length === 1 ? '' : 's'}`) + ` · ${kits} kit${kits === 1 ? '' : 's'}` + (db && !isFile && !kcLoaded ? ' · loading…' : '');
   if (!all.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.keycaps}</div><h2>No keycap sets yet</h2><p>Add a set with its kits, or import your Excel Keycaps tab on the Import page.</p><p style="margin-top:14px"><a class="btn primary" href="#/keycaps/new">${I.plus}Add keycap set</a></p></div>`; return; }
-  if (!list.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.search}</div><h2>No matches</h2><p>Nothing matches "${esc(kcQuery)}".</p></div>`; return; }
+  if (!list.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.search}</div><h2>No matches</h2><p>${kcQuery.trim() ? `Nothing matches "${esc(kcQuery)}".` : 'No sets with this filter.'}</p></div>`; return; }
   const sub = s => [s.manufacturer, `${kitsOf(s).length} kit${kitsOf(s).length === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
   if (kcView === 'gallery') {
     box.innerHTML = `<div class="gallery">${list.map(s => `
@@ -1711,11 +1736,11 @@ function drawKeycapResults() {
         <div class="ph">${s.coverThumb ? `<img src="${s.coverThumb}" alt="" loading="lazy">` : I.keycaps.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}
           ${s.profile ? `<span class="badge chip">${esc(s.profile)}</span>` : ''}
           <button class="fav${s.isFavorite ? ' on' : ''}" data-fav="${esc(s.id)}" aria-label="${s.isFavorite ? 'Remove from' : 'Add to'} favorites">${s.isFavorite ? I.starFill : I.star}</button></div>
-        <div class="meta"><b>${esc(s.name)}</b><span>${esc(sub(s))}</span>${paletteStripHtml(s)}</div></a>`).join('')}</div>`;
+        <div class="meta"><b>${esc(s.name)}</b><span>${esc(sub(s))}</span>${completionHtml(s)}${paletteStripHtml(s)}</div></a>`).join('')}</div>`;
   } else {
-    box.innerHTML = `<table class="list"><thead><tr><th style="width:44px"></th><th>Set</th><th>Maker</th><th>Profile</th><th style="text-align:right">Kits</th><th>Latest purchase</th></tr></thead><tbody>${list.map(s => `
+    box.innerHTML = `<table class="list"><thead><tr><th style="width:44px"></th><th>Set</th><th>Maker</th><th>Profile</th><th style="text-align:right">Kits</th><th>Completion</th><th>Latest purchase</th></tr></thead><tbody>${list.map(s => `
       <tr class="row" data-href="#/keycaps/${esc(s.id)}"><td><button class="fav${s.isFavorite ? ' on' : ''}" style="position:static;width:28px;height:28px" data-fav="${esc(s.id)}" aria-label="Favorite">${s.isFavorite ? I.starFill : I.star}</button></td>
-      <td><b>${esc(s.name)}</b></td><td>${esc(s.manufacturer || '')}</td><td>${esc(s.profile || '')}</td><td style="text-align:right">${kitsOf(s).length}</td><td>${esc(fmtDate(s._date)) || '<span style="color:var(--text-3)">—</span>'}</td></tr>`).join('')}</tbody></table>`;
+      <td><b>${esc(s.name)}</b></td><td>${esc(s.manufacturer || '')}</td><td>${esc(s.profile || '')}</td><td style="text-align:right">${kitsOf(s).length}</td><td>${completionHtml(s) || '<span style="color:var(--text-3)">—</span>'}</td><td>${esc(fmtDate(s._date)) || '<span style="color:var(--text-3)">—</span>'}</td></tr>`).join('')}</tbody></table>`;
   }
   box.onclick = async e => {
     const f = e.target.closest('[data-fav]');
@@ -2224,7 +2249,7 @@ function renderParts(t) {
       <div class="tools">
         <select class="select" id="ptSort" aria-label="Sort">${Object.entries(SORTS).map(([v, s]) => `<option value="${v}"${v === st.sort ? ' selected' : ''}>${s.replace('Brand', 'Maker')}</option>`).join('')}</select>
         <div class="seg" role="group" aria-label="View"><button id="ptGal" class="${st.view === 'gallery' ? 'on' : ''}">${I.grid}Gallery</button><button id="ptList" class="${st.view === 'list' ? 'on' : ''}">${I.list}List</button></div>
-        <a class="btn primary" href="#/${t}/new">${I.plus}${P.addLabel}</a>
+        ${shareListButton(t)}<a class="btn primary" href="#/${t}/new">${I.plus}${P.addLabel}</a>
       </div></div>
     <div class="tools" style="margin-bottom:16px"><label class="search">${I.search}<input class="input" id="ptSearch" placeholder="Search ${P.title.toLowerCase()} by name, maker, notes or anything else" value="${esc(st.q)}"></label></div>
     <div id="ptResults"></div>`;
@@ -2232,13 +2257,14 @@ function renderParts(t) {
   document.getElementById('ptGal').onclick = () => { st.view = 'gallery'; renderParts(t); };
   document.getElementById('ptList').onclick = () => { st.view = 'list'; renderParts(t); };
   document.getElementById('ptSearch').oninput = e => { st.q = e.target.value; drawPartResults(t); };
+  wireShareList(t, P.title, x => ({ name: x.name, sub: P.sub(x), thumb: x.coverThumb }));
   drawPartResults(t);
 }
 function drawPartResults(t) {
   const box = document.getElementById('ptResults'); if (!box || !location.hash.startsWith('#/' + t)) return;
   const P = PART_TYPES[t], st = partState[t], all = savedParts[t];
   const by = (f, dir) => (a, b) => dir * String(f(a) || '').localeCompare(String(f(b) || ''), 'en', { sensitivity: 'base' });
-  const list = all.filter(x => partMatches(t, x, st.q.trim())).sort({ newest: by(sortDate, -1), oldest: by(sortDate, 1), nameAZ: by(x => x.name, 1), nameZA: by(x => x.name, -1), brandAZ: by(x => x.manufacturer, 1), brandZA: by(x => x.manufacturer, -1) }[st.sort]);
+  const list = lastLists[t] = all.filter(x => partMatches(t, x, st.q.trim())).sort({ newest: by(sortDate, -1), oldest: by(sortDate, 1), nameAZ: by(x => x.name, 1), nameZA: by(x => x.name, -1), brandAZ: by(x => x.manufacturer, 1), brandZA: by(x => x.manufacturer, -1) }[st.sort]);
   document.getElementById('ptCount').textContent = (st.q.trim() ? `${list.length} of ${all.length}` : `${all.length}`) + ` ${all.length === 1 ? P.singular : P.title.toLowerCase()}` + (db && !isFile && !partsLoaded[t] ? ' · loading…' : '');
   if (!all.length) { box.innerHTML = `<div class="card empty"><div class="big">${I[P.icon]}</div><h2>No ${P.title.toLowerCase()} yet</h2><p>Add one here${t !== 'artisans' ? ', or import from Excel on the Import page' : ''}.</p><p style="margin-top:14px"><a class="btn primary" href="#/${t}/new">${I.plus}${P.addLabel}</a></p></div>`; return; }
   if (!list.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.search}</div><h2>No matches</h2><p>Nothing matches "${esc(st.q)}".</p></div>`; return; }
@@ -3044,6 +3070,142 @@ function drawGmkMatch() {
   };
 }
 
+/* ===================== Step 9.4: share as image =====================
+   Everything is drawn on a canvas in the browser from data already on screen; nothing is uploaded.
+   Photos are data URLs, so the canvas can be saved. GMK catalog colors are left out of shared images (private data). */
+const SHARE_FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+function loadImg(src) { return new Promise(r => { if (!src) return r(null); const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; }); }
+function shareColors(list) { return (list || []).filter(c => c.source !== 'catalog').map(c => normHex(c.hex)).filter(Boolean); }
+function fitText(ctx, t, w) { t = String(t || ''); if (ctx.measureText(t).width <= w) return t; while (t.length > 1 && ctx.measureText(t + '…').width > w) t = t.slice(0, -1); return t.trimEnd() + '…'; }
+function wrapText(ctx, t, w, maxLines) { const words = String(t || '').split(/\s+/), out = []; let line = '';
+  for (const wd of words) { const tryL = line ? line + ' ' + wd : wd; if (ctx.measureText(tryL).width <= w || !line) line = tryL; else { out.push(line); line = wd; } }
+  if (line) out.push(line); if (out.length > maxLines) { out.length = maxLines; out[maxLines - 1] = fitText(ctx, out[maxLines - 1] + ' …', w); } return out; }
+function rrect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+function drawCover(ctx, img, x, y, w, h) { const s = Math.max(w / img.width, h / img.height), sw = w / s, sh = h / s; ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, x, y, w, h); }
+function drawStrip(ctx, colors, x, y, w, h) { if (!colors.length) return; const cw = Math.min(w / colors.length, 34); ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 1; colors.slice(0, Math.floor(w / 6)).forEach((c, i) => { ctx.fillStyle = c; rrect(ctx, x + i * cw + .5, y + .5, cw - 4, h - 1, 3); ctx.fill(); ctx.stroke(); }); }
+const SH = { bg: '#0f1115', card: '#181b22', line: '#262a33', text: '#f3f4f6', text2: '#b4b9c4', text3: '#7c8290', accent: '#2dd4bf' };
+async function shareGridCanvas(title, items) {
+  const cols = Math.min(4, Math.max(1, items.length)), cw = 320, ph = 240, th = 78, gap = 16, pad = 32, head = 104;
+  const rows = Math.ceil(items.length / cols), W = pad * 2 + cols * cw + (cols - 1) * gap, H = head + pad + rows * (ph + th) + (rows - 1) * gap + 40;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
+  ctx.fillStyle = SH.bg; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = SH.accent; ctx.font = `600 13px ${SHARE_FONT}`; ctx.fillText('FSN · KEYBOARD COLLECTION', pad, 42);
+  ctx.fillStyle = SH.text; ctx.font = `700 28px ${SHARE_FONT}`; ctx.fillText(fitText(ctx, title, W - pad * 2 - 220), pad, 78);
+  ctx.fillStyle = SH.text3; ctx.font = `14px ${SHARE_FONT}`; ctx.textAlign = 'right'; ctx.fillText(`${items.length} item${items.length === 1 ? '' : 's'} · ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`, W - pad, 78); ctx.textAlign = 'left';
+  const imgs = await Promise.all(items.map(it => loadImg(it.thumb)));
+  items.forEach((it, i) => {
+    const x = pad + (i % cols) * (cw + gap), y = head + Math.floor(i / cols) * (ph + th + gap);
+    ctx.save(); rrect(ctx, x, y, cw, ph + th, 12); ctx.clip(); ctx.fillStyle = SH.card; ctx.fillRect(x, y, cw, ph + th);
+    if (imgs[i]) drawCover(ctx, imgs[i], x, y, cw, ph); else { ctx.fillStyle = '#1e222b'; ctx.fillRect(x, y, cw, ph); ctx.fillStyle = SH.text3; ctx.font = `13px ${SHARE_FONT}`; ctx.textAlign = 'center'; ctx.fillText('No photo', x + cw / 2, y + ph / 2 + 4); ctx.textAlign = 'left'; }
+    ctx.restore(); ctx.strokeStyle = SH.line; rrect(ctx, x + .5, y + .5, cw - 1, ph + th - 1, 12); ctx.stroke();
+    ctx.fillStyle = SH.text; ctx.font = `600 15px ${SHARE_FONT}`; ctx.fillText(fitText(ctx, it.name, cw - 24), x + 12, y + ph + 24);
+    ctx.fillStyle = SH.text2; ctx.font = `13px ${SHARE_FONT}`; ctx.fillText(fitText(ctx, it.sub, cw - 24), x + 12, y + ph + 44);
+    drawStrip(ctx, it.colors || [], x + 12, y + ph + 54, cw - 24, 12);
+  });
+  ctx.fillStyle = SH.text3; ctx.font = `12px ${SHARE_FONT}`; ctx.fillText('Made with Keyboard Collection', pad, H - 16);
+  return cv;
+}
+async function buildCardCanvas(k, withSpend) {
+  const W = 1080, P = 56; let full = null;
+  if (k.coverPhotoId && db && !isFile) { try { const d = await withTimeout(photoCol().doc(k.coverPhotoId).get()); full = d.exists ? d.data().full : null; } catch (e) { full = null; } }
+  const img = await loadImg(full || k.coverThumb);
+  const sw = switchesOn(k.id).map(({ w, a }) => [[w.manufacturer, w.name].filter(Boolean).join(' '), `× ${a.count}`]);
+  const kc = kitsOn(k.id).map(({ s, k: kit }) => [s.name, kit.name]);
+  const pt = partsOn(k.id).map(({ t, x }) => [x.name, PART_TYPES[t].singular]);
+  const sections = [['Switches', sw], ['Keycaps', kc], ['Parts', pt]].filter(s => s[1].length);
+  const meas = document.createElement('canvas').getContext('2d'); meas.font = `20px ${SHARE_FONT}`;
+  const photoH = img ? 810 : 0, colors = shareColors(k.colorway);
+  let H = photoH + P + 60 + 34 + (colors.length ? 44 : 0) + 20;
+  sections.forEach(s => { H += 50 + s[1].length * 34; }); if (!sections.length) H += 40; if (withSpend) H += 70; H += 70;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
+  ctx.fillStyle = SH.bg; ctx.fillRect(0, 0, W, H); if (img) drawCover(ctx, img, 0, 0, W, photoH);
+  let y = photoH + P + 40;
+  ctx.fillStyle = SH.text; ctx.font = `700 46px ${SHARE_FONT}`; ctx.fillText(fitText(ctx, k.name, W - P * 2), P, y); y += 40;
+  ctx.fillStyle = SH.text2; ctx.font = `22px ${SHARE_FONT}`; ctx.fillText(fitText(ctx, [k.brand, k.size, k.color].filter(Boolean).join(' · '), W - P * 2), P, y); y += 22;
+  if (colors.length) { drawStrip(ctx, colors, P, y + 6, W - P * 2, 26); y += 44; }
+  y += 20;
+  if (!sections.length) { ctx.fillStyle = SH.text3; ctx.font = `20px ${SHARE_FONT}`; ctx.fillText('No switches, keycaps or parts linked yet.', P, y + 20); y += 40; }
+  sections.forEach(([h, rows]) => {
+    ctx.strokeStyle = SH.line; ctx.beginPath(); ctx.moveTo(P, y + .5); ctx.lineTo(W - P, y + .5); ctx.stroke();
+    ctx.fillStyle = SH.accent; ctx.font = `600 15px ${SHARE_FONT}`; ctx.fillText(h.toUpperCase(), P, y + 34); y += 50;
+    rows.forEach(([a, b]) => { ctx.font = `20px ${SHARE_FONT}`; ctx.fillStyle = SH.text3; const bw = ctx.measureText(b).width; ctx.textAlign = 'right'; ctx.fillText(b, W - P, y + 20); ctx.textAlign = 'left';
+      ctx.fillStyle = SH.text; ctx.fillText(fitText(ctx, a, W - P * 2 - bw - 24), P, y + 20); y += 34; });
+  });
+  if (withSpend) { ctx.strokeStyle = SH.line; ctx.beginPath(); ctx.moveTo(P, y + 10.5); ctx.lineTo(W - P, y + 10.5); ctx.stroke(); ctx.fillStyle = SH.text2; ctx.font = `20px ${SHARE_FONT}`; ctx.fillText('Keyboard total paid', P, y + 50); ctx.fillStyle = SH.text; ctx.font = `700 24px ${SHARE_FONT}`; ctx.textAlign = 'right'; ctx.fillText(money(kbTotal(k)), W - P, y + 50); ctx.textAlign = 'left'; y += 70; }
+  ctx.fillStyle = SH.accent; ctx.font = `600 14px ${SHARE_FONT}`; ctx.fillText('FSN · KEYBOARD COLLECTION', P, H - 32);
+  return cv;
+}
+function shareFileName(t) { return (t || 'collection').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.png'; }
+function openShareDialog(title, make, opts = {}) {
+  const d = document.createElement('div'); d.className = 'gdlg'; d.id = 'shareDlg';
+  d.innerHTML = `<div class="card share-card"><div class="sec-title"><h3>${esc(title)}</h3><button class="btn" data-x>✕</button></div>
+    ${opts.spendToggle ? '<label style="display:flex;gap:8px;align-items:center;margin:4px 0 10px;font-size:14px"><input type="checkbox" id="shSpend"> Include what I paid</label>' : ''}
+    <div class="share-prev" id="shPrev"><p class="sub">Drawing…</p></div>
+    <div class="btnrow" style="margin-top:12px"><button class="btn primary" id="shSave" disabled>Download PNG</button>${navigator.canShare ? '<button class="btn" id="shShare" disabled>Share…</button>' : ''}<span class="sub" id="shInfo" style="margin:0 0 0 auto"></span></div></div>`;
+  document.body.appendChild(d); let blob = null;
+  const draw = async () => { const cv = await make(!!document.getElementById('shSpend')?.checked); blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+    const prev = document.getElementById('shPrev'); if (!prev) return; prev.innerHTML = ''; cv.className = 'share-img'; prev.appendChild(cv);
+    document.getElementById('shInfo').textContent = `${cv.width} × ${cv.height} · ${Math.round(blob.size / 1024)} KB`;
+    d.querySelectorAll('#shSave,#shShare').forEach(b => b.disabled = false); };
+  draw().catch(e => { document.getElementById('shPrev').innerHTML = `<p class="sub">Could not draw the image: ${esc(String(e.message || e))}</p>`; });
+  d.onclick = async e => {
+    if (e.target === d || e.target.closest('[data-x]')) { d.remove(); return; }
+    if (e.target.id === 'shSave' && blob) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = opts.file || shareFileName(title); a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+    if (e.target.id === 'shShare' && blob) { const f = new File([blob], opts.file || shareFileName(title), { type: 'image/png' }); if (navigator.canShare({ files: [f] })) navigator.share({ files: [f], title }).catch(() => {}); else toast('Sharing files is not supported here. Use Download.'); }
+  };
+  const sp = document.getElementById('shSpend'); if (sp) sp.onchange = () => { d.querySelectorAll('#shSave,#shShare').forEach(b => b.disabled = true); draw(); };
+}
+let lastLists = {};   // page -> the filtered, sorted list currently on screen
+function shareListButton(page) { return `<button class="btn" id="shareList" data-page="${page}" title="Save the cards on screen as one image">Share</button>`; }
+function wireShareList(page, title, toItem) { const b = document.getElementById('shareList'); if (b) b.onclick = () => { const list = lastLists[page] || []; if (!list.length) { toast('Nothing to share with this filter'); return; }
+  openShareDialog(title + (list.length ? '' : ''), () => shareGridCanvas(title, list.map(toItem)), { file: shareFileName('fsn-' + title) }); }; }
+
+/* ===================== Step 9.3: keycap extras from the Keycap Collection app =====================
+   Completion = catalog kits you own / all kits in the linked GMK catalog set (only for linked sets).
+   Kit names are compared loosely ("Novelty Kit" = "Novelties", "Neo-Tokyo Base Kit" = "Neo Tokyo"). */
+let kcChip = '';   // '' | 'fav' | 'incomplete' | 'profile:<name>'
+function kitKey(t) { return gmkNorm(t).replace(/kits?$/, '').replace(/ies$/, 'y').replace(/s$/, ''); }
+function kitMatch(a, b) { const x = kitKey(a), y = kitKey(b); return !!x && !!y && (x === y || (Math.min(x.length, y.length) >= 3 && (x.includes(y) || y.includes(x)))); }
+function completionOf(s) {
+  const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef); if (!ref || !(ref.kits || []).length) return null;
+  const owned = kitsOf(s), have = ref.kits.filter(ck => owned.some(k => kitMatch(k.name, ck.name)));
+  return { ref, have: have.length, total: ref.kits.length, pct: Math.round(have.length / ref.kits.length * 100), missing: ref.kits.filter(ck => !have.includes(ck)) };
+}
+function completionHtml(s) { const c = completionOf(s); return c ? `<span class="cbar" title="${c.have} of ${c.total} catalog kits"><span class="cfill" style="width:${c.pct}%"></span></span><span class="cnum">${c.have}/${c.total} kits · ${c.pct}%</span>` : ''; }
+function kcChipsHtml() {
+  const profiles = [...new Set(savedKeycaps.map(s => s.profile).filter(Boolean))].sort();
+  const chip = (v, t) => `<button class="pchip${kcChip === v ? ' on' : ''}" data-kchip="${esc(v)}">${t}</button>`;
+  return `<div class="pchips" id="kcChips">${chip('', 'All')}${chip('fav', '★ Favorites')}${chip('incomplete', 'Missing kits')}${profiles.map(p => chip('profile:' + p, esc(p))).join('')}</div>`;
+}
+function kcChipOk(s) {
+  if (!kcChip) return true; if (kcChip === 'fav') return !!s.isFavorite;
+  if (kcChip === 'incomplete') { const c = completionOf(s); return !!c && c.pct < 100; }
+  return s.profile === kcChip.slice(8);
+}
+function wishHas(setName, kitName) { const nm = t => gmkNorm(t || '').replace(/^gmk/, ''); return savedWish.some(w => w.status !== 'bought' && nm(w.name) === nm(setName) && kitMatch(w.version || '', kitName)); }
+async function addKitToWishlist(s, ck) {
+  if (wishHas(s.name, ck.name)) { toast('Already on your wishlist'); return; }
+  const now = firebase.firestore.FieldValue.serverTimestamp(), d = { category: 'Keycaps', name: s.name, version: ck.name, platform: 'GMK', status: 'wanted', createdAt: now, updatedAt: now, source: 'app' };
+  if (ck.priceUsd != null) d.estPrice = ck.priceUsd;
+  try { await withTimeout(wishCol().add(d)); toast(`Added ${ck.name} to your wishlist`); } catch (e) { toast('Could not add: ' + explain(e)); }
+}
+function openKeycapStats() {
+  const sets = savedKeycaps, kits = sets.reduce((n, s) => n + kitsOf(s).length, 0), linked = sets.filter(s => completionOf(s));
+  const comp = linked.map(s => ({ s, c: completionOf(s) })), have = comp.reduce((n, x) => n + x.c.have, 0), total = comp.reduce((n, x) => n + x.c.total, 0);
+  const count = f => { const m = {}; sets.forEach(s => { const k = f(s) || 'Not set'; m[k] = (m[k] || 0) + 1; }); return Object.entries(m).sort((a, b) => b[1] - a[1]); };
+  const spend = {}; sets.forEach(s => { const k = s.manufacturer || 'Not set'; spend[k] = (spend[k] || 0) + setTotal(s); });
+  const rows = (list, fmt = v => v) => list.map(([k, v]) => `<div class="srow"><span>${esc(k)}</span><b>${fmt(v)}</b></div>`).join('') || '<p class="sub">—</p>';
+  const ranked = comp.slice().sort((a, b) => b.c.pct - a.c.pct || a.s.name.localeCompare(b.s.name));
+  const d = document.createElement('div'); d.className = 'gdlg';
+  d.innerHTML = `<div class="card"><div class="sec-title"><h3>Keycap stats</h3><button class="btn" data-x>✕</button></div>
+    <div class="sgrid">${[[sets.length, 'Sets'], [kits, 'Kits owned'], [sets.filter(s => s.isFavorite).length, '★ Favorites'], [linked.length, 'Linked to GMK catalog'], [comp.filter(x => x.c.pct === 100).length, 'Complete sets'], [total - have, 'Catalog kits missing']].map(([n, l]) => `<div class="scard"><b>${n}</b><span>${l}</span></div>`).join('')}</div>
+    ${total ? `<p class="sub" style="margin:12px 0 4px">Completion of linked sets · ${Math.round(have / total * 100)}%</p><span class="cbar wide"><span class="cfill" style="width:${have / total * 100}%"></span></span>` : '<p class="sub">Link sets on Catalog → GMK reference → Match your GMK sets to see completion.</p>'}
+    <div class="scols"><div><h4>By profile</h4>${rows(count(s => s.profile))}</div><div><h4>By maker</h4>${rows(count(s => s.manufacturer).slice(0, 8))}</div></div>
+    <div class="scols"><div><h4>Spend by maker</h4>${rows(Object.entries(spend).sort((a, b) => b[1] - a[1]).slice(0, 8), v => `<span class="${spendHidden ? 'blur' : ''}">${money(v)}</span>`)}</div>
+      <div><h4>Most complete</h4>${rows(ranked.slice(0, 4).map(x => [x.s.name, x.c.pct + '%']))}<h4 style="margin-top:10px">Needs attention</h4>${rows(ranked.slice(-4).reverse().map(x => [x.s.name, x.c.pct + '%']))}</div></div></div>`;
+  document.body.appendChild(d); d.onclick = e => { if (e.target === d || e.target.closest('[data-x]')) d.remove(); };
+}
+
 /* ===================== Step 8.4: fill a keycap set from the GMK reference catalog =====================
    You pick (or confirm) which catalog set this is; it is saved as gmkRef when you save the set.
    "Fill" only writes into the form: empty fields, plus colors marked Catalog. Colors you entered or edited
@@ -3077,7 +3239,8 @@ function gmkCardHtml(s, live = false) {   // live = read the link and name from 
     return `<div class="card side-card" id="gmkCard"><h3>GMK reference</h3>
       <p style="margin:6px 0 2px"><b>GMK ${esc(ref.title)}</b> ${gmkStripHtml(ref)}</p>
       <p class="sub" style="margin:0">${esc([ref.designer, [ref.gbStart, ref.gbEnd].filter(Boolean).join(' → ')].filter(Boolean).join(' · '))}</p>
-      ${(ref.kits || []).length ? `<div class="chips" style="margin-top:8px">${ref.kits.map(k => { const have = owned.some(o => o && (o.includes(gmkNorm(k.name)) || gmkNorm(k.name).includes(o))); return `<span class="chip"${have ? ' style="color:#86efac"' : ''} title="${have ? 'Looks like you own this kit' : ''}">${have ? '✓ ' : ''}${esc(k.name)}</span>`; }).join(' ')}</div>` : ''}
+      ${(ref.kits || []).length ? (() => { const mine = s ? kitsOf(s) : []; const hv = ref.kits.filter(k => mine.some(o => kitMatch(o.name, k.name))); return `<p class="sub" style="margin:8px 0 4px">${hv.length} of ${ref.kits.length} kits · ${Math.round(hv.length / ref.kits.length * 100)}%</p><span class="cbar wide"><span class="cfill" style="width:${hv.length / ref.kits.length * 100}%"></span></span>
+        <div class="kitlist">${ref.kits.map(k => { const have = hv.includes(k); return `<div class="kitrow${have ? ' have' : ''}"><span>${have ? '✓' : '○'} ${esc(k.name)}${gmkKitPrice(k) ? ` <span class="sub" style="margin:0">${gmkKitPrice(k)}</span>` : ''}</span>${!have && s ? (wishHas(s.name, k.name) ? '<span class="chip">On wishlist</span>' : `<button class="btn" data-wishkit="${esc(k.name)}">+ Wishlist</button>`) : ''}</div>`; }).join('')}</div>`; })() : ''}
       <div class="btnrow" style="margin-top:10px"><button class="btn primary" id="gmkFill">Fill from catalog</button><button class="btn" id="gmkView">Details</button><button class="btn" id="gmkUnlink">Unlink</button></div>
       <p class="sub" style="margin:8px 0 0;font-size:11px">${esc(GMK_CREDIT)}</p></div>`;
   }
@@ -3096,6 +3259,8 @@ function wireGmkCard(s) {
     if (e.target.id === 'gmkUnlink') { setRef(''); return; }
     if (e.target.id === 'gmkView') { const ref = gmkSets.find(x => x.id === document.getElementById('f_gmkRef').value); if (ref) openGmkDialog(ref); return; }
     if (e.target.id === 'gmkFill') fillFromGmk(gmkSets.find(x => x.id === document.getElementById('f_gmkRef').value));
+    const wk = e.target.closest('[data-wishkit]');
+    if (wk && s) { const ref = gmkSets.find(x => x.id === document.getElementById('f_gmkRef').value); const ck = ref && ref.kits.find(k => k.name === wk.dataset.wishkit); if (ck) addKitToWishlist(s, ck).then(() => setTimeout(redraw, 400)); }
   };
   const q = document.getElementById('gmkSearch');
   if (q) q.oninput = () => { const t = q.value.trim().toLowerCase(), box = document.getElementById('gmkSearchRes');
