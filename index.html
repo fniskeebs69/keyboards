@@ -339,6 +339,20 @@
   .mtable td { vertical-align: top; } .mtable .msel { max-width: 320px; padding: 6px 8px; font-size: 13px; } .mtable .msearch { margin-top: 6px; max-width: 320px; padding: 6px 8px; font-size: 13px; } .mtable .gpick { max-width: 320px; margin-top: 4px; }
   .gdlg > .share-card { width: min(980px, 100%); } .share-prev { max-height: 64vh; overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: #0b0d10; display: grid; place-items: center; min-height: 160px; }
   .share-img { max-width: 100%; max-height: 62vh; width: auto; height: auto; display: block; }
+  .kgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; } .kgrid.sm { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .kg { position: relative; display: flex; flex-direction: column; text-align: left; padding: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-2); overflow: hidden; color: var(--text); font: inherit; cursor: pointer; transition: border-color .15s, transform .15s; }
+  div.kg { cursor: default; } .kg:hover { transform: translateY(-1px); }
+  .kgimg { position: relative; aspect-ratio: 16 / 9; background: #0b0d10; display: grid; place-items: center; overflow: hidden; }
+  .kgimg img { width: 100%; height: 100%; object-fit: cover; transition: filter .2s, opacity .2s; }
+  .kgnone { display: grid; justify-items: center; gap: 4px; color: var(--text-3); font-size: 11.5px; } .kgnone svg { width: 28px; height: 28px; opacity: .6; }
+  .kgname { padding: 8px 10px 0; font-weight: 600; font-size: 13.5px; line-height: 1.25; } .kgsub { padding: 2px 10px 9px; font-size: 12px; color: var(--text-3); }
+  .kgbadge { position: absolute; top: 8px; left: 8px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: rgba(15,17,21,.82); color: var(--text-2); }
+  .kg.own:not(div) { border-color: color-mix(in srgb, #34d399 55%, var(--line)); } .kg.own .kgbadge { background: #065f46; color: #d1fae5; }
+  .kg.miss { border-style: dashed; } .kg.miss .kgimg img { filter: grayscale(1) brightness(.8); opacity: .45; } .kg.miss .kgname { color: var(--text-3); }
+  .kg.miss:hover .kgimg img, .kg.miss:focus-visible .kgimg img { filter: none; opacity: 1; } .kg.miss:hover .kgname, .kg.miss:focus-visible .kgname { color: var(--text); }
+  .gdlg > .kv-card { width: min(860px, 100%); } .kvimg { border-radius: 10px; overflow: hidden; background: #0b0d10; } .kvimg img { width: 100%; max-height: 60vh; object-fit: contain; display: block; }
+  .kvthumbs { display: flex; gap: 6px; margin-top: 8px; } .kvthumbs img { width: 96px; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; cursor: pointer; border: 1px solid var(--line); }
+  .chip.kvown { background: #065f46; color: #d1fae5; } .kit.flash { outline: 2px solid var(--kc); outline-offset: 2px; border-radius: 10px; }
   .pchips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
   .pchip { border: 1px solid var(--line); background: var(--bg-2); color: var(--text-2); border-radius: 999px; padding: 4px 11px; font-size: 12.5px; cursor: pointer; }
   .pchip.on { background: color-mix(in srgb, var(--kc) 22%, transparent); color: var(--text); border-color: var(--kc); }
@@ -403,7 +417,7 @@
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.41.0';
+const APP_VERSION = 'v0.42.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -1733,7 +1747,7 @@ function drawKeycapResults() {
   if (kcView === 'gallery') {
     box.innerHTML = `<div class="gallery">${list.map(s => `
       <a class="kcard" href="#/keycaps/${esc(s.id)}">
-        <div class="ph">${s.coverThumb ? `<img src="${s.coverThumb}" alt="" loading="lazy">` : I.keycaps.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}
+        <div class="ph">${s.coverThumb ? `<img src="${s.coverThumb}" alt="" loading="lazy">` : catalogCoverOf(s) ? `<img src="${esc(catalogCoverOf(s))}" alt="" loading="lazy" referrerpolicy="no-referrer" title="Picture from the GMK catalog (Matrix)" onerror="this.remove()">` : I.keycaps.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}
           ${s.profile ? `<span class="badge chip">${esc(s.profile)}</span>` : ''}
           <button class="fav${s.isFavorite ? ' on' : ''}" data-fav="${esc(s.id)}" aria-label="${s.isFavorite ? 'Remove from' : 'Add to'} favorites">${s.isFavorite ? I.starFill : I.star}</button></div>
         <div class="meta"><b>${esc(s.name)}</b><span>${esc(sub(s))}</span>${completionHtml(s)}${paletteStripHtml(s)}</div></a>`).join('')}</div>`;
@@ -1796,6 +1810,7 @@ function renderKeycapForm(s = null) {
         <div class="tabs" role="tablist">
           <button class="on" data-tab="overview" role="tab">Overview<span class="err" id="errOverview"></span></button>
           <button data-tab="kits" role="tab">Kits (<span id="kitCount">${kits.length}</span>)<span class="err" id="errKits"></span></button>
+          <button data-tab="gallery" role="tab">Kit gallery</button>
           <button data-tab="colors" role="tab">Colors (<span id="colorCount">${paletteOf(s).length}</span>)<span class="err" id="errColors"></span></button>
           <button data-tab="notes" role="tab">Notes</button>
         </div>
@@ -1823,6 +1838,10 @@ function renderKeycapForm(s = null) {
           <p class="sub">Each kit keeps its own purchase details. Base is optional.</p>
           <div id="kitList">${kits.map((k, i) => kitRowHtml(k, i)).join('')}</div>
           <button type="button" class="btn" id="addKit" style="margin-top:10px">${I.plus}Add kit</button>
+        </div>
+        <div class="card" data-panel="gallery" hidden>
+          <div class="sec-title"><h3>Kit gallery</h3></div>
+          <div id="kitGallery"></div>
         </div>
         <div class="card" data-panel="colors" hidden>
           <div class="sec-title"><h3>Color palette</h3>${paletteStripHtml(s)}</div>
@@ -1856,7 +1875,9 @@ function renderKeycapForm(s = null) {
     lastTab = { id: s ? s.id : null, tab: b.dataset.tab };
     view.querySelectorAll('.tabs [data-tab]').forEach(x => x.classList.toggle('on', x === b));
     view.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== b.dataset.tab);
+    if (b.dataset.tab === 'gallery') drawKitGallery(s);
   };
+  document.getElementById('f_gmkRef').addEventListener('change', () => { if (!document.querySelector('[data-panel="gallery"]').hidden) drawKitGallery(s); });
   const formEl = view.querySelector('.form-grid');
   const markDirty = () => { if (s) { formDirty = location.hash; setEditState(true); } };
   formEl.addEventListener('input', e => {
@@ -2811,9 +2832,10 @@ function gmkDetailHtml(s) {
   const sw = c => { const h = gmkHex(c); return c ? `<span class="gcode">${h ? `<i style="background:${h}"></i>` : ''}${esc(gmkCodeLabel(c, true))}${h ? ` <span class="mono">${h}</span>` : ''}${h && c.sys === 'RAL' ? ' <span class="sub" style="margin:0" title="Worked out from the RAL Design code">≈</span>' : ''}</span>` : '—'; };
   return `<div class="gdet"><div class="sec-title"><h3>GMK ${esc(s.title)} ${s.titleCn ? `<span class="sub" style="margin:0">${esc(s.titleCn)}</span>` : ''}</h3></div>
     <div class="kv">Designer: ${esc(s.designer || '—')}<br>Profile: ${esc(s.profile || '—')}<br>Group buy: ${esc([s.gbStart, s.gbEnd].filter(Boolean).join(' → ') || '—')}${s.shipping ? `<br>Estimated shipping: ${esc(s.shipping)}` : ''}${s.colorCodes ? `<br>Color codes: ${esc(s.colorCodes)}` : ''}</div>
-    ${(s.kits || []).length ? `<h4 style="margin:12px 0 6px">Kits</h4><div class="chips">${s.kits.map(k => `<span class="chip">${esc(k.name)}${gmkKitPrice(k) ? ' · ' + gmkKitPrice(k) : ''}</span>`).join(' ')}</div>` : ''}
+    ${matrixUrlOf(s) ? `<p style="margin:10px 0 0">${matrixLinkHtml(s, 'Open this set on Matrix ↗')}</p>` : ''}
+    ${(s.kits || []).length ? `<h4 style="margin:12px 0 6px">Kits</h4>${s.kits.some(k => k.img) ? `<div class="kgrid sm">${s.kits.map(k => `<div class="kg own"><span class="kgimg">${k.img ? `<img src="${esc(k.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</span><span class="kgname">${esc(k.name)}</span><span class="kgsub">${gmkKitPrice(k) || '&nbsp;'}</span></div>`).join('')}</div>` : `<div class="chips">${s.kits.map(k => `<span class="chip">${esc(k.name)}${gmkKitPrice(k) ? ' · ' + gmkKitPrice(k) : ''}</span>`).join(' ')}</div>`}` : ''}
     ${(s.colors || []).length ? `<h4 style="margin:12px 0 6px">Colors</h4><table class="list"><thead><tr><th>Group</th><th>Base</th><th>Legend</th></tr></thead><tbody>${s.colors.map(r => `<tr><td>${esc(r.group || '')}</td><td>${sw(r.base)}</td><td>${sw(r.legend)}</td></tr>`).join('')}</tbody></table>` : '<p class="sub">No color table for this set.</p>'}
-    ${(s.links || []).length ? `<p class="sub" style="margin:10px 0 0">${s.links.map(l => `<a class="lnk" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join(' · ')}</p>` : ''}
+    ${(s.links || []).length ? `<details class="more" style="margin-top:10px"><summary>Original group-buy links (often closed now)</summary><p class="sub" style="margin:6px 0 0">${s.links.map(l => `<a class="lnk" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join(' · ')}</p></details>` : ''}
     <p class="sub" style="margin:8px 0 0">${esc(GMK_CREDIT)}</p></div>`;
 }
 function showGmkDetail(s) { const d = document.getElementById('gmkDetail'); if (!d || !s) return; d.innerHTML = `<div class="card" style="margin-top:16px">${gmkDetailHtml(s)}</div>`; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
@@ -3070,6 +3092,79 @@ function drawGmkMatch() {
   };
 }
 
+/* ===================== Step 9.5: kit gallery + Matrix pages =====================
+   Pictures are not copied: catalog kits hold links to the pictures on Matrix's site (matrixzj.github.io),
+   and the browser shows them from there. The links live only in Firebase (private catalog), never in this file. */
+function matrixUrlOf(ref) {
+  if (!ref) return ''; if (ref.matrixUrl) return ref.matrixUrl;
+  const slug = String(ref.sourcePage || '').replace(/\.md$/, ''); return slug ? 'https://matrixzj.github.io/docs/gmk-keycaps/' + encodeURIComponent(slug) + '/' : '';
+}
+function matrixLinkHtml(ref, label = 'Open on Matrix ↗') { const u = matrixUrlOf(ref); return u ? `<a class="lnk" href="${esc(u)}" target="_blank" rel="noopener" title="Matrix's page for this set: kits, renders and colors">${label}</a>` : ''; }
+function catalogCoverOf(s) {   // picture for a keycap card with no photo of your own: your first matching kit, else the first kit
+  const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef); if (!ref) return '';
+  const ks = (ref.kits || []).filter(k => k.img), own = ks.find(ck => kitsOf(s).some(k => kitMatch(k.name, ck.name)));
+  return (own || ks[0] || {}).img || '';
+}
+let kgFilter = 'all';
+function formKits() { return [...document.querySelectorAll('#kitList .kit')].map(readKitRow).filter(k => k.name); }
+function kitGalleryTiles(s) {
+  const refId = document.getElementById('f_gmkRef')?.value || '', ref = refId && gmkSets ? gmkSets.find(x => x.id === refId) : null;
+  const mine = formKits(), saved = s ? kitsOf(s) : [], tiles = [];
+  const where = k => { const sk = saved.find(x => x.id === k.id); const kb = sk && sk.installedOn && savedKeyboards.find(b => b.id === sk.installedOn); return kb ? kb.name : ''; };
+  if (ref) (ref.kits || []).forEach(ck => { const own = mine.find(k => kitMatch(k.name, ck.name)); tiles.push({ name: ck.name, img: ck.img, more: ck.moreImgs || [], price: gmkKitPrice(ck), qty: ck.quantity, owned: !!own, kit: own, on: own ? where(own) : '', ck }); });
+  mine.filter(k => !tiles.some(t => t.kit === k)).forEach(k => tiles.push({ name: k.name, owned: true, kit: k, on: where(k), extra: !!ref }));
+  return { ref, tiles, refId };
+}
+function drawKitGallery(s) {
+  const box = document.getElementById('kitGallery'); if (!box) return;
+  const refId = document.getElementById('f_gmkRef')?.value || '';
+  if (refId && !gmkSets) { box.innerHTML = '<p class="sub">Loading the GMK reference…</p>'; loadGmk().then(() => drawKitGallery(s)).catch(e => { box.innerHTML = `<p class="sub">Could not load the GMK reference: ${esc(explain(e))}</p>`; }); return; }
+  const { ref, tiles } = kitGalleryTiles(s), cat = tiles.filter(t => t.ck), have = cat.filter(t => t.owned).length;
+  const shown = tiles.filter(t => kgFilter === 'all' || (kgFilter === 'owned') === t.owned);
+  const chip = (v, t) => `<button class="pchip${kgFilter === v ? ' on' : ''}" data-kgf="${v}">${t}</button>`;
+  const noPics = ref && !cat.some(t => t.img);
+  box.innerHTML = `${ref ? `<div class="sec-title" style="margin-bottom:4px"><p class="sub" style="margin:0"><b style="color:var(--text)">${have} of ${cat.length}</b> catalog kits owned · ${cat.length ? Math.round(have / cat.length * 100) : 0}%</p>${matrixLinkHtml(ref)}</div>
+      <span class="cbar wide" style="margin-bottom:12px"><span class="cfill" style="width:${cat.length ? have / cat.length * 100 : 0}%"></span></span>
+      <div class="pchips" style="margin-bottom:12px">${chip('all', `All (${tiles.length})`)}${chip('owned', `Owned (${tiles.filter(t => t.owned).length})`)}${chip('missing', `Not owned (${tiles.filter(t => !t.owned).length})`)}</div>
+      ${noPics ? '<p class="sub">No kit pictures yet. Load the newest gmk_catalog_private.json on the Import page to add them.</p>' : ''}`
+    : `<p class="sub" style="margin-top:0">${!/gmk/i.test((document.getElementById('f_manufacturer')?.value || '') + ' ' + (document.getElementById('f_name')?.value || '')) ? 'Kit pictures come from the GMK catalog, so they are only available for GMK sets. Your kits are shown below.' : gmkSets && gmkSets.length ? 'Link this set on the GMK reference card (right) to see every kit in the set with pictures, and which ones you own.' : 'Load gmk_catalog_private.json on the Import page, then link this set on the GMK reference card to see every kit with pictures.'}</p>`}
+    ${shown.length ? `<div class="kgrid">${shown.map(t => { const i = tiles.indexOf(t); return `<button type="button" class="kg ${t.owned ? 'own' : 'miss'}" data-kg="${i}" title="${t.owned ? 'You own this kit' : 'Not owned · click for details'}">
+      <span class="kgimg">${t.img ? `<img src="${esc(t.img)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<span class="kgnone">${I.keycaps}<span>${t.ck ? 'No picture' : 'Your kit'}</span></span>`}
+        <span class="kgbadge">${t.owned ? '✓ Owned' : 'Not owned'}</span></span>
+      <span class="kgname">${esc(t.name)}</span><span class="kgsub">${esc([t.price && t.price.replace(/<[^>]+>/g, ''), t.on ? 'On ' + t.on : '', t.extra ? 'Not in the catalog' : ''].filter(Boolean).join(' · ')) || '&nbsp;'}</span></button>`; }).join('')}</div>`
+    : `<p class="sub">${tiles.length ? 'No kits with this filter.' : 'No kits yet. Add the kits you own on the Kits tab.'}</p>`}
+    ${ref ? `<p class="sub" style="margin:12px 0 0;font-size:11px">Pictures and kit list: ${esc(GMK_CREDIT)}</p>` : ''}`;
+  if (!box.dataset.wired) {
+    box.dataset.wired = '1';
+    box.addEventListener('error', e => { if (e.target.tagName === 'IMG') { const w = e.target.parentElement; e.target.remove(); w.insertAdjacentHTML('afterbegin', `<span class="kgnone">${I.keycaps}<span>Picture unavailable</span></span>`); } }, true);
+    box.addEventListener('click', e => {
+      const f = e.target.closest('[data-kgf]'); if (f) { kgFilter = f.dataset.kgf; drawKitGallery(s); return; }
+      const b = e.target.closest('[data-kg]'); if (b) openKitView(s, kitGalleryTiles(s).tiles[+b.dataset.kg]);
+    });
+  }
+}
+function openKitView(s, t) {
+  if (!t) return; const d = document.createElement('div'); d.className = 'gdlg'; d.id = 'kitView';
+  const imgs = [t.img, ...(t.more || [])].filter(Boolean);
+  const onWish = s && t.ck && wishHas(s.name, t.name);
+  d.innerHTML = `<div class="card kv-card"><div class="sec-title"><h3>${esc(t.name)} <span class="chip ${t.owned ? 'kvown' : ''}">${t.owned ? '✓ Owned' : 'Not owned'}</span></h3><button class="btn" data-x>✕</button></div>
+    ${imgs.length ? `<div class="kvimg"><img id="kvMain" src="${esc(imgs[0])}" alt="" referrerpolicy="no-referrer"></div>${imgs.length > 1 ? `<div class="kvthumbs">${imgs.map((u, i) => `<img src="${esc(u)}" data-kvi="${i}" alt="" loading="lazy" referrerpolicy="no-referrer">`).join('')}</div>` : ''}` : ''}
+    <p class="sub" style="margin:10px 0 0">${[t.price ? 'Group-buy price ' + t.price : '', t.qty ? 'Made: ' + esc(t.qty) : '', t.on ? 'Installed on ' + esc(t.on) : '', t.extra ? 'This kit of yours has no match in the catalog list' : ''].filter(Boolean).join(' · ')}</p>
+    <div class="btnrow" style="margin-top:12px">
+      ${t.owned ? '<button class="btn" id="kvShow">Show in Kits tab</button>' : `<button class="btn primary" id="kvOwn" title="Adds this kit to the Kits tab; click Save to keep it">I own this kit</button>${s ? (onWish ? '<span class="chip">On wishlist</span>' : '<button class="btn" id="kvWish">+ Wishlist</button>') : ''}`}
+      <span style="margin-left:auto">${matrixLinkHtml(t.ck ? gmkSets.find(x => x.id === document.getElementById('f_gmkRef').value) : null)}</span></div></div>`;
+  document.body.appendChild(d);
+  const toKits = () => { d.remove(); document.querySelector('.tabs [data-tab="kits"]').click(); };
+  d.onclick = async e => {
+    if (e.target === d || e.target.closest('[data-x]')) { d.remove(); return; }
+    const th = e.target.closest('[data-kvi]'); if (th) { document.getElementById('kvMain').src = imgs[+th.dataset.kvi]; return; }
+    if (e.target.id === 'kvShow') { toKits(); const row = [...document.querySelectorAll('#kitList .kit')].find(r => r.dataset.kit === t.kit.id); if (row) { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); row.classList.add('flash'); setTimeout(() => row.classList.remove('flash'), 1600); } }
+    if (e.target.id === 'kvOwn') { toKits(); document.getElementById('addKit').click(); const rows = document.querySelectorAll('#kitList .kit'), row = rows[rows.length - 1], inp = row.querySelector('.k-name');
+      inp.value = t.name; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); row.scrollIntoView({ behavior: 'smooth', block: 'center' }); toast(`Added ${t.name} to Kits. Fill in what you paid, then Save.`); }
+    if (e.target.id === 'kvWish' && s) { await addKitToWishlist(s, t.ck); d.remove(); drawKitGallery(s); }
+  };
+}
+
 /* ===================== Step 9.4: share as image =====================
    Everything is drawn on a canvas in the browser from data already on screen; nothing is uploaded.
    Photos are data URLs, so the canvas can be saved. GMK catalog colors are left out of shared images (private data). */
@@ -3242,6 +3337,7 @@ function gmkCardHtml(s, live = false) {   // live = read the link and name from 
       ${(ref.kits || []).length ? (() => { const mine = s ? kitsOf(s) : []; const hv = ref.kits.filter(k => mine.some(o => kitMatch(o.name, k.name))); return `<p class="sub" style="margin:8px 0 4px">${hv.length} of ${ref.kits.length} kits · ${Math.round(hv.length / ref.kits.length * 100)}%</p><span class="cbar wide"><span class="cfill" style="width:${hv.length / ref.kits.length * 100}%"></span></span>
         <div class="kitlist">${ref.kits.map(k => { const have = hv.includes(k); return `<div class="kitrow${have ? ' have' : ''}"><span>${have ? '✓' : '○'} ${esc(k.name)}${gmkKitPrice(k) ? ` <span class="sub" style="margin:0">${gmkKitPrice(k)}</span>` : ''}</span>${!have && s ? (wishHas(s.name, k.name) ? '<span class="chip">On wishlist</span>' : `<button class="btn" data-wishkit="${esc(k.name)}">+ Wishlist</button>`) : ''}</div>`; }).join('')}</div>`; })() : ''}
       <div class="btnrow" style="margin-top:10px"><button class="btn primary" id="gmkFill">Fill from catalog</button><button class="btn" id="gmkView">Details</button><button class="btn" id="gmkUnlink">Unlink</button></div>
+      <p style="margin:8px 0 0">${matrixLinkHtml(ref, 'Matrix page for this set ↗')}</p>
       <p class="sub" style="margin:8px 0 0;font-size:11px">${esc(GMK_CREDIT)}</p></div>`;
   }
   const cands = gmkCandidates(name);
