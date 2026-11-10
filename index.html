@@ -353,6 +353,13 @@
   .gdlg > .kv-card { width: min(860px, 100%); } .kvimg { border-radius: 10px; overflow: hidden; background: #0b0d10; } .kvimg img { width: 100%; max-height: 60vh; object-fit: contain; display: block; }
   .kvthumbs { display: flex; gap: 6px; margin-top: 8px; } .kvthumbs img { width: 96px; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; cursor: pointer; border: 1px solid var(--line); }
   .chip.kvown { background: #065f46; color: #d1fae5; } .kit.flash { outline: 2px solid var(--kc); outline-offset: 2px; border-radius: 10px; }
+  .sumhead { display: flex; gap: 14px; align-items: center; margin-bottom: 6px; } .sumhead img { width: 120px; aspect-ratio: 4/3; object-fit: cover; border-radius: 10px; flex: none; }
+  .sumsec { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 12px; } .sumsec h4 { margin: 0 0 8px; font-size: 13px; color: var(--text-2); text-transform: uppercase; letter-spacing: .04em; }
+  .sumsec .sec-title { margin-bottom: 0; } .sumsec .lnk { background: none; border: 0; cursor: pointer; font: inherit; font-size: 13px; }
+  .sumdl { display: grid; grid-template-columns: minmax(120px, 190px) 1fr; gap: 6px 14px; margin: 0; font-size: 14px; } .sumdl dt { color: var(--text-3); } .sumdl dd { margin: 0; overflow-wrap: anywhere; }
+  .sumkits { display: grid; gap: 6px; } .sumkits div { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; } .sumkits span { color: var(--text-3); text-align: right; }
+  .sumsw { display: flex; flex-wrap: wrap; gap: 8px; } .sumsw span { display: flex; align-items: center; gap: 6px; font-size: 13px; } .sumsw i { width: 18px; height: 18px; border-radius: 5px; border: 1px solid rgba(255,255,255,.2); }
+  @media (max-width: 700px) { .sumdl { grid-template-columns: 1fr; gap: 0 0; } .sumdl dd { margin-bottom: 8px; } .sumhead img { width: 90px; } }
   .pchips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
   .pchip { border: 1px solid var(--line); background: var(--bg-2); color: var(--text-2); border-radius: 999px; padding: 4px 11px; font-size: 12.5px; cursor: pointer; }
   .pchip.on { background: color-mix(in srgb, var(--kc) 22%, transparent); color: var(--text); border-color: var(--kc); }
@@ -458,7 +465,7 @@
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.47.0';
+const APP_VERSION = 'v0.48.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -1088,7 +1095,7 @@ ${purchasePanelHtml(savedKeyboards)}
   document.getElementById('taxQuick').onclick = e => { const b = e.target.closest('[data-tax]'); if (!b) return; const t = document.getElementById('f_taxRatePct'); t.value = b.dataset.tax; t.dispatchEvent(new Event('input', { bubbles: true })); };
   updateCalc();
   if (!k) document.getElementById('f_name').focus();
-  else if (lastTab.id === k.id && lastTab.tab !== 'overview') view.querySelector(`.tabs [data-tab="${lastTab.tab}"]`).click();
+  else restoreTab(view, k, 'keyboards');
 }
 function drawStars() {
   RATINGS.forEach(([n]) => {
@@ -1673,7 +1680,7 @@ function renderSwitchForm(w = null) {
       try { await withTimeout(deletePhotosOf(w.id), 30000); await withTimeout(swCol().doc(w.id).delete()); formDirty = false; toast('Switches deleted'); location.hash = '#/switches'; }
       catch (e) { toast('Delete failed: ' + explain(e)); }
     };
-    if (lastTab.id === w.id && lastTab.tab !== 'overview') view.querySelector(`.tabs [data-tab="${lastTab.tab}"]`)?.click();
+    restoreTab(view, w, 'switches');
   } else document.getElementById('f_name').focus();
   updateCalc();
 }
@@ -2017,7 +2024,7 @@ function renderKeycapForm(s = null) {
       try { await withTimeout(deletePhotosOf(s.id), 30000); await withTimeout(kcCol().doc(s.id).delete()); formDirty = false; toast('Keycap set deleted'); location.hash = '#/keycaps'; }
       catch (e) { toast('Delete failed: ' + explain(e)); }
     };
-    if (lastTab.id === s.id && lastTab.tab !== 'overview') view.querySelector(`.tabs [data-tab="${lastTab.tab}"]`)?.click();
+    restoreTab(view, s, 'keycaps');
   } else { document.getElementById('f_name').focus(); document.getElementById('addKit').click(); formDirty = false; }
   wireGmkCard(s);
   if (!gmkSets) loadGmk().then(() => { const c = document.getElementById('gmkCard'); if (c && editing === s) { c.outerHTML = gmkCardHtml(s, true); wireGmkCard(s); } }).catch(() => {});
@@ -2495,7 +2502,7 @@ ${purchasePanelHtml(all)}
       try { await withTimeout(deletePhotosOf(x.id), 30000); await withTimeout(partCol(t).doc(x.id).delete()); formDirty = false; toast(`${P.singular[0].toUpperCase() + P.singular.slice(1)} deleted`); location.hash = '#/' + t; }
       catch (e) { toast('Delete failed: ' + explain(e)); }
     };
-    if (lastTab.id === x.id && lastTab.tab !== 'overview') view.querySelector(`.tabs [data-tab="${lastTab.tab}"]`)?.click();
+    restoreTab(view, x, t);
   } else { if (partPrefill && partPrefill.t === t) { Object.entries(partPrefill).forEach(([n, v]) => { const el = n !== 't' && document.getElementById('f_' + n); if (el) el.value = v; }); } partPrefill = null; document.getElementById('f_name').focus(); }
   updateCalc();
 }
@@ -3344,6 +3351,80 @@ function openKitView(s, t) {
       inp.value = t.name; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); row.scrollIntoView({ behavior: 'smooth', block: 'center' }); toast(`Added ${t.name} to Kits. Fill in what you paid, then Save.`); }
     if (e.target.id === 'kvWish' && s) { await addKitToWishlist(s, t.ck); d.remove(); drawKitGallery(s); }
   };
+}
+
+/* ===================== Step S.1: Summary tab (read-only "face card") =====================
+   First tab on every saved item. Built from what is filled in on the other tabs (empty fields are left out),
+   so it always matches the form, including changes not saved yet. "Edit" opens that tab. */
+function addSummaryTab(view, x, type) {
+  const tabs = view.querySelector('.tabs'); if (!tabs || tabs.querySelector('[data-tab="summary"]')) return;
+  tabs.insertAdjacentHTML('afterbegin', '<button data-tab="summary" role="tab">Summary</button>');
+  const first = view.querySelector('[data-panel]');
+  first.insertAdjacentHTML('beforebegin', '<div class="card" data-panel="summary" hidden><div id="sumBox"></div></div>');
+  tabs.addEventListener('click', e => { if (e.target.closest('[data-tab="summary"]')) drawSummary(view, x, type); });
+  view.querySelector('[data-panel="summary"]').addEventListener('click', e => { const g = e.target.closest('[data-goto]'); if (g) tabs.querySelector(`[data-tab="${g.dataset.goto}"]`)?.click(); });
+}
+function restoreTab(view, x, type) {
+  addSummaryTab(view, x, type);
+  const t = lastTab.id === x.id ? lastTab.tab : 'summary';
+  if (t !== 'overview') view.querySelector(`.tabs [data-tab="${t}"]`)?.click();
+}
+function fieldValue(c) {
+  if (!c) return '';
+  if (c.tagName === 'SELECT') return c.value ? (c.selectedOptions[0]?.textContent || c.value).trim() : '';
+  if (c.type === 'checkbox' || c.type === 'radio' || c.type === 'file' || c.type === 'color') return '';
+  return (c.value || '').trim();
+}
+function summaryRows(panel) {
+  const rows = [];
+  panel.querySelectorAll('.fld').forEach(f => {
+    if (f.closest('.kit') || f.closest('[hidden]:not([data-panel])')) return;
+    const lab = f.querySelector(':scope > label')?.textContent.replace('*', '').trim(), c = f.querySelector('input:not([type=hidden]), select, textarea');
+    if (c && c.dataset && c.dataset.slot) return;            // PCB / plate / case picks are listed under Linked
+    let v = fieldValue(c); if (!lab || !v) return;
+    const id = (c.id || '').replace(/^f_/, '');
+    if (c.type === 'date') v = fmtDate(v) || v;
+    else if (['price', 'shipping', 'discounts'].includes(id) && isFinite(+v)) v = money(+v);
+    else if (id === 'taxRatePct' && isFinite(+v)) v = (+v) + '%';
+    rows.push([lab, v]);
+  });
+  const checks = [...panel.querySelectorAll('label.check input[type=checkbox]:checked, label.acq input:checked, .acqs input:checked')].filter(i => !i.closest('.kit') && i.id !== 'f_isFavorite').map(i => i.closest('label')?.textContent.trim()).filter(Boolean);
+  if (checks.length) rows.push(['Ticked', [...new Set(checks)].join(', ')]);
+  const tot = panel.querySelector('#cTotal'); if (tot && rows.some(r => /price/i.test(r[0]))) rows.push(['Total paid', tot.textContent]);
+  return rows;
+}
+function drawSummary(view, x, type) {
+  const box = view.querySelector('#sumBox'); if (!box) return;
+  const live = (type === 'keyboards' ? savedKeyboards : type === 'switches' ? savedSwitches : type === 'keycaps' ? savedKeycaps : savedParts[type] || []).find(y => y.id === x.id) || x;
+  const secs = [];
+  view.querySelectorAll('.tabs [data-tab]').forEach(b => {
+    const t = b.dataset.tab; if (t === 'summary' || t === 'gallery') return;
+    const panel = view.querySelector(`[data-panel="${t}"]`); if (!panel) return;
+    const bc = b.cloneNode(true); bc.querySelectorAll('.err').forEach(e => e.remove()); const title = bc.textContent.replace(/\s+/g, ' ').trim() || t;
+    let rows = summaryRows(panel), extra = '';
+    if (t === 'kits') { const kits = [...panel.querySelectorAll('#kitList .kit')].map(readKitRow).filter(k => k.name);
+      if (kits.length) extra = `<div class="sumkits">${kits.map(k => `<div><b>${esc(k.name)}</b><span>${esc([k.kitType, k.datePurchased ? fmtDate(k.datePurchased) : '', k.purchasedFrom, Number(k.price) ? money(kbTotal(k)) : ''].filter(Boolean).join(' · '))}</span></div>`).join('')}</div>`; }
+    if (t === 'colors') { const pal = paletteOf(live); if (pal.length) extra = `<div class="sumsw">${pal.map(c => `<span title="${esc([c.name, c.gmk, c.ral, c.pantone, c.hex].filter(Boolean).join(' · '))}"><i style="background:${esc(c.hex || '#000')}"></i>${esc(c.name || c.hex || '')}</span>`).join('')}</div>`; rows = []; }
+    if (t === 'review') { rows = [...panel.querySelectorAll('.rate')].map(r => [r.querySelector('label')?.textContent.trim(), r.querySelector('.val')?.textContent.trim()]).filter(([, v]) => v && v !== 'Not rated'); const rt = fieldValue(panel.querySelector('textarea')); if (rt) rows.push(['Review', rt]); }
+    if (rows.length || extra) secs.push(`<div class="sumsec"><div class="sec-title"><h4>${esc(title)}</h4><button class="lnk" data-goto="${t}">Edit</button></div>
+      ${rows.length ? `<dl class="sumdl">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${/^https?:\/\//.test(v) ? `<a class="lnk" href="${esc(v)}" target="_blank" rel="noopener">${esc(v.replace(/^https?:\/\/(www\.)?/, '').slice(0, 48))}</a>` : esc(v).replace(/\n/g, '<br>')}</dd>`).join('')}</dl>` : ''}${extra}</div>`);
+  });
+  const links = [];
+  if (type === 'keyboards') {
+    switchesOn(live.id).forEach(({ w, a }) => links.push(['Switches', `${[w.manufacturer, w.name].filter(Boolean).join(' ')} × ${a.count}`, '#/switches/' + w.id]));
+    kitsOn(live.id).forEach(({ s, k }) => links.push(['Keycaps', `${s.name} — ${k.name}`, '#/keycaps/' + s.id]));
+    partsOn(live.id).forEach(({ t, x: p }) => links.push([partRole(t, p), p.name, `#/${t}/${p.id}`]));
+  } else if (type === 'switches') allocsOf(live).forEach(a => { const kb = savedKeyboards.find(b => b.id === a.keyboardId); if (kb) links.push(['Installed on', `${kb.name} × ${a.count}`, '#/keyboards/' + kb.id]); });
+  else if (type === 'keycaps') { kitsOf(live).forEach(k => { const kb = k.installedOn && savedKeyboards.find(b => b.id === k.installedOn); if (kb) links.push(['Installed on', `${k.name} → ${kb.name}`, '#/keyboards/' + kb.id]); });
+    const ref = live.gmkRef && gmkSets && gmkSets.find(r => r.id === live.gmkRef), c = completionOf(live); if (ref) links.push(['GMK catalog', `GMK ${ref.title}${c ? ` · ${c.have}/${c.total} kits` : ''}`, '']); }
+  else if (live.installedOn) { const kb = savedKeyboards.find(b => b.id === live.installedOn); if (kb) links.push(['Installed on', kb.name, '#/keyboards/' + kb.id]); }
+  const vals = (live.values || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  if (vals.length) links.push(['Market value', `${money(vals[0].value)} (${fmtDate(vals[0].date)}${vals[0].source ? ', ' + vals[0].source : ''})`, '']);
+  const cover = live.coverThumb || (type === 'keycaps' ? setPhotoCoverOf(live) : '');
+  box.innerHTML = `<div class="sumhead">${cover ? `<img src="${esc(cover)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<div><h3 style="margin:0">${esc(live.name || '')}${live.isFavorite ? ' <span style="color:#fbbf24">★</span>' : ''}</h3>
+      <p class="sub" style="margin:4px 0 0">Everything filled in so far. Use Edit on a section, or the tabs above, to add or change details.</p></div></div>
+    ${links.length ? `<div class="sumsec"><h4>Linked</h4><dl class="sumdl">${links.map(([k, v, h]) => `<dt>${esc(k)}</dt><dd>${h ? `<a class="lnk" href="${h}">${esc(v)}</a>` : esc(v)}</dd>`).join('')}</dl></div>` : ''}
+    ${secs.join('') || '<p class="sub">Nothing filled in yet. Open the other tabs to add details.</p>'}`;
 }
 
 /* ===================== Step K.3: kit photos from the old Keycap Collection app =====================
