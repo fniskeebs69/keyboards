@@ -387,6 +387,43 @@
     .dash-grid, .two, .detail-grid { grid-template-columns: 1fr; }
     .page { padding-left: 18px; padding-right: 18px; }
   }
+  /* ===== Step P.1: phone layout (D20) ===== */
+  .mtop, .mbar, .mscrim, .camBtn { display: none; }
+  @media (max-width: 700px) {
+    :root { --mbar-h: calc(58px + env(safe-area-inset-bottom, 0px)); }
+    body { -webkit-tap-highlight-color: transparent; }
+    .shell { display: block; background: var(--bg); }
+    .side { position: fixed; left: 0; top: 0; bottom: 0; width: 260px; height: auto; z-index: 80; transform: translateX(-102%); transition: transform .22s ease; box-shadow: 0 0 40px #000; padding-left: 12px; padding-right: 12px; }
+    .shell.menu .side { transform: none; }
+    .brandmark div, .navgroup, .navitem .t, .navitem .soon, .side-foot { display: revert; }
+    .navitem { justify-content: flex-start; padding: 11px 10px; }
+    .mscrim { display: block; position: fixed; inset: 0; z-index: 79; background: rgba(0,0,0,.55); opacity: 0; pointer-events: none; transition: opacity .2s; }
+    .shell.menu .mscrim { opacity: 1; pointer-events: auto; }
+    .mtop { display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 60; padding: calc(10px + var(--safe-top)) 14px 10px; background: color-mix(in srgb, var(--side) 94%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); transition: padding .2s; }
+    .mtop .mmenu { border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 10px; width: 40px; height: 40px; display: grid; place-items: center; flex: none; }
+    .mtop .mmenu svg { width: 20px; height: 20px; }
+    .mtop .mlogo { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: color-mix(in srgb, var(--kb) 18%, var(--surface)); color: var(--kb); flex: none; transition: .2s; } .mtop .mlogo svg { width: 20px; height: 20px; }
+    .mtop .mt { display: grid; min-width: 0; } .mtop .mt b { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .mtop .mt span { font-size: 12px; color: var(--text-3); }
+    .mtop.collapsed { padding-top: calc(6px + var(--safe-top)); padding-bottom: 6px; } .mtop.collapsed .mlogo { width: 0; opacity: 0; margin-right: -10px; } .mtop.collapsed .mt span { display: none; } .mtop.collapsed .mt b { font-size: 14.5px; } .mtop.collapsed .mmenu { width: 34px; height: 34px; }
+    .mbar { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 70; height: var(--mbar-h); padding-bottom: env(safe-area-inset-bottom, 0px); background: color-mix(in srgb, var(--side) 96%, transparent); backdrop-filter: blur(10px); border-top: 1px solid var(--line); }
+    .mbar a, .mbar button { display: grid; justify-items: center; align-content: center; gap: 3px; font-size: 10.5px; color: var(--text-3); text-decoration: none; background: none; border: 0; font-family: inherit; }
+    .mbar svg { width: 21px; height: 21px; } .mbar .on { color: var(--accent, var(--kb)); }
+    .page { padding: 16px 12px calc(var(--mbar-h) + 24px); }
+    .pagehead { align-items: flex-start; gap: 10px; margin-bottom: 14px; } .pagehead h1 { font-size: 24px; }
+    .pagehead .tools { width: 100%; flex-wrap: wrap; gap: 8px; } .pagehead .tools .select { flex: 1 1 140px; }
+    .form-grid, .dash-grid, .two, .detail-grid, .scols, .frm { grid-template-columns: minmax(0, 1fr) !important; } .form-grid > *, .frm .fld { min-width: 0; }
+    .kit-grid, .calc, .sgrid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    .tabs { overflow-x: auto; scrollbar-width: none; } .tabs::-webkit-scrollbar { display: none; } .tabs button { flex: none; }
+    .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .kgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .pgrid2 { grid-template-columns: 1fr; }
+    .main table { display: block; max-width: 100%; overflow-x: auto; white-space: nowrap; }
+    .main pre { white-space: pre-wrap; overflow-wrap: anywhere; } .main .card { min-width: 0; max-width: 100%; } .kv { overflow-wrap: anywhere; }
+    .seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; } .seg button { flex: none; } .page { overflow-x: clip; }
+    .input, .select, textarea.input { font-size: 16px; } .btn { min-height: 40px; }
+    .gdlg { padding: 10px; align-items: end; } .gdlg > .card { max-height: 88vh; border-radius: 16px 16px 12px 12px; }
+    .savebar { position: fixed; left: 0; right: 0; bottom: var(--mbar-h); z-index: 65; margin: 0; border-radius: 14px 14px 0 0; padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; box-shadow: 0 -10px 30px -12px #000; }
+    .savebar .savedhint { grid-column: 1 / -1; font-size: 11.5px; } .savebar:has(#btnSave:disabled) { display: none; }
+    .camBtn { display: flex; } .toast { bottom: calc(var(--mbar-h) + 14px); }
+  }
 </style>
 </head>
 <body>
@@ -411,13 +448,17 @@
       <span id="verText"></span>
     </div>
   </aside>
-  <main class="main"><div class="page"><div id="protoWarn" role="alert"></div><div id="view"></div></div></main>
+  <div class="mscrim" id="mScrim"></div>
+  <main class="main"><header class="mtop" id="mTop"><button class="mmenu" id="mMenu" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <span class="mlogo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 18l1.6-10.2A2 2 0 0 1 8.6 6h6.8a2 2 0 0 1 2 1.8L19 18"/><path d="M3.5 18h17"/><path d="M9 10.5h6"/></svg></span><span class="mt"><b id="mTitle">FSN · Keyboard Collection</b><span>Faraz's vault</span></span></header>
+    <div class="page"><div id="protoWarn" role="alert"></div><div id="view"></div></div></main>
+  <nav class="mbar" id="mBar" aria-label="Quick navigation"></nav>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.42.0';
+const APP_VERSION = 'v0.46.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -448,6 +489,7 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 
 /* ===================== Icons ===================== */
 const I = {
+  camera: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg>',
   dashboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
   keyboards: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2.5"/><path d="M6 10h.01M9.5 10h.01M13 10h.01M16.5 10h.01M6 13.5h.01M18 10h.01M18 13.5h.01M8.5 14.5h7"/></svg>',
   switches:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M12 3v6M9.5 5.5h5"/><path d="M8 20v1.5M16 20v1.5"/></svg>',
@@ -494,6 +536,27 @@ const SECTIONS = [
   { id: 'settings',    title: 'Settings',    color: 'var(--text-3)', built: true }
 ];
 const SEC = Object.fromEntries(SECTIONS.filter(s => s.id).map(s => [s.id, s]));
+
+/* ===================== Step P.1: phone top bar (collapses on scroll, like the Keycap Collection app), bottom bar and menu ===================== */
+const MBAR = ['dashboard', 'keyboards', 'keycaps', 'switches'];
+function renderMobileBar(active) {
+  const bar = document.getElementById('mBar'); if (!bar) return;
+  bar.innerHTML = MBAR.map(id => `<a href="#/${id}" class="${id === active ? 'on' : ''}" style="--accent:${SEC[id].color}">${I[id]}<span>${SEC[id].title}</span></a>`).join('')
+    + `<button type="button" id="mMore" class="${MBAR.includes(active) ? '' : 'on'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg><span>${MBAR.includes(active) ? 'More' : esc(SEC[active].title)}</span></button>`;
+  document.getElementById('mMore').onclick = () => setMenu(true);
+}
+function setMenu(open) { document.querySelector('.shell')?.classList.toggle('menu', !!open); }
+function updateMobileTop() {
+  const top = document.getElementById('mTop'), t = document.getElementById('mTitle'); if (!top) return;
+  const c = window.scrollY > 40; top.classList.toggle('collapsed', c);
+  t.textContent = c ? 'FSN · ' + (t.dataset.page || 'Keyboard Collection') : 'Keyboard Collection';
+}
+window.addEventListener('scroll', updateMobileTop, { passive: true });
+document.addEventListener('click', e => {
+  if (e.target.closest('#mMenu')) setMenu(true);
+  else if (e.target.closest('#mScrim') || e.target.closest('.side .navitem')) setMenu(false);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
 
 function renderNav(active) {
   document.getElementById('nav').innerHTML = SECTIONS.map(s => s.group
@@ -567,7 +630,7 @@ function route() {
   if (parts[1] !== lastTab.id) lastTab = { id: null, tab: 'overview' }; // the tab is only remembered while staying on one keyboard
   const sec = SEC[id] || SEC.dashboard;
   document.documentElement.style.setProperty('--accent', sec.color.startsWith('var(--text') ? 'var(--kb)' : sec.color);
-  renderNav(sec.id);
+  renderNav(sec.id); renderMobileBar(sec.id); document.getElementById('mTitle').dataset.page = sec.title; setMenu(false); updateMobileTop();
   document.title = sec.title + ' · Keyboard Collection';
   const view = document.getElementById('view');
   if (sec.id === 'dashboard') view.innerHTML = dashboardHtml(), wireDashboard();
@@ -886,7 +949,7 @@ function selectHtml(name, opts, ph, val = '') {
   return `<select class="select" name="${name}" id="f_${name}">${ph ? `<option value="">${esc(ph)}</option>` : ''}${opts.map(o => { const [v, t] = Array.isArray(o) ? o : [o, o]; return `<option value="${esc(v)}"${v === val ? ' selected' : ''}>${esc(t)}</option>`; }).join('')}</select>`;
 }
 function inputHtml(name, ph = '', list = '') { return `<input class="input" name="${name}" id="f_${name}" placeholder="${esc(ph)}" autocomplete="off"${list ? ` list="${list}"` : ''}>`; }
-function fld(label, control, opts = {}) { return `<div class="fld${opts.full ? ' full' : ''}" data-for="${opts.name || ''}"><label for="f_${opts.name || ''}">${esc(label)}${opts.req ? ' <span class="req">*</span>' : ''}</label>${control}${opts.hint ? `<div class="hint">${esc(opts.hint)}</div>` : ''}</div>`; }
+function fld(label, control, opts = {}) { return `<div class="fld${opts.full ? ' full' : ''}" data-for="${opts.name || ''}"><label for="f_${opts.name || ''}">${esc(label)}${opts.req ? ' <span class="req">*</span>' : ''}</label>${control}${opts.hintHtml ? `<div class="hint">${opts.hintHtml}</div>` : opts.hint ? `<div class="hint">${esc(opts.hint)}</div>` : ''}</div>`; }
 
 let editing = null; // the saved keyboard being edited, or null when adding
 let lastTab = { id: null, tab: 'overview' }; // keeps the open tab when the edit page redraws
@@ -939,6 +1002,7 @@ function renderKeyboardForm(k = null) {
         <div class="card" data-panel="build" hidden>
           <h3 style="margin-bottom:14px">Build details</h3>
           <div class="frm">
+            ${buildSlotsHtml(k)}
             ${BUILD_FIELDS.map(([n, label, ph, sug]) => fld(label, inputHtml(n, ph, sug.length ? 'dl_' + n : ''), { name: n })).join('')}
             ${fld('Current build', '<textarea class="input" name="currentBuildText" id="f_currentBuildText" rows="2" placeholder="e.g. GMK Olivia base kit + Gateron Oil King V2"></textarea>', { name: 'currentBuildText', full: true, hint: 'What is installed right now. Free text for now; it becomes links to your switches and keycaps in Phase 5.' })}
           </div>
@@ -965,7 +1029,7 @@ ${purchasePanelHtml(savedKeyboards)}
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
         ${k ? valueCardHtml('keyboards', k) + colorwayCardHtml(k) + photoCardHtml(k) + switchesOnKeyboardCardHtml(k) + keycapsOnKeyboardCardHtml(k) + partsOnKeyboardCardHtml(k) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the keyboard first, then drop photos on its page.</p></div>'}
-        <div class="card side-card stack">
+        <div class="card side-card stack savebar">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${k ? 'Save changes' : 'Save keyboard'}</button>
           <button class="btn" id="btnCancel">${k ? 'Discard changes' : 'Cancel'}</button>
           <div class="savedhint" id="draftHint">${k ? 'Added ' + esc(fmtDate(k.createdIso) || '') + (k.updatedAt && k.updatedAt.toDate ? ' · last saved ' + esc(k.updatedAt.toDate().toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) : '') : ''}</div>
@@ -993,7 +1057,7 @@ ${purchasePanelHtml(savedKeyboards)}
     if (k) { formDirty = location.hash; setEditState(true); } else scheduleDraftSave();
   };
   formEl.addEventListener('input', e => { onEdit(e); if (e.target.name && document.querySelector(`.fld.bad[data-for="${e.target.name}"]`)) clearFieldError(e.target.name); });
-  formEl.addEventListener('change', onEdit);
+  formEl.addEventListener('change', onEdit); wireBuildSlots();
   if (k) {
     document.getElementById('btnBuildCard').onclick = () => { const cur = savedKeyboards.find(x => x.id === k.id) || k; openShareDialog(`Build card · ${cur.name}`, withSpend => buildCardCanvas(cur, withSpend), { spendToggle: true, file: shareFileName('fsn-' + cur.name) }); };
     fillKeyboardForm(k); setEditState(false); wirePhotos(k); wireValueCard('keyboards', k); wireColorwayCard(k); wireSwitchesOnKeyboard(k); wireKeycapsOnKeyboard(k); wirePartsOnKeyboard(k);
@@ -1168,11 +1232,13 @@ async function saveKeyboard() {
   if (!data.name) problems.unshift(['name', 'Name is required']);
   if (problems.length) { problems.forEach(([f, m], i) => showFieldError(f, m, i === 0)); return; }
   btn.disabled = true; btn.textContent = 'Saving…';
-  if (editing) return saveEdits(data, btn, errBox);
+  const picks = readBuildSlots();
+  if (editing) return saveEdits(data, btn, errBox, picks);
   try {
     const now = firebase.firestore.FieldValue.serverTimestamp();
     const ref = await withTimeout(kbCol().add(Object.assign(data, { createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app' })));
     clearTimeout(draftTimer); lsDel(DRAFT_KEY);
+    try { await applyBuildSlots(ref.id, picks); } catch (e) { toast('Keyboard saved, but the PCB/plate could not be linked: ' + explain(e)); }
     toast(`Saved "${data.name}"`);
     location.hash = '#/keyboards/' + ref.id;
   } catch (e) {
@@ -1184,7 +1250,7 @@ async function saveKeyboard() {
 const EDITABLE = ['keyboardType', 'brand', 'name', 'manufacturer', 'size', 'location', 'modelNumber', 'serialNumber', 'designer', 'layout', 'color', 'connectivity', 'connector', 'status',
   'typingAngle', 'frontHeight', 'weight', 'currentBuildText', 'datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'pictureLink', 'mods', 'notes',
   'price', 'taxRate', 'shipping', 'discounts', 'acquisition', 'isFavorite', 'reviewText'].concat(RATINGS.map(r => r[0]));
-async function saveEdits(data, btn, errBox) {
+async function saveEdits(data, btn, errBox, picks = {}) {
   const k = editing, upd = {};
   const del = firebase.firestore.FieldValue.delete();
   EDITABLE.concat(BUILD_FIELDS.map(f => f[0])).forEach(n => {
@@ -1197,6 +1263,7 @@ async function saveEdits(data, btn, errBox) {
   formDirty = false;   // the live listener may redraw the page with the new values as soon as the write starts
   try {
     await withTimeout(kbCol().doc(k.id).update(upd));
+    try { await applyBuildSlots(k.id, picks); } catch (e) { toast('Saved, but the PCB/plate could not be linked: ' + explain(e)); return; }
     toast('Changes saved');
   } catch (e) {
     // put the unsaved values back on screen and keep the page marked as changed
@@ -1230,7 +1297,9 @@ function photoCardHtml(k, type = 'keyboards') {
   return `<div class="card side-card" id="photoCard"><h3>Primary photo</h3><p class="sub">Shown on the gallery card. Pick any photo below as the default.</p>
     <div class="cover" id="coverBox">${k.coverThumb ? `<img src="${k.coverThumb}" alt="${esc(k.name)}">` : `<span>${I[type]}No photo yet</span>`}</div>
     <div class="drop" id="dropZone" tabindex="0" role="button" aria-label="Add photos"><b>Drop photos here or click to upload</b><span>JPG, PNG or WebP. Each one can be cropped before it is saved.</span></div>
+    <button type="button" class="btn camBtn" id="camBtn" style="width:100%;justify-content:center;margin-top:8px">${I.camera}Take a photo</button>
     <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" multiple hidden>
+    <input type="file" id="photoCam" accept="image/*" capture="environment" hidden>
     <div class="pgrid" id="photoGrid"><span class="sub">Loading photos…</span></div></div>`;
 }
 function wirePhotos(k, type = 'keyboards') {
@@ -1244,6 +1313,8 @@ function wirePhotos(k, type = 'keyboards') {
   ['dragleave', 'drop'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.remove('over'); }));
   zone.addEventListener('drop', e => queuePhotos(k, [...(e.dataTransfer?.files || [])]));
   input.onchange = () => { queuePhotos(k, [...input.files]); input.value = ''; };
+  const cam = document.getElementById('photoCam'), camBtn = document.getElementById('camBtn');
+  if (cam && camBtn) { camBtn.onclick = () => cam.click(); cam.onchange = () => { queuePhotos(k, [...cam.files]); cam.value = ''; }; }
   photoUnsub = photoCol().where('itemId', '==', k.id).onSnapshot(snap => {
     currentPhotos = snap.docs.map(d => Object.assign({ id: d.id }, d.data()))
       .sort((a, b) => ((a.createdAt && a.createdAt.toDate ? a.createdAt.toDate() : 0) - (b.createdAt && b.createdAt.toDate ? b.createdAt.toDate() : 0)));
@@ -1442,6 +1513,8 @@ function startSwitchListener() {
 
 /* ---------- list ---------- */
 let swSort = 'newest', swView = 'gallery', swQuery = '';
+const swMain = w => [w.manufacturer, w.name, w.switchType, w.mechanism];
+const swExtra = w => [w.location, w.notes, w.specsText, w.purchasedFrom].concat(SW_SPEC_FIELDS.map(f => w[f[0]]));
 function swMatches(w, q) {
   if (!q) return true;
   const hay = [w.manufacturer, w.name, w.switchType, w.mechanism, w.location, w.notes, w.specsText, w.purchasedFrom].concat(SW_SPEC_FIELDS.map(f => w[f[0]])).join(' ').toLowerCase();
@@ -1470,7 +1543,7 @@ function renderSwitches() {
 }
 function drawSwitchResults() {
   const box = document.getElementById('swResults'); if (!box) return;
-  const all = savedSwitches, list = lastLists.switches = sortSwitches(all.filter(w => swMatches(w, swQuery.trim())));
+  const all = savedSwitches, list = lastLists.switches = sortSwitches(twoPass(all, swQuery.trim(), swMain, swExtra).list);
   const count = all.reduce((s, w) => s + (Number(w.totalCount) || 0), 0);
   const unknown = all.filter(w => w.totalCount == null).length;
   const inst = all.reduce((s, w) => s + installedCount(w), 0);
@@ -1566,7 +1639,7 @@ function renderSwitchForm(w = null) {
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
         ${w ? valueCardHtml('switches', w) + photoCardHtml(w, 'switches') + installedOnCardHtml(w) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save first, then drop photos on its page.</p></div><div class="card side-card"><h3>Installed on</h3><p class="sub" style="margin:0">Save first, then install these switches on your keyboards.</p></div>'}
-        <div class="card side-card stack">
+        <div class="card side-card stack savebar">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${w ? 'Save changes' : 'Save switches'}</button>
           ${w ? '<button class="btn" id="btnCancel">Discard changes</button>' : '<a class="btn" href="#/switches" id="btnCancelNew">Cancel</a>'}
           ${ready ? '' : '<p class="sub" style="margin:0">Saving needs Firebase (open the https site).</p>'}
@@ -1703,11 +1776,13 @@ function startKeycapListener() {
 }
 /* ---------- list ---------- */
 let kcSort = 'newest', kcView = 'gallery', kcQuery = '';
-function kcMatches(s, q) {
-  if (!q) return true;
-  const hay = [s.name, s.manufacturer, s.designer, s.profile, s.colorsText, s.material, s.notes, s.location].concat(kitsOf(s).map(k => k.name + ' ' + (k.kitType || ''))).join(' ').toLowerCase();
-  return q.toLowerCase().split(/\s+/).every(t => hay.includes(t));
-}
+/* Search in two passes: names first (name, maker, designer, profile, kit names); only when nothing matches there,
+   also look in colors, notes and location. So "GMK" finds GMK sets, not sets whose notes mention GMK colors. */
+function textHit(parts, q) { const hay = parts.filter(Boolean).join(' ').toLowerCase(); return q.toLowerCase().split(/\s+/).every(t => hay.includes(t)); }
+function twoPass(all, q, main, extra) { if (!q) return { list: all, deep: false }; const a = all.filter(x => textHit(main(x), q)); return a.length ? { list: a, deep: false } : { list: all.filter(x => textHit(main(x).concat(extra(x)), q)), deep: true }; }
+const kcMain = s => [s.name, s.manufacturer, s.designer, s.profile].concat(kitsOf(s).map(k => k.name + ' ' + (k.kitType || '')));
+const kcExtra = s => [s.colorsText, s.material, s.notes, s.location];
+function kcMatches(s, q) { return !q || textHit(kcMain(s).concat(kcExtra(s)), q); }
 function sortKeycaps(list) {
   const by = (f, dir) => (a, b) => dir * String(f(a) || '').localeCompare(String(f(b) || ''), 'en', { sensitivity: 'base' });
   const pct = s => { const c = completionOf(s); return c ? c.pct : -1; };
@@ -1738,7 +1813,7 @@ function renderKeycaps() {
 }
 function drawKeycapResults() {
   const box = document.getElementById('kcResults'); if (!box) return;
-  const all = savedKeycaps, list = lastLists.keycaps = sortKeycaps(all.filter(s => kcMatches(s, kcQuery.trim()) && kcChipOk(s)));
+  const all = savedKeycaps, found = twoPass(all, kcQuery.trim(), kcMain, kcExtra), list = lastLists.keycaps = sortKeycaps(found.list.filter(kcChipOk));
   const kits = all.reduce((n, s) => n + kitsOf(s).length, 0);
   document.getElementById('kcCount').textContent = (kcQuery.trim() || kcChip ? `${list.length} of ${all.length} sets` : `${all.length} set${all.length === 1 ? '' : 's'}`) + ` · ${kits} kit${kits === 1 ? '' : 's'}` + (db && !isFile && !kcLoaded ? ' · loading…' : '');
   if (!all.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.keycaps}</div><h2>No keycap sets yet</h2><p>Add a set with its kits, or import your Excel Keycaps tab on the Import page.</p><p style="margin-top:14px"><a class="btn primary" href="#/keycaps/new">${I.plus}Add keycap set</a></p></div>`; return; }
@@ -1858,8 +1933,9 @@ function renderKeycapForm(s = null) {
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
         ${s ? valueCardHtml('keycaps', s) + photoCardHtml(s, 'keycaps') : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the set first, then drop photos on its page.</p></div>'}
         <input type="hidden" id="f_gmkRef" value="${esc(s?.gmkRef || '')}">${gmkCardHtml(s)}
+        ${s ? mergeCardHtml(s) : ''}
         ${s ? kitInstallCardHtml(s) : '<div class="card side-card"><h3>Installed on</h3><p class="sub" style="margin:0">Save the set first, then install its kits on your keyboards.</p></div>'}
-        <div class="card side-card stack">
+        <div class="card side-card stack savebar">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${s ? 'Save changes' : 'Save keycap set'}</button>
           ${s ? '<button class="btn" id="btnCancel">Discard changes</button>' : '<a class="btn" href="#/keycaps">Cancel</a>'}
           ${ready ? '' : '<p class="sub" style="margin:0">Saving needs Firebase (open the https site).</p>'}
@@ -1934,7 +2010,7 @@ function renderKeycapForm(s = null) {
     Object.entries(st.fields).forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.value = val; });
     document.getElementById('f_isFavorite').checked = st.fav;
     if (['designer', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText'].some(n => s[n])) document.getElementById('moreDetails').open = true;
-    setEditState(false); wirePhotos(s, 'keycaps'); wireValueCard('keycaps', s); wireKitInstall(s);
+    setEditState(false); wirePhotos(s, 'keycaps'); wireValueCard('keycaps', s); wireKitInstall(s); wireMergeCard(s);
     document.getElementById('btnCancel').onclick = () => { formDirty = false; renderKeycapForm(savedKeycaps.find(x => x.id === s.id) || s); toast('Changes discarded'); };
     document.getElementById('btnDelete').onclick = async () => {
       if (!confirm(`Delete "${s.name}" with all its kits and photos? This cannot be undone.`)) return;
@@ -2223,7 +2299,7 @@ const PART_TYPES = {
     cols: [['Maker', x => x.manufacturer], ['Series', x => x.series], ['Colorway', x => x.colorway]] },
   accessories: { title: 'Accessories', singular: 'accessory', addLabel: 'Add accessory', icon: 'accessories', makers: ['Amazon Basics', 'Glorious', 'Durock', 'TX', 'Krytox', 'YMDK', 'KBDfans', 'Drop', 'Keychron', 'Kemove', 'Gateron', 'WS'],
     fields: [['manufacturer', 'Manufacturer', 'e.g. Glorious', 'maker'], ['name', 'Name', 'e.g. Coiled cable', 'text', null, 'req'],
-      ['category', 'Category', 'e.g. Stabilizers', 'text', ['Cable', 'Cases & Plates', 'Deskmat', 'Keyboard Parts', 'Lube & Tools', 'Modding Supplies', 'Springs', 'Stabilizers', 'Storage & Display', 'Switch Parts', 'Switch Testers', 'Tools & Pullers', 'Wrist Rests', 'Other']],
+      ['category', 'Category', 'e.g. Stabilizers', 'text', ['Cable', 'Case', 'Cases & Plates', 'Plate', 'Deskmat', 'Keyboard Parts', 'Lube & Tools', 'Modding Supplies', 'Springs', 'Stabilizers', 'Storage & Display', 'Switch Parts', 'Switch Testers', 'Tools & Pullers', 'Wrist Rests', 'Other']],
       ['location', 'Location', 'e.g. Desk drawer', 'text'], ['style', 'Style / type', 'e.g. Coiled / USB-C / Aviator', 'text', null, 'more', 'Mostly used for cables (Excel Cables tab).']],
     checks: [], textareas: [['notes', 'Notes', 'Anything else worth remembering']],
     sub: x => [x.category, x.manufacturer].filter(Boolean).join(' · '),
@@ -2285,7 +2361,7 @@ function drawPartResults(t) {
   const box = document.getElementById('ptResults'); if (!box || !location.hash.startsWith('#/' + t)) return;
   const P = PART_TYPES[t], st = partState[t], all = savedParts[t];
   const by = (f, dir) => (a, b) => dir * String(f(a) || '').localeCompare(String(f(b) || ''), 'en', { sensitivity: 'base' });
-  const list = lastLists[t] = all.filter(x => partMatches(t, x, st.q.trim())).sort({ newest: by(sortDate, -1), oldest: by(sortDate, 1), nameAZ: by(x => x.name, 1), nameZA: by(x => x.name, -1), brandAZ: by(x => x.manufacturer, 1), brandZA: by(x => x.manufacturer, -1) }[st.sort]);
+  const list = lastLists[t] = twoPass(all, st.q.trim(), x => [x.name, x.manufacturer, x.category, x.series, x.colorway], x => PART_TYPES[t].fields.map(f => x[f[0]]).concat([x.notes, x.mods, x.purchasedFrom, x.belongsToText])).list.sort({ newest: by(sortDate, -1), oldest: by(sortDate, 1), nameAZ: by(x => x.name, 1), nameZA: by(x => x.name, -1), brandAZ: by(x => x.manufacturer, 1), brandZA: by(x => x.manufacturer, -1) }[st.sort]);
   document.getElementById('ptCount').textContent = (st.q.trim() ? `${list.length} of ${all.length}` : `${all.length}`) + ` ${all.length === 1 ? P.singular : P.title.toLowerCase()}` + (db && !isFile && !partsLoaded[t] ? ' · loading…' : '');
   if (!all.length) { box.innerHTML = `<div class="card empty"><div class="big">${I[P.icon]}</div><h2>No ${P.title.toLowerCase()} yet</h2><p>Add one here${t !== 'artisans' ? ', or import from Excel on the Import page' : ''}.</p><p style="margin-top:14px"><a class="btn primary" href="#/${t}/new">${I.plus}${P.addLabel}</a></p></div>`; return; }
   if (!list.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.search}</div><h2>No matches</h2><p>Nothing matches "${esc(st.q)}".</p></div>`; return; }
@@ -2323,7 +2399,7 @@ function partsOnKeyboardCardHtml(k) {
   const on = partsOn(k.id);
   if (!PART_IDS.length) return '';
   return `<div class="card side-card" id="kbPartsCard"><h3>Other parts</h3>
-    ${on.length ? `<div class="alist">${on.map(({ t, x }) => `<div class="arow" style="grid-template-columns:1fr auto auto"><a class="lnk" href="#/${t}/${esc(x.id)}">${esc(x.name)}</a><span class="chip">${esc(PART_TYPES[t].singular)}</span><button class="btn" data-ptun="${t}|${esc(x.id)}" aria-label="Remove">✕</button></div>`).join('')}</div>`
+    ${on.length ? `<div class="alist">${on.map(({ t, x }) => `<div class="arow" style="grid-template-columns:1fr auto auto"><a class="lnk" href="#/${t}/${esc(x.id)}">${esc(x.name)}</a><span class="chip">${esc(partRole(t, x))}</span><button class="btn" data-ptun="${t}|${esc(x.id)}" aria-label="Remove">✕</button></div>`).join('')}</div>`
       : '<p class="sub" style="margin:0 0 10px">None yet.</p>'}
     ${(() => { const free = PART_IDS.flatMap(t => savedParts[t].filter(x => !x.installedOn).map(x => ({ t, x }))).sort((a, b) => a.x.name.localeCompare(b.x.name));
       return free.length ? `<div class="aadd" style="grid-template-columns:1fr auto"><select class="select" id="kbPtPick"><option value="">Add a PCB, artisan or accessory…</option>${PART_IDS.map(t => `<optgroup label="${PART_TYPES[t].title}">${free.filter(f => f.t === t).map(f => `<option value="${t}|${esc(f.x.id)}">${esc(f.x.name)}</option>`).join('')}</optgroup>`).join('')}</select><button class="btn primary" id="kbPtAdd">Add</button></div>` : ''; })()}
@@ -2380,7 +2456,7 @@ ${purchasePanelHtml(all)}
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
         ${x ? valueCardHtml(t, x) + photoCardHtml(x, t) + partInstallCardHtml(t, x) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save first, then drop photos on its page.</p></div>'}
-        <div class="card side-card stack">
+        <div class="card side-card stack savebar">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${x ? 'Save changes' : 'Save ' + P.singular}</button>
           ${x ? '<button class="btn" id="btnCancel">Discard changes</button>' : `<a class="btn" href="#/${t}">Cancel</a>`}
           ${ready ? '' : '<p class="sub" style="margin:0">Saving needs Firebase (open the https site).</p>'}
@@ -2420,7 +2496,7 @@ ${purchasePanelHtml(all)}
       catch (e) { toast('Delete failed: ' + explain(e)); }
     };
     if (lastTab.id === x.id && lastTab.tab !== 'overview') view.querySelector(`.tabs [data-tab="${lastTab.tab}"]`)?.click();
-  } else document.getElementById('f_name').focus();
+  } else { if (partPrefill && partPrefill.t === t) { Object.entries(partPrefill).forEach(([n, v]) => { const el = n !== 't' && document.getElementById('f_' + n); if (el) el.value = v; }); } partPrefill = null; document.getElementById('f_name').focus(); }
   updateCalc();
 }
 function partTextFields(t) { return PART_TYPES[t].fields.map(f => f[0]).concat(PART_TYPES[t].textareas.map(f => f[0]), ['datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'pictureLink']); }
@@ -3092,6 +3168,96 @@ function drawGmkMatch() {
   };
 }
 
+/* ===================== Step 6.4: PCB and plate on a keyboard's Build tab =====================
+   PCBs come from the PCBs page; plates are accessories (category Plate, or a "Cases & Plates" item named like a switch plate).
+   Picking one marks that item as installed on this keyboard when you save (one board at a time, like kits). */
+function isPlate(x) { return x.category === 'Plate' || (/^(cases & plates|keyboard parts)$/i.test(x.category || '') && /\bplates?\b/i.test(x.name || '') && !/cover plate|plated/i.test(x.name || '')); }
+function isCase(x) { return x.category === 'Case' || (/^(cases & plates|keyboard parts)$/i.test(x.category || '') && /\bcases?\b/i.test(x.name || '') && !isPlate(x) && !/weight|badge|diffuser/i.test(x.name || '')); }
+function partRole(t, x) { return t === 'accessories' ? (isPlate(x) ? 'Plate' : isCase(x) ? 'Case' : x.category || 'Accessory') : PART_TYPES[t].singular; }
+const BUILD_SLOTS = [['pcb', 'pcbs', () => true, 'PCB', '#/pcbs/new', null], ['plate', 'accessories', isPlate, 'Plate', '#/accessories/new', 'Plate'], ['case', 'accessories', isCase, 'Case', '#/accessories/new', 'Case']];
+let partPrefill = null;   // e.g. { t: 'accessories', category: 'Plate' } for the "+ Add" link
+function slotItem(kbId, t, f) { return kbId ? savedParts[t].find(x => x.installedOn === kbId && f(x)) : null; }
+function buildSlotsHtml(k) {
+  return BUILD_SLOTS.map(([key, t, f, label, href]) => {
+    const cur = slotItem(k && k.id, t, f), items = savedParts[t].filter(f), name = x => [x.manufacturer && !(x.name || '').toLowerCase().startsWith(x.manufacturer.toLowerCase()) ? x.manufacturer : '', x.name].filter(Boolean).join(' ');
+    const sugg = k ? items.filter(x => !x.installedOn && x.belongsToText && guessKeyboard(x.belongsToText)?.id === k.id) : [];
+    const opt = x => { const other = x.installedOn && (!k || x.installedOn !== k.id) ? savedKeyboards.find(b => b.id === x.installedOn) : null;
+      return `<option value="${esc(x.id)}"${cur && cur.id === x.id ? ' selected' : ''}${other ? ' disabled' : ''}>${esc(name(x))}${other ? ` (on ${esc(other.name)})` : ''}</option>`; };
+    const rest = items.filter(x => !sugg.includes(x)).sort((a, b) => !!a.installedOn - !!b.installedOn || name(a).localeCompare(name(b)));
+    return fld(label, `<select class="select" id="f_${key}Pick" data-slot="${key}" data-init="${esc(cur ? cur.id : '')}"><option value="">${items.length ? `No ${label === 'PCB' ? 'PCB' : label.toLowerCase()} selected` : `No ${label === 'PCB' ? 'PCB' : label.toLowerCase()}s added yet`}</option>
+        ${sugg.length ? `<optgroup label="Excel says these belong to this board">${sugg.map(opt).join('')}</optgroup><optgroup label="All ${label.toLowerCase()}s">` : ''}${rest.map(opt).join('')}${sugg.length ? '</optgroup>' : ''}</select>`,
+      { name: key + 'Pick', hintHtml: `<a class="lnk" href="${href}" data-addslot="${key}">+ Add a ${label === 'PCB' ? 'PCB' : label.toLowerCase()}</a> · ${label === 'PCB' ? 'From your PCBs page.' : `From Accessories (category ${label}).`}${key === 'case' ? ' For swappable cases, e.g. CSTM decorative cases.' : ''}` });
+  }).join('');
+}
+function plateMaterialFrom(n) { const m = [[/carbon|\bcf\b/i, 'Carbon Fiber'], [/brass/i, 'Brass'], [/alu/i, 'Aluminum'], [/fr-?4/i, 'FR4'], [/\bpom\b/i, 'POM'], [/\bpp\b/i, 'PP'], [/\bpc\b|polycarbonate/i, 'PC (Polycarbonate)'], [/steel/i, 'Steel'], [/copper/i, 'Copper']].find(([r]) => r.test(n || '')); return m ? m[1] : ''; }
+function wireBuildSlots() {
+  const pl = document.getElementById('f_platePick');
+  if (pl) pl.addEventListener('change', () => { const x = savedParts.accessories.find(y => y.id === pl.value), mat = document.getElementById('f_plateMaterial');
+    if (x && mat && !mat.value.trim()) { const m = plateMaterialFrom(x.name); if (m) { mat.value = m; mat.dispatchEvent(new Event('input', { bubbles: true })); } } });
+  document.querySelectorAll('[data-addslot]').forEach(a => a.addEventListener('click', () => { const sl = BUILD_SLOTS.find(x => x[0] === a.dataset.addslot); partPrefill = sl && sl[5] ? { t: sl[1], category: sl[5] } : null; }));
+}
+function readBuildSlots() {   // read before saving: the page may redraw as soon as the keyboard write starts
+  const r = {}; BUILD_SLOTS.forEach(([key]) => { const sel = document.getElementById(`f_${key}Pick`); if (sel) r[key] = { want: sel.value, init: sel.dataset.init }; }); return r;
+}
+async function applyBuildSlots(kbId, picks) {   // after the keyboard itself saved
+  const b = db.batch(), now = firebase.firestore.FieldValue.serverTimestamp(); let n = 0;
+  for (const [key, t, f] of BUILD_SLOTS) {
+    const pk = picks[key]; if (!pk) continue;
+    const want = pk.want, cur = slotItem(kbId, t, f);
+    if (want === pk.init || (cur ? cur.id : '') === want) continue;   // untouched here (the Other parts card may have changed it meanwhile)
+    if (cur) { b.update(partCol(t).doc(cur.id), { installedOn: firebase.firestore.FieldValue.delete(), updatedAt: now }); n++; }
+    if (want) { b.update(partCol(t).doc(want), { installedOn: kbId, updatedAt: now }); n++; }
+  }
+  if (n) await withTimeout(b.commit());
+  return n;
+}
+
+/* ===================== Step K.2: merge two keycap sets =====================
+   The other set's kits, photos, colors, values and Excel name move into this set; the other record is then deleted.
+   Its Excel set name is kept in importAliases so importing the workbook again adds its kits here instead of re-creating it. */
+function mergeCardHtml(s) {
+  const others = savedKeycaps.filter(x => x.id !== s.id).sort((a, b) => a.name.localeCompare(b.name));
+  return `<div class="card side-card" id="kcMergeCard"><h3>Merge sets</h3><p class="sub">Same set split over two records? Move the other one into this set.</p>
+    <select class="select" id="mergePick" aria-label="Set to merge in"><option value="">Choose a set to merge in…</option>${others.map(x => `<option value="${esc(x.id)}">${esc(x.name)} · ${kitsOf(x).length} kit${kitsOf(x).length === 1 ? '' : 's'}</option>`).join('')}</select>
+    <button class="btn" id="mergeGo" style="margin-top:8px;width:100%;justify-content:center" disabled>Merge into this set</button>
+    ${(s.importAliases || []).length ? `<p class="sub" style="margin:8px 0 0">Also imports Excel set${s.importAliases.length === 1 ? '' : 's'}: ${s.importAliases.map(esc).join(', ')}</p>` : ''}</div>`;
+}
+function wireMergeCard(s) {
+  const pick = document.getElementById('mergePick'), go = document.getElementById('mergeGo'); if (!pick) return;
+  pick.onchange = () => { go.disabled = !pick.value; };
+  go.onclick = async () => {
+    const d = savedKeycaps.find(x => x.id === pick.value); if (!d) return;
+    if (formDirty) { toast('Save or discard your changes first.'); return; }
+    if (!confirm(`Move ${kitsOf(d).length} kit${kitsOf(d).length === 1 ? '' : 's'} and the photos, colors and values of "${d.name}" into "${s.name}", then delete "${d.name}"?`)) return;
+    go.disabled = true; go.textContent = 'Merging…';
+    try { const n = await mergeKeycapSets(savedKeycaps.find(x => x.id === s.id) || s, d); toast(`Merged "${d.name}" into "${s.name}"${n ? ` (${n} photo${n === 1 ? '' : 's'} moved)` : ''}`); }
+    catch (e) { toast('Merge failed: ' + explain(e)); go.disabled = false; go.textContent = 'Merge into this set'; }
+  };
+}
+async function mergeKeycapSets(k, d) {
+  const now = firebase.firestore.FieldValue.serverTimestamp(), upd = { updatedAt: now };
+  const ids = new Set(kitsOf(k).map(x => x.id));
+  upd.kits = kitsOf(k).concat(kitsOf(d).map(x => ids.has(x.id) ? Object.assign({}, x, { id: newKitId() }) : x));
+  const al = new Set([...(k.importAliases || []), ...(d.importAliases || [])]); if (d.importKey && d.importKey !== k.importKey) al.add(d.importKey); al.delete(k.importKey);
+  if (al.size) upd.importAliases = [...al];
+  if (Array.isArray(d.excelRows)) upd.excelRows = [...new Set([...(k.excelRows || []), ...d.excelRows])].sort((a, b) => a - b);
+  if (k.excelTotal != null || d.excelTotal != null) upd.excelTotal = Math.round(((Number(k.excelTotal) || 0) + (Number(d.excelTotal) || 0)) * 100) / 100;
+  const pal = paletteOf(k).slice(); paletteOf(d).forEach(c => { if (!pal.some(p => (p.hex || '') === (c.hex || '') && (p.name || '') === (c.name || ''))) pal.push(c); }); if (pal.length) upd.palette = pal;
+  if ((d.values || []).length) upd.values = (k.values || []).concat(d.values);
+  if (d.isFavorite && !k.isFavorite) upd.isFavorite = true;
+  if (!k.gmkRef && d.gmkRef) upd.gmkRef = d.gmkRef;
+  ['manufacturer', 'designer', 'profile', 'location', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText'].forEach(f => { if (blank(k[f]) && !blank(d[f])) upd[f] = d[f]; });
+  if (!blank(d.notes)) upd.notes = blank(k.notes) ? d.notes : k.notes + '\n\n' + d.notes;
+  if (!k.coverThumb && d.coverThumb) { upd.coverThumb = d.coverThumb; if (d.coverPhotoId) upd.coverPhotoId = d.coverPhotoId; }
+  const photos = await withTimeout(photoCol().where('itemId', '==', d.id).get());
+  const b = db.batch();
+  b.update(kcCol().doc(k.id), upd);
+  photos.docs.forEach(p => b.update(p.ref, { itemId: k.id }));
+  b.delete(kcCol().doc(d.id));
+  await withTimeout(b.commit(), 30000);
+  return photos.size;
+}
+
 /* ===================== Step 9.5: kit gallery + Matrix pages =====================
    Pictures are not copied: catalog kits hold links to the pictures on Matrix's site (matrixzj.github.io),
    and the browser shows them from there. The links live only in Firebase (private catalog), never in this file. */
@@ -3102,7 +3268,7 @@ function matrixUrlOf(ref) {
 function matrixLinkHtml(ref, label = 'Open on Matrix ↗') { const u = matrixUrlOf(ref); return u ? `<a class="lnk" href="${esc(u)}" target="_blank" rel="noopener" title="Matrix's page for this set: kits, renders and colors">${label}</a>` : ''; }
 function catalogCoverOf(s) {   // picture for a keycap card with no photo of your own: your first matching kit, else the first kit
   const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef); if (!ref) return '';
-  const ks = (ref.kits || []).filter(k => k.img), own = ks.find(ck => kitsOf(s).some(k => kitMatch(k.name, ck.name)));
+  const ks = (ref.kits || []).filter(k => k.img), pairs = pairKits(kitsOf(s), ref.kits || []), own = ks.find(ck => pairs.has(ck));
   return (own || ks[0] || {}).img || '';
 }
 let kgFilter = 'all';
@@ -3111,7 +3277,8 @@ function kitGalleryTiles(s) {
   const refId = document.getElementById('f_gmkRef')?.value || '', ref = refId && gmkSets ? gmkSets.find(x => x.id === refId) : null;
   const mine = formKits(), saved = s ? kitsOf(s) : [], tiles = [];
   const where = k => { const sk = saved.find(x => x.id === k.id); const kb = sk && sk.installedOn && savedKeyboards.find(b => b.id === sk.installedOn); return kb ? kb.name : ''; };
-  if (ref) (ref.kits || []).forEach(ck => { const own = mine.find(k => kitMatch(k.name, ck.name)); tiles.push({ name: ck.name, img: ck.img, more: ck.moreImgs || [], price: gmkKitPrice(ck), qty: ck.quantity, owned: !!own, kit: own, on: own ? where(own) : '', ck }); });
+  const pairs = ref ? pairKits(mine, ref.kits || []) : new Map();
+  if (ref) (ref.kits || []).forEach(ck => { const own = pairs.get(ck); tiles.push({ name: ck.name, img: ck.img, more: ck.moreImgs || [], price: gmkKitPrice(ck), qty: ck.quantity, owned: !!own, kit: own, on: own ? where(own) : '', ck }); });
   mine.filter(k => !tiles.some(t => t.kit === k)).forEach(k => tiles.push({ name: k.name, owned: true, kit: k, on: where(k), extra: !!ref }));
   return { ref, tiles, refId };
 }
@@ -3206,7 +3373,7 @@ async function buildCardCanvas(k, withSpend) {
   const img = await loadImg(full || k.coverThumb);
   const sw = switchesOn(k.id).map(({ w, a }) => [[w.manufacturer, w.name].filter(Boolean).join(' '), `× ${a.count}`]);
   const kc = kitsOn(k.id).map(({ s, k: kit }) => [s.name, kit.name]);
-  const pt = partsOn(k.id).map(({ t, x }) => [x.name, PART_TYPES[t].singular]);
+  const pt = partsOn(k.id).map(({ t, x }) => [x.name, partRole(t, x)]);
   const sections = [['Switches', sw], ['Keycaps', kc], ['Parts', pt]].filter(s => s[1].length);
   const meas = document.createElement('canvas').getContext('2d'); meas.font = `20px ${SHARE_FONT}`;
   const photoH = img ? 810 : 0, colors = shareColors(k.colorway);
@@ -3261,9 +3428,17 @@ function wireShareList(page, title, toItem) { const b = document.getElementById(
 let kcChip = '';   // '' | 'fav' | 'incomplete' | 'profile:<name>'
 function kitKey(t) { return gmkNorm(t).replace(/kits?$/, '').replace(/ies$/, 'y').replace(/s$/, ''); }
 function kitMatch(a, b) { const x = kitKey(a), y = kitKey(b); return !!x && !!y && (x === y || (Math.min(x.length, y.length) >= 3 && (x.includes(y) || y.includes(x)))); }
+/* One owned kit counts for one catalog kit: exact names first, then loose matches, closest length first.
+   So "Base Kit" is Olivia R3's "Base", not also its "Dark Base". Returns Map(catalog kit -> owned kit). */
+function pairKits(owned, cat) {
+  const pairs = new Map(), used = new Set();
+  owned.forEach(o => { const c = cat.find(ck => !pairs.has(ck) && kitKey(ck.name) === kitKey(o.name)); if (c) { pairs.set(c, o); used.add(o); } });
+  owned.filter(o => !used.has(o)).forEach(o => { const c = cat.filter(ck => !pairs.has(ck) && kitMatch(o.name, ck.name)).sort((p, q) => Math.abs(kitKey(p.name).length - kitKey(o.name).length) - Math.abs(kitKey(q.name).length - kitKey(o.name).length))[0]; if (c) pairs.set(c, o); });
+  return pairs;
+}
 function completionOf(s) {
   const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef); if (!ref || !(ref.kits || []).length) return null;
-  const owned = kitsOf(s), have = ref.kits.filter(ck => owned.some(k => kitMatch(k.name, ck.name)));
+  const pairs = pairKits(kitsOf(s), ref.kits), have = ref.kits.filter(ck => pairs.has(ck));
   return { ref, have: have.length, total: ref.kits.length, pct: Math.round(have.length / ref.kits.length * 100), missing: ref.kits.filter(ck => !have.includes(ck)) };
 }
 function completionHtml(s) { const c = completionOf(s); return c ? `<span class="cbar" title="${c.have} of ${c.total} catalog kits"><span class="cfill" style="width:${c.pct}%"></span></span><span class="cnum">${c.have}/${c.total} kits · ${c.pct}%</span>` : ''; }
@@ -3334,7 +3509,7 @@ function gmkCardHtml(s, live = false) {   // live = read the link and name from 
     return `<div class="card side-card" id="gmkCard"><h3>GMK reference</h3>
       <p style="margin:6px 0 2px"><b>GMK ${esc(ref.title)}</b> ${gmkStripHtml(ref)}</p>
       <p class="sub" style="margin:0">${esc([ref.designer, [ref.gbStart, ref.gbEnd].filter(Boolean).join(' → ')].filter(Boolean).join(' · '))}</p>
-      ${(ref.kits || []).length ? (() => { const mine = s ? kitsOf(s) : []; const hv = ref.kits.filter(k => mine.some(o => kitMatch(o.name, k.name))); return `<p class="sub" style="margin:8px 0 4px">${hv.length} of ${ref.kits.length} kits · ${Math.round(hv.length / ref.kits.length * 100)}%</p><span class="cbar wide"><span class="cfill" style="width:${hv.length / ref.kits.length * 100}%"></span></span>
+      ${(ref.kits || []).length ? (() => { const mine = s ? kitsOf(s) : [], pr = pairKits(mine, ref.kits); const hv = ref.kits.filter(k => pr.has(k)); return `<p class="sub" style="margin:8px 0 4px">${hv.length} of ${ref.kits.length} kits · ${Math.round(hv.length / ref.kits.length * 100)}%</p><span class="cbar wide"><span class="cfill" style="width:${hv.length / ref.kits.length * 100}%"></span></span>
         <div class="kitlist">${ref.kits.map(k => { const have = hv.includes(k); return `<div class="kitrow${have ? ' have' : ''}"><span>${have ? '✓' : '○'} ${esc(k.name)}${gmkKitPrice(k) ? ` <span class="sub" style="margin:0">${gmkKitPrice(k)}</span>` : ''}</span>${!have && s ? (wishHas(s.name, k.name) ? '<span class="chip">On wishlist</span>' : `<button class="btn" data-wishkit="${esc(k.name)}">+ Wishlist</button>`) : ''}</div>`; }).join('')}</div>`; })() : ''}
       <div class="btnrow" style="margin-top:10px"><button class="btn primary" id="gmkFill">Fill from catalog</button><button class="btn" id="gmkView">Details</button><button class="btn" id="gmkUnlink">Unlink</button></div>
       <p style="margin:8px 0 0">${matrixLinkHtml(ref, 'Matrix page for this set ↗')}</p>
@@ -3421,7 +3596,22 @@ const KC_SET_FIELDS = ['name', 'manufacturer', 'designer', 'colorsText', 'excelR
 const KC_KIT_FIELDS = ['name', 'quantity', 'excelRow', 'kitsPurchasedExcel', 'purchasedFrom', 'datePurchased', 'receipt', 'pictureLink', 'price', 'taxRate', 'shipping', 'discounts', 'excelTotal', 'installedOnText'];
 function sameAny(a, b) { return Array.isArray(a) || Array.isArray(b) ? JSON.stringify(a || []) === JSON.stringify(b || []) : sameVal(a, b); }
 function blank(v) { return v === undefined || v === null || v === ''; }
+/* Sets merged in the app keep the other Excel set names in importAliases. On import, those Excel rows are folded into the
+   kept set (their kits added to it), so a merge is never undone by importing again. */
+function foldKeycapAliases(list) {
+  const alias = new Map(); savedKeycaps.forEach(s => (s.importAliases || []).forEach(a => alias.set(a, s.importKey)));
+  if (!alias.size) return list;
+  const out = list.filter(x => !alias.has(x.importKey)).map(x => Object.assign({}, x, { kits: x.kits.slice() }));
+  list.filter(x => alias.has(x.importKey)).forEach(x => {
+    const host = out.find(y => y.importKey === alias.get(x.importKey));
+    if (host) { host.kits.push(...x.kits);
+      if (Array.isArray(x.excelRows)) host.excelRows = [...new Set([...(host.excelRows || []), ...x.excelRows])].sort((p, q) => p - q);
+      if (host.excelTotal != null || x.excelTotal != null) host.excelTotal = Math.round(((Number(host.excelTotal) || 0) + (Number(x.excelTotal) || 0)) * 100) / 100; } else out.push(Object.assign({}, x, { importKey: alias.get(x.importKey) }));
+  });
+  return out;
+}
 function planKeycapImport(file) {
+  file = Object.assign({}, file, { keycaps: foldKeycapAliases(file.keycaps) });
   const byKey = new Map(savedKeycaps.filter(s => s.importKey).map(s => [s.importKey, s]));
   const rows = file.keycaps.map(x => {
     const cur = byKey.get(x.importKey);
