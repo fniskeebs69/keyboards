@@ -458,7 +458,7 @@
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.46.0';
+const APP_VERSION = 'v0.47.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -1822,7 +1822,7 @@ function drawKeycapResults() {
   if (kcView === 'gallery') {
     box.innerHTML = `<div class="gallery">${list.map(s => `
       <a class="kcard" href="#/keycaps/${esc(s.id)}">
-        <div class="ph">${s.coverThumb ? `<img src="${s.coverThumb}" alt="" loading="lazy">` : catalogCoverOf(s) ? `<img src="${esc(catalogCoverOf(s))}" alt="" loading="lazy" referrerpolicy="no-referrer" title="Picture from the GMK catalog (Matrix)" onerror="this.remove()">` : I.keycaps.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}
+        <div class="ph">${s.coverThumb ? `<img src="${s.coverThumb}" alt="" loading="lazy">` : catalogCoverOf(s) ? `<img src="${esc(catalogCoverOf(s))}" alt="" loading="lazy" referrerpolicy="no-referrer" title="${(s.kitPhotos || []).length ? 'Picture from your Keycap Collection app' : 'Picture from the GMK catalog (Matrix)'}" onerror="this.remove()">` : I.keycaps.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}
           ${s.profile ? `<span class="badge chip">${esc(s.profile)}</span>` : ''}
           <button class="fav${s.isFavorite ? ' on' : ''}" data-fav="${esc(s.id)}" aria-label="${s.isFavorite ? 'Remove from' : 'Add to'} favorites">${s.isFavorite ? I.starFill : I.star}</button></div>
         <div class="meta"><b>${esc(s.name)}</b><span>${esc(sub(s))}</span>${completionHtml(s)}${paletteStripHtml(s)}</div></a>`).join('')}</div>`;
@@ -3266,41 +3266,55 @@ function matrixUrlOf(ref) {
   const slug = String(ref.sourcePage || '').replace(/\.md$/, ''); return slug ? 'https://matrixzj.github.io/docs/gmk-keycaps/' + encodeURIComponent(slug) + '/' : '';
 }
 function matrixLinkHtml(ref, label = 'Open on Matrix ↗') { const u = matrixUrlOf(ref); return u ? `<a class="lnk" href="${esc(u)}" target="_blank" rel="noopener" title="Matrix's page for this set: kits, renders and colors">${label}</a>` : ''; }
-function catalogCoverOf(s) {   // picture for a keycap card with no photo of your own: your first matching kit, else the first kit
+function setPhotoCoverOf(s) {   // picture for a keycap card with no photo of your own: your kit photos from the old app first, then the catalog
+  const ph = s.kitPhotos || [];
+  if (ph.length) { const pr = pairKits(kitsOf(s), ph), own = ph.find(p => pr.has(p)); return (own || ph[0]).url || ''; }
   const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef); if (!ref) return '';
   const ks = (ref.kits || []).filter(k => k.img), pairs = pairKits(kitsOf(s), ref.kits || []), own = ks.find(ck => pairs.has(ck));
   return (own || ks[0] || {}).img || '';
 }
+function catalogCoverOf(s) { return setPhotoCoverOf(s); }
 let kgFilter = 'all';
 function formKits() { return [...document.querySelectorAll('#kitList .kit')].map(readKitRow).filter(k => k.name); }
+/* Reference list for the gallery: the linked GMK catalog set, else the kit list from your old Keycap Collection app.
+   Pictures: your old app's photo for that kit first, then the catalog picture. */
 function kitGalleryTiles(s) {
   const refId = document.getElementById('f_gmkRef')?.value || '', ref = refId && gmkSets ? gmkSets.find(x => x.id === refId) : null;
-  const mine = formKits(), saved = s ? kitsOf(s) : [], tiles = [];
+  const live = s ? savedKeycaps.find(x => x.id === s.id) || s : null, photos = (live && live.kitPhotos) || [];
+  const mine = formKits(), saved = live ? kitsOf(live) : [], tiles = [];
   const where = k => { const sk = saved.find(x => x.id === k.id); const kb = sk && sk.installedOn && savedKeyboards.find(b => b.id === sk.installedOn); return kb ? kb.name : ''; };
-  const pairs = ref ? pairKits(mine, ref.kits || []) : new Map();
-  if (ref) (ref.kits || []).forEach(ck => { const own = pairs.get(ck); tiles.push({ name: ck.name, img: ck.img, more: ck.moreImgs || [], price: gmkKitPrice(ck), qty: ck.quantity, owned: !!own, kit: own, on: own ? where(own) : '', ck }); });
-  mine.filter(k => !tiles.some(t => t.kit === k)).forEach(k => tiles.push({ name: k.name, owned: true, kit: k, on: where(k), extra: !!ref }));
-  return { ref, tiles, refId };
+  let kind = '', base = [];
+  if (ref) { kind = 'catalog'; base = (ref.kits || []).map(ck => ({ name: ck.name, img: ck.img, more: ck.moreImgs || [], price: gmkKitPrice(ck), qty: ck.quantity, ck, cat: true })); }
+  else if (photos.length) { kind = 'photos'; base = photos.map(p => ({ name: p.name, img: p.url, more: [], ck: { name: p.name }, yours: true })); }
+  let spare = photos;
+  if (kind === 'catalog' && photos.length) { const pp = pairKits(photos, base); pp.forEach((p, b) => { b.more = [b.img, ...b.more].filter(Boolean); b.img = p.url; b.yours = true; }); spare = photos.filter(p => ![...pp.values()].includes(p)); }
+  const pairs = pairKits(mine, base);
+  base.forEach(b => { const own = pairs.get(b); tiles.push(Object.assign({}, b, { inList: true, owned: !!own, kit: own, on: own ? where(own) : '' })); });
+  const extras = mine.filter(k => !tiles.some(t => t.kit === k)), ep = kind === 'catalog' ? pairKits(spare, extras.map(k => ({ name: k.name, k }))) : new Map();
+  extras.forEach(k => { const hit = [...ep.entries()].find(([e]) => e.k === k); tiles.push({ name: k.name, owned: true, kit: k, on: where(k), extra: !!base.length, img: hit ? hit[1].url : '', yours: !!hit }); });
+  return { ref, tiles, refId, kind };
 }
 function drawKitGallery(s) {
   const box = document.getElementById('kitGallery'); if (!box) return;
   const refId = document.getElementById('f_gmkRef')?.value || '';
   if (refId && !gmkSets) { box.innerHTML = '<p class="sub">Loading the GMK reference…</p>'; loadGmk().then(() => drawKitGallery(s)).catch(e => { box.innerHTML = `<p class="sub">Could not load the GMK reference: ${esc(explain(e))}</p>`; }); return; }
-  const { ref, tiles } = kitGalleryTiles(s), cat = tiles.filter(t => t.ck), have = cat.filter(t => t.owned).length;
+  const { ref, tiles, kind } = kitGalleryTiles(s), cat = tiles.filter(t => t.inList), have = cat.filter(t => t.owned).length;
   const shown = tiles.filter(t => kgFilter === 'all' || (kgFilter === 'owned') === t.owned);
   const chip = (v, t) => `<button class="pchip${kgFilter === v ? ' on' : ''}" data-kgf="${v}">${t}</button>`;
-  const noPics = ref && !cat.some(t => t.img);
-  box.innerHTML = `${ref ? `<div class="sec-title" style="margin-bottom:4px"><p class="sub" style="margin:0"><b style="color:var(--text)">${have} of ${cat.length}</b> catalog kits owned · ${cat.length ? Math.round(have / cat.length * 100) : 0}%</p>${matrixLinkHtml(ref)}</div>
+  const noPics = kind === 'catalog' && !cat.some(t => t.img);
+  const isGmk = /gmk/i.test((document.getElementById('f_manufacturer')?.value || '') + ' ' + (document.getElementById('f_name')?.value || ''));
+  box.innerHTML = `${kind ? `<div class="sec-title" style="margin-bottom:4px"><p class="sub" style="margin:0"><b style="color:var(--text)">${have} of ${cat.length}</b> ${kind === 'catalog' ? 'catalog kits' : 'kits'} owned · ${cat.length ? Math.round(have / cat.length * 100) : 0}%</p>${ref ? matrixLinkHtml(ref) : ''}</div>
       <span class="cbar wide" style="margin-bottom:12px"><span class="cfill" style="width:${cat.length ? have / cat.length * 100 : 0}%"></span></span>
       <div class="pchips" style="margin-bottom:12px">${chip('all', `All (${tiles.length})`)}${chip('owned', `Owned (${tiles.filter(t => t.owned).length})`)}${chip('missing', `Not owned (${tiles.filter(t => !t.owned).length})`)}</div>
-      ${noPics ? '<p class="sub">No kit pictures yet. Load the newest gmk_catalog_private.json on the Import page to add them.</p>' : ''}`
-    : `<p class="sub" style="margin-top:0">${!/gmk/i.test((document.getElementById('f_manufacturer')?.value || '') + ' ' + (document.getElementById('f_name')?.value || '')) ? 'Kit pictures come from the GMK catalog, so they are only available for GMK sets. Your kits are shown below.' : gmkSets && gmkSets.length ? 'Link this set on the GMK reference card (right) to see every kit in the set with pictures, and which ones you own.' : 'Load gmk_catalog_private.json on the Import page, then link this set on the GMK reference card to see every kit with pictures.'}</p>`}
+      ${noPics ? '<p class="sub">No kit pictures yet. Load the newest gmk_catalog_private.json on the Import page to add them.</p>' : ''}
+      ${kind === 'photos' ? `<p class="sub" style="margin-top:0">Kit list and pictures from your Keycap Collection app.${isGmk ? ' Link this set on the GMK reference card for prices and the full catalog list.' : ''}</p>` : ''}`
+    : `<p class="sub" style="margin-top:0">${!isGmk ? 'Kit pictures come from the GMK catalog or your Keycap Collection photos; this set has neither yet. Your kits are shown below.' : gmkSets && gmkSets.length ? 'Link this set on the GMK reference card (right) to see every kit in the set with pictures, and which ones you own.' : 'Load gmk_catalog_private.json on the Import page, then link this set on the GMK reference card to see every kit with pictures.'}</p>`}
     ${shown.length ? `<div class="kgrid">${shown.map(t => { const i = tiles.indexOf(t); return `<button type="button" class="kg ${t.owned ? 'own' : 'miss'}" data-kg="${i}" title="${t.owned ? 'You own this kit' : 'Not owned · click for details'}">
-      <span class="kgimg">${t.img ? `<img src="${esc(t.img)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<span class="kgnone">${I.keycaps}<span>${t.ck ? 'No picture' : 'Your kit'}</span></span>`}
+      <span class="kgimg">${t.img ? `<img src="${esc(t.img)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<span class="kgnone">${I.keycaps}<span>${t.inList ? 'No picture' : 'Your kit'}</span></span>`}
         <span class="kgbadge">${t.owned ? '✓ Owned' : 'Not owned'}</span></span>
-      <span class="kgname">${esc(t.name)}</span><span class="kgsub">${esc([t.price && t.price.replace(/<[^>]+>/g, ''), t.on ? 'On ' + t.on : '', t.extra ? 'Not in the catalog' : ''].filter(Boolean).join(' · ')) || '&nbsp;'}</span></button>`; }).join('')}</div>`
+      <span class="kgname">${esc(t.name)}</span><span class="kgsub">${esc([t.price && t.price.replace(/<[^>]+>/g, ''), t.on ? 'On ' + t.on : '', t.extra ? (kind === 'catalog' ? 'Not in the catalog' : 'Not in your old list') : ''].filter(Boolean).join(' · ')) || '&nbsp;'}</span></button>`; }).join('')}</div>`
     : `<p class="sub">${tiles.length ? 'No kits with this filter.' : 'No kits yet. Add the kits you own on the Kits tab.'}</p>`}
-    ${ref ? `<p class="sub" style="margin:12px 0 0;font-size:11px">Pictures and kit list: ${esc(GMK_CREDIT)}</p>` : ''}`;
+    ${ref ? `<p class="sub" style="margin:12px 0 0;font-size:11px">${tiles.some(t => t.yours) ? 'Pictures: your Keycap Collection photos, then ' : 'Pictures and kit list: '}${esc(GMK_CREDIT)}</p>` : ''}`;
   if (!box.dataset.wired) {
     box.dataset.wired = '1';
     box.addEventListener('error', e => { if (e.target.tagName === 'IMG') { const w = e.target.parentElement; e.target.remove(); w.insertAdjacentHTML('afterbegin', `<span class="kgnone">${I.keycaps}<span>Picture unavailable</span></span>`); } }, true);
@@ -3316,10 +3330,10 @@ function openKitView(s, t) {
   const onWish = s && t.ck && wishHas(s.name, t.name);
   d.innerHTML = `<div class="card kv-card"><div class="sec-title"><h3>${esc(t.name)} <span class="chip ${t.owned ? 'kvown' : ''}">${t.owned ? '✓ Owned' : 'Not owned'}</span></h3><button class="btn" data-x>✕</button></div>
     ${imgs.length ? `<div class="kvimg"><img id="kvMain" src="${esc(imgs[0])}" alt="" referrerpolicy="no-referrer"></div>${imgs.length > 1 ? `<div class="kvthumbs">${imgs.map((u, i) => `<img src="${esc(u)}" data-kvi="${i}" alt="" loading="lazy" referrerpolicy="no-referrer">`).join('')}</div>` : ''}` : ''}
-    <p class="sub" style="margin:10px 0 0">${[t.price ? 'Group-buy price ' + t.price : '', t.qty ? 'Made: ' + esc(t.qty) : '', t.on ? 'Installed on ' + esc(t.on) : '', t.extra ? 'This kit of yours has no match in the catalog list' : ''].filter(Boolean).join(' · ')}</p>
+    <p class="sub" style="margin:10px 0 0">${[t.price ? 'Group-buy price ' + t.price : '', t.qty ? 'Made: ' + esc(t.qty) : '', t.on ? 'Installed on ' + esc(t.on) : '', t.extra ? 'This kit of yours has no match in the kit list' : '', t.yours ? 'Picture from your Keycap Collection app' : ''].filter(Boolean).join(' · ')}</p>
     <div class="btnrow" style="margin-top:12px">
       ${t.owned ? '<button class="btn" id="kvShow">Show in Kits tab</button>' : `<button class="btn primary" id="kvOwn" title="Adds this kit to the Kits tab; click Save to keep it">I own this kit</button>${s ? (onWish ? '<span class="chip">On wishlist</span>' : '<button class="btn" id="kvWish">+ Wishlist</button>') : ''}`}
-      <span style="margin-left:auto">${matrixLinkHtml(t.ck ? gmkSets.find(x => x.id === document.getElementById('f_gmkRef').value) : null)}</span></div></div>`;
+      <span style="margin-left:auto">${matrixLinkHtml(t.cat ? gmkSets.find(x => x.id === document.getElementById('f_gmkRef').value) : null)}</span></div></div>`;
   document.body.appendChild(d);
   const toKits = () => { d.remove(); document.querySelector('.tabs [data-tab="kits"]').click(); };
   d.onclick = async e => {
@@ -3330,6 +3344,44 @@ function openKitView(s, t) {
       inp.value = t.name; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); row.scrollIntoView({ behavior: 'smooth', block: 'center' }); toast(`Added ${t.name} to Kits. Fill in what you paid, then Save.`); }
     if (e.target.id === 'kvWish' && s) { await addKitToWishlist(s, t.ck); d.remove(); drawKitGallery(s); }
   };
+}
+
+/* ===================== Step K.3: kit photos from the old Keycap Collection app =====================
+   The photos stay in the old repo (fniskeebs69.github.io/keycaps) and are shown from there; only their links are saved,
+   as kitPhotos [{name, url}] on the matching keycap set. Nothing uses Firebase photo storage. */
+let oldPhotos = null, oldPhotoPicks = {};
+function oldSetKey(t) { return String(t || '').toLowerCase().replace(/\b(gmk|cyl|mt3)\b/g, '').replace(/[^a-z0-9]/g, ''); }
+function oldRoundless(t) { return oldSetKey(t).replace(/(r|no)\d+$/, '').replace(/(\D)\d$/, '$1'); }
+function guessOldSet(name) {
+  const k = oldSetKey(name), sets = savedKeycaps;
+  let hit = sets.filter(s => oldSetKey(s.name) === k); if (hit.length === 1) return { id: hit[0].id, how: 'same' };
+  hit = sets.filter(s => oldRoundless(s.name) === oldRoundless(name)); if (hit.length === 1) return { id: hit[0].id, how: 'close' };
+  hit = sets.filter(s => k.length >= 4 && oldSetKey(s.name).startsWith(k)); if (hit.length === 1) return { id: hit[0].id, how: 'close' };
+  return { id: '', how: 'none' };
+}
+function drawOldPhotosPreview() {
+  const box = document.getElementById('impPreview'); if (!box || !oldPhotos) return;
+  oldPhotos.sets.forEach(o => { if (!(o.oldId in oldPhotoPicks)) oldPhotoPicks[o.oldId] = guessOldSet(o.name); });
+  const opts = savedKeycaps.slice().sort((a, b) => a.name.localeCompare(b.name));
+  const rows = oldPhotos.sets.map(o => { const pk = oldPhotoPicks[o.oldId], n = o.kits.filter(k => k.url).length, cur = pk.id && savedKeycaps.find(s => s.id === pk.id);
+    return `<tr><td><b>${esc(o.name)}</b><div class="sub" style="margin:0">${o.kits.length} kit${o.kits.length === 1 ? '' : 's'} · ${n} photo${n === 1 ? '' : 's'}</div></td>
+      <td><select class="select" data-oldset="${o.oldId}"><option value="">Skip (no matching set)</option>${opts.map(s => `<option value="${esc(s.id)}"${s.id === pk.id ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</select></td>
+      <td>${{ same: '<span style="color:#86efac">Same name</span>', close: '<span style="color:#fbbf24">Close name, check</span>', none: '<span style="color:var(--text-3)">No match</span>', you: 'Your pick' }[pk.how]}${cur && (cur.kitPhotos || []).length ? '<div class="sub" style="margin:0">Has photos; will be replaced</div>' : ''}</td></tr>`; }).join('');
+  const go = oldPhotos.sets.filter(o => oldPhotoPicks[o.oldId].id).length;
+  box.innerHTML = `<div class="card" style="margin-top:16px"><h3>2 · Kit photos from your Keycap Collection app</h3>
+    <p class="sub">${oldPhotos.photoCount} photos for ${oldPhotos.setCount} sets. They stay in the old app's repo and are shown from there, so they use no Firebase space. Check the matches; "Skip" leaves a set out.</p>
+    <div style="overflow-x:auto"><table class="list"><thead><tr><th>Old app set</th><th>Your set here</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="btnrow" style="margin-top:12px"><button class="btn primary" id="oldGo"${go ? '' : ' disabled'}>Add photos to ${go} set${go === 1 ? '' : 's'}</button><span class="sub" style="margin:0" id="oldStatus"></span></div></div>`;
+  box.querySelectorAll('[data-oldset]').forEach(sel => sel.onchange = () => { oldPhotoPicks[sel.dataset.oldset] = { id: sel.value, how: sel.value ? 'you' : 'none' }; drawOldPhotosPreview(); });
+  document.getElementById('oldGo').onclick = runOldPhotos;
+}
+async function runOldPhotos() {
+  const by = {}; oldPhotos.sets.forEach(o => { const id = oldPhotoPicks[o.oldId].id; if (!id) return; (by[id] = by[id] || []).push(...o.kits.filter(k => k.url).map(k => ({ name: k.name, url: k.url }))); });
+  const ids = Object.keys(by); if (!confirm(`Add ${Object.values(by).reduce((n, l) => n + l.length, 0)} photo links to ${ids.length} keycap sets? Photos already added this way are replaced.`)) return;
+  const st = document.getElementById('oldStatus'), btn = document.getElementById('oldGo'); btn.disabled = true;
+  try { const b = db.batch(), now = firebase.firestore.FieldValue.serverTimestamp(); ids.forEach(id => b.update(kcCol().doc(id), { kitPhotos: by[id], kitPhotosFrom: oldPhotos.source || 'Keycap Collection app', updatedAt: now }));
+    await withTimeout(b.commit(), 30000); st.textContent = `Done: photos linked on ${ids.length} sets.`; toast('Kit photos added'); }
+  catch (e) { st.textContent = 'Could not save: ' + explain(e) + ' Nothing is duplicated if you run it again.'; btn.disabled = false; }
 }
 
 /* ===================== Step 9.4: share as image =====================
@@ -3455,7 +3507,7 @@ function kcChipOk(s) {
 function wishHas(setName, kitName) { const nm = t => gmkNorm(t || '').replace(/^gmk/, ''); return savedWish.some(w => w.status !== 'bought' && nm(w.name) === nm(setName) && kitMatch(w.version || '', kitName)); }
 async function addKitToWishlist(s, ck) {
   if (wishHas(s.name, ck.name)) { toast('Already on your wishlist'); return; }
-  const now = firebase.firestore.FieldValue.serverTimestamp(), d = { category: 'Keycaps', name: s.name, version: ck.name, platform: 'GMK', status: 'wanted', createdAt: now, updatedAt: now, source: 'app' };
+  const now = firebase.firestore.FieldValue.serverTimestamp(), d = { category: 'Keycaps', name: s.name, version: ck.name, platform: /\bgmk\b/i.test(s.name) ? 'GMK' : (s.manufacturer || ''), status: 'wanted', createdAt: now, updatedAt: now, source: 'app' };
   if (ck.priceUsd != null) d.estPrice = ck.priceUsd;
   try { await withTimeout(wishCol().add(d)); toast(`Added ${ck.name} to your wishlist`); } catch (e) { toast('Could not add: ' + explain(e)); }
 }
@@ -3679,7 +3731,7 @@ function renderImport() {
   document.getElementById('view').innerHTML = `
     <div class="pagehead"><div><h1>Import</h1><p>Bring items in from your Excel workbook. Excel stays the source of truth; the app never changes the workbook.</p></div></div>
     <div class="card"><h3>1 · Choose an import file</h3>
-      <p class="sub">Pick an import file made from your workbook: ${Object.values(IMPORT_TYPES).map(T => `<b>${T.metaKey || T.key}_import_v18.json</b>`).join(', ')}, <b>colors_import_v18.json</b>, or the private <b>gmk_catalog_private.json</b>. Keep these files on your PC; never upload them to the GitHub repo, which is public.</p>
+      <p class="sub">Pick an import file made from your workbook: ${Object.values(IMPORT_TYPES).map(T => `<b>${T.metaKey || T.key}_import_v18.json</b>`).join(', ')}, <b>colors_import_v18.json</b>, <b>old_keycap_photos.json</b> (kit photos from your Keycap Collection app), or the private <b>gmk_catalog_private.json</b>. Keep these files on your PC; never upload them to the GitHub repo, which is public.</p>
       <label class="btn primary" style="width:max-content">Choose file…<input type="file" id="impFile" accept=".json,application/json" hidden ${ready ? '' : 'disabled'}></label>
       ${ready ? '' : '<p class="sub" style="margin:10px 0 0">Importing needs Firebase (open the https site).</p>'}
       <div id="impMsg" class="sub" style="margin:10px 0 0"></div></div>
@@ -3705,6 +3757,13 @@ function renderImport() {
         drawExcelColorsPreview(); return;
       }
       xlColors = null;
+      if (data.kind === 'old_keycap_photos') {
+        if (!Array.isArray(data.sets) || data.sets.some(x => !x.name || !Array.isArray(x.kits))) throw new Error('The photos file looks damaged.');
+        importFile = null; importType = null; oldPhotos = data; oldPhotoPicks = {};
+        msg.textContent = `Loaded ${f.name}: ${data.photoCount} kit photos for ${data.setCount} sets from your Keycap Collection app.`;
+        drawOldPhotosPreview(); return;
+      }
+      oldPhotos = null;
       const T = IMPORT_TYPES[data.tab];
       if (!T || !Array.isArray(data[T.key])) throw new Error('This is not an import file this version of the app knows.');
       if (T.nested && data[T.key].some(x => !Array.isArray(x.kits) || x.kits.some(k => !k.importKey || !k.name))) throw new Error('Some sets have kits without a name or key.');
