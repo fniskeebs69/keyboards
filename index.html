@@ -360,6 +360,7 @@
   .sumkits { display: grid; gap: 6px; } .sumkits div { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; } .sumkits span { color: var(--text-3); text-align: right; }
   .sumsw { display: flex; flex-wrap: wrap; gap: 8px; } .sumsw span { display: flex; align-items: center; gap: 6px; font-size: 13px; } .sumsw i { width: 18px; height: 18px; border-radius: 5px; border: 1px solid rgba(255,255,255,.2); }
   @media (max-width: 700px) { .sumdl { grid-template-columns: 1fr; gap: 0 0; } .sumdl dd { margin-bottom: 8px; } .sumhead img { width: 90px; } }
+  .refimg { width: 100%; border-radius: 10px; display: block; background: #0b0d10; }
   .pchips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
   .pchip { border: 1px solid var(--line); background: var(--bg-2); color: var(--text-2); border-radius: 999px; padding: 4px 11px; font-size: 12.5px; cursor: pointer; }
   .pchip.on { background: color-mix(in srgb, var(--kc) 22%, transparent); color: var(--text); border-color: var(--kc); }
@@ -465,7 +466,7 @@
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.48.0';
+const APP_VERSION = 'v0.49.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -1561,7 +1562,7 @@ function drawSwitchResults() {
   if (swView === 'gallery') {
     box.innerHTML = `<div class="gallery">${list.map(w => `
       <a class="kcard" href="#/switches/${esc(w.id)}">
-        <div class="ph">${w.coverThumb ? `<img src="${w.coverThumb}" alt="" loading="lazy">` : I.switches.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}
+        <div class="ph">${w.coverThumb ? `<img src="${w.coverThumb}" alt="" loading="lazy">` : w.refImage ? `<img src="${esc(w.refImage)}" alt="" loading="lazy" referrerpolicy="no-referrer" title="Picture from ${esc(w.refSource || 'the product page')}" onerror="this.remove()">` : I.switches.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}
           ${w.switchType ? `<span class="badge chip">${esc(w.switchType)}</span>` : ''}
           <button class="fav${w.isFavorite ? ' on' : ''}" data-fav="${esc(w.id)}" aria-label="${w.isFavorite ? 'Remove from' : 'Add to'} favorites">${w.isFavorite ? I.starFill : I.star}</button></div>
         <div class="meta"><b>${esc(w.name)}</b><span>${esc(sub(w))}</span></div></a>`).join('')}</div>`;
@@ -1645,7 +1646,7 @@ function renderSwitchForm(w = null) {
       </div>
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
-        ${w ? valueCardHtml('switches', w) + photoCardHtml(w, 'switches') + installedOnCardHtml(w) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save first, then drop photos on its page.</p></div><div class="card side-card"><h3>Installed on</h3><p class="sub" style="margin:0">Save first, then install these switches on your keyboards.</p></div>'}
+        ${w ? valueCardHtml('switches', w) + refCardHtml(w) + photoCardHtml(w, 'switches') + installedOnCardHtml(w) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save first, then drop photos on its page.</p></div><div class="card side-card"><h3>Installed on</h3><p class="sub" style="margin:0">Save first, then install these switches on your keyboards.</p></div>'}
         <div class="card side-card stack savebar">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${w ? 'Save changes' : 'Save switches'}</button>
           ${w ? '<button class="btn" id="btnCancel">Discard changes</button>' : '<a class="btn" href="#/switches" id="btnCancelNew">Cancel</a>'}
@@ -3356,6 +3357,12 @@ function openKitView(s, t) {
 /* ===================== Step S.1: Summary tab (read-only "face card") =====================
    First tab on every saved item. Built from what is filled in on the other tabs (empty fields are left out),
    so it always matches the form, including changes not saved yet. "Edit" opens that tab. */
+/* Product page reference (filled from a vendor page Faraz sends): picture shown from the vendor's site, link to the page. */
+function refCardHtml(x) {
+  if (!x.refImage && !x.refUrl) return '';
+  return `<div class="card side-card"><h3>Product page</h3>${x.refImage ? `<a href="${esc(x.refUrl || x.refImage)}" target="_blank" rel="noopener"><img class="refimg" src="${esc(x.refImage)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>` : ''}
+    <p class="sub" style="margin:8px 0 0">Specs and picture from ${esc(x.refSource || 'the product page')}${x.refUrl ? ` · <a class="lnk" href="${esc(x.refUrl)}" target="_blank" rel="noopener">open page ↗</a>` : ''}. Your own photos replace this picture on the card.</p></div>`;
+}
 function addSummaryTab(view, x, type) {
   const tabs = view.querySelector('.tabs'); if (!tabs || tabs.querySelector('[data-tab="summary"]')) return;
   tabs.insertAdjacentHTML('afterbegin', '<button data-tab="summary" role="tab">Summary</button>');
@@ -3420,7 +3427,7 @@ function drawSummary(view, x, type) {
   else if (live.installedOn) { const kb = savedKeyboards.find(b => b.id === live.installedOn); if (kb) links.push(['Installed on', kb.name, '#/keyboards/' + kb.id]); }
   const vals = (live.values || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
   if (vals.length) links.push(['Market value', `${money(vals[0].value)} (${fmtDate(vals[0].date)}${vals[0].source ? ', ' + vals[0].source : ''})`, '']);
-  const cover = live.coverThumb || (type === 'keycaps' ? setPhotoCoverOf(live) : '');
+  const cover = live.coverThumb || (type === 'keycaps' ? setPhotoCoverOf(live) : live.refImage || '');
   box.innerHTML = `<div class="sumhead">${cover ? `<img src="${esc(cover)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<div><h3 style="margin:0">${esc(live.name || '')}${live.isFavorite ? ' <span style="color:#fbbf24">★</span>' : ''}</h3>
       <p class="sub" style="margin:4px 0 0">Everything filled in so far. Use Edit on a section, or the tabs above, to add or change details.</p></div></div>
     ${links.length ? `<div class="sumsec"><h4>Linked</h4><dl class="sumdl">${links.map(([k, v, h]) => `<dt>${esc(k)}</dt><dd>${h ? `<a class="lnk" href="${h}">${esc(v)}</a>` : esc(v)}</dd>`).join('')}</dl></div>` : ''}
@@ -3702,7 +3709,7 @@ const SW_EXCEL_FIELDS = ['manufacturer', 'name', 'typeExcel', 'switchType', 'tot
 const IMPORT_TYPES = {
   Keyboards: { key: 'keyboards', title: 'Keyboards', fields: EXCEL_FIELDS, col: () => kbCol(), saved: () => savedKeyboards, href: '#/keyboards',
     who: x => x.brand, detail: x => (x.size || '') + (x.layout ? ' · ' + x.layout : ''), extraNew: () => ({}) },
-  Switches: { key: 'switches', title: 'Switches', fields: SW_EXCEL_FIELDS, col: () => swCol(), saved: () => savedSwitches, href: '#/switches',
+  Switches: { key: 'switches', title: 'Switches', fields: SW_EXCEL_FIELDS, fillOnly: ['preLubed', 'pins', 'topMaterial', 'bottomMaterial', 'stemMaterial', 'springWeight', 'actuationForce', 'bottomOutForce'], col: () => swCol(), saved: () => savedSwitches, href: '#/switches',
     who: x => x.manufacturer, detail: x => [x.switchType, x.totalCount != null ? (x.countApprox ? '~' : '') + x.totalCount + ' pcs' : 'count ?'].filter(Boolean).join(' · '),
     extraNew: x => (x.importNotes ? { notes: x.importNotes } : {}) },
   Keycaps: { key: 'keycaps', title: 'Keycaps', nested: true, col: () => kcCol(), saved: () => savedKeycaps, href: '#/keycaps',
@@ -3801,7 +3808,8 @@ function planImport(file, T) {
   const rows = items.map(x => {
     const cur = byKey.get(x.importKey);
     if (!cur) return { x, status: 'new', changes: [] };
-    const changes = T.fields.filter(f => !sameVal(cur[f], x[f]));
+    const blankX = f => x[f] === undefined || x[f] === '' || x[f] === null;
+    const changes = T.fields.filter(f => !sameVal(cur[f], x[f]) && !((T.fillOnly || []).includes(f) && blankX(f)));
     return { x, cur, status: changes.length ? 'update' : 'same', changes };
   });
   const inFile = new Set(items.map(x => x.importKey));
@@ -3901,7 +3909,7 @@ async function runImport(rows) {
           return;
         }
         const rec = {};
-        T.fields.forEach(f => { if (r.x[f] !== undefined && r.x[f] !== '' && r.x[f] !== null) rec[f] = r.x[f]; else if (r.cur && r.cur[f] !== undefined) rec[f] = del; });
+        T.fields.forEach(f => { if (r.x[f] !== undefined && r.x[f] !== '' && r.x[f] !== null) rec[f] = r.x[f]; else if (r.cur && r.cur[f] !== undefined && !(T.fillOnly || []).includes(f)) rec[f] = del; });   // specs the workbook leaves blank are kept
         Object.assign(rec, { importKey: r.x.importKey, source: 'excel', importedFrom: importFile.source, importedAt: now, updatedAt: now });
         if (r.cur) batch.update(T.col().doc(r.cur.id), rec);
         else batch.set(T.col().doc(), Object.assign(rec, T.extraNew(r.x), { createdAt: now, isFavorite: false, appVersion: APP_VERSION }));
