@@ -360,6 +360,7 @@
   .sumkits { display: grid; gap: 6px; } .sumkits div { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; } .sumkits span { color: var(--text-3); text-align: right; }
   .sumsw { display: flex; flex-wrap: wrap; gap: 8px; } .sumsw span { display: flex; align-items: center; gap: 6px; font-size: 13px; } .sumsw i { width: 18px; height: 18px; border-radius: 5px; border: 1px solid rgba(255,255,255,.2); }
   @media (max-width: 700px) { .sumdl { grid-template-columns: 1fr; gap: 0 0; } .sumdl dd { margin-bottom: 8px; } .sumhead img { width: 90px; } }
+  .sumdesc { margin: 6px 0 0; color: var(--text-2); line-height: 1.5; }
   .refimg { width: 100%; border-radius: 10px; display: block; background: #0b0d10; }
   .pchips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
   .pchip { border: 1px solid var(--line); background: var(--bg-2); color: var(--text-2); border-radius: 999px; padding: 4px 11px; font-size: 12.5px; cursor: pointer; }
@@ -466,7 +467,7 @@
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.49.0';
+const APP_VERSION = 'v0.50.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -1628,6 +1629,8 @@ function renderSwitchForm(w = null) {
             ${fld('Switch type', selectHtml('switchType', SW_TYPES, 'Select type'), { name: 'switchType' })}
             ${fld('Location', inputHtml('location', 'e.g. Switch bin', 'dlSwLocations'), { name: 'location' })}
             <div class="fld"><label>&nbsp;</label><label class="check" style="margin-top:10px"><input type="checkbox" id="f_preLubed"> Pre-lubed from the factory</label></div>
+            ${fld('Descriptors', inputHtml('descriptors', 'e.g. clacky, high-pitched, resonant'), { name: 'descriptors', full: true, hint: 'Sound and feel words, separated by commas.' })}
+            ${fld('Description', '<textarea class="input" name="description" id="f_description" rows="3" placeholder="A short description of how it feels and sounds"></textarea>', { name: 'description', full: true, hint: 'Shown under the name on the Summary.' })}
             <details class="more" id="moreDetails"><summary>More details</summary><div class="frm">
               ${fld('Mechanism', selectHtml('mechanism', SW_MECH, 'Select mechanism'), { name: 'mechanism' })}
               ${fld('Pins', selectHtml('pins', ['3-pin', '5-pin'], 'Select pins'), { name: 'pins' })}
@@ -1685,7 +1688,7 @@ function renderSwitchForm(w = null) {
   } else document.getElementById('f_name').focus();
   updateCalc();
 }
-const SW_TEXT = ['manufacturer', 'name', 'switchType', 'location', 'mechanism', 'pins', 'specsText', 'notes', 'datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'pictureLink'];
+const SW_TEXT = ['manufacturer', 'name', 'switchType', 'location', 'mechanism', 'pins', 'descriptors', 'description', 'specsText', 'notes', 'datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'pictureLink'];
 function fillSwitchForm(w) {
   const st = { fields: {}, acq: w.acquisition || [], fav: !!w.isFavorite };
   SW_TEXT.concat(SW_SPEC_FIELDS.map(f => f[0])).forEach(n => { if (w[n] != null && w[n] !== '') st.fields['f_' + n] = String(w[n]); });
@@ -3388,12 +3391,13 @@ function summaryRows(panel) {
     if (f.closest('.kit') || f.closest('[hidden]:not([data-panel])')) return;
     const lab = f.querySelector(':scope > label')?.textContent.replace('*', '').trim(), c = f.querySelector('input:not([type=hidden]), select, textarea');
     if (c && c.dataset && c.dataset.slot) return;            // PCB / plate / case picks are listed under Linked
+    if (c && c.id === 'f_description') return;               // shown under the name at the top
     let v = fieldValue(c); if (!lab || !v) return;
     const id = (c.id || '').replace(/^f_/, '');
     if (c.type === 'date') v = fmtDate(v) || v;
     else if (['price', 'shipping', 'discounts'].includes(id) && isFinite(+v)) v = money(+v);
     else if (id === 'taxRatePct' && isFinite(+v)) v = (+v) + '%';
-    rows.push([lab, v]);
+    rows.push(id === 'descriptors' ? [lab, v, 'chips'] : [lab, v]);
   });
   const checks = [...panel.querySelectorAll('label.check input[type=checkbox]:checked, label.acq input:checked, .acqs input:checked')].filter(i => !i.closest('.kit') && i.id !== 'f_isFavorite').map(i => i.closest('label')?.textContent.trim()).filter(Boolean);
   if (checks.length) rows.push(['Ticked', [...new Set(checks)].join(', ')]);
@@ -3414,7 +3418,7 @@ function drawSummary(view, x, type) {
     if (t === 'colors') { const pal = paletteOf(live); if (pal.length) extra = `<div class="sumsw">${pal.map(c => `<span title="${esc([c.name, c.gmk, c.ral, c.pantone, c.hex].filter(Boolean).join(' · '))}"><i style="background:${esc(c.hex || '#000')}"></i>${esc(c.name || c.hex || '')}</span>`).join('')}</div>`; rows = []; }
     if (t === 'review') { rows = [...panel.querySelectorAll('.rate')].map(r => [r.querySelector('label')?.textContent.trim(), r.querySelector('.val')?.textContent.trim()]).filter(([, v]) => v && v !== 'Not rated'); const rt = fieldValue(panel.querySelector('textarea')); if (rt) rows.push(['Review', rt]); }
     if (rows.length || extra) secs.push(`<div class="sumsec"><div class="sec-title"><h4>${esc(title)}</h4><button class="lnk" data-goto="${t}">Edit</button></div>
-      ${rows.length ? `<dl class="sumdl">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${/^https?:\/\//.test(v) ? `<a class="lnk" href="${esc(v)}" target="_blank" rel="noopener">${esc(v.replace(/^https?:\/\/(www\.)?/, '').slice(0, 48))}</a>` : esc(v).replace(/\n/g, '<br>')}</dd>`).join('')}</dl>` : ''}${extra}</div>`);
+      ${rows.length ? `<dl class="sumdl">${rows.map(([k, v, kind]) => `<dt>${esc(k)}</dt><dd>${kind === 'chips' ? v.split(',').map(x => x.trim()).filter(Boolean).map(x => `<span class="chip">${esc(x)}</span>`).join(' ') : /^https?:\/\//.test(v) ? `<a class="lnk" href="${esc(v)}" target="_blank" rel="noopener">${esc(v.replace(/^https?:\/\/(www\.)?/, '').slice(0, 48))}</a>` : esc(v).replace(/\n/g, '<br>')}</dd>`).join('')}</dl>` : ''}${extra}</div>`);
   });
   const links = [];
   if (type === 'keyboards') {
@@ -3429,9 +3433,50 @@ function drawSummary(view, x, type) {
   if (vals.length) links.push(['Market value', `${money(vals[0].value)} (${fmtDate(vals[0].date)}${vals[0].source ? ', ' + vals[0].source : ''})`, '']);
   const cover = live.coverThumb || (type === 'keycaps' ? setPhotoCoverOf(live) : live.refImage || '');
   box.innerHTML = `<div class="sumhead">${cover ? `<img src="${esc(cover)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<div><h3 style="margin:0">${esc(live.name || '')}${live.isFavorite ? ' <span style="color:#fbbf24">★</span>' : ''}</h3>
-      <p class="sub" style="margin:4px 0 0">Everything filled in so far. Use Edit on a section, or the tabs above, to add or change details.</p></div></div>
+      ${(() => { const d = (view.querySelector('#f_description')?.value ?? live.description ?? '').trim();
+        return d ? `<p class="sumdesc">${esc(d).replace(/\n/g, '<br>')}</p>${live.refSource ? `<p class="sub" style="margin:2px 0 0;font-size:11.5px">Description from ${live.refUrl ? `<a class="lnk" href="${esc(live.refUrl)}" target="_blank" rel="noopener">${esc(live.refSource)}</a>` : esc(live.refSource)}</p>` : ''}`
+          : '<p class="sub" style="margin:4px 0 0">Everything filled in so far. Use Edit on a section, or the tabs above, to add or change details.</p>'; })()}</div></div>
     ${links.length ? `<div class="sumsec"><h4>Linked</h4><dl class="sumdl">${links.map(([k, v, h]) => `<dt>${esc(k)}</dt><dd>${h ? `<a class="lnk" href="${h}">${esc(v)}</a>` : esc(v)}</dd>`).join('')}</dl></div>` : ''}
     ${secs.join('') || '<p class="sub">Nothing filled in yet. Open the other tabs to add details.</p>'}`;
+}
+
+/* ===================== Step W.2: switch details file (from product pages Claude reads) =====================
+   switch_details.json: { kind: 'switch_details', items: [{ match: {manufacturer, name}, fields: {...}, description, descriptors,
+   refImage, refUrl, refSource, note }] }. Only empty fields are filled; nothing you entered is overwritten. */
+let swDetails = null, swDetailPicks = {};
+function swKey(m, n) { return (String(m || '') + ' ' + String(n || '')).toLowerCase().replace(/[^a-z0-9]/g, ''); }
+function guessSwitch(it) { const k = swKey(it.match.manufacturer, it.match.name), n = swKey('', it.match.name);
+  const a = savedSwitches.filter(w => swKey(w.manufacturer, w.name) === k); if (a.length) return a.map(w => w.id);
+  const b = savedSwitches.filter(w => swKey('', w.name) === n); return b.map(w => w.id); }
+function swDetailPlan(it, w) {
+  const want = Object.assign({}, it.fields || {}); if (it.description) want.description = it.description; if (it.descriptors) want.descriptors = [].concat(it.descriptors).join(', ');
+  ['refImage', 'refUrl', 'refSource'].forEach(f => { if (it[f]) want[f] = it[f]; });
+  const fill = {}, kept = [];
+  Object.entries(want).forEach(([f, v]) => { const cur = w[f]; if (cur === undefined || cur === null || cur === '' || (f === 'preLubed' && cur !== true && v === true)) fill[f] = v; else if (String(cur) !== String(v)) kept.push(f); });
+  if (it.note && !String(w.notes || '').includes(it.refUrl || it.note)) fill.notes = w.notes ? w.notes + '\n\n' + it.note : it.note;
+  return { fill, kept };
+}
+function drawSwDetailsPreview(doneMsg = '') {
+  const box = document.getElementById('impPreview'); if (!box || !swDetails) return;
+  swDetails.items.forEach((it, i) => { if (!(i in swDetailPicks)) swDetailPicks[i] = guessSwitch(it); });
+  const opts = savedSwitches.slice().sort((a, b) => (a.manufacturer + a.name).localeCompare(b.manufacturer + b.name));
+  let total = 0;
+  const rows = swDetails.items.map((it, i) => { const ids = swDetailPicks[i] || [], plans = ids.map(id => savedSwitches.find(w => w.id === id)).filter(Boolean).map(w => swDetailPlan(it, w));
+    const nf = plans.reduce((n, p) => n + Object.keys(p.fill).length, 0); total += nf;
+    return `<tr><td><b>${esc([it.match.manufacturer, it.match.name].filter(Boolean).join(' '))}</b><div class="sub" style="margin:0">${esc(it.refSource || '')}</div></td>
+      <td><select class="select" data-swdet="${i}"><option value="">Skip</option>${opts.map(w => `<option value="${esc(w.id)}"${ids[0] === w.id ? ' selected' : ''}>${esc([w.manufacturer, w.name].filter(Boolean).join(' '))}${w.datePurchased ? ' · ' + esc(fmtDate(w.datePurchased)) : ''}</option>`).join('')}</select>${ids.length > 1 ? `<div class="sub" style="margin:0">+ ${ids.length - 1} more entr${ids.length === 2 ? 'y' : 'ies'} with this name</div>` : ''}</td>
+      <td>${plans.length ? `${nf} field${nf === 1 ? '' : 's'} to fill${plans.some(p => p.kept.length) ? `<div class="sub" style="margin:0">Kept yours: ${esc([...new Set(plans.flatMap(p => p.kept))].join(', '))}</div>` : ''}` : '<span style="color:var(--text-3)">No match</span>'}</td></tr>`; }).join('');
+  box.innerHTML = `<div class="card" style="margin-top:16px"><h3>2 · Switch details</h3><p class="sub">Fills only empty fields on the matching switch entries. Fields you already filled are kept.</p>
+    <div style="overflow-x:auto"><table class="list"><thead><tr><th>From the product page</th><th>Your switch entry</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="btnrow" style="margin-top:12px"><button class="btn primary" id="swDetGo"${total ? '' : ' disabled'}>Fill ${total} field${total === 1 ? '' : 's'}</button><span class="sub" style="margin:0" id="swDetStatus">${esc(doneMsg)}</span></div></div>`;
+  box.querySelectorAll('[data-swdet]').forEach(sel => sel.onchange = () => { swDetailPicks[sel.dataset.swdet] = sel.value ? [sel.value] : []; drawSwDetailsPreview(); });
+  document.getElementById('swDetGo').onclick = async () => {
+    const b = db.batch(), now = firebase.firestore.FieldValue.serverTimestamp(); let n = 0;
+    swDetails.items.forEach((it, i) => (swDetailPicks[i] || []).forEach(id => { const w = savedSwitches.find(x => x.id === id); if (!w) return; const p = swDetailPlan(it, w); if (Object.keys(p.fill).length) { b.update(swCol().doc(id), Object.assign(p.fill, { updatedAt: now })); n++; } }));
+    const st = document.getElementById('swDetStatus');
+    try { await withTimeout(b.commit()); const m = `Done: ${n} switch entr${n === 1 ? 'y' : 'ies'} updated.`; st.textContent = m; toast('Switch details filled'); setTimeout(() => drawSwDetailsPreview(m), 800); }
+    catch (e) { st.textContent = 'Could not save: ' + explain(e); }
+  };
 }
 
 /* ===================== Step K.3: kit photos from the old Keycap Collection app =====================
@@ -3846,6 +3891,13 @@ function renderImport() {
         drawExcelColorsPreview(); return;
       }
       xlColors = null;
+      if (data.kind === 'switch_details') {
+        if (!Array.isArray(data.items) || data.items.some(x => !x.match || !x.match.name)) throw new Error('The switch details file looks damaged.');
+        importFile = null; importType = null; oldPhotos = null; swDetails = data; swDetailPicks = {};
+        msg.textContent = `Loaded ${f.name}: details for ${data.items.length} switch${data.items.length === 1 ? '' : 'es'}.`;
+        drawSwDetailsPreview(); return;
+      }
+      swDetails = null;
       if (data.kind === 'old_keycap_photos') {
         if (!Array.isArray(data.sets) || data.sets.some(x => !x.name || !Array.isArray(x.kits))) throw new Error('The photos file looks damaged.');
         importFile = null; importType = null; oldPhotos = data; oldPhotoPicks = {};
