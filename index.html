@@ -360,6 +360,18 @@
   .sumkits { display: grid; gap: 6px; } .sumkits div { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; } .sumkits span { color: var(--text-3); text-align: right; }
   .sumsw { display: flex; flex-wrap: wrap; gap: 8px; } .sumsw span { display: flex; align-items: center; gap: 6px; font-size: 13px; } .sumsw i { width: 18px; height: 18px; border-radius: 5px; border: 1px solid rgba(255,255,255,.2); }
   @media (max-width: 700px) { .sumdl { grid-template-columns: 1fr; gap: 0 0; } .sumdl dd { margin-bottom: 8px; } .sumhead img { width: 90px; } }
+  .savebar.hasTop #btnSave, .savebar.hasTop #btnCancel { display: none; }
+  .sumrow { display: flex; gap: 8px; align-items: flex-start; } .sumrow .sumv { flex: 1; min-width: 0; } .sumacts { display: flex; gap: 8px; opacity: 0; transition: opacity .15s; flex-shrink: 0; }
+  .sumrow:hover .sumacts, .sumrow:focus-within .sumacts, .sumacts.on { opacity: 1; } .sumacts .lnk { font-size: 12px; color: var(--text-3); } .sumacts .lnk:hover { color: var(--text); }
+  .sumhid { opacity: .45; } .sumrow .sumed { flex: 1; } .sumadd { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 8px; margin-top: 8px; }
+  @media (hover: none) { .sumacts { opacity: 1; } } @media (max-width: 700px) { .sumadd { grid-template-columns: 1fr; } }
+  .sndlist { display: grid; gap: 10px; margin-top: 10px; } .snditem { border: 1px solid var(--line); border-radius: 10px; padding: 8px; display: grid; gap: 6px; }
+  .snditem audio, .sndnew audio { width: 100%; height: 36px; } .sndmeta { display: grid; gap: 2px; font-size: 13px; } .snditem .btnrow .btn { padding: 3px 10px; font-size: 12.5px; }
+  .sndform { display: grid; gap: 8px; } .sndrec { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
+  .snddot { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; display: inline-block; margin-right: 6px; flex-shrink: 0; } .sndrec.on .snddot { animation: sndpulse 1s infinite; }
+  @keyframes sndpulse { 50% { opacity: .25; } }
+  .pstock { position: absolute; top: 6px; right: 6px; max-width: 80%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cwmatrow { grid-column: 1 / -1; margin-top: 4px; } .cwmatrow .cwmat { width: 100%; }
   .sumdesc { margin: 6px 0 0; color: var(--text-2); line-height: 1.5; }
   .refimg { width: 100%; border-radius: 10px; display: block; background: #0b0d10; }
   .pchips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
@@ -431,6 +443,7 @@
     .gdlg { padding: 10px; align-items: end; } .gdlg > .card { max-height: 88vh; border-radius: 16px 16px 12px 12px; }
     .savebar { position: fixed; left: 0; right: 0; bottom: var(--mbar-h); z-index: 65; margin: 0; border-radius: 14px 14px 0 0; padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; box-shadow: 0 -10px 30px -12px #000; }
     .savebar .savedhint { grid-column: 1 / -1; font-size: 11.5px; } .savebar:has(#btnSave:disabled) { display: none; }
+    .topsave { display: none !important; } .savebar.hasTop #btnSave, .savebar.hasTop #btnCancel { display: inline-flex !important; }
     .camBtn { display: flex; } .toast { bottom: calc(var(--mbar-h) + 14px); }
   }
 </style>
@@ -467,7 +480,7 @@
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.51.0';
+const APP_VERSION = 'v0.52.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -632,7 +645,7 @@ function sortDate(k) { return k.datePurchased || k.createdIso || ''; }
 /* ===================== Router ===================== */
 let currentView = '';
 function route() {
-  stopTestListener(); stopPhotoListener(); stopMetaListener();
+  stopTestListener(); stopPhotoListener(); stopMetaListener(); stopSoundListener(!(soundRec && location.hash.includes(soundRec.itemId)));
   const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   if (parts[0] === 'connection-test') { location.replace('#/settings'); return; } // old v0.2.0 link
   const id = parts[0] || 'dashboard';
@@ -859,7 +872,7 @@ function drawKeyboardResults() {
   if (kbView === 'gallery') {
     box.innerHTML = `<div class="gallery">${list.map(k => `
       <a class="kcard" href="#/keyboards/${esc(k.id)}">
-        <div class="ph">${k.coverThumb ? `<img src="${k.coverThumb}" alt="" loading="lazy">` : k.refImage ? `<img src="${esc(k.refImage)}" alt="" loading="lazy" referrerpolicy="no-referrer" title="Picture from ${esc(k.refSource || 'the product page')}" onerror="this.remove()">` : I.keyboards.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}
+        <div class="ph">${k.coverThumb ? `<img src="${k.coverThumb}" alt="" loading="lazy">` : k.stockThumb ? `<img src="${k.stockThumb}" alt="" loading="lazy" title="Your stock picture">` : k.refImage ? `<img src="${esc(k.refImage)}" alt="" loading="lazy" referrerpolicy="no-referrer" title="Picture from ${esc(k.refSource || 'the product page')}" onerror="this.remove()">` : I.keyboards.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}
           ${k.isSample ? '<span class="badge chip">Sample</span>' : ''}
           <button class="fav${isFav(k) ? ' on' : ''}" data-fav="${esc(k.id)}" aria-label="${isFav(k) ? 'Remove from' : 'Add to'} favorites">${isFav(k) ? I.starFill : I.star}</button></div>
         <div class="meta"><b>${esc(k.name)}</b><span>${esc(k.brand)}</span>${colorwayStripHtml(k)}</div>
@@ -927,7 +940,7 @@ function modsHtml(mods) {
   return list.length > 1 ? '<ul class="modlist">' + list.map(m => '<li>' + esc(m) + '</li>').join('') + '</ul>' : esc(mods || '');
 }
 /* ===================== Step 2.2: Add keyboard form (Overview tab) ===================== */
-const KB_TYPES = { custom: 'Custom keyboard', oem: 'OEM keyboard', vintage: 'Vintage keyboard' };
+const KB_TYPES = { custom: 'Custom keyboard', prebuilt: 'Pre-Built keyboard', oem: 'OEM keyboard', vintage: 'Vintage keyboard' };
 const KB_SIZES = ['Macropad', 'Numpad', '40%', '60%', '65%', '75%', 'TKL (80%)', '96%', '1800', 'Full Size (100%)', 'Other'];
 const KB_LAYOUTS = ['ANSI', 'ISO', 'Alice', 'Ortholinear', 'Split / Ergonomic', 'HHKB', 'Other'];
 const KB_CONN = ['Wired', 'Wireless (3-Mode)', 'Bluetooth + Wired', '2.4 GHz + Wired'];
@@ -1037,7 +1050,7 @@ ${purchasePanelHtml(savedKeyboards)}
       </div>
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
-        ${k ? valueCardHtml('keyboards', k) + colorwayCardHtml(k) + refCardHtml(k) + photoCardHtml(k) + switchesOnKeyboardCardHtml(k) + keycapsOnKeyboardCardHtml(k) + partsOnKeyboardCardHtml(k) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the keyboard first, then drop photos on its page.</p></div>'}
+        ${k ? valueCardHtml('keyboards', k) + colorwayCardHtml(k) + refCardHtml('keyboards', k) + photoCardHtml(k) + switchesOnKeyboardCardHtml(k) + keycapsOnKeyboardCardHtml(k) + partsOnKeyboardCardHtml(k) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the keyboard first, then drop photos on its page.</p></div>'}
         <div class="card side-card stack savebar">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${k ? 'Save changes' : 'Save keyboard'}</button>
           <button class="btn" id="btnCancel">${k ? 'Discard changes' : 'Cancel'}</button>
@@ -1069,7 +1082,7 @@ ${purchasePanelHtml(savedKeyboards)}
   formEl.addEventListener('change', onEdit); wireBuildSlots();
   if (k) {
     document.getElementById('btnBuildCard').onclick = () => { const cur = savedKeyboards.find(x => x.id === k.id) || k; openShareDialog(`Build card · ${cur.name}`, withSpend => buildCardCanvas(cur, withSpend), { spendToggle: true, file: shareFileName('fsn-' + cur.name) }); };
-    fillKeyboardForm(k); setEditState(false); wirePhotos(k); wireValueCard('keyboards', k); wireColorwayCard(k); wireSwitchesOnKeyboard(k); wireKeycapsOnKeyboard(k); wirePartsOnKeyboard(k);
+    fillKeyboardForm(k); setEditState(false); wirePhotos(k); wireValueCard('keyboards', k); wireRefCard('keyboards', k); wireColorwayCard(k); wireSwitchesOnKeyboard(k); wireKeycapsOnKeyboard(k); wirePartsOnKeyboard(k);
     document.getElementById('btnCancel').onclick = () => { formDirty = false; renderKeyboardForm(savedKeyboards.find(x => x.id === k.id) || k); toast('Changes discarded'); };
     document.getElementById('btnDelete').onclick = async () => {
       if (!confirm(`Delete "${k.name}" and its photos? This cannot be undone.`)) return;
@@ -1339,9 +1352,10 @@ function drawPhotoGrid(k) {
   grid.innerHTML = currentPhotos.map(p => `
     <div class="ptile${p.id === cur.coverPhotoId ? ' def' : ''}">
       <img src="${p.thumb}" alt="${esc(p.fileName || 'photo')}">
-      ${p.id === cur.coverPhotoId ? '<span class="chip acc pbadge">Default</span>' : ''}
+      ${p.id === cur.coverPhotoId ? '<span class="chip acc pbadge">Default</span>' : ''}${stockLabelOf(cur, p) ? `<span class="chip pbadge pstock">${esc(stockLabelOf(cur, p))}</span>` : ''}
       <div class="pacts">
         ${p.id === cur.coverPhotoId ? '' : `<button class="btn" data-pact="default" data-pid="${p.id}">Set as default</button>`}
+        ${photoType !== 'keycaps' && cur.stockPhotoId === p.id ? `<button class="btn" data-pact="unstock" data-pid="${p.id}">Remove stock</button>` : `<button class="btn" data-pact="stock" data-pid="${p.id}">${photoType === 'keycaps' ? 'Use as kit picture' : 'Use as stock picture'}</button>`}
         <button class="btn" data-pact="crop" data-pid="${p.id}">Crop</button>
         <button class="btn danger" data-pact="delete" data-pid="${p.id}" aria-label="Delete photo">Delete</button>
       </div></div>`).join('') + `<p class="sub" style="margin:4px 0 0;grid-column:1/-1">${currentPhotos.length} photo${currentPhotos.length === 1 ? '' : 's'}</p>`;
@@ -1349,6 +1363,8 @@ function drawPhotoGrid(k) {
     const b = e.target.closest('[data-pact]'); if (!b) return;
     const p = currentPhotos.find(x => x.id === b.dataset.pid); if (!p) return;
     if (b.dataset.pact === 'default') setCover(k.id, p);
+    else if (b.dataset.pact === 'stock') { if (photoType === 'keycaps') pickKitForStock(photoItem(k), p); else setStockPhoto(photoType, k.id, p); }
+    else if (b.dataset.pact === 'unstock') setStockPhoto(photoType, k.id, null);
     else if (b.dataset.pact === 'crop') { const img = await loadImage(p.full); const out = await cropDialog(img, p.fileName || 'photo'); if (out) replacePhoto(k, p, out); }
     else if (b.dataset.pact === 'delete') deletePhoto(k, p);
   };
@@ -1356,6 +1372,41 @@ function drawPhotoGrid(k) {
 async function setCover(itemId, p) {
   try { await withTimeout(PHOTO_TYPES[photoType].col().doc(itemId).update({ coverPhotoId: p ? p.id : firebase.firestore.FieldValue.delete(), coverThumb: p ? p.thumb : firebase.firestore.FieldValue.delete() })); if (p) toast('Default photo set'); }
   catch (e) { toast('Could not set default: ' + explain(e)); }
+}
+/* "Use as stock picture": one of your photos stands in for the shop picture (card, Summary, Product page card).
+   Keycaps: the photo becomes the picture of one kit in the Kit gallery (kitStock [{key, name, photoId, thumb}]). */
+function stockLabelOf(cur, p) {
+  if (photoType === 'keycaps') { const e = (cur.kitStock || []).filter(x => x.photoId === p.id); return e.length ? 'Kit: ' + e.map(x => x.name).join(', ') : ''; }
+  return cur.stockPhotoId === p.id ? 'Stock' : '';
+}
+async function setStockPhoto(type, itemId, p) {
+  const del = firebase.firestore.FieldValue.delete();
+  try { await withTimeout(colOfType(type).doc(itemId).update({ stockPhotoId: p ? p.id : del, stockThumb: p ? p.thumb : del, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); toast(p ? 'Stock picture set' : 'Back to the shop picture'); }
+  catch (e) { toast('Could not set the stock picture: ' + explain(e)); }
+}
+async function writeKitStock(s, list, msg) {
+  try { await withTimeout(kcCol().doc(s.id).update({ kitStock: list.length ? list : firebase.firestore.FieldValue.delete(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); if (msg) toast(msg); }
+  catch (e) { toast('Could not save the kit picture: ' + explain(e)); }
+}
+function pickKitForStock(s, p) {
+  const live = savedKeycaps.find(x => x.id === s.id) || s;
+  let names = []; try { names = kitGalleryTiles(live).tiles.map(t => t.name); } catch (e) { names = kitsOf(live).map(k => k.name); }
+  names = [...new Set(names.filter(Boolean))];
+  const cur = (live.kitStock || []).filter(x => x.photoId === p.id).map(x => x.key);
+  const d = document.createElement('div'); d.className = 'gdlg'; d.id = 'kitStockDlg';
+  d.innerHTML = `<div class="card kv-card" style="max-width:420px"><div class="sec-title"><h3>Use as kit picture</h3><button class="btn" data-x>✕</button></div>
+    <img src="${p.thumb}" alt="" style="width:100%;border-radius:10px;margin-bottom:10px">
+    ${names.length ? `<div class="fld"><label for="ksPick">Kit</label><select class="input" id="ksPick">${names.map(n => `<option value="${esc(n)}"${cur.includes(kitKey(n)) ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select></div>
+    <p class="sub" style="margin:6px 0 0">This photo becomes that kit's picture in the Kit gallery.</p>` : '<p class="sub">This set has no kits yet. Add kits on the Kits tab first.</p>'}
+    <div class="btnrow" style="margin-top:12px">${names.length ? '<button class="btn primary" id="ksGo">Use for this kit</button>' : ''}${cur.length ? '<button class="btn" id="ksOff">Remove from its kit</button>' : ''}</div></div>`;
+  document.body.appendChild(d);
+  d.onclick = async e => {
+    if (e.target === d || e.target.closest('[data-x]')) { d.remove(); return; }
+    const list = (savedKeycaps.find(x => x.id === s.id) || s).kitStock || [];
+    if (e.target.id === 'ksGo') { const name = document.getElementById('ksPick').value, key = kitKey(name);
+      await writeKitStock(s, list.filter(x => x.key !== key).concat([{ key, name, photoId: p.id, thumb: p.thumb }]), `Picture set for ${name}`); d.remove(); }
+    if (e.target.id === 'ksOff') { await writeKitStock(s, list.filter(x => x.photoId !== p.id), 'Kit picture removed'); d.remove(); }
+  };
 }
 function loadImage(src) {
   return new Promise((res, rej) => { const img = new Image(); img.onload = () => res(img); img.onerror = () => rej(new Error('This file could not be read as an image. iPhone HEIC photos need to be saved as JPG first.')); img.src = src; });
@@ -1395,6 +1446,8 @@ async function replacePhoto(k, p, out) {
     await metaRef().set({ photoBytes: firebase.firestore.FieldValue.increment(out.bytes - (p.bytes || 0)) }, { merge: true });
     const cur = photoItem(k);
     if (cur.coverPhotoId === p.id) await setCover(k.id, { id: p.id, thumb: out.thumb });
+    if (cur.stockPhotoId === p.id) await withTimeout(colOfType(photoType).doc(k.id).update({ stockThumb: out.thumb }));
+    if ((cur.kitStock || []).some(x => x.photoId === p.id)) await withTimeout(kcCol().doc(k.id).update({ kitStock: cur.kitStock.map(x => x.photoId === p.id ? Object.assign({}, x, { thumb: out.thumb }) : x) }));
     toast('Crop saved');
   } catch (e) { toast('Crop not saved: ' + explain(e)); }
 }
@@ -1405,6 +1458,9 @@ async function deletePhoto(k, p) {
     await metaRef().set({ photoCount: firebase.firestore.FieldValue.increment(-1), photoBytes: firebase.firestore.FieldValue.increment(-(p.bytes || 0)) }, { merge: true });
     const cur = photoItem(k);
     if (cur.coverPhotoId === p.id) { const next = currentPhotos.find(x => x.id !== p.id); await setCover(k.id, next || null); }
+    const del = firebase.firestore.FieldValue.delete();
+    if (cur.stockPhotoId === p.id) await withTimeout(colOfType(photoType).doc(k.id).update({ stockPhotoId: del, stockThumb: del }));
+    if ((cur.kitStock || []).some(x => x.photoId === p.id)) { const rest = cur.kitStock.filter(x => x.photoId !== p.id); await withTimeout(kcCol().doc(k.id).update({ kitStock: rest.length ? rest : del })); }
     toast('Photo deleted');
   } catch (e) { toast('Delete failed: ' + explain(e)); }
 }
@@ -1563,7 +1619,7 @@ function drawSwitchResults() {
   if (swView === 'gallery') {
     box.innerHTML = `<div class="gallery">${list.map(w => `
       <a class="kcard" href="#/switches/${esc(w.id)}">
-        <div class="ph">${w.coverThumb ? `<img src="${w.coverThumb}" alt="" loading="lazy">` : w.refImage ? `<img src="${esc(w.refImage)}" alt="" loading="lazy" referrerpolicy="no-referrer" title="Picture from ${esc(w.refSource || 'the product page')}" onerror="this.remove()">` : I.switches.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}
+        <div class="ph">${w.coverThumb ? `<img src="${w.coverThumb}" alt="" loading="lazy">` : w.stockThumb ? `<img src="${w.stockThumb}" alt="" loading="lazy" title="Your stock picture">` : w.refImage ? `<img src="${esc(w.refImage)}" alt="" loading="lazy" referrerpolicy="no-referrer" title="Picture from ${esc(w.refSource || 'the product page')}" onerror="this.remove()">` : I.switches.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}
           ${w.switchType ? `<span class="badge chip">${esc(w.switchType)}</span>` : ''}
           <button class="fav${w.isFavorite ? ' on' : ''}" data-fav="${esc(w.id)}" aria-label="${w.isFavorite ? 'Remove from' : 'Add to'} favorites">${w.isFavorite ? I.starFill : I.star}</button></div>
         <div class="meta"><b>${esc(w.name)}</b><span>${esc(sub(w))}</span></div></a>`).join('')}</div>`;
@@ -1649,7 +1705,7 @@ function renderSwitchForm(w = null) {
       </div>
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
-        ${w ? valueCardHtml('switches', w) + refCardHtml(w) + photoCardHtml(w, 'switches') + installedOnCardHtml(w) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save first, then drop photos on its page.</p></div><div class="card side-card"><h3>Installed on</h3><p class="sub" style="margin:0">Save first, then install these switches on your keyboards.</p></div>'}
+        ${w ? valueCardHtml('switches', w) + refCardHtml('switches', w) + photoCardHtml(w, 'switches') + soundCardHtml(w) + installedOnCardHtml(w) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save first, then drop photos on its page.</p></div><div class="card side-card"><h3>Installed on</h3><p class="sub" style="margin:0">Save first, then install these switches on your keyboards.</p></div>'}
         <div class="card side-card stack savebar">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${w ? 'Save changes' : 'Save switches'}</button>
           ${w ? '<button class="btn" id="btnCancel">Discard changes</button>' : '<a class="btn" href="#/switches" id="btnCancelNew">Cancel</a>'}
@@ -1677,11 +1733,11 @@ function renderSwitchForm(w = null) {
   document.getElementById('taxQuick').onclick = e => { const b = e.target.closest('[data-tax]'); if (!b) return; const t = document.getElementById('f_taxRatePct'); t.value = b.dataset.tax; t.dispatchEvent(new Event('input', { bubbles: true })); };
   document.getElementById('btnSave').onclick = saveSwitch;
   if (w) {
-    fillSwitchForm(w); setEditState(false); wirePhotos(w, 'switches'); wireValueCard('switches', w); wireInstalledOn(w);
+    fillSwitchForm(w); setEditState(false); wirePhotos(w, 'switches'); wireValueCard('switches', w); wireRefCard('switches', w); wireSounds(w); wireInstalledOn(w);
     document.getElementById('btnCancel').onclick = () => { formDirty = false; renderSwitchForm(savedSwitches.find(x => x.id === w.id) || w); toast('Changes discarded'); };
     document.getElementById('btnDelete').onclick = async () => {
       if (!confirm(`Delete "${w.name}"? This cannot be undone.`)) return;
-      try { await withTimeout(deletePhotosOf(w.id), 30000); await withTimeout(swCol().doc(w.id).delete()); formDirty = false; toast('Switches deleted'); location.hash = '#/switches'; }
+      try { await withTimeout(deletePhotosOf(w.id), 30000); await withTimeout(deleteSoundsOf(w.id), 30000); await withTimeout(swCol().doc(w.id).delete()); formDirty = false; toast('Switches deleted'); location.hash = '#/switches'; }
       catch (e) { toast('Delete failed: ' + explain(e)); }
     };
     restoreTab(view, w, 'switches');
@@ -2138,6 +2194,117 @@ function kbOptions(selected = '') {
     .map(k => `<option value="${esc(k.id)}"${k.id === selected ? ' selected' : ''}>${esc(kbLabel(k))}</option>`).join('');
 }
 /* card on a switch entry's page */
+/* ===================== Switch sound tests (up to 30 s each) =====================
+   Recorded in the browser (MediaRecorder, ~48 kbps) and kept in Firebase like photos:
+   keyboard_collection/main/sounds/<id> = { itemId, itemType: 'switches', audio (data URL), mime, bytes, seconds,
+   keyboardId, keyboardName, keycapSetId, kitId, keycapLabel, note, createdAt }. */
+const SOUND_MAX_S = 30;
+function soundCol() { return db.collection(FIRESTORE_COLLECTION).doc(ROOT_DOC).collection('sounds'); }
+let soundUnsub = null, currentSounds = [], soundRec = null, soundPending = null, soundEditId = '';
+function stopSoundListener(dropRec) { if (soundUnsub) { soundUnsub(); soundUnsub = null; } currentSounds = []; soundEditId = ''; if (soundRec && dropRec) stopRecording(true); }
+function soundCardHtml(w) {
+  return `<div class="card side-card" id="soundCard"><h3>Sound tests</h3><p class="sub" style="margin:0 0 8px">Record up to ${SOUND_MAX_S} seconds of typing and note the build and keycaps you used.</p>
+    <div id="soundRecBox"></div><div id="soundList" class="sndlist"><span class="sub">Loading recordings…</span></div></div>`;
+}
+const kbOptionsHtml = sel => `<option value="">Not on a keyboard / other</option>${savedKeyboards.slice().sort((a, b) => (a.name || '').localeCompare(b.name || '')).map(k => `<option value="${esc(k.id)}"${k.id === sel ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}`;
+const kcOptionsHtml = sel => `<option value="">None / other</option>${savedKeycaps.slice().sort((a, b) => (a.name || '').localeCompare(b.name || '')).flatMap(s => { const ks = kitsOf(s); return (ks.length ? ks : [{ id: '', name: '' }]).map(k => { const v = s.id + '|' + (k.id || ''); return `<option value="${esc(v)}"${v === sel ? ' selected' : ''}>${esc(s.name + (k.name ? ' — ' + k.name : ''))}</option>`; }); }).join('')}`;
+function soundFormHtml(d) {
+  return `<div class="sndform">
+    <div class="fld"><label for="sndKb">Keyboard build</label><select class="input" id="sndKb">${kbOptionsHtml(d.keyboardId || '')}</select></div>
+    <div class="fld"><label for="sndKc">Keycaps</label><select class="input" id="sndKc">${kcOptionsHtml(d.keycapSetId ? d.keycapSetId + '|' + (d.kitId || '') : '')}</select></div>
+    <div class="fld"><label for="sndNote">Note</label><input class="input" id="sndNote" placeholder="e.g. Foam in, PE film, desk mat" value="${esc(d.note || '')}"></div></div>`;
+}
+function readSoundForm() {
+  const kbId = document.getElementById('sndKb').value, kc = document.getElementById('sndKc').value, [setId, kitId] = kc ? kc.split('|') : ['', ''];
+  const kb = savedKeyboards.find(k => k.id === kbId), set = savedKeycaps.find(x => x.id === setId), kit = set && kitsOf(set).find(k => k.id === kitId);
+  return { keyboardId: kbId || '', keyboardName: kb ? kb.name : '', keycapSetId: setId || '', kitId: kitId || '', keycapLabel: set ? set.name + (kit ? ' — ' + kit.name : '') : '', note: document.getElementById('sndNote').value.trim() };
+}
+function soundDefaults(w) {   // pre-pick where these switches are installed and the keycaps on that board
+  const a = allocsOf(w)[0], kbId = a ? a.keyboardId : '', on = kbId ? kitsOn(kbId) : [], first = on.find(o => /base/i.test(o.k.name)) || on[0];
+  return { keyboardId: kbId, keycapSetId: first ? first.s.id : '', kitId: first ? first.k.id || '' : '' };
+}
+const fmtSec = n => `0:${String(Math.max(0, Math.round(n))).padStart(2, '0')}`;
+function drawSoundRec(w) {
+  const box = document.getElementById('soundRecBox'); if (!box) return;
+  const ready = !!db && !isFile, canRec = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+  if (!ready) { box.innerHTML = '<p class="sub">Recordings need Firebase. Open the https site.</p>'; return; }
+  if (soundRec && soundRec.itemId === w.id) {
+    box.innerHTML = `<div class="sndrec on"><span class="snddot"></span><b id="sndTime">${fmtSec((Date.now() - soundRec.t0) / 1000)}</b><span class="sub" style="margin:0">of ${fmtSec(SOUND_MAX_S)}</span><button class="btn primary" id="sndStop" style="margin-left:auto">■ Stop</button></div>`;
+    document.getElementById('sndStop').onclick = () => stopRecording(false); return; }
+  if (soundPending && soundPending.itemId === w.id) {
+    box.innerHTML = `<div class="sndnew"><audio controls src="${soundPending.audio}"></audio><p class="sub" style="margin:4px 0 8px">${fmtSec(soundPending.seconds)} · ${Math.round(soundPending.bytes / 1024)} KB</p>
+      ${soundFormHtml(soundPending.form || soundDefaults(w))}<div class="btnrow" style="margin-top:8px"><button class="btn primary" id="sndSave">Save recording</button><button class="btn" id="sndDiscard">Discard</button></div><p class="sub" id="sndMsg" style="margin:6px 0 0"></p></div>`;
+    document.getElementById('sndDiscard').onclick = () => { soundPending = null; drawSoundRec(w); };
+    document.getElementById('sndSave').onclick = () => saveSound(w);
+    return; }
+  box.innerHTML = canRec ? `<button class="btn" id="sndRecBtn" style="width:100%;justify-content:center"><span class="snddot"></span>Record sound</button>`
+    : '<p class="sub">This browser cannot record audio. Try Chrome, Edge or Safari 14.1+.</p>';
+  const rb = document.getElementById('sndRecBtn'); if (rb) rb.onclick = () => startRecording(w);
+}
+async function startRecording(w) {
+  if (soundRec) return;
+  let stream; try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); }
+  catch (e) { toast('Microphone not available: ' + (e && e.name === 'NotAllowedError' ? 'permission was refused. Allow the microphone for this site and try again.' : explain(e))); return; }
+  const mime = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/ogg;codecs=opus', 'audio/webm'].find(m => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || '';
+  let mr; try { mr = new MediaRecorder(stream, Object.assign({ audioBitsPerSecond: 48000 }, mime ? { mimeType: mime } : {})); } catch (e) { stream.getTracks().forEach(t => t.stop()); toast('Could not start recording: ' + explain(e)); return; }
+  const chunks = []; mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  soundRec = { itemId: w.id, w, mr, stream, chunks, t0: Date.now(), drop: false };
+  mr.onstop = async () => {
+    const r = soundRec; soundRec = null; clearInterval(r.timer); r.stream.getTracks().forEach(t => t.stop());
+    if (r.drop || !r.chunks.length) { drawSoundRec(r.w); return; }
+    const blob = new Blob(r.chunks, { type: mr.mimeType || mime || 'audio/webm' }), seconds = Math.min(SOUND_MAX_S, (Date.now() - r.t0) / 1000);
+    const audio = await fileToDataUrl(blob);
+    soundPending = { itemId: r.itemId, audio, mime: blob.type, bytes: blob.size, seconds, form: null };
+    drawSoundRec(r.w);
+  };
+  soundRec.timer = setInterval(() => { if (!soundRec) return; const el = document.getElementById('sndTime'), t = (Date.now() - soundRec.t0) / 1000; if (el) el.textContent = fmtSec(t); if (t >= SOUND_MAX_S) stopRecording(false); }, 250);
+  mr.start(1000); drawSoundRec(w);
+}
+function stopRecording(drop) { if (!soundRec) return; soundRec.drop = !!drop; try { if (soundRec.mr.state !== 'inactive') soundRec.mr.stop(); else soundRec.mr.onstop(); } catch (e) { soundRec = null; } }
+async function saveSound(w) {
+  const p = soundPending; if (!p) return; const msg = document.getElementById('sndMsg'), btn = document.getElementById('sndSave');
+  if (p.audio.length > 950000) { msg.textContent = 'This recording is too large to store. Record a shorter clip.'; return; }
+  const form = readSoundForm(); p.form = form; btn.disabled = true; msg.textContent = 'Saving…';
+  try {
+    await withTimeout(soundCol().doc().set(Object.assign({ itemType: 'switches', itemId: w.id, audio: p.audio, mime: p.mime, bytes: p.bytes, seconds: Math.round(p.seconds * 10) / 10, createdAt: firebase.firestore.FieldValue.serverTimestamp() }, form)), 30000);
+    await metaRef().set({ soundCount: firebase.firestore.FieldValue.increment(1), soundBytes: firebase.firestore.FieldValue.increment(p.bytes) }, { merge: true });
+    soundPending = null; drawSoundRec(w); toast('Recording saved');
+  } catch (e) { btn.disabled = false; msg.textContent = 'Not saved: ' + explain(e); }
+}
+function drawSoundList(w) {
+  const box = document.getElementById('soundList'); if (!box) return;
+  if (!currentSounds.length) { box.innerHTML = '<span class="sub">No recordings yet.</span>'; return; }
+  box.innerHTML = currentSounds.map(r => {
+    const when = r.createdAt && r.createdAt.toDate ? fmtDate(r.createdAt.toDate().toISOString().slice(0, 10)) : '';
+    if (r.id === soundEditId) return `<div class="snditem" data-sid="${esc(r.id)}"><audio controls preload="none" src="${r.audio}"></audio>${soundFormHtml(r)}<div class="btnrow" style="margin-top:6px"><button class="btn primary" data-sact="save">Save</button><button class="btn" data-sact="cancel">Cancel</button></div></div>`;
+    const kb = r.keyboardId && savedKeyboards.find(k => k.id === r.keyboardId);
+    return `<div class="snditem" data-sid="${esc(r.id)}"><audio controls preload="none" src="${r.audio}"></audio>
+      <div class="sndmeta"><b>${kb ? `<a class="lnk" href="#/keyboards/${esc(kb.id)}">${esc(kb.name)}</a>` : esc(r.keyboardName || 'No keyboard noted')}</b>${r.keycapLabel ? `<span>Keycaps: ${esc(r.keycapLabel)}</span>` : ''}${r.note ? `<span>${esc(r.note)}</span>` : ''}
+      <span class="sub" style="margin:0">${[when, r.seconds ? fmtSec(r.seconds) : ''].filter(Boolean).join(' · ')}</span></div>
+      <div class="btnrow"><button class="btn" data-sact="edit">Edit details</button><button class="btn danger" data-sact="delete">Delete</button></div></div>`; }).join('');
+}
+function wireSounds(w) {
+  stopSoundListener(false); drawSoundRec(w);
+  const list = document.getElementById('soundList'); if (!list) return;
+  if (!db || isFile) { list.innerHTML = ''; return; }
+  list.onclick = async e => {
+    const b = e.target.closest('[data-sact]'); if (!b) return; const id = b.closest('[data-sid]').dataset.sid, r = currentSounds.find(x => x.id === id); if (!r) return;
+    if (b.dataset.sact === 'edit') { soundEditId = id; drawSoundList(w); return; }
+    if (b.dataset.sact === 'cancel') { soundEditId = ''; drawSoundList(w); return; }
+    if (b.dataset.sact === 'save') { try { await withTimeout(soundCol().doc(id).update(readSoundForm())); soundEditId = ''; toast('Recording details saved'); } catch (err) { toast('Not saved: ' + explain(err)); } return; }
+    if (b.dataset.sact === 'delete') { if (!confirm('Delete this recording? This cannot be undone.')) return;
+      try { await withTimeout(soundCol().doc(id).delete()); await metaRef().set({ soundCount: firebase.firestore.FieldValue.increment(-1), soundBytes: firebase.firestore.FieldValue.increment(-(r.bytes || 0)) }, { merge: true }); toast('Recording deleted'); } catch (err) { toast('Delete failed: ' + explain(err)); } }
+  };
+  soundUnsub = soundCol().where('itemId', '==', w.id).onSnapshot(snap => {
+    currentSounds = snap.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => ((b.createdAt && b.createdAt.toDate ? b.createdAt.toDate() : 0) - (a.createdAt && a.createdAt.toDate ? a.createdAt.toDate() : 0)));
+    drawSoundList(w);
+  }, err => { list.innerHTML = `<span class="sub">Could not load recordings: ${esc(explain(err))}</span>`; });
+}
+async function deleteSoundsOf(itemId) {
+  const snap = await soundCol().where('itemId', '==', itemId).get(); let n = 0, bytes = 0;
+  for (const d of snap.docs) { bytes += d.data().bytes || 0; n++; await d.ref.delete(); }
+  if (n) await metaRef().set({ soundCount: firebase.firestore.FieldValue.increment(-n), soundBytes: firebase.firestore.FieldValue.increment(-bytes) }, { merge: true });
+}
 function installedOnCardHtml(w) {
   const allocs = allocsOf(w), loose = looseCount(w);
   const guess = !allocs.length && w.installedOnText ? savedKeyboards.find(k => kbLabel(k).toLowerCase().includes(w.installedOnText.toLowerCase()) || (k.brand + ' ' + k.name).toLowerCase() === w.installedOnText.toLowerCase()) : null;
@@ -2378,7 +2545,7 @@ function drawPartResults(t) {
   if (!list.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.search}</div><h2>No matches</h2><p>Nothing matches "${esc(st.q)}".</p></div>`; return; }
   const fav = (x, sm) => `<button class="fav${x.isFavorite ? ' on' : ''}"${sm ? ' style="position:static;width:28px;height:28px"' : ''} data-fav="${esc(x.id)}" aria-label="${x.isFavorite ? 'Remove from' : 'Add to'} favorites">${x.isFavorite ? I.starFill : I.star}</button>`;
   box.innerHTML = st.view === 'gallery'
-    ? `<div class="gallery">${list.map(x => `<a class="kcard" href="#/${t}/${esc(x.id)}"><div class="ph">${x.coverThumb ? `<img src="${x.coverThumb}" alt="" loading="lazy">` : I[P.icon].replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}${fav(x)}</div>
+    ? `<div class="gallery">${list.map(x => `<a class="kcard" href="#/${t}/${esc(x.id)}"><div class="ph">${x.coverThumb ? `<img src="${x.coverThumb}" alt="" loading="lazy">` : x.stockThumb ? `<img src="${x.stockThumb}" alt="" loading="lazy" title="Your stock picture">` : x.refImage ? `<img src="${esc(x.refImage)}" alt="" loading="lazy" referrerpolicy="no-referrer" title="Picture from ${esc(x.refSource || 'the product page')}" onerror="this.remove()">` : I[P.icon].replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}${fav(x)}</div>
         <div class="meta"><b>${esc(x.name)}</b><span>${esc(P.sub(x))}</span></div></a>`).join('')}</div>`
     : `<table class="list"><thead><tr><th style="width:44px"></th><th>Name</th>${P.cols.map(c => `<th>${c[0]}</th>`).join('')}<th>Purchased</th></tr></thead><tbody>${list.map(x => `
         <tr class="row" data-href="#/${t}/${esc(x.id)}"><td>${fav(x, true)}</td><td><b>${esc(x.name)}</b></td>${P.cols.map(c => `<td>${esc(c[1](x) || '')}</td>`).join('')}<td>${esc(fmtDate(x.datePurchased)) || '<span style="color:var(--text-3)">—</span>'}</td></tr>`).join('')}</tbody></table>`;
@@ -2466,7 +2633,7 @@ ${purchasePanelHtml(all)}
       </div>
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
-        ${x ? valueCardHtml(t, x) + photoCardHtml(x, t) + partInstallCardHtml(t, x) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save first, then drop photos on its page.</p></div>'}
+        ${x ? valueCardHtml(t, x) + refCardHtml(t, x) + photoCardHtml(x, t) + partInstallCardHtml(t, x) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save first, then drop photos on its page.</p></div>'}
         <div class="card side-card stack savebar">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${x ? 'Save changes' : 'Save ' + P.singular}</button>
           ${x ? '<button class="btn" id="btnCancel">Discard changes</button>' : `<a class="btn" href="#/${t}">Cancel</a>`}
@@ -2499,7 +2666,7 @@ ${purchasePanelHtml(all)}
     applyState(st);
     P.checks.forEach(([n]) => { document.getElementById('f_' + n).checked = !!x[n]; });
     if (more.some(f => x[f[0]]) || P.checks.some(([n]) => x[n])) document.getElementById('moreDetails').open = true;
-    setEditState(false); wirePhotos(x, t); wireValueCard(t, x); wirePartInstall(t, x);
+    setEditState(false); wirePhotos(x, t); wireValueCard(t, x); wireRefCard(t, x); wirePartInstall(t, x);
     document.getElementById('btnCancel').onclick = () => { formDirty = false; renderPartForm(t, savedParts[t].find(y => y.id === x.id) || x); toast('Changes discarded'); };
     document.getElementById('btnDelete').onclick = async () => {
       if (!confirm(`Delete "${x.name}" and its photos? This cannot be undone.`)) return;
@@ -2800,11 +2967,16 @@ function wireValueCard(t, x) {
 /* while a form has unsaved typing, a value change only redraws the value card */
 function swapValueCardIfOnly(t, x) {
   const c = document.getElementById('valueCard'); if (!c || !editing || editing.id !== x.id) return false;
-  const strip = o => JSON.stringify(Object.assign({}, o, { values: null, colorway: null, updatedAt: null, createdIso: null, _date: null }));
+  const strip = o => JSON.stringify(Object.assign({}, o, { values: null, colorway: null, refImage: null, refUrl: null, refSource: null, stockThumb: null, stockPhotoId: null, kitStock: null, summaryHidden: null, summaryExtra: null, updatedAt: null, createdIso: null, _date: null }));
   if (strip(editing) !== strip(x)) return false;
   c.outerHTML = valueCardHtml(t, x); wireValueCard(t, x);
   const cw = document.getElementById('cwCard'); if (cw && t === 'keyboards') { cw.outerHTML = colorwayCardHtml(x); wireColorwayCard(x); }
-  editing = Object.assign({}, editing, { values: x.values, colorway: x.colorway }); return true;
+  const rc = document.getElementById('refCard'); if (rc && rc.querySelector('#refForm')?.hidden !== false) { rc.outerHTML = refCardHtml(t, x); wireRefCard(t, x); }
+  if (document.getElementById('photoGrid') && currentPhotos.length) drawPhotoGrid(x);
+  if (t === 'keycaps' && document.getElementById('kitGallery')) drawKitGallery(x);
+  editing = Object.assign({}, editing, { values: x.values, colorway: x.colorway, refImage: x.refImage, refUrl: x.refUrl, refSource: x.refSource, stockThumb: x.stockThumb, stockPhotoId: x.stockPhotoId, kitStock: x.kitStock, summaryHidden: x.summaryHidden, summaryExtra: x.summaryExtra });
+  const sp = document.querySelector('#view [data-panel="summary"]'); if (sp && !sp.hidden && !sp.querySelector('.sumed')) drawSummary(document.getElementById('view'), x, t);
+  return true;
 }
 /* Value page: everything you have valued, like the Excel Value Tracking tab */
 let valFilter = 'all';
@@ -3087,13 +3259,32 @@ async function runExcelColors(p) {
   } catch (e) { st.textContent = 'Could not add colors: ' + explain(e) + ' Some items may have been updated; loading again is safe.'; btn.disabled = false; }
 }
 /* keyboard colorway card (saved straight away, like Market value) */
-function colorwayStripHtml(k) { const c = (k.colorway || []).filter(x => normHex(x.hex)); return c.length ? `<span class="pstrip">${c.map(x => `<i style="background:${normHex(x.hex)}" title="${esc((x.label || '') + ' ' + x.hex)}"></i>`).join('')}</span>` : ''; }
+function colorwayStripHtml(k) { const c = (k.colorway || []).filter(x => normHex(x.hex)); return c.length ? `<span class="pstrip">${c.map(x => `<i style="background:${cwBg(x)}" title="${esc((x.label || '') + ' ' + x.hex)}"></i>`).join('')}</span>` : ''; }
+/* weight materials: stock colors (closest common hex for each finish); PVD shows a multicolor swatch */
+const WEIGHT_MATS = [
+  ['brass', 'Brass', '#B5A642'],
+  ['ss-silver', 'Stainless Steel · Silver', '#AAA9AD'],
+  ['ss-gold', 'Stainless Steel · Gold', '#D4AF37'],
+  ['ss-black', 'Stainless Steel · Black', '#2B2B2D'],
+  ['ss-glass', 'Stainless Steel · Glass', '#C8CBCD'],
+  ['ss-304', 'Stainless Steel · 304 Steel', '#A9A9A9'],
+  ['ss-mirror', 'Stainless Steel · Mirror', '#E5E4E2'],
+  ['copper', 'Copper', '#B87333'],
+  ['aluminum', 'Aluminum', '#A5A5A4'],
+  ['pvd', 'PVD (multicolor)', '#7B68EE']];
+const PVD_GRAD = 'linear-gradient(135deg,#5B3FD1,#1E9FD6,#2BB673,#E8C547,#D6336C)';
+const matOf = id => WEIGHT_MATS.find(m => m[0] === id);
+const cwBg = c => (c.material === 'pvd' && c.source === 'material') ? PVD_GRAD : (normHex(c.hex) || 'transparent');
+const isWeightRow = c => !!c.material || /weight/i.test(c.label || '');
+const matSelectHtml = (cur, attr) => `<select class="input cwmat" ${attr} aria-label="Weight material"><option value="">Material…</option>${WEIGHT_MATS.map(m => `<option value="${m[0]}"${m[0] === cur ? ' selected' : ''}>${esc(m[1])}</option>`).join('')}</select>`;
 function colorwayCardHtml(k) {
   const cw = k.colorway || [];
   return `<div class="card side-card" id="cwCard"><h3>Colorway</h3><p class="sub" style="margin:0 0 8px">${esc(k.color || 'Colors of this keyboard')}. Click a swatch to adjust it.</p>
-    <div class="cwlist">${cw.map(c => `<div class="cwrow"><button class="swbtn" data-cwpick="${esc(c.id)}" style="background:${normHex(c.hex) || 'transparent'}" aria-label="Adjust ${esc(c.label || 'color')}"></button>
-      <span><b>${esc(c.label || 'Color')}</b><span class="mono sub" style="margin:0"> ${esc(c.hex || '')}</span>${c.source === 'excel' ? ' <span class="chip">Excel</span>' : ''}</span><button class="btn" data-cwdel="${esc(c.id)}" aria-label="Remove">✕</button></div>`).join('') || '<p class="sub" style="margin:0">No colors yet.</p>'}</div>
+    <div class="cwlist">${cw.map(c => `<div class="cwrow"><button class="swbtn" data-cwpick="${esc(c.id)}" style="background:${cwBg(c)}" aria-label="Adjust ${esc(c.label || 'color')}"></button>
+      <span><b>${esc(c.label || 'Color')}</b><span class="mono sub" style="margin:0"> ${esc(c.material === 'pvd' && c.source === 'material' ? 'multicolor' : (c.hex || ''))}</span>${c.source === 'excel' ? ' <span class="chip">Excel</span>' : ''}${c.material && matOf(c.material) ? ` <span class="chip">${esc(matOf(c.material)[1])}</span>` : ''}</span><button class="btn" data-cwdel="${esc(c.id)}" aria-label="Remove">✕</button>
+      ${isWeightRow(c) ? `<div class="cwmatrow">${matSelectHtml(c.material || '', `data-cwmat="${esc(c.id)}"`)}</div>` : ''}</div>`).join('') || '<p class="sub" style="margin:0">No colors yet.</p>'}</div>
     <div class="aadd" style="grid-template-columns:1fr auto;margin-top:8px"><input class="input" id="cwLabel" placeholder="e.g. Case, Weight, Badge" list="dlCw"><button class="btn primary" id="cwAdd">Add color</button></div>
+    <div id="cwAddMat" hidden style="margin-top:6px">${matSelectHtml('', 'id="cwMatNew"')}<p class="sub" style="margin:4px 0 0">Pick a material to add the weight with its stock color, or leave it and pick a color.</p></div>
     <datalist id="dlCw">${['Case', 'Top case', 'Bottom case', 'Weight', 'Badge', 'Knob', 'Plate', 'Keycaps', 'Accent'].map(o => `<option value="${o}">`).join('')}</datalist></div>`;
 }
 function wireColorwayCard(k) {
@@ -3104,10 +3295,23 @@ function wireColorwayCard(k) {
   card.onclick = e => {
     const p = e.target.closest('[data-cwpick]'), d = e.target.closest('[data-cwdel]');
     if (p) { const c = (latest().colorway || []).find(x => x.id === p.dataset.cwpick);
-      openColorWheel(p, c.hex, hx => write((latest().colorway || []).map(x => x.id === c.id ? Object.assign({}, x, { hex: hx, source: 'manual' }) : x)).then(ok => ok && toast('Color saved')), Object.assign({ title: c.label || 'Color' }, photo())); return; }
+      openColorWheel(p, normHex(c.hex) || '#808080', hx => write((latest().colorway || []).map(x => x.id === c.id ? Object.assign({}, x, { hex: hx, source: 'manual' }) : x)).then(ok => ok && toast('Color saved')), Object.assign({ title: c.label || 'Color' }, photo())); return; }
     if (d) { if (confirm('Remove this color?')) write((latest().colorway || []).filter(x => x.id !== d.dataset.cwdel)); return; }
     if (e.target.id === 'cwAdd') { const label = document.getElementById('cwLabel').value.trim() || 'Color';
+      const mid = document.getElementById('cwMatNew')?.value, m = /weight/i.test(label) && matOf(mid);
+      if (m) { write((latest().colorway || []).concat([{ id: 'w' + Math.random().toString(36).slice(2, 10), label, hex: m[2], material: m[0], source: 'material' }])).then(ok => ok && toast('Weight added')); return; }
       openColorWheel(e.target, '#808080', hx => write((latest().colorway || []).concat([{ id: 'w' + Math.random().toString(36).slice(2, 10), label, hex: hx, source: 'manual' }])).then(ok => ok && toast('Color added')), Object.assign({ title: label }, photo())); }
+  };
+  const lab = document.getElementById('cwLabel'), am = document.getElementById('cwAddMat');
+  if (lab && am) lab.oninput = () => { am.hidden = !/weight/i.test(lab.value); };
+  card.onchange = e => {
+    const sel = e.target.closest('[data-cwmat]'); if (!sel) return;
+    const m = matOf(sel.value), id = sel.dataset.cwmat;
+    write((latest().colorway || []).map(x => {
+      if (x.id !== id) return x;
+      const y = Object.assign({}, x);
+      if (m) Object.assign(y, { material: m[0], hex: m[2], source: 'material' }); else delete y.material;
+      return y; })).then(ok => ok && toast(m ? 'Weight set to ' + m[1] : 'Material cleared'));
   };
 }
 
@@ -3277,7 +3481,8 @@ function matrixUrlOf(ref) {
   const slug = String(ref.sourcePage || '').replace(/\.md$/, ''); return slug ? 'https://matrixzj.github.io/docs/gmk-keycaps/' + encodeURIComponent(slug) + '/' : '';
 }
 function matrixLinkHtml(ref, label = 'Open on Matrix ↗') { const u = matrixUrlOf(ref); return u ? `<a class="lnk" href="${esc(u)}" target="_blank" rel="noopener" title="Matrix's page for this set: kits, renders and colors">${label}</a>` : ''; }
-function setPhotoCoverOf(s) {   // picture for a keycap card with no photo of your own: your kit photos from the old app first, then the catalog
+function setPhotoCoverOf(s) {   // picture for a keycap card with no photo of your own: your kit stock pictures, your kit photos from the old app, then the catalog
+  if ((s.kitStock || []).length) { const b = s.kitStock.find(e => /base/i.test(e.name)) || s.kitStock[0]; if (b.thumb) return b.thumb; }
   const ph = s.kitPhotos || [];
   if (ph.length) { const pr = pairKits(kitsOf(s), ph), own = ph.find(p => pr.has(p)); return (own || ph[0]).url || ''; }
   const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef); if (!ref) return '';
@@ -3303,6 +3508,8 @@ function kitGalleryTiles(s) {
   base.forEach(b => { const own = pairs.get(b); tiles.push(Object.assign({}, b, { inList: true, owned: !!own, kit: own, on: own ? where(own) : '' })); });
   const extras = mine.filter(k => !tiles.some(t => t.kit === k)), ep = kind === 'catalog' ? pairKits(spare, extras.map(k => ({ name: k.name, k }))) : new Map();
   extras.forEach(k => { const hit = [...ep.entries()].find(([e]) => e.k === k); tiles.push({ name: k.name, owned: true, kit: k, on: where(k), extra: !!base.length, img: hit ? hit[1].url : '', yours: !!hit }); });
+  const ks = (live && live.kitStock) || [];
+  if (ks.length) tiles.forEach(t => { const e = ks.find(x => x.key === kitKey(t.name)); if (e && e.thumb) { t.more = [t.img, ...(t.more || [])].filter(Boolean); t.img = e.thumb; t.yours = true; t.stock = true; } });
   return { ref, tiles, refId, kind };
 }
 function drawKitGallery(s) {
@@ -3341,7 +3548,7 @@ function openKitView(s, t) {
   const onWish = s && t.ck && wishHas(s.name, t.name);
   d.innerHTML = `<div class="card kv-card"><div class="sec-title"><h3>${esc(t.name)} <span class="chip ${t.owned ? 'kvown' : ''}">${t.owned ? '✓ Owned' : 'Not owned'}</span></h3><button class="btn" data-x>✕</button></div>
     ${imgs.length ? `<div class="kvimg"><img id="kvMain" src="${esc(imgs[0])}" alt="" referrerpolicy="no-referrer"></div>${imgs.length > 1 ? `<div class="kvthumbs">${imgs.map((u, i) => `<img src="${esc(u)}" data-kvi="${i}" alt="" loading="lazy" referrerpolicy="no-referrer">`).join('')}</div>` : ''}` : ''}
-    <p class="sub" style="margin:10px 0 0">${[t.price ? 'Group-buy price ' + t.price : '', t.qty ? 'Made: ' + esc(t.qty) : '', t.on ? 'Installed on ' + esc(t.on) : '', t.extra ? 'This kit of yours has no match in the kit list' : '', t.yours ? 'Picture from your Keycap Collection app' : ''].filter(Boolean).join(' · ')}</p>
+    <p class="sub" style="margin:10px 0 0">${[t.price ? 'Group-buy price ' + t.price : '', t.qty ? 'Made: ' + esc(t.qty) : '', t.on ? 'Installed on ' + esc(t.on) : '', t.extra ? 'This kit of yours has no match in the kit list' : '', t.stock ? 'Your stock picture for this kit' : t.yours ? 'Picture from your Keycap Collection app' : ''].filter(Boolean).join(' · ')}</p>
     <div class="btnrow" style="margin-top:12px">
       ${t.owned ? '<button class="btn" id="kvShow">Show in Kits tab</button>' : `<button class="btn primary" id="kvOwn" title="Adds this kit to the Kits tab; click Save to keep it">I own this kit</button>${s ? (onWish ? '<span class="chip">On wishlist</span>' : '<button class="btn" id="kvWish">+ Wishlist</button>') : ''}`}
       <span style="margin-left:auto">${matrixLinkHtml(t.cat ? gmkSets.find(x => x.id === document.getElementById('f_gmkRef').value) : null)}</span></div></div>`;
@@ -3361,10 +3568,38 @@ function openKitView(s, t) {
    First tab on every saved item. Built from what is filled in on the other tabs (empty fields are left out),
    so it always matches the form, including changes not saved yet. "Edit" opens that tab. */
 /* Product page reference (filled from a vendor page Faraz sends): picture shown from the vendor's site, link to the page. */
-function refCardHtml(x) {
-  if (!x.refImage && !x.refUrl) return '';
-  return `<div class="card side-card"><h3>Product page</h3>${x.refImage ? `<a href="${esc(x.refUrl || x.refImage)}" target="_blank" rel="noopener"><img class="refimg" src="${esc(x.refImage)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>` : ''}
-    <p class="sub" style="margin:8px 0 0">Specs and picture from ${esc(x.refSource || 'the product page')}${x.refUrl ? ` · <a class="lnk" href="${esc(x.refUrl)}" target="_blank" rel="noopener">open page ↗</a>` : ''}. Your own photos replace this picture on the card.</p></div>`;
+function refCardHtml(t, x) {
+  const has = x.refImage || x.refUrl;
+  return `<div class="card side-card" id="refCard"><h3>Product page</h3>
+    ${x.stockThumb ? `<img class="refimg" src="${x.stockThumb}" alt=""><p class="sub" style="margin:6px 0 0">Stock picture: your own photo. <button class="btn" id="refStockOff" style="padding:2px 8px">Use the shop picture</button></p>` : x.refImage ? `<a href="${esc(x.refUrl || x.refImage)}" target="_blank" rel="noopener"><img class="refimg" src="${esc(x.refImage)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>` : ''}
+    <p class="sub" style="margin:8px 0 0">${has ? `Stock picture and details from ${esc(x.refSource || 'the product page')}${x.refUrl ? ` · <a class="lnk" href="${esc(x.refUrl)}" target="_blank" rel="noopener">open page ↗</a>` : ''}. Your own photos replace this picture on the card.` : 'No product page yet. Add a link to the maker’s or shop’s page and its picture.'}</p>
+    <div class="btnrow" style="margin-top:10px"><button class="btn" id="refEditBtn">${has ? 'Edit' : '+ Add product page'}</button></div>
+    <div id="refForm" hidden><div style="margin-top:10px;display:grid;gap:8px">
+      <div class="fld"><label for="refUrlIn">Product page link</label><input class="input" id="refUrlIn" type="url" placeholder="https://…" value="${esc(x.refUrl || '')}"></div>
+      <div class="fld"><label for="refImgIn">Picture link</label><input class="input" id="refImgIn" type="url" placeholder="https://… (.jpg, .png, .webp)" value="${esc(x.refImage || '')}"><div class="hint">Right-click the picture on the shop page → Copy image address.</div></div>
+      <div class="fld"><label for="refSrcIn">Source name</label><input class="input" id="refSrcIn" placeholder="e.g. Keychron, Milktooth" value="${esc(x.refSource || '')}"></div>
+      <div id="refPrev"></div>
+      <div class="btnrow"><button class="btn primary" id="refSave">Save</button><button class="btn" id="refCancel">Cancel</button>${has ? '<button class="btn danger" id="refClear">Remove product page</button>' : ''}</div>
+      <p class="sub" style="margin:0" id="refMsg"></p>
+    </div></div></div>`;
+}
+function wireRefCard(t, x) {
+  const card = document.getElementById('refCard'); if (!card) return;
+  const $ = id => document.getElementById(id), form = $('refForm');
+  const prev = () => { const u = $('refImgIn').value.trim(); $('refPrev').innerHTML = /^https?:\/\//.test(u) ? `<img class="refimg" src="${esc(u)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<p class=&quot;sub&quot; style=&quot;margin:0;color:var(--danger)&quot;>That picture link did not load. Check it is a direct image link.</p>'">` : ''; };
+  $('refEditBtn').onclick = () => { form.hidden = false; $('refEditBtn').hidden = true; prev(); $('refUrlIn').focus(); };
+  $('refCancel').onclick = () => { card.outerHTML = refCardHtml(t, x); wireRefCard(t, x); };
+  $('refImgIn').oninput = prev;
+  const redraw = vals => { const cur = Object.assign({}, itemsOfType(t).find(y => y.id === x.id) || x, vals); const c2 = document.getElementById('refCard'); if (c2) { c2.outerHTML = refCardHtml(t, cur); wireRefCard(t, cur); } };
+  const write = async (data, vals) => { try { await withTimeout(colOfType(t).doc(x.id).update(Object.assign(data, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() }))); redraw(vals); return true; } catch (e) { $('refMsg').textContent = 'Could not save: ' + explain(e); return false; } };
+  $('refSave').onclick = async () => {
+    const u = $('refUrlIn').value.trim(), im = $('refImgIn').value.trim(), src = $('refSrcIn').value.trim(), del = firebase.firestore.FieldValue.delete();
+    if ((u && !/^https?:\/\//.test(u)) || (im && !/^https?:\/\//.test(im))) { $('refMsg').textContent = 'Links must start with https://'; return; }
+    let source = src; if (!source && u) { try { source = new URL(u).hostname.replace(/^www\./, ''); } catch (e) {} }
+    if (await write({ refUrl: u || del, refImage: im || del, refSource: (u || im) ? (source || del) : del }, { refUrl: u || undefined, refImage: im || undefined, refSource: (u || im) ? (source || undefined) : undefined })) toast('Product page saved');
+  };
+  const so = $('refStockOff'); if (so) so.onclick = () => setStockPhoto(t, x.id, null);
+  const c = $('refClear'); if (c) c.onclick = async () => { if (!confirm('Remove the product page link and stock picture from this item? Your own photos are not touched.')) return; const del = firebase.firestore.FieldValue.delete(); if (await write({ refUrl: del, refImage: del, refSource: del }, { refUrl: undefined, refImage: undefined, refSource: undefined })) toast('Product page removed'); };
 }
 function addSummaryTab(view, x, type) {
   const tabs = view.querySelector('.tabs'); if (!tabs || tabs.querySelector('[data-tab="summary"]')) return;
@@ -3372,7 +3607,41 @@ function addSummaryTab(view, x, type) {
   const first = view.querySelector('[data-panel]');
   first.insertAdjacentHTML('beforebegin', '<div class="card" data-panel="summary" hidden><div id="sumBox"></div></div>');
   tabs.addEventListener('click', e => { if (e.target.closest('[data-tab="summary"]')) drawSummary(view, x, type); });
-  view.querySelector('[data-panel="summary"]').addEventListener('click', e => { const g = e.target.closest('[data-goto]'); if (g) tabs.querySelector(`[data-tab="${g.dataset.goto}"]`)?.click(); });
+  view.querySelector('[data-panel="summary"]').addEventListener('click', e => { const g = e.target.closest('[data-goto]'); if (g) tabs.querySelector(`[data-tab="${g.dataset.goto}"]`)?.click(); else summaryAction(view, x, type, e); });
+}
+/* Summary editing: ✎ changes the value in its form field (Save at the top keeps it); Hide/Unhide and
+   "Your details" rows save straight away (summaryHidden: ['tab|Label'], summaryExtra: [{id, label, value}]). */
+async function summaryAction(view, x, type, e) {
+  const latest = () => itemsOfType(type).find(y => y.id === x.id) || x;
+  const write = async data => { try { await withTimeout(colOfType(type).doc(x.id).update(Object.assign(data, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() }))); return true; } catch (err) { toast('Could not save: ' + explain(err)); return false; } };
+  const redraw = data => drawSummary(view, Object.assign({}, latest(), data), type);
+  const row = e.target.closest('.sumrow');
+  if (e.target.closest('[data-sumedit]') && row) {
+    const c = document.getElementById(row.dataset.sc); if (!c) return;
+    let ed; if (c.tagName === 'SELECT') { ed = c.cloneNode(true); ed.removeAttribute('id'); ed.value = c.value; }
+    else if (c.tagName === 'TEXTAREA') { ed = document.createElement('textarea'); ed.rows = 3; ed.value = c.value; }
+    else { ed = document.createElement('input'); ed.type = c.type || 'text'; if (c.step) ed.step = c.step; if (c.getAttribute('list')) ed.setAttribute('list', c.getAttribute('list')); ed.value = c.value; }
+    ed.className = 'input sumed';
+    row.innerHTML = ''; row.appendChild(ed); row.insertAdjacentHTML('beforeend', '<span class="sumacts on"><button class="btn primary" data-sumok>OK</button><button class="btn" data-sumcancel>Cancel</button></span>');
+    ed.focus(); ed.onkeydown = ev => { if (ev.key === 'Enter' && ed.tagName !== 'TEXTAREA') { ev.preventDefault(); row.querySelector('[data-sumok]').click(); } if (ev.key === 'Escape') row.querySelector('[data-sumcancel]').click(); };
+    return; }
+  if (e.target.closest('[data-sumok]') && row) {
+    const c = document.getElementById(row.dataset.sc), ed = row.querySelector('.sumed');
+    if (c && ed && c.value !== ed.value) { c.value = ed.value; c.dispatchEvent(new Event('input', { bubbles: true })); c.dispatchEvent(new Event('change', { bubbles: true })); toast('Changed. Press Save changes at the top to keep it.'); }
+    redraw({}); return; }
+  if (e.target.closest('[data-sumcancel]')) { redraw({}); return; }
+  if (e.target.closest('[data-sumhide]') && row) {
+    const k = row.dataset.sk, h = (latest().summaryHidden || []).slice(), i = h.indexOf(k); if (i >= 0) h.splice(i, 1); else h.push(k);
+    if (await write({ summaryHidden: h.length ? h : firebase.firestore.FieldValue.delete() })) redraw({ summaryHidden: h }); return; }
+  if (e.target.id === 'sumToggleHidden') { sumShowHidden = !sumShowHidden; redraw({}); return; }
+  const xd = e.target.closest('[data-sumxdel]');
+  if (xd) { const list = (latest().summaryExtra || []).filter(r => r.id !== xd.dataset.sumxdel);
+    if (await write({ summaryExtra: list.length ? list : firebase.firestore.FieldValue.delete() })) { redraw({ summaryExtra: list }); toast('Row removed'); } return; }
+  if (e.target.id === 'sumxAdd') {
+    const l = document.getElementById('sumxLabel').value.trim(), v = document.getElementById('sumxValue').value.trim();
+    if (!l) { toast('Give the row a label first'); document.getElementById('sumxLabel').focus(); return; }
+    const list = (latest().summaryExtra || []).concat([{ id: 'r' + Math.random().toString(36).slice(2, 10), label: l, value: v }]);
+    if (await write({ summaryExtra: list })) { redraw({ summaryExtra: list }); toast('Row added'); } }
 }
 function restoreTab(view, x, type) {
   addSummaryTab(view, x, type);
@@ -3397,17 +3666,20 @@ function summaryRows(panel) {
     if (c.type === 'date') v = fmtDate(v) || v;
     else if (['price', 'shipping', 'discounts'].includes(id) && isFinite(+v)) v = money(+v);
     else if (id === 'taxRatePct' && isFinite(+v)) v = (+v) + '%';
-    rows.push(id === 'descriptors' ? [lab, v, 'chips'] : [lab, v]);
+    rows.push([lab, v, id === 'descriptors' ? 'chips' : '', c.id || '']);
   });
   const checks = [...panel.querySelectorAll('label.check input[type=checkbox]:checked, label.acq input:checked, .acqs input:checked')].filter(i => !i.closest('.kit') && i.id !== 'f_isFavorite').map(i => i.closest('label')?.textContent.trim()).filter(Boolean);
   if (checks.length) rows.push(['Ticked', [...new Set(checks)].join(', ')]);
   const tot = panel.querySelector('#cTotal'); if (tot && rows.some(r => /price/i.test(r[0]))) rows.push(['Total paid', tot.textContent]);
   return rows;
 }
+let sumShowHidden = false, sumShowFor = '';
+const sumDd = (v, kind) => kind === 'chips' ? v.split(',').map(x => x.trim()).filter(Boolean).map(x => `<span class="chip">${esc(x)}</span>`).join(' ') : /^https?:\/\//.test(v) ? `<a class="lnk" href="${esc(v)}" target="_blank" rel="noopener">${esc(v.replace(/^https?:\/\/(www\.)?/, '').slice(0, 48))}</a>` : esc(v).replace(/\n/g, '<br>');
 function drawSummary(view, x, type) {
   const box = view.querySelector('#sumBox'); if (!box) return;
   const live = (type === 'keyboards' ? savedKeyboards : type === 'switches' ? savedSwitches : type === 'keycaps' ? savedKeycaps : savedParts[type] || []).find(y => y.id === x.id) || x;
-  const secs = [];
+  if (sumShowFor !== live.id) { sumShowFor = live.id; sumShowHidden = false; }
+  const secs = [], hidden = live.summaryHidden || []; let nHidden = 0;
   view.querySelectorAll('.tabs [data-tab]').forEach(b => {
     const t = b.dataset.tab; if (t === 'summary' || t === 'gallery') return;
     const panel = view.querySelector(`[data-panel="${t}"]`); if (!panel) return;
@@ -3417,9 +3689,15 @@ function drawSummary(view, x, type) {
       if (kits.length) extra = `<div class="sumkits">${kits.map(k => `<div><b>${esc(k.name)}</b><span>${esc([k.kitType, k.datePurchased ? fmtDate(k.datePurchased) : '', k.purchasedFrom, Number(k.price) ? money(kbTotal(k)) : ''].filter(Boolean).join(' · '))}</span></div>`).join('')}</div>`; }
     if (t === 'colors') { const pal = paletteOf(live); if (pal.length) extra = `<div class="sumsw">${pal.map(c => `<span title="${esc([c.name, c.gmk, c.ral, c.pantone, c.hex].filter(Boolean).join(' · '))}"><i style="background:${esc(c.hex || '#000')}"></i>${esc(c.name || c.hex || '')}</span>`).join('')}</div>`; rows = []; }
     if (t === 'review') { rows = [...panel.querySelectorAll('.rate')].map(r => [r.querySelector('label')?.textContent.trim(), r.querySelector('.val')?.textContent.trim()]).filter(([, v]) => v && v !== 'Not rated'); const rt = fieldValue(panel.querySelector('textarea')); if (rt) rows.push(['Review', rt]); }
+    rows = rows.map(r => { const key = t + '|' + r[0], hid = hidden.includes(key); if (hid) nHidden++; return { k: r[0], v: r[1], kind: r[2] || '', cid: r[3] || '', key, hid }; }).filter(r => !r.hid || sumShowHidden);
     if (rows.length || extra) secs.push(`<div class="sumsec"><div class="sec-title"><h4>${esc(title)}</h4><button class="lnk" data-goto="${t}">Edit</button></div>
-      ${rows.length ? `<dl class="sumdl">${rows.map(([k, v, kind]) => `<dt>${esc(k)}</dt><dd>${kind === 'chips' ? v.split(',').map(x => x.trim()).filter(Boolean).map(x => `<span class="chip">${esc(x)}</span>`).join(' ') : /^https?:\/\//.test(v) ? `<a class="lnk" href="${esc(v)}" target="_blank" rel="noopener">${esc(v.replace(/^https?:\/\/(www\.)?/, '').slice(0, 48))}</a>` : esc(v).replace(/\n/g, '<br>')}</dd>`).join('')}</dl>` : ''}${extra}</div>`);
+      ${rows.length ? `<dl class="sumdl">${rows.map(r => `<dt class="${r.hid ? 'sumhid' : ''}">${esc(r.k)}</dt><dd class="sumrow${r.hid ? ' sumhid' : ''}" data-sk="${esc(r.key)}"${r.cid ? ` data-sc="${esc(r.cid)}"` : ''}><span class="sumv">${sumDd(r.v, r.kind)}</span><span class="sumacts">${r.cid && !r.hid ? '<button class="lnk" data-sumedit title="Change this value">✎</button>' : ''}<button class="lnk" data-sumhide title="${r.hid ? 'Show on the Summary' : 'Hide from the Summary'}">${r.hid ? 'Unhide' : 'Hide'}</button></span></dd>`).join('')}</dl>` : ''}${extra}</div>`);
   });
+  const ext = live.summaryExtra || [];
+  secs.push(`<div class="sumsec" id="sumExtra"><h4>Your details</h4>
+    ${ext.length ? `<dl class="sumdl">${ext.map(e => `<dt>${esc(e.label)}</dt><dd class="sumrow"><span class="sumv">${sumDd(e.value || '', '')}</span><span class="sumacts"><button class="lnk" data-sumxdel="${esc(e.id)}" title="Remove this row">Remove</button></span></dd>`).join('')}</dl>` : '<p class="sub" style="margin:0 0 6px">Add any detail that has no field, e.g. Lube, Film, Mods, Serial number.</p>'}
+    <div class="sumadd"><input class="input" id="sumxLabel" placeholder="Label, e.g. Lube"><input class="input" id="sumxValue" placeholder="Value, e.g. Krytox 205g0"><button class="btn" id="sumxAdd">+ Add row</button></div>
+    ${nHidden ? `<p class="sub" style="margin:10px 0 0">${nHidden} row${nHidden === 1 ? '' : 's'} hidden. <button class="lnk" id="sumToggleHidden">${sumShowHidden ? 'Hide them again' : 'Show hidden rows'}</button></p>` : ''}</div>`);
   const links = [];
   if (type === 'keyboards') {
     switchesOn(live.id).forEach(({ w, a }) => links.push(['Switches', `${[w.manufacturer, w.name].filter(Boolean).join(' ')} × ${a.count}`, '#/switches/' + w.id]));
@@ -3431,7 +3709,7 @@ function drawSummary(view, x, type) {
   else if (live.installedOn) { const kb = savedKeyboards.find(b => b.id === live.installedOn); if (kb) links.push(['Installed on', kb.name, '#/keyboards/' + kb.id]); }
   const vals = (live.values || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
   if (vals.length) links.push(['Market value', `${money(vals[0].value)} (${fmtDate(vals[0].date)}${vals[0].source ? ', ' + vals[0].source : ''})`, '']);
-  const cover = live.coverThumb || (type === 'keycaps' ? setPhotoCoverOf(live) : live.refImage || '');
+  const cover = live.coverThumb || (type === 'keycaps' ? setPhotoCoverOf(live) : live.stockThumb || live.refImage || '');
   box.innerHTML = `<div class="sumhead">${cover ? `<img src="${esc(cover)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<div><h3 style="margin:0">${esc(live.name || '')}${live.isFavorite ? ' <span style="color:#fbbf24">★</span>' : ''}</h3>
       ${(() => { const d = (view.querySelector('#f_description')?.value ?? live.description ?? '').trim();
         return d ? `<p class="sumdesc">${esc(d).replace(/\n/g, '<br>')}</p>${live.refSource ? `<p class="sub" style="margin:2px 0 0;font-size:11.5px">Description from ${live.refUrl ? `<a class="lnk" href="${esc(live.refUrl)}" target="_blank" rel="noopener">${esc(live.refSource)}</a>` : esc(live.refSource)}</p>` : ''}`
@@ -3439,6 +3717,28 @@ function drawSummary(view, x, type) {
     ${links.length ? `<div class="sumsec"><h4>Linked</h4><dl class="sumdl">${links.map(([k, v, h]) => `<dt>${esc(k)}</dt><dd>${h ? `<a class="lnk" href="${h}">${esc(v)}</a>` : esc(v)}</dd>`).join('')}</dl></div>` : ''}
     ${secs.join('') || '<p class="sub">Nothing filled in yet. Open the other tabs to add details.</p>'}`;
 }
+
+/* ===================== Save / Discard at the top, next to Delete =====================
+   Mirrors the real Save and Discard buttons (same disabled state and wording) so nothing else changes. */
+function ensureTopSave() {
+  const tools = document.querySelector('#view .pagehead .tools'), del = tools && tools.querySelector('#btnDelete');
+  const sv = document.getElementById('btnSave'), cn = document.getElementById('btnCancel');
+  if (!del || !sv || !cn) return;
+  let ts = document.getElementById('btnSaveTop'), tc = document.getElementById('btnCancelTop');
+  if (!ts) {
+    del.insertAdjacentHTML('beforebegin', '<button class="btn topsave" id="btnCancelTop" type="button"></button><button class="btn primary topsave" id="btnSaveTop" type="button"></button>');
+    ts = document.getElementById('btnSaveTop'); tc = document.getElementById('btnCancelTop');
+    ts.onclick = () => document.getElementById('btnSave')?.click(); tc.onclick = () => document.getElementById('btnCancel')?.click();
+    sv.closest('.savebar')?.classList.add('hasTop');
+  }
+  const sync = () => { const a = document.getElementById('btnSave'), b = document.getElementById('btnCancel'); if (!a || !b || !ts.isConnected) return;
+    if (ts.textContent !== a.textContent) ts.textContent = a.textContent; if (ts.disabled !== a.disabled) ts.disabled = a.disabled;
+    if (tc.textContent !== b.textContent) tc.textContent = b.textContent; if (tc.disabled !== b.disabled) tc.disabled = b.disabled; };
+  sync();
+  if (!sv._topObs) { sv._topObs = new MutationObserver(sync); sv._topObs.observe(sv, { attributes: true, childList: true, characterData: true, subtree: true }); }
+  if (!cn._topObs) { cn._topObs = new MutationObserver(sync); cn._topObs.observe(cn, { attributes: true, childList: true, characterData: true, subtree: true }); }
+}
+new MutationObserver(() => ensureTopSave()).observe(document.getElementById('view'), { childList: true, subtree: true });
 
 /* ===================== Step W.2: switch details file (from product pages Claude reads) =====================
    switch_details.json: { kind: 'switch_details', items: [{ match: {manufacturer, name}, fields: {...}, description, descriptors,
