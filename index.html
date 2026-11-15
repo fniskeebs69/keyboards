@@ -467,7 +467,7 @@
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.50.0';
+const APP_VERSION = 'v0.51.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -859,7 +859,7 @@ function drawKeyboardResults() {
   if (kbView === 'gallery') {
     box.innerHTML = `<div class="gallery">${list.map(k => `
       <a class="kcard" href="#/keyboards/${esc(k.id)}">
-        <div class="ph">${k.coverThumb ? `<img src="${k.coverThumb}" alt="" loading="lazy">` : I.keyboards.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}
+        <div class="ph">${k.coverThumb ? `<img src="${k.coverThumb}" alt="" loading="lazy">` : k.refImage ? `<img src="${esc(k.refImage)}" alt="" loading="lazy" referrerpolicy="no-referrer" title="Picture from ${esc(k.refSource || 'the product page')}" onerror="this.remove()">` : I.keyboards.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}
           ${k.isSample ? '<span class="badge chip">Sample</span>' : ''}
           <button class="fav${isFav(k) ? ' on' : ''}" data-fav="${esc(k.id)}" aria-label="${isFav(k) ? 'Remove from' : 'Add to'} favorites">${isFav(k) ? I.starFill : I.star}</button></div>
         <div class="meta"><b>${esc(k.name)}</b><span>${esc(k.brand)}</span>${colorwayStripHtml(k)}</div>
@@ -1037,7 +1037,7 @@ ${purchasePanelHtml(savedKeyboards)}
       </div>
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
-        ${k ? valueCardHtml('keyboards', k) + colorwayCardHtml(k) + photoCardHtml(k) + switchesOnKeyboardCardHtml(k) + keycapsOnKeyboardCardHtml(k) + partsOnKeyboardCardHtml(k) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the keyboard first, then drop photos on its page.</p></div>'}
+        ${k ? valueCardHtml('keyboards', k) + colorwayCardHtml(k) + refCardHtml(k) + photoCardHtml(k) + switchesOnKeyboardCardHtml(k) + keycapsOnKeyboardCardHtml(k) + partsOnKeyboardCardHtml(k) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the keyboard first, then drop photos on its page.</p></div>'}
         <div class="card side-card stack savebar">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${k ? 'Save changes' : 'Save keyboard'}</button>
           <button class="btn" id="btnCancel">${k ? 'Discard changes' : 'Cancel'}</button>
@@ -3444,10 +3444,12 @@ function drawSummary(view, x, type) {
    switch_details.json: { kind: 'switch_details', items: [{ match: {manufacturer, name}, fields: {...}, description, descriptors,
    refImage, refUrl, refSource, note }] }. Only empty fields are filled; nothing you entered is overwritten. */
 let swDetails = null, swDetailPicks = {};
+function detT() { return swDetails && swDetails.kind === 'keyboard_details' ? { list: savedKeyboards, col: kbCol, maker: 'brand', one: 'keyboard', many: 'keyboards', title: 'Keyboard pictures' } : { list: savedSwitches, col: swCol, maker: 'manufacturer', one: 'switch', many: 'switches', title: 'Switch details' }; }
 function swKey(m, n) { return (String(m || '') + ' ' + String(n || '')).toLowerCase().replace(/[^a-z0-9]/g, ''); }
-function guessSwitch(it) { const k = swKey(it.match.manufacturer, it.match.name), n = swKey('', it.match.name);
-  const a = savedSwitches.filter(w => swKey(w.manufacturer, w.name) === k); if (a.length) return a.map(w => w.id);
-  const b = savedSwitches.filter(w => swKey('', w.name) === n); return b.map(w => w.id); }
+function guessSwitch(it) { const T = detT(), mk = it.match[T.maker] || it.match.manufacturer || it.match.brand, k = swKey(mk, it.match.name), n = swKey('', it.match.name);
+  if (it.match.color !== undefined) { const c = T.list.filter(w => swKey(w[T.maker], w.name) === k && swKey('', w.color) === swKey('', it.match.color)); return c.map(w => w.id); }
+  const a = T.list.filter(w => swKey(w[T.maker], w.name) === k); if (a.length) return a.map(w => w.id);
+  const b = T.list.filter(w => swKey('', w.name) === n); return b.map(w => w.id); }
 function swDetailPlan(it, w) {
   const want = Object.assign({}, it.fields || {}); if (it.description) want.description = it.description; if (it.descriptors) want.descriptors = [].concat(it.descriptors).join(', ');
   ['refImage', 'refUrl', 'refSource'].forEach(f => { if (it[f]) want[f] = it[f]; });
@@ -3458,23 +3460,24 @@ function swDetailPlan(it, w) {
 }
 function drawSwDetailsPreview(doneMsg = '') {
   const box = document.getElementById('impPreview'); if (!box || !swDetails) return;
+  const T = detT();
   swDetails.items.forEach((it, i) => { if (!(i in swDetailPicks)) swDetailPicks[i] = guessSwitch(it); });
-  const opts = savedSwitches.slice().sort((a, b) => (a.manufacturer + a.name).localeCompare(b.manufacturer + b.name));
+  const opts = T.list.slice().sort((a, b) => ((a[T.maker] || '') + a.name).localeCompare((b[T.maker] || '') + b.name));
   let total = 0;
-  const rows = swDetails.items.map((it, i) => { const ids = swDetailPicks[i] || [], plans = ids.map(id => savedSwitches.find(w => w.id === id)).filter(Boolean).map(w => swDetailPlan(it, w));
+  const rows = swDetails.items.map((it, i) => { const ids = swDetailPicks[i] || [], plans = ids.map(id => T.list.find(w => w.id === id)).filter(Boolean).map(w => swDetailPlan(it, w));
     const nf = plans.reduce((n, p) => n + Object.keys(p.fill).length, 0); total += nf;
-    return `<tr><td><b>${esc([it.match.manufacturer, it.match.name].filter(Boolean).join(' '))}</b><div class="sub" style="margin:0">${esc(it.refSource || '')}</div></td>
-      <td><select class="select" data-swdet="${i}"><option value="">Skip</option>${opts.map(w => `<option value="${esc(w.id)}"${ids[0] === w.id ? ' selected' : ''}>${esc([w.manufacturer, w.name].filter(Boolean).join(' '))}${w.datePurchased ? ' · ' + esc(fmtDate(w.datePurchased)) : ''}</option>`).join('')}</select>${ids.length > 1 ? `<div class="sub" style="margin:0">+ ${ids.length - 1} more entr${ids.length === 2 ? 'y' : 'ies'} with this name</div>` : ''}</td>
+    return `<tr><td><b>${esc([it.match.manufacturer || it.match.brand, it.match.name, it.match.color ? '(' + it.match.color + ')' : ''].filter(Boolean).join(' '))}</b><div class="sub" style="margin:0">${esc(it.refSource || '')}</div></td>
+      <td><select class="select" data-swdet="${i}"><option value="">Skip</option>${opts.map(w => `<option value="${esc(w.id)}"${ids[0] === w.id ? ' selected' : ''}>${esc([w[T.maker], w.name, T.one === 'keyboard' && w.color ? '(' + w.color + ')' : ''].filter(Boolean).join(' '))}${w.datePurchased ? ' · ' + esc(fmtDate(w.datePurchased)) : ''}</option>`).join('')}</select>${ids.length > 1 ? `<div class="sub" style="margin:0">+ ${ids.length - 1} more entr${ids.length === 2 ? 'y' : 'ies'} with this name</div>` : ''}</td>
       <td>${plans.length ? `${nf} field${nf === 1 ? '' : 's'} to fill${plans.some(p => p.kept.length) ? `<div class="sub" style="margin:0">Kept yours: ${esc([...new Set(plans.flatMap(p => p.kept))].join(', '))}</div>` : ''}` : '<span style="color:var(--text-3)">No match</span>'}</td></tr>`; }).join('');
-  box.innerHTML = `<div class="card" style="margin-top:16px"><h3>2 · Switch details</h3><p class="sub">Fills only empty fields on the matching switch entries. Fields you already filled are kept.</p>
-    <div style="overflow-x:auto"><table class="list"><thead><tr><th>From the product page</th><th>Your switch entry</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+  box.innerHTML = `<div class="card" style="margin-top:16px"><h3>2 · ${T.title}</h3><p class="sub">Fills only empty fields on the matching ${T.one} entries. Fields you already filled are kept.</p>
+    <div style="overflow-x:auto"><table class="list"><thead><tr><th>From the product page</th><th>Your ${T.one}</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
     <div class="btnrow" style="margin-top:12px"><button class="btn primary" id="swDetGo"${total ? '' : ' disabled'}>Fill ${total} field${total === 1 ? '' : 's'}</button><span class="sub" style="margin:0" id="swDetStatus">${esc(doneMsg)}</span></div></div>`;
   box.querySelectorAll('[data-swdet]').forEach(sel => sel.onchange = () => { swDetailPicks[sel.dataset.swdet] = sel.value ? [sel.value] : []; drawSwDetailsPreview(); });
   document.getElementById('swDetGo').onclick = async () => {
     const b = db.batch(), now = firebase.firestore.FieldValue.serverTimestamp(); let n = 0;
-    swDetails.items.forEach((it, i) => (swDetailPicks[i] || []).forEach(id => { const w = savedSwitches.find(x => x.id === id); if (!w) return; const p = swDetailPlan(it, w); if (Object.keys(p.fill).length) { b.update(swCol().doc(id), Object.assign(p.fill, { updatedAt: now })); n++; } }));
+    swDetails.items.forEach((it, i) => (swDetailPicks[i] || []).forEach(id => { const w = T.list.find(x => x.id === id); if (!w) return; const p = swDetailPlan(it, w); if (Object.keys(p.fill).length) { b.update(T.col().doc(id), Object.assign(p.fill, { updatedAt: now })); n++; } }));
     const st = document.getElementById('swDetStatus');
-    try { await withTimeout(b.commit()); const m = `Done: ${n} switch entr${n === 1 ? 'y' : 'ies'} updated.`; st.textContent = m; toast('Switch details filled'); setTimeout(() => drawSwDetailsPreview(m), 800); }
+    try { await withTimeout(b.commit()); const m = `Done: ${n} ${T.one} entr${n === 1 ? 'y' : 'ies'} updated.`; st.textContent = m; toast(T.title + ' filled'); setTimeout(() => drawSwDetailsPreview(m), 800); }
     catch (e) { st.textContent = 'Could not save: ' + explain(e); }
   };
 }
@@ -3891,10 +3894,11 @@ function renderImport() {
         drawExcelColorsPreview(); return;
       }
       xlColors = null;
-      if (data.kind === 'switch_details') {
-        if (!Array.isArray(data.items) || data.items.some(x => !x.match || !x.match.name)) throw new Error('The switch details file looks damaged.');
+      if (data.kind === 'switch_details' || data.kind === 'keyboard_details') {
+        if (!Array.isArray(data.items) || data.items.some(x => !x.match || !x.match.name)) throw new Error('The details file looks damaged.');
         importFile = null; importType = null; oldPhotos = null; swDetails = data; swDetailPicks = {};
-        msg.textContent = `Loaded ${f.name}: details for ${data.items.length} switch${data.items.length === 1 ? '' : 'es'}.`;
+        const kb = data.kind === 'keyboard_details';
+        msg.textContent = `Loaded ${f.name}: details for ${data.items.length} ${kb ? 'keyboard' : 'switch'}${data.items.length === 1 ? '' : kb ? 's' : 'es'}.`;
         drawSwDetailsPreview(); return;
       }
       swDetails = null;
