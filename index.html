@@ -481,7 +481,7 @@
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.53.0';
+const APP_VERSION = 'v0.55.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -1342,6 +1342,7 @@ function wirePhotos(k, type = 'keyboards') {
     currentPhotos = snap.docs.map(d => Object.assign({ id: d.id }, d.data()))
       .sort((a, b) => ((a.createdAt && a.createdAt.toDate ? a.createdAt.toDate() : 0) - (b.createdAt && b.createdAt.toDate ? b.createdAt.toDate() : 0)));
     drawPhotoGrid(k);
+    if (type === 'keycaps') { const gp = document.querySelector('[data-panel="gallery"]'); if (gp && !gp.hidden) drawKitGallery(k); migrateKitStock(k); }
   }, err => { document.getElementById('photoGrid').innerHTML = `<span class="sub">Could not load photos: ${esc(explain(err))}</span>`; });
 }
 function drawPhotoGrid(k) {
@@ -1385,9 +1386,18 @@ async function setStockPhoto(type, itemId, p) {
   try { await withTimeout(colOfType(type).doc(itemId).update({ stockPhotoId: p ? p.id : del, stockThumb: p ? p.thumb : del, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); toast(p ? 'Stock picture set' : 'Back to the shop picture'); }
   catch (e) { toast('Could not set the stock picture: ' + explain(e)); }
 }
+/* Kit pictures are stored as links to your photos ({key, name, photoId}), not copies, so a set with many kit
+   pictures stays far below Firestore's 1 MB record limit. One small copy (kitStockCover) is kept for the list card. */
+function kitStockThumb(e) { const p = photoType === 'keycaps' && currentPhotos.find(x => x.id === e.photoId); return (p && p.thumb) || e.thumb || ''; }
+function kitStockCoverOf(list) { const b = list.find(e => /base/i.test(e.name)) || list[0], t = b && kitStockThumb(b); return t ? { photoId: b.photoId, thumb: t } : null; }
 async function writeKitStock(s, list, msg) {
-  try { await withTimeout(kcCol().doc(s.id).update({ kitStock: list.length ? list : firebase.firestore.FieldValue.delete(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); if (msg) toast(msg); }
-  catch (e) { toast('Could not save the kit picture: ' + explain(e)); }
+  const slim = list.map(e => ({ key: e.key, name: e.name, photoId: e.photoId })), cover = kitStockCoverOf(list), del = firebase.firestore.FieldValue.delete();
+  try { await withTimeout(kcCol().doc(s.id).update({ kitStock: slim.length ? slim : del, kitStockCover: cover || del, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); if (msg) toast(msg); return true; }
+  catch (e) { toast('Could not save the kit picture: ' + explain(e)); return false; }
+}
+async function migrateKitStock(s) {   // v0.52–v0.53 kept a copy of every kit picture inside the set; convert once, silently
+  const live = savedKeycaps.find(x => x.id === s.id) || s, list = live.kitStock || [];
+  if (list.some(e => e.thumb)) await writeKitStock(live, list, '');
 }
 function pickKitForStock(s, p) {
   const live = savedKeycaps.find(x => x.id === s.id) || s;
@@ -1405,7 +1415,7 @@ function pickKitForStock(s, p) {
     if (e.target === d || e.target.closest('[data-x]')) { d.remove(); return; }
     const list = (savedKeycaps.find(x => x.id === s.id) || s).kitStock || [];
     if (e.target.id === 'ksGo') { const name = document.getElementById('ksPick').value, key = kitKey(name);
-      await writeKitStock(s, list.filter(x => x.key !== key).concat([{ key, name, photoId: p.id, thumb: p.thumb }]), `Picture set for ${name}`); d.remove(); }
+      await writeKitStock(s, list.filter(x => x.key !== key).concat([{ key, name, photoId: p.id }]), `Picture set for ${name}`); d.remove(); }
     if (e.target.id === 'ksOff') { await writeKitStock(s, list.filter(x => x.photoId !== p.id), 'Kit picture removed'); d.remove(); }
   };
 }
@@ -1448,7 +1458,7 @@ async function replacePhoto(k, p, out) {
     const cur = photoItem(k);
     if (cur.coverPhotoId === p.id) await setCover(k.id, { id: p.id, thumb: out.thumb });
     if (cur.stockPhotoId === p.id) await withTimeout(colOfType(photoType).doc(k.id).update({ stockThumb: out.thumb }));
-    if ((cur.kitStock || []).some(x => x.photoId === p.id)) await withTimeout(kcCol().doc(k.id).update({ kitStock: cur.kitStock.map(x => x.photoId === p.id ? Object.assign({}, x, { thumb: out.thumb }) : x) }));
+    if (cur.kitStockCover && cur.kitStockCover.photoId === p.id) await withTimeout(kcCol().doc(k.id).update({ kitStockCover: { photoId: p.id, thumb: out.thumb } }));
     toast('Crop saved');
   } catch (e) { toast('Crop not saved: ' + explain(e)); }
 }
@@ -1461,7 +1471,7 @@ async function deletePhoto(k, p) {
     if (cur.coverPhotoId === p.id) { const next = currentPhotos.find(x => x.id !== p.id); await setCover(k.id, next || null); }
     const del = firebase.firestore.FieldValue.delete();
     if (cur.stockPhotoId === p.id) await withTimeout(colOfType(photoType).doc(k.id).update({ stockPhotoId: del, stockThumb: del }));
-    if ((cur.kitStock || []).some(x => x.photoId === p.id)) { const rest = cur.kitStock.filter(x => x.photoId !== p.id); await withTimeout(kcCol().doc(k.id).update({ kitStock: rest.length ? rest : del })); }
+    if ((cur.kitStock || []).some(x => x.photoId === p.id)) await writeKitStock(cur, cur.kitStock.filter(x => x.photoId !== p.id), '');
     toast('Photo deleted');
   } catch (e) { toast('Delete failed: ' + explain(e)); }
 }
@@ -1551,10 +1561,13 @@ function startMetaListener() {
   const t = document.getElementById('meterText'); if (!t) return;
   if (!db || isFile) { t.textContent = 'Needs Firebase (open the https site).'; return; }
   metaUnsub = metaRef().onSnapshot(snap => {
-    const m = snap.exists ? snap.data() : {}; const n = m.photoCount || 0, b = Math.max(0, m.photoBytes || 0);
-    const GB = 1024 * 1024 * 1024, pctUsed = b / GB * 100;
-    document.getElementById('meterBar').style.width = Math.min(100, Math.max(n ? 0.5 : 0, pctUsed)) + '%';
-    t.innerHTML = `${n} photo${n === 1 ? '' : 's'} · ${(b / 1048576).toFixed(1)} MB of 1,024 MB (${pctUsed.toFixed(1)}%)` + (n ? `<br>About ${Math.round(b / n / 1024)} KB per photo · room for roughly ${Math.max(0, Math.floor((GB * 0.9 - b) / Math.max(1, b / n))).toLocaleString()} more` : '');
+    const m = snap.exists ? snap.data() : {}; const n = m.photoCount || 0, b = Math.max(0, m.photoBytes || 0), sn = Math.max(0, m.soundCount || 0), sb = Math.max(0, m.soundBytes || 0);
+    const size = list => (list || []).reduce((a, x) => a + JSON.stringify(x).length, 0);
+    const recs = size(savedKeyboards) + size(savedSwitches) + size(savedKeycaps) + PART_IDS.reduce((a, t2) => a + size(savedParts[t2]), 0) + size(savedWish), cat = gmkSets ? size(gmkSets) : 0;
+    const total = b + sb + recs + cat, GB = 1024 * 1024 * 1024, pctUsed = total / GB * 100, mb = v => (v / 1048576).toFixed(1) + ' MB';
+    document.getElementById('meterBar').style.width = Math.min(100, Math.max(total ? 0.5 : 0, pctUsed)) + '%';
+    t.innerHTML = `<b>${mb(total)} of 1,024 MB (${pctUsed.toFixed(1)}%)</b><br>Photos: ${n} · ${mb(b)}<br>Sound recordings: ${sn} · ${mb(sb)}<br>Item records (with card and stock pictures): ${mb(recs)}<br>GMK catalog: ${gmkSets ? mb(cat) : 'not counted until the Catalog page has been opened'}`
+      + (n ? `<br>About ${Math.round(b / n / 1024)} KB per photo · room for roughly ${Math.max(0, Math.floor((GB * 0.9 - total) / Math.max(1, b / n))).toLocaleString()} more photos` : '');
   }, err => { t.textContent = 'Could not read storage: ' + explain(err); });
 }
 
@@ -2968,14 +2981,14 @@ function wireValueCard(t, x) {
 /* while a form has unsaved typing, a value change only redraws the value card */
 function swapValueCardIfOnly(t, x) {
   const c = document.getElementById('valueCard'); if (!c || !editing || editing.id !== x.id) return false;
-  const strip = o => JSON.stringify(Object.assign({}, o, { values: null, colorway: null, refImage: null, refUrl: null, refSource: null, stockThumb: null, stockPhotoId: null, kitStock: null, summaryHidden: null, summaryExtra: null, description: null, descriptionOwn: null, updatedAt: null, createdIso: null, _date: null }));
+  const strip = o => JSON.stringify(Object.assign({}, o, { values: null, colorway: null, refImage: null, refUrl: null, refSource: null, stockThumb: null, stockPhotoId: null, kitStock: null, kitStockCover: null, summaryHidden: null, summaryExtra: null, description: null, descriptionOwn: null, updatedAt: null, createdIso: null, _date: null }));
   if (strip(editing) !== strip(x)) return false;
   c.outerHTML = valueCardHtml(t, x); wireValueCard(t, x);
   const cw = document.getElementById('cwCard'); if (cw && t === 'keyboards') { cw.outerHTML = colorwayCardHtml(x); wireColorwayCard(x); }
   const rc = document.getElementById('refCard'); if (rc && rc.querySelector('#refForm')?.hidden !== false) { rc.outerHTML = refCardHtml(t, x); wireRefCard(t, x); }
   if (document.getElementById('photoGrid') && currentPhotos.length) drawPhotoGrid(x);
   if (t === 'keycaps' && document.getElementById('kitGallery')) drawKitGallery(x);
-  editing = Object.assign({}, editing, { values: x.values, colorway: x.colorway, refImage: x.refImage, refUrl: x.refUrl, refSource: x.refSource, stockThumb: x.stockThumb, stockPhotoId: x.stockPhotoId, kitStock: x.kitStock, summaryHidden: x.summaryHidden, summaryExtra: x.summaryExtra, description: x.description, descriptionOwn: x.descriptionOwn });
+  editing = Object.assign({}, editing, { values: x.values, colorway: x.colorway, refImage: x.refImage, refUrl: x.refUrl, refSource: x.refSource, stockThumb: x.stockThumb, stockPhotoId: x.stockPhotoId, kitStock: x.kitStock, kitStockCover: x.kitStockCover, summaryHidden: x.summaryHidden, summaryExtra: x.summaryExtra, description: x.description, descriptionOwn: x.descriptionOwn });
   const sp = document.querySelector('#view [data-panel="summary"]'); if (sp && !sp.hidden && !sp.querySelector('.sumed')) drawSummary(document.getElementById('view'), x, t);
   return true;
 }
@@ -3483,7 +3496,8 @@ function matrixUrlOf(ref) {
 }
 function matrixLinkHtml(ref, label = 'Open on Matrix ↗') { const u = matrixUrlOf(ref); return u ? `<a class="lnk" href="${esc(u)}" target="_blank" rel="noopener" title="Matrix's page for this set: kits, renders and colors">${label}</a>` : ''; }
 function setPhotoCoverOf(s) {   // picture for a keycap card with no photo of your own: your kit stock pictures, your kit photos from the old app, then the catalog
-  if ((s.kitStock || []).length) { const b = s.kitStock.find(e => /base/i.test(e.name)) || s.kitStock[0]; if (b.thumb) return b.thumb; }
+  if (s.kitStockCover && s.kitStockCover.thumb) return s.kitStockCover.thumb;
+  if ((s.kitStock || []).length) { const b = s.kitStock.find(e => /base/i.test(e.name)) || s.kitStock[0]; if (b.thumb) return b.thumb; }   // records from v0.52–v0.53
   const ph = s.kitPhotos || [];
   if (ph.length) { const pr = pairKits(kitsOf(s), ph), own = ph.find(p => pr.has(p)); return (own || ph[0]).url || ''; }
   const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef); if (!ref) return '';
@@ -3510,7 +3524,7 @@ function kitGalleryTiles(s) {
   const extras = mine.filter(k => !tiles.some(t => t.kit === k)), ep = kind === 'catalog' ? pairKits(spare, extras.map(k => ({ name: k.name, k }))) : new Map();
   extras.forEach(k => { const hit = [...ep.entries()].find(([e]) => e.k === k); tiles.push({ name: k.name, owned: true, kit: k, on: where(k), extra: !!base.length, img: hit ? hit[1].url : '', yours: !!hit }); });
   const ks = (live && live.kitStock) || [];
-  if (ks.length) tiles.forEach(t => { const e = ks.find(x => x.key === kitKey(t.name)); if (e && e.thumb) { t.more = [t.img, ...(t.more || [])].filter(Boolean); t.img = e.thumb; t.yours = true; t.stock = true; } });
+  if (ks.length) tiles.forEach(t => { const e0 = ks.find(x => x.key === kitKey(t.name)), e = e0 && { thumb: kitStockThumb(e0) }; if (e && e.thumb) { t.more = [t.img, ...(t.more || [])].filter(Boolean); t.img = e.thumb; t.yours = true; t.stock = true; } });
   return { ref, tiles, refId, kind };
 }
 function drawKitGallery(s) {
@@ -3773,7 +3787,7 @@ function swDetailPlan(it, w) {
   ['refImage', 'refUrl', 'refSource'].forEach(f => { if (it[f]) want[f] = it[f]; });
   const fill = {}, kept = [];
   Object.entries(want).forEach(([f, v]) => { const cur = w[f]; if (cur === undefined || cur === null || cur === '' || (f === 'preLubed' && cur !== true && v === true)) fill[f] = v; else if (String(cur) !== String(v)) kept.push(f); });
-  if (it.note && !String(w.notes || '').includes(it.refUrl || it.note)) fill.notes = w.notes ? w.notes + '\n\n' + it.note : it.note;
+  if (it.note && !String(w.notes || '').includes(it.note.trim()) && !(it.refUrl && String(w.notes || '').includes(it.refUrl))) fill.notes = w.notes ? w.notes + '\n\n' + it.note : it.note;
   return { fill, kept };
 }
 function drawSwDetailsPreview(doneMsg = '') {
@@ -4381,6 +4395,77 @@ function explain(err) {
   return (err && (err.code || err.message)) || String(err);
 }
 function fmtTime(ts) { if (!ts) return 'pending…'; const d = ts.toDate ? ts.toDate() : new Date(ts); return d.toLocaleString(); }
+/* ===================== Backup and restore (Settings) =====================
+   Backup file: { kind: 'kbc_backup', version, app, createdAt, full, collections: { <name>: { <docId>: data } } }.
+   Firestore timestamps are written as { __ts: milliseconds }. Restore sets each record by its id (overwrite); it never deletes. */
+const BACKUP_COLS = ['keyboards', 'switches', 'keycaps', 'pcbs', 'artisans', 'accessories', 'wishlist'], BACKUP_BLOBS = ['photos', 'sounds'];
+const rootDoc = () => db.collection(FIRESTORE_COLLECTION).doc(ROOT_DOC);
+function bkEncode(v) { if (v && typeof v.toDate === 'function') return { __ts: v.toDate().getTime() }; if (Array.isArray(v)) return v.map(bkEncode); if (v && typeof v === 'object') { const o = {}; for (const k in v) o[k] = bkEncode(v[k]); return o; } return v; }
+function bkDecode(v) { if (v && typeof v === 'object' && typeof v.__ts === 'number' && Object.keys(v).length === 1) return firebase.firestore.Timestamp.fromMillis(v.__ts); if (Array.isArray(v)) return v.map(bkDecode); if (v && typeof v === 'object') { const o = {}; for (const k in v) o[k] = bkDecode(v[k]); return o; } return v; }
+async function makeBackup(full) {
+  const msg = document.getElementById('backupMsg'), btns = [document.getElementById('btnBackup'), document.getElementById('btnBackupFull')];
+  btns.forEach(b => b.disabled = true);
+  try {
+    const out = { kind: 'kbc_backup', version: 1, app: APP_VERSION, createdAt: new Date().toISOString(), full: !!full, collections: {} }, counts = [];
+    for (const c of BACKUP_COLS.concat(full ? BACKUP_BLOBS : [])) {
+      msg.textContent = `Reading ${c}…`;
+      const snap = await withTimeout(rootDoc().collection(c).get(), 180000), o = {};
+      snap.docs.forEach(d => { if (!d.id.startsWith('_')) o[d.id] = bkEncode(d.data()); });
+      out.collections[c] = o; counts.push(`${Object.keys(o).length} ${c}`);
+    }
+    const blob = new Blob([JSON.stringify(out)], { type: 'application/json' }), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `keyboard_collection_backup_${todayIso()}${full ? '_full' : ''}.json`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    lsSet('kbc_last_backup', { at: out.createdAt, full: !!full });
+    msg.textContent = `Backup saved (${(blob.size / 1048576).toFixed(1)} MB): ${counts.join(', ')}.`; toast('Backup downloaded');
+  } catch (e) { msg.textContent = 'Backup failed: ' + explain(e); }
+  btns.forEach(b => b.disabled = false);
+}
+let restoreData = null;
+function drawRestorePreview(note) {
+  const box = document.getElementById('restorePreview'); if (!box) return;
+  if (!restoreData) { box.innerHTML = note ? `<p class="sub" style="margin:0;color:var(--danger)">${esc(note)}</p>` : ''; return; }
+  const cols = Object.keys(restoreData.collections).filter(c => BACKUP_COLS.concat(BACKUP_BLOBS).includes(c)), n = cols.reduce((a, c) => a + Object.keys(restoreData.collections[c]).length, 0);
+  box.innerHTML = `<p class="sub" style="margin:0 0 6px">Backup from <b>${esc(fmtDate(String(restoreData.createdAt).slice(0, 10)))}</b> (${esc(restoreData.app || '')}, ${restoreData.full ? 'everything' : 'records only'}):</p>
+    <div class="kv" style="word-break:normal">${cols.map(c => `${esc(c)}: ${Object.keys(restoreData.collections[c]).length}`).join('<br>')}</div>
+    <div class="btnrow" style="margin-top:10px"><button class="btn primary" id="btnRestoreGo">Restore ${n} records</button><button class="btn" id="btnRestoreCancel">Cancel</button></div><p class="sub" id="restoreMsg" style="margin:6px 0 0">${esc(note || '')}</p>`;
+  document.getElementById('btnRestoreCancel').onclick = () => { restoreData = null; drawRestorePreview(); };
+  document.getElementById('btnRestoreGo').onclick = runRestore;
+}
+async function runRestore() {
+  const d = restoreData; if (!d) return; const msg = document.getElementById('restoreMsg'), btn = document.getElementById('btnRestoreGo');
+  const cols = Object.keys(d.collections).filter(c => BACKUP_COLS.concat(BACKUP_BLOBS).includes(c)), n = cols.reduce((a, c) => a + Object.keys(d.collections[c]).length, 0);
+  if (!confirm(`Restore ${n} records from the backup of ${fmtDate(String(d.createdAt).slice(0, 10))}?\n\nEach record in the file replaces the current one. Changes made to those records after the backup are lost. Records not in the file are kept.`)) return;
+  btn.disabled = true; let done = 0;
+  try {
+    for (const c of cols) {
+      const ids = Object.keys(d.collections[c]), blob = BACKUP_BLOBS.includes(c), step = blob ? 1 : 50;
+      for (let i = 0; i < ids.length; i += step) {
+        const b = db.batch(); ids.slice(i, i + step).forEach(id => b.set(rootDoc().collection(c).doc(id), bkDecode(d.collections[c][id])));
+        await withTimeout(b.commit(), 60000); done += Math.min(step, ids.length - i); msg.textContent = `Restoring… ${done} of ${n}`;
+      }
+    }
+    if (cols.some(c => BACKUP_BLOBS.includes(c))) { msg.textContent = 'Counting photos and recordings…'; await recountStorage(); }
+    restoreData = null; drawRestorePreview(); document.getElementById('restorePreview').innerHTML = `<p class="sub" style="margin:0;color:#86efac">Restored ${n} records.</p>`; toast('Backup restored');
+  } catch (e) { msg.textContent = `Stopped after ${done} of ${n}: ${explain(e)} Running it again is safe.`; btn.disabled = false; }
+}
+async function recountStorage() {   // reads every photo and recording once and resets the counters behind the meter
+  const sum = async c => { const snap = await withTimeout(rootDoc().collection(c).get(), 180000); let n = 0, b = 0; snap.docs.forEach(x => { n++; b += x.data().bytes || 0; }); return [n, b]; };
+  const [pn, pb] = await sum('photos'), [sn, sb] = await sum('sounds');
+  await withTimeout(metaRef().set({ photoCount: pn, photoBytes: pb, soundCount: sn, soundBytes: sb }, { merge: true }));
+  return { pn, pb, sn, sb };
+}
+function wireBackup() {
+  const $ = id => document.getElementById(id); if (!$('btnBackup')) return;
+  if (!db || isFile) { ['btnBackup', 'btnBackupFull', 'btnRestorePick', 'btnRecount'].forEach(i => { if ($(i)) $(i).disabled = true; }); return; }
+  $('btnBackup').onclick = () => makeBackup(false);
+  $('btnBackupFull').onclick = () => { if (confirm('This reads every photo and recording, so it can take a few minutes and make a large file. Continue?')) makeBackup(true); };
+  $('btnRestorePick').onclick = () => $('restoreFile').click();
+  $('restoreFile').onchange = async () => { const f = $('restoreFile').files[0]; $('restoreFile').value = ''; if (!f) return; restoreData = null;
+    try { const d = JSON.parse(await f.text()); if (!d || d.kind !== 'kbc_backup' || !d.collections) throw new Error('This is not a Keyboard Collection backup file.'); restoreData = d; drawRestorePreview(); }
+    catch (e) { drawRestorePreview(/not a Keyboard Collection/.test(e.message || '') ? e.message : 'This file could not be read as a backup. Choose a keyboard_collection_backup_….json file.'); } };
+  $('btnRecount').onclick = async () => { const m = $('recountMsg'); $('btnRecount').disabled = true; m.textContent = 'Counting…';
+    try { const r = await recountStorage(); m.textContent = `Counted ${r.pn} photos and ${r.sn} recordings.`; } catch (e) { m.textContent = 'Could not count: ' + explain(e); } $('btnRecount').disabled = false; };
+}
 function renderSettings() {
   const ready = !!db && !isFile;
   document.getElementById('view').innerHTML = `
@@ -4388,8 +4473,19 @@ function renderSettings() {
     <div class="two">
       <div class="card"><h3>About this app</h3><p class="sub">Keyboard Collection ${APP_VERSION} · single user · USD</p>
         <div class="kv">Data path: ${FIRESTORE_COLLECTION}/${ROOT_DOC}/&lt;type&gt;/&lt;id&gt;<br>Firebase project: ${firebaseConfig.projectId}</div></div>
-      <div class="card"><h3>Photo storage</h3><p class="sub">Photos are saved in your Firebase database. The free plan includes 1 GB in total.</p>
-        <div class="meter"><span id="meterBar" style="width:0%"></span></div><div class="kv" id="meterText">Loading…</div></div>
+      <div class="card"><h3>Storage</h3><p class="sub">Photos, sound recordings and your records are saved in your Firebase database. The free plan includes 1 GB in total.</p>
+        <div class="meter"><span id="meterBar" style="width:0%"></span></div><div class="kv" id="meterText" style="word-break:normal">Loading…</div>
+        <div class="btnrow" style="margin-top:10px"><button class="btn" id="btnRecount" title="Counts every photo and recording again. Reads them all once, so it can take a while.">Recount photos and recordings</button><span class="sub" style="margin:0" id="recountMsg"></span></div></div>
+    </div>
+    <h2 style="font-size:17px;margin:26px 0 12px">Backup and restore</h2>
+    <div class="two">
+      <div class="card" id="backupCard"><h3>Download a backup</h3><p class="sub">Saves a file to this device. It contains prices and receipt links, so keep it on your PC and never put it in the public GitHub repo.</p>
+        <div class="btnrow"><button class="btn primary" id="btnBackup">Back up my records</button><button class="btn" id="btnBackupFull">Back up everything (with photos and recordings)</button></div>
+        <p class="sub" id="backupMsg" style="margin:8px 0 0">${(() => { const l = lsGet('kbc_last_backup'); return l ? `Last backup on this device: ${esc(fmtDate(String(l.at).slice(0, 10)))} (${l.full ? 'everything' : 'records'}).` : 'No backup made on this device yet.'; })()}</p>
+        <p class="sub" style="margin:6px 0 0">Records = keyboards, switches, keycaps, PCBs, artisans, accessories and wishlist. The GMK catalog is not included; reload it from its own file.</p></div>
+      <div class="card" id="restoreCard"><h3>Restore from a backup</h3><p class="sub">Puts back every record in the file, replacing the current version of each. Records that are not in the file are left alone. Nothing happens until you confirm.</p>
+        <input type="file" id="restoreFile" accept=".json,application/json" hidden><div class="btnrow"><button class="btn" id="btnRestorePick">Choose a backup file…</button></div>
+        <div id="restorePreview" style="margin-top:8px"></div></div>
     </div>
     ${currentUser ? `<h2 style="font-size:17px;margin:26px 0 12px">Account and security</h2>
     <div class="two">
@@ -4411,7 +4507,7 @@ function renderSettings() {
           <button class="btn danger" id="btnDelete" ${ready ? '' : 'disabled'}>Delete test keyboard</button></div>
         <ul class="log" id="testLog" style="margin-top:14px"></ul></div>
     </div>`;
-  startMetaListener();
+  startMetaListener(); wireBackup();
   document.getElementById('btnSignOut')?.addEventListener('click', signOutApp);
   document.getElementById('btnCopyRules')?.addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(lockedRulesText(currentUser.uid)); toast('Rules copied'); }
