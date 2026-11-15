@@ -483,6 +483,12 @@
   .qrsheet { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; } .qrlabel { background: #fff; color: #111; border-radius: 8px; padding: 10px; text-align: center; font-family: system-ui, sans-serif; break-inside: avoid; } .qrlabel img { width: 120px; height: 120px; image-rendering: pixelated; display: block; margin: 0 auto 6px; } .qrlabel b { display: block; font-size: 13px; line-height: 1.25; } .qrlabel span { font-size: 11px; color: #555; }
   #printArea { display: none; }
   @media print { body.printing > *:not(#printArea) { display: none !important; } body.printing { background: #fff !important; } body.printing #printArea { display: block; padding: 8mm; } body.printing .qrsheet { grid-template-columns: repeat(4, 1fr); gap: 4mm; } body.printing .qrlabel { border: 1px dashed #999; border-radius: 0; } }
+  select[data-listfilter] { max-width: 168px; } select[data-workmenu] { max-width: 104px; }
+  .donebtn { position: absolute; left: 8px; bottom: 8px; z-index: 2; font: inherit; font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line-2); background: color-mix(in srgb, var(--surface) 88%, transparent); color: var(--text-2); cursor: pointer; opacity: 0; transition: opacity .15s; }
+  .kcard { position: relative; } .kcard:hover .donebtn, .donebtn.on, .donebtn.inq, tr.row .donebtn { opacity: 1; } tr.row .donebtn { position: static; margin-left: 8px; }
+  .donebtn.on { background: var(--ok-bg); color: var(--ok-on); border-color: transparent; } .donebtn.inq { border-color: var(--warn); color: var(--warn); } .btn.donestate { background: var(--ok-bg); color: var(--ok-on); border-color: transparent; }
+  @media (hover: none) { .donebtn { opacity: 1; } }
+  .bulkrow { display: grid; grid-template-columns: 1fr 1.3fr auto; gap: 8px; margin-top: 8px; align-items: center; } @media (max-width: 700px) { .bulkrow { grid-template-columns: 1fr; } }
   /* theme picker */
   .thgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
   .thcard { border: 2px solid var(--line); border-radius: var(--radius-s); padding: 0; overflow: hidden; cursor: pointer; background: none; text-align: left; color: inherit; }
@@ -531,7 +537,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.61.0';
+const APP_VERSION = 'v0.62.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -674,7 +680,7 @@ function refreshIfShowing() {
   const id = (location.hash.replace(/^#\/?/, '').split('/')[0]) || 'dashboard';
   if (formDirty && editing && VALUE_TYPES.includes(id)) { const cur = itemsOfType(id).find(x => x.id === editing.id); if (cur && swapValueCardIfOnly(id, cur)) return; }
   if (id === 'dashboard') route();
-  else if (id === 'import') { drawImportPreview(); drawReconcile(); }
+  else if (id === 'import') { clearTimeout(refreshIfShowing._t); refreshIfShowing._t = setTimeout(() => { if (location.hash.startsWith('#/import')) { drawImportPreview(); drawReconcile(); } }, 120); }   // many records arrive at once during an import: redraw once, not per record
   else if (id === 'catalog' && document.getElementById('matchBox')) drawGmkMatch();
   else if (id === 'catalog') drawCatalog();
   else if (id === 'value') renderValue();
@@ -772,13 +778,16 @@ function drawSelBar() {
   let bar = document.getElementById('selBar'); if (!selMode) { if (bar) bar.remove(); return; }
   if (!bar) { bar = document.createElement('div'); bar.id = 'selBar'; bar.className = 'selbar'; document.body.appendChild(bar); bar.onclick = selAction; }
   const n = selIds.size, dis = n ? '' : ' disabled';
-  bar.innerHTML = `<b>${n} selected</b><button class="btn" data-sel="all">Select all shown</button><button class="btn" data-sel="fav"${dis}>★ Favorite</button><button class="btn" data-sel="unfav"${dis}>Unfavorite</button>${LOC_TYPES.includes(selType) ? `<button class="btn" data-sel="loc"${dis}>Set location…</button>` : ''}<button class="btn" data-sel="qr"${dis}>QR labels</button><button class="btn danger" data-sel="del"${dis}>Delete</button><button class="btn" data-sel="done">Done</button>`;
+  bar.innerHTML = `<b>${n} selected</b><button class="btn" data-sel="all">Select all shown</button><button class="btn" data-sel="fav"${dis}>★ Favorite</button><button class="btn" data-sel="unfav"${dis}>Unfavorite</button>${LOC_TYPES.includes(selType) ? `<button class="btn" data-sel="loc"${dis}>Set location…</button>` : ''}<button class="btn" data-sel="edit"${dis}>Edit fields…</button><button class="btn" data-sel="queue"${dis}>Add to work queue</button><button class="btn" data-sel="done"${dis} data-donev="1">Mark done</button><button class="btn" data-sel="qr"${dis}>QR labels</button><button class="btn danger" data-sel="del"${dis}>Delete</button><button class="btn" data-sel="done">Close</button>`;
 }
 async function selAction(e) {
   const b = e.target.closest('[data-sel]'); if (!b) return; const act = b.dataset.sel, t = selType, ids = [...selIds].filter(id => itemsOfType(t).some(x => x.id === id));
-  if (act === 'done') { setSelMode(false); return; }
+  if (act === 'done' && !b.dataset.donev) { setSelMode(false); return; }
   if (act === 'all') { document.querySelectorAll('#view a.kcard, #view tr.row[data-href]').forEach(el => { const id = idOfEl(el); if (id && itemsOfType(t).some(x => x.id === id)) selIds.add(id); }); markSel(); drawSelBar(); return; }
   if (!ids.length) { toast('Samples cannot be changed'); return; }
+  if (act === 'edit') { bulkEditDialog(t, ids); return; }
+  if (act === 'queue') { try { for (const id of ids) await withTimeout(colOfType(t).doc(id).update({ inQueue: true, doneAt: firebase.firestore.FieldValue.delete() })); toast(`${ids.length} added to your work queue`); listFilter[t] = 'queue'; setSelMode(false); redrawList(t); } catch (err) { toast('Stopped: ' + explain(err)); } return; }
+  if (act === 'done') { try { for (const id of ids) await withTimeout(colOfType(t).doc(id).update({ doneAt: Date.now(), inQueue: firebase.firestore.FieldValue.delete() })); toast(`${ids.length} marked done`); setSelMode(false); } catch (err) { toast('Stopped: ' + explain(err)); } return; }
   if (act === 'qr') { showQrLabels(ids.map(id => ({ t, x: itemsOfType(t).find(y => y.id === id) }))); return; }
   try {
     if (act === 'fav' || act === 'unfav') { for (const id of ids) await withTimeout(colOfType(t).doc(id).update({ isFavorite: act === 'fav' })); toast(`${ids.length} ${act === 'fav' ? 'marked as favorite' : 'removed from favorites'}`); setSelMode(false); }
@@ -812,6 +821,92 @@ function ensureListTools() {   // adds Select (list pages) and Duplicate (item p
 }
 new MutationObserver(() => ensureListTools()).observe(document.getElementById('view'), { childList: true, subtree: true });
 window.addEventListener('hashchange', () => { if (selMode && listTypeNow() !== selType) setSelMode(false); });
+/* ---------- v0.62.0: Last modified, one Filter drop-down per list, Done marks and a work queue, bulk field edit ---------- */
+const listFilter = { keyboards: '', switches: '', keycaps: '', pcbs: '', artisans: '', accessories: '' };
+const modMs = x => x.updatedAt && x.updatedAt.toDate ? x.updatedAt.toDate().getTime() : x.createdAt && x.createdAt.toDate ? x.createdAt.toDate().getTime() : (x.isSample ? 0 : Date.now());
+const DAY = 86400000;
+function listFilterHtml(t) {
+  const its = itemsOfType(t), f = t === 'keycaps' && kcChip ? 'kc:' + kcChip : listFilter[t] || '', o = (v, label) => `<option value="${esc(v)}"${f === v ? ' selected' : ''}>${esc(label)}</option>`;
+  const nd = its.filter(x => x.doneAt).length, nq = its.filter(x => x.inQueue).length;
+  return `<select class="select" data-listfilter="${t}" aria-label="Filter" title="Filter">${o('', 'Filter: all')}${o('fav', '★ Favorites')}
+    <optgroup label="Work">${o('todo', `Not done yet (${its.length - nd})`)}${o('done', `Done (${nd})`)}${o('done7', 'Done in the last 7 days')}${o('queue', `My work queue (${nq})`)}</optgroup>
+    <optgroup label="Last modified">${o('mod7', 'Changed in the last 7 days')}${o('mod30', 'Changed in the last 30 days')}${o('old30', 'Not changed for 30+ days')}</optgroup>
+    ${t === 'keycaps' ? `<optgroup label="Keycaps">${o('kc:incomplete', 'Missing kits')}${savedKeycaps.some(x => { const c = completionOf(x); return c && c.check.length; }) ? o('kc:kitcheck', '⚠ Kit names to check') : ''}${[...new Set(savedKeycaps.map(x => x.profile).filter(Boolean))].sort().map(p2 => o('kc:profile:' + p2, 'Profile: ' + p2)).join('')}</optgroup>` : ''}</select>
+    <select class="select" data-workmenu="${t}" aria-label="Work list actions" title="Done marks and work queue"><option value="">Work…</option><option value="finish"${nq ? '' : ' disabled'}>Finish my queue: mark all ${nq} done</option><option value="clearq"${nq ? '' : ' disabled'}>Empty my queue (no done marks)</option><option value="reset"${nd ? '' : ' disabled'}>Reset: clear all ${nd} done marks</option></select>`;
+}
+function finishList(t, list) {
+  const f = listFilter[t] || '', now = Date.now(), sort = t === 'keyboards' ? kbSort : t === 'switches' ? swSort : t === 'keycaps' ? kcSort : (partState[t] || {}).sort;
+  const ok = { fav: x => x.isSample ? favs.has(x.id) : !!x.isFavorite, todo: x => !x.doneAt, done: x => !!x.doneAt, done7: x => x.doneAt && now - x.doneAt < 7 * DAY, queue: x => !!x.inQueue, mod7: x => now - modMs(x) < 7 * DAY, mod30: x => now - modMs(x) < 30 * DAY, old30: x => now - modMs(x) >= 30 * DAY }[f];
+  let out = ok ? list.filter(ok) : list.slice();
+  if (sort === 'modNew' || sort === 'modOld') out.sort((a, b) => (sort === 'modNew' ? -1 : 1) * (modMs(a) - modMs(b)));
+  return out;
+}
+function redrawList(t) { if (listTypeNow() !== t) return; if (t === 'keyboards') drawKeyboardResults(); else if (t === 'switches') drawSwitchResults(); else if (t === 'keycaps') drawKeycapResults(); else drawPartResults(t); refreshFilterSelects(t); }
+function refreshFilterSelects(t) { const f = document.querySelector(`[data-listfilter="${t}"]`), w = document.querySelector(`[data-workmenu="${t}"]`); if (!f || !w) return; const tmp = document.createElement('div'); tmp.innerHTML = listFilterHtml(t); f.innerHTML = tmp.children[0].innerHTML; f.value = t === 'keycaps' && kcChip ? 'kc:' + kcChip : listFilter[t] || ''; w.innerHTML = tmp.children[1].innerHTML; }
+document.addEventListener('change', async e => {
+  const f = e.target.closest('[data-listfilter]');
+  if (f) { const t = f.dataset.listfilter, v = f.value; if (t === 'keycaps') kcChip = v.startsWith('kc:') ? v.slice(3) : ''; listFilter[t] = v.startsWith('kc:') ? '' : v; redrawList(t); return; }
+  const w = e.target.closest('[data-workmenu]'); if (!w) return; const t = w.dataset.workmenu, act = w.value; w.value = ''; if (!act) return;
+  const its = itemsOfType(t), del = firebase.firestore.FieldValue.delete(), q = its.filter(x => x.inQueue), d = its.filter(x => x.doneAt);
+  try {
+    if (act === 'finish') { if (!await askConfirm(`Mark all ${q.length} items in your queue as done and empty the queue?`, { ok: 'Finish queue', danger: false })) return; for (const x of q) await withTimeout(colOfType(t).doc(x.id).update({ doneAt: Date.now(), inQueue: del })); toast(`Queue finished: ${q.length} done`); if (listFilter[t] === 'queue') listFilter[t] = ''; }
+    if (act === 'clearq') { for (const x of q) await withTimeout(colOfType(t).doc(x.id).update({ inQueue: del })); toast('Queue emptied'); if (listFilter[t] === 'queue') listFilter[t] = ''; }
+    if (act === 'reset') { if (!await askConfirm(`Clear the done mark on all ${d.length} ${SEC[t].title.toLowerCase()}? This starts a new round; nothing else changes.`, { ok: 'Reset done marks', danger: false })) return; for (const x of d) await withTimeout(colOfType(t).doc(x.id).update({ doneAt: del })); toast('Done marks cleared'); if (['done', 'done7'].includes(listFilter[t])) listFilter[t] = ''; }
+  } catch (err) { toast('Stopped: ' + explain(err)); }
+  setTimeout(() => redrawList(t), 300);
+});
+async function toggleDone(t, id) { const x = itemsOfType(t).find(y => y.id === id); if (!x) return; const del = firebase.firestore.FieldValue.delete();
+  try { await withTimeout(colOfType(t).doc(id).update(x.doneAt ? { doneAt: del } : { doneAt: Date.now(), inQueue: del })); toast(x.doneAt ? 'Marked not done' : 'Marked done'); } catch (e) { toast('Not saved: ' + explain(e)); } }
+function decorateCards() {   // a Done tick on every card and row; a Done button on item pages
+  const lt = listTypeNow();
+  if (lt && db && !isFile) document.querySelectorAll('#view a.kcard, #view tr.row[data-href]').forEach(el => { const id = idOfEl(el), x = id && itemsOfType(lt).find(y => y.id === id); if (!x) return;
+    let b = el.querySelector('.donebtn'); const want = (x.doneAt ? 'd' : '') + (x.inQueue ? 'q' : '');
+    if (b && b.dataset.st === want) return;
+    if (!b) { b = document.createElement('button'); b.type = 'button'; b.className = 'donebtn'; b.dataset.done = id; (el.tagName === 'TR' ? el.cells[el.cells.length - 1] : (el.querySelector('.ph') || el)).appendChild(b); }
+    b.dataset.st = want; b.classList.toggle('on', !!x.doneAt); b.classList.toggle('inq', !!x.inQueue); b.textContent = x.doneAt ? '✓ Done' : x.inQueue ? 'In queue' : 'Done?'; b.title = x.doneAt ? 'Done on ' + new Date(x.doneAt).toLocaleDateString() + '. Click to undo.' : 'Mark this entry as done'; });
+  const m = location.hash.match(/^#\/(\w+)\/([^/]+)$/), tools = document.querySelector('#view .pagehead .tools'), del = tools && tools.querySelector('#btnDelete');
+  if (m && del && LIST_TYPES.includes(m[1])) { const x = itemsOfType(m[1]).find(y => y.id === m[2]); if (!x) return; let b = document.getElementById('btnDone');
+    if (!b) { del.insertAdjacentHTML('beforebegin', '<button class="btn" id="btnDone" type="button"></button>'); b = document.getElementById('btnDone'); b.onclick = () => toggleDone(m[1], m[2]); }
+    const txt = x.doneAt ? '✓ Done' : x.inQueue ? 'Mark done (in queue)' : 'Mark done'; if (b.textContent !== txt) { b.textContent = txt; b.classList.toggle('donestate', !!x.doneAt); } }
+}
+new MutationObserver(() => decorateCards()).observe(document.getElementById('view'), { childList: true, subtree: true });
+document.addEventListener('click', e => { const b = e.target.closest('.donebtn'); if (!b || selMode) return; e.preventDefault(); e.stopPropagation(); toggleDone(listTypeNow(), b.dataset.done); }, true);
+/* bulk edit of general fields (not prices, dates, receipts, names or notes) */
+const BULK_FIELDS = {
+  keyboards: [['brand', 'Brand'], ['size', 'Size'], ['layout', 'Layout'], ['keyboardType', 'Keyboard type'], ['status', 'Status'], ['color', 'Color'], ['connectivity', 'Connectivity'], ['connector', 'Connector'], ['designer', 'Designer'], ['location', 'Location'], ['purchasedFrom', 'Purchased from']],
+  switches: [['manufacturer', 'Maker'], ['switchType', 'Type'], ['pins', 'Pins'], ['mechanism', 'Mechanism'], ['topMaterial', 'Top housing'], ['bottomMaterial', 'Bottom housing'], ['stemMaterial', 'Stem'], ['location', 'Location'], ['purchasedFrom', 'Purchased from']],
+  keycaps: [['manufacturer', 'Maker / platform'], ['profile', 'Profile'], ['designer', 'Designer'], ['material', 'Material'], ['legends', 'Legends'], ['stemMount', 'Stem mount'], ['location', 'Location']],
+  pcbs: [['manufacturer', 'Maker'], ['category', 'Category'], ['location', 'Location'], ['purchasedFrom', 'Purchased from']],
+  artisans: [['manufacturer', 'Maker'], ['category', 'Category'], ['series', 'Series'], ['colorway', 'Colorway'], ['location', 'Location'], ['purchasedFrom', 'Purchased from']],
+  accessories: [['manufacturer', 'Maker'], ['category', 'Category'], ['style', 'Style / type'], ['location', 'Location'], ['purchasedFrom', 'Purchased from']] };
+function bulkEditDialog(t, ids) {
+  const F = BULK_FIELDS[t] || [], d = document.createElement('div'); d.className = 'gdlg askdlg'; d.id = 'bulkDlg';
+  const vals = f => [...new Set(itemsOfType(t).map(x => x[f]).filter(v => typeof v === 'string' && v.trim()))].sort((a, b) => a.localeCompare(b));
+  const rowHtml = i => `<div class="bulkrow" data-i="${i}"><select class="input" data-bf><option value="">Choose a field…</option>${F.map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select><span data-bvwrap><input class="input" data-bv placeholder="New value" disabled></span><button class="btn" data-brm type="button" title="Remove this line">✕</button></div>`;
+  d.innerHTML = `<div class="card askcard" style="width:min(620px,100%)"><p class="askmsg"><b>Edit ${ids.length} ${ids.length === 1 ? 'entry' : 'entries'}</b></p><p class="sub" style="margin:4px 0 12px">Pick the fields to change and the new value for each. Every selected entry gets these values. Leave a value empty to clear that field. Prices, dates, receipts, names and notes are not changed here.</p>
+    <div id="bulkRows">${rowHtml(0)}</div><button class="btn" id="bulkMore" type="button" style="margin-top:8px">+ Another field</button>
+    <div class="btnrow" style="justify-content:flex-end;margin-top:16px"><button class="btn" id="bulkNo">Cancel</button><button class="btn primary" id="bulkGo">Apply to ${ids.length}</button></div><p class="sub" id="bulkMsg" style="margin:6px 0 0"></p></div>`;
+  document.body.appendChild(d); let n = 1;
+  d.onchange = e => { const sel = e.target.closest('[data-bf]'); if (!sel) return; const wrap = sel.parentElement.querySelector('[data-bvwrap]'), f = sel.value;
+    if (t === 'keyboards' && f === 'keyboardType') wrap.innerHTML = `<select class="input" data-bv><option value="">(clear)</option>${Object.entries(KB_TYPES).map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join('')}</select>`;
+    else { const id = 'bulkdl' + sel.parentElement.dataset.i; wrap.innerHTML = `<input class="input" data-bv placeholder="New value" list="${id}"${f ? '' : ' disabled'}><datalist id="${id}">${f ? vals(f).map(v => `<option value="${esc(v)}">`).join('') : ''}</datalist>`; } };
+  d.onclick = async e => {
+    if (e.target.id === 'bulkNo' || e.target === d) { d.remove(); return; }
+    if (e.target.id === 'bulkMore') { document.getElementById('bulkRows').insertAdjacentHTML('beforeend', rowHtml(n++)); return; }
+    if (e.target.closest('[data-brm]')) { const r = e.target.closest('.bulkrow'); if (document.querySelectorAll('#bulkRows .bulkrow').length > 1) r.remove(); return; }
+    if (e.target.id !== 'bulkGo') return;
+    const upd = {}; d.querySelectorAll('.bulkrow').forEach(r => { const f = r.querySelector('[data-bf]').value; if (f) upd[f] = r.querySelector('[data-bv]').value.trim(); });
+    const keys = Object.keys(upd), msg = document.getElementById('bulkMsg'); if (!keys.length) { msg.textContent = 'Choose at least one field.'; return; }
+    const label = k => (F.find(x => x[0] === k) || [k, k])[1];
+    if (!await askConfirm(`Change ${keys.map(k => `${label(k)} → ${upd[k] ? '"' + upd[k] + '"' : 'empty'}`).join(', ')} on ${ids.length} ${ids.length === 1 ? 'entry' : 'entries'}?`, { ok: 'Apply', danger: false })) return;
+    const before = ids.map(id => { const x = itemsOfType(t).find(y => y.id === id) || {}; return { id, old: Object.fromEntries(keys.map(k => [k, x[k] === undefined ? null : x[k]])) }; });
+    e.target.disabled = true; let done = 0;
+    try { for (const id of ids) { await withTimeout(colOfType(t).doc(id).update(Object.assign({ updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, upd))); msg.textContent = `Saving… ${++done} of ${ids.length}`; }
+      d.remove(); setSelMode(false);
+      toast(`${ids.length} updated`, { action: 'Undo', ms: 10000, onAction: async () => { try { for (const b of before) await withTimeout(colOfType(t).doc(b.id).update(Object.fromEntries(keys.map(k => [k, b.old[k] === null ? firebase.firestore.FieldValue.delete() : b.old[k]])))); toast('Changes undone'); } catch (err) { toast('Undo failed: ' + explain(err)); } } });
+    } catch (err) { msg.textContent = `Stopped after ${done} of ${ids.length}: ${explain(err)}`; e.target.disabled = false; }
+  };
+}
 /* ---------- Keyboard shortcuts ---------- */
 const SHORTCUTS = [['/', 'Jump to the search box'], ['N', 'Add a new item (on a list page)'], ['Ctrl + S', 'Save changes'], ['Esc', 'Close a box, or leave select mode'], ['G then D / K / S / C', 'Go to Dashboard / Keyboards / Switches / Keycaps'], ['?', 'Show this list']];
 function showShortcuts() { if (document.getElementById('keysDlg')) return; const d = document.createElement('div'); d.className = 'gdlg'; d.id = 'keysDlg';
@@ -999,13 +1094,14 @@ let currentView = '';
    search text stays until the browser tab is closed. */
 let listPrefsReady = false, listPrefsLast = '';
 function listPrefsNow() { const parts = {}; Object.keys(partState).forEach(t => { parts[t] = { sort: partState[t].sort, view: partState[t].view }; });
-  return [{ kbSort, kbView, swSort, swView, kcSort, kcView, wishFilter, valFilter, parts }, { kb: kbQuery, sw: swQuery, kc: kcQuery, parts: Object.fromEntries(Object.keys(partState).map(t => [t, partState[t].q || ''])) }]; }
+  return [{ kbSort, kbView, swSort, swView, kcSort, kcView, wishFilter, valFilter, parts, filters: listFilter }, { kb: kbQuery, sw: swQuery, kc: kcQuery, parts: Object.fromEntries(Object.keys(partState).map(t => [t, partState[t].q || ''])) }]; }
 function restoreListPrefs() {
   listPrefsReady = true;
   try { const p = lsGet('kbc_list_prefs') || {}, q = JSON.parse(sessionStorage.getItem('kbc_list_q') || '{}'), V = ['gallery', 'list'];
     if (SORTS[p.kbSort]) kbSort = p.kbSort; if (V.includes(p.kbView)) kbView = p.kbView;
     if (SORTS[p.swSort]) swSort = p.swSort; if (V.includes(p.swView)) swView = p.swView;
     if (SORTS[p.kcSort] || p.kcSort === 'completion') kcSort = p.kcSort; if (V.includes(p.kcView)) kcView = p.kcView;
+    if (p.filters && typeof p.filters === 'object') LIST_TYPES.forEach(t => { if (typeof p.filters[t] === 'string' && !p.filters[t].startsWith('kc:')) listFilter[t] = p.filters[t]; });
     if (['open', 'bought', 'all'].includes(p.wishFilter)) wishFilter = p.wishFilter; if (typeof p.valFilter === 'string' && (['all', 'none'].includes(p.valFilter) || VALUE_TYPES.includes(p.valFilter))) valFilter = p.valFilter;
     PART_IDS.forEach(t => { const pp = (p.parts || {})[t] || {}, qq = (q.parts || {})[t] || ''; if (pp.sort || pp.view || qq) partState[t] = { sort: pp.sort || 'newest', view: V.includes(pp.view) ? pp.view : 'gallery', q: qq }; });
     if (typeof q.kb === 'string') kbQuery = q.kb; if (typeof q.sw === 'string') swQuery = q.sw; if (typeof q.kc === 'string') kcQuery = q.kc;
@@ -1196,7 +1292,7 @@ function wireDashboard() {
 }
 
 /* ===================== Keyboards: gallery / list ===================== */
-const SORTS = { newest: 'Newest first', oldest: 'Oldest first', nameAZ: 'Name A→Z', nameZA: 'Name Z→A', brandAZ: 'Brand A→Z', brandZA: 'Brand Z→A' };
+const SORTS = { newest: 'Newest first', oldest: 'Oldest first', modNew: 'Last modified', modOld: 'Longest untouched', nameAZ: 'Name A→Z', nameZA: 'Name Z→A', brandAZ: 'Brand A→Z', brandZA: 'Brand Z→A' };
 let kbSort = 'newest', kbView = 'gallery', kbQuery = '';
 function sortKeyboards(list) {
   const by = (f, dir) => (a, b) => dir * String(f(a) || '').localeCompare(String(f(b) || ''), 'en', { sensitivity: 'base' });
@@ -1221,7 +1317,7 @@ function renderKeyboards() {
   view.innerHTML = `
     <div class="pagehead"><div><h1>Keyboards</h1><p id="kbCount"></p></div>
       <div class="tools">
-        <select class="select" id="kbSort" aria-label="Sort">${Object.entries(SORTS).map(([v, t]) => `<option value="${v}"${v === kbSort ? ' selected' : ''}>${t}</option>`).join('')}</select>
+        <select class="select" id="kbSort" aria-label="Sort">${Object.entries(SORTS).map(([v, t]) => `<option value="${v}"${v === kbSort ? ' selected' : ''}>${t}</option>`).join('')}</select>${listFilterHtml('keyboards')}
         <div class="seg" role="group" aria-label="View"><button id="vGal" class="${kbView === 'gallery' ? 'on' : ''}">${I.grid}Gallery</button><button id="vList" class="${kbView === 'list' ? 'on' : ''}">${I.list}List</button></div>
         ${shareListButton('keyboards')}<a class="btn primary" href="#/keyboards/new">${I.plus}Add keyboard</a>
       </div></div>
@@ -1237,9 +1333,9 @@ function renderKeyboards() {
 }
 function drawKeyboardResults() {
   const all = allKeyboards();
-  const list = lastLists.keyboards = sortKeyboards(all.filter(k => matches(k, kbQuery.trim())));
+  const list = lastLists.keyboards = finishList('keyboards', sortKeyboards(all.filter(k => matches(k, kbQuery.trim()))));
   const nSaved = savedKeyboards.length;
-  document.getElementById('kbCount').textContent = (kbQuery.trim() ? `${list.length} of ${all.length} keyboards` : `${all.length} keyboards`) + (activeSamples().length ? ` · ${nSaved} saved, ${activeSamples().length} samples` : '') + (db && !isFile && !kbLoaded ? ' · loading…' : '');
+  document.getElementById('kbCount').textContent = (kbQuery.trim() || list.length !== all.length ? `${list.length} of ${all.length} keyboards` : `${all.length} keyboards`) + (activeSamples().length ? ` · ${nSaved} saved, ${activeSamples().length} samples` : '') + (db && !isFile && !kbLoaded ? ' · loading…' : '');
   const box = document.getElementById('kbResults');
   if (!list.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.search}</div><h2>No matches</h2><p>Nothing matches "${esc(kbQuery)}".</p></div>`; return; }
   if (kbView === 'gallery') {
@@ -1972,7 +2068,7 @@ function renderSwitches() {
   document.getElementById('view').innerHTML = `
     <div class="pagehead"><div><h1>Switches</h1><p id="swCount"></p></div>
       <div class="tools">
-        <select class="select" id="swSort" aria-label="Sort">${Object.entries(SORTS).map(([v, t]) => `<option value="${v}"${v === swSort ? ' selected' : ''}>${t.replace('Brand', 'Maker')}</option>`).join('')}</select>
+        <select class="select" id="swSort" aria-label="Sort">${Object.entries(SORTS).map(([v, t]) => `<option value="${v}"${v === swSort ? ' selected' : ''}>${t.replace('Brand', 'Maker')}</option>`).join('')}</select>${listFilterHtml('switches')}
         <div class="seg" role="group" aria-label="View"><button id="swGal" class="${swView === 'gallery' ? 'on' : ''}">${I.grid}Gallery</button><button id="swList" class="${swView === 'list' ? 'on' : ''}">${I.list}List</button></div>
         ${shareListButton('switches')}<a class="btn primary" href="#/switches/new">${I.plus}Add switches</a>
       </div></div>
@@ -1987,11 +2083,11 @@ function renderSwitches() {
 }
 function drawSwitchResults() {
   const box = document.getElementById('swResults'); if (!box) return;
-  const all = savedSwitches, list = lastLists.switches = sortSwitches(twoPass(all, swQuery.trim(), swMain, swExtra).list);
+  const all = savedSwitches, list = lastLists.switches = finishList('switches', sortSwitches(twoPass(all, swQuery.trim(), swMain, swExtra).list));
   const count = all.reduce((s, w) => s + (Number(w.totalCount) || 0), 0);
   const unknown = all.filter(w => w.totalCount == null).length;
   const inst = all.reduce((s, w) => s + installedCount(w), 0);
-  document.getElementById('swCount').textContent = (swQuery.trim() ? `${list.length} of ${all.length} entries` : `${all.length} entr${all.length === 1 ? 'y' : 'ies'}`) + ` · ${count.toLocaleString()} switches in total · ${inst.toLocaleString()} installed` + (unknown ? ` (${unknown} entr${unknown === 1 ? 'y' : 'ies'} without a count)` : '') + (db && !isFile && !swLoaded ? ' · loading…' : '');
+  document.getElementById('swCount').textContent = (swQuery.trim() || list.length !== all.length ? `${list.length} of ${all.length} entries` : `${all.length} entr${all.length === 1 ? 'y' : 'ies'}`) + ` · ${count.toLocaleString()} switches in total · ${inst.toLocaleString()} installed` + (unknown ? ` (${unknown} entr${unknown === 1 ? 'y' : 'ies'} without a count)` : '') + (db && !isFile && !swLoaded ? ' · loading…' : '');
   if (!all.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.switches}</div><h2>No switches yet</h2><p>Add your first switches, or import them from Excel later in Phase 4.</p><p style="margin-top:14px"><a class="btn primary" href="#/switches/new">${I.plus}Add switches</a></p></div>`; return; }
   if (!list.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.search}</div><h2>No matches</h2><p>Nothing matches "${esc(swQuery)}".</p></div>`; return; }
   const sub = w => [w.manufacturer, w.totalCount != null ? `${w.countApprox ? '~' : ''}${Number(w.totalCount).toLocaleString()} pcs` : 'count ?'].filter(Boolean).join(' · ');
@@ -2238,13 +2334,13 @@ function renderKeycaps() {
   document.getElementById('view').innerHTML = `
     <div class="pagehead"><div><h1>Keycaps</h1><p id="kcCount"></p></div>
       <div class="tools">
-        <select class="select" id="kcSort" aria-label="Sort">${Object.entries(SORTS).concat([['completion', 'Most complete']]).map(([v, t]) => `<option value="${v}"${v === kcSort ? ' selected' : ''}>${t.replace('Brand', 'Maker')}</option>`).join('')}</select>
+        <select class="select" id="kcSort" aria-label="Sort">${Object.entries(SORTS).concat([['completion', 'Most complete']]).map(([v, t]) => `<option value="${v}"${v === kcSort ? ' selected' : ''}>${t.replace('Brand', 'Maker')}</option>`).join('')}</select>${listFilterHtml('keycaps')}
         <button class="btn" id="kcStats">Stats</button>${shareListButton('keycaps')}
         <div class="seg" role="group" aria-label="View"><button id="kcGal" class="${kcView === 'gallery' ? 'on' : ''}">${I.grid}Gallery</button><button id="kcList" class="${kcView === 'list' ? 'on' : ''}">${I.list}List</button></div>
         <a class="btn primary" href="#/keycaps/new">${I.plus}Add keycap set</a>
       </div></div>
     <div class="tools" style="margin-bottom:10px"><label class="search">${I.search}<input class="input" id="kcSearch" placeholder="Search by set, maker, designer, profile, colors or kit" value="${esc(kcQuery)}"></label></div>
-    ${kcChipsHtml()}
+    <div id="kcChips" hidden></div>
     <div id="kcResults"></div>`;
   wireShareList('keycaps', 'Keycaps', s => ({ name: s.name, sub: [s.manufacturer, s.profile, `${kitsOf(s).length} kit${kitsOf(s).length === 1 ? '' : 's'}`].filter(Boolean).join(' · '), thumb: s.coverThumb || (s.kitStockCover && s.kitStockCover.thumb), colors: shareColors(paletteOf(s)) }));
   document.getElementById('kcStats').onclick = () => (gmkSets ? Promise.resolve() : loadGmk().catch(() => {})).then(openKeycapStats);
@@ -2258,9 +2354,9 @@ function renderKeycaps() {
 }
 function drawKeycapResults() {
   const box = document.getElementById('kcResults'); if (!box) return;
-  const all = savedKeycaps, found = twoPass(all, kcQuery.trim(), kcMain, kcExtra), list = lastLists.keycaps = sortKeycaps(found.list.filter(kcChipOk));
+  const all = savedKeycaps, found = twoPass(all, kcQuery.trim(), kcMain, kcExtra), list = lastLists.keycaps = finishList('keycaps', sortKeycaps(found.list.filter(kcChipOk)));
   const kits = all.reduce((n, s) => n + kitsOf(s).length, 0);
-  document.getElementById('kcCount').textContent = (kcQuery.trim() || kcChip ? `${list.length} of ${all.length} sets` : `${all.length} set${all.length === 1 ? '' : 's'}`) + ` · ${kits} kit${kits === 1 ? '' : 's'}` + (db && !isFile && !kcLoaded ? ' · loading…' : '');
+  document.getElementById('kcCount').textContent = (kcQuery.trim() || kcChip || list.length !== all.length ? `${list.length} of ${all.length} sets` : `${all.length} set${all.length === 1 ? '' : 's'}`) + ` · ${kits} kit${kits === 1 ? '' : 's'}` + (db && !isFile && !kcLoaded ? ' · loading…' : '');
   if (!all.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.keycaps}</div><h2>No keycap sets yet</h2><p>Add a set with its kits, or import your Excel Keycaps tab on the Import page.</p><p style="margin-top:14px"><a class="btn primary" href="#/keycaps/new">${I.plus}Add keycap set</a></p></div>`; return; }
   if (!list.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.search}</div><h2>No matches</h2><p>${kcQuery.trim() ? `Nothing matches "${esc(kcQuery)}".` : 'No sets with this filter.'}</p></div>`; return; }
   const sub = s => [s.manufacturer, `${kitsOf(s).length} kit${kitsOf(s).length === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
@@ -2912,7 +3008,7 @@ function renderParts(t) {
   document.getElementById('view').innerHTML = `
     <div class="pagehead"><div><h1>${P.title}</h1><p id="ptCount"></p></div>
       <div class="tools">
-        <select class="select" id="ptSort" aria-label="Sort">${Object.entries(SORTS).map(([v, s]) => `<option value="${v}"${v === st.sort ? ' selected' : ''}>${s.replace('Brand', 'Maker')}</option>`).join('')}</select>
+        <select class="select" id="ptSort" aria-label="Sort">${Object.entries(SORTS).map(([v, s]) => `<option value="${v}"${v === st.sort ? ' selected' : ''}>${s.replace('Brand', 'Maker')}</option>`).join('')}</select>${listFilterHtml(t)}
         <div class="seg" role="group" aria-label="View"><button id="ptGal" class="${st.view === 'gallery' ? 'on' : ''}">${I.grid}Gallery</button><button id="ptList" class="${st.view === 'list' ? 'on' : ''}">${I.list}List</button></div>
         ${shareListButton(t)}<a class="btn primary" href="#/${t}/new">${I.plus}${P.addLabel}</a>
       </div></div>
@@ -2929,8 +3025,8 @@ function drawPartResults(t) {
   const box = document.getElementById('ptResults'); if (!box || !location.hash.startsWith('#/' + t)) return;
   const P = PART_TYPES[t], st = partState[t], all = savedParts[t];
   const by = (f, dir) => (a, b) => dir * String(f(a) || '').localeCompare(String(f(b) || ''), 'en', { sensitivity: 'base' });
-  const list = lastLists[t] = twoPass(all, st.q.trim(), x => [x.name, x.manufacturer, x.category, x.series, x.colorway], x => PART_TYPES[t].fields.map(f => x[f[0]]).concat([x.notes, x.mods, x.purchasedFrom, x.belongsToText])).list.sort({ newest: by(sortDate, -1), oldest: by(sortDate, 1), nameAZ: by(x => x.name, 1), nameZA: by(x => x.name, -1), brandAZ: by(x => x.manufacturer, 1), brandZA: by(x => x.manufacturer, -1) }[st.sort]);
-  document.getElementById('ptCount').textContent = (st.q.trim() ? `${list.length} of ${all.length}` : `${all.length}`) + ` ${all.length === 1 ? P.singular : P.title.toLowerCase()}` + (db && !isFile && !partsLoaded[t] ? ' · loading…' : '');
+  const list = lastLists[t] = finishList(t, twoPass(all, st.q.trim(), x => [x.name, x.manufacturer, x.category, x.series, x.colorway], x => PART_TYPES[t].fields.map(f => x[f[0]]).concat([x.notes, x.mods, x.purchasedFrom, x.belongsToText])).list.sort({ newest: by(sortDate, -1), oldest: by(sortDate, 1), nameAZ: by(x => x.name, 1), nameZA: by(x => x.name, -1), brandAZ: by(x => x.manufacturer, 1), brandZA: by(x => x.manufacturer, -1) }[st.sort]));
+  document.getElementById('ptCount').textContent = (st.q.trim() || list.length !== all.length ? `${list.length} of ${all.length}` : `${all.length}`) + ` ${all.length === 1 ? P.singular : P.title.toLowerCase()}` + (db && !isFile && !partsLoaded[t] ? ' · loading…' : '');
   if (!all.length) { box.innerHTML = `<div class="card empty"><div class="big">${I[P.icon]}</div><h2>No ${P.title.toLowerCase()} yet</h2><p>Add one here${t !== 'artisans' ? ', or import from Excel on the Import page' : ''}.</p><p style="margin-top:14px"><a class="btn primary" href="#/${t}/new">${I.plus}${P.addLabel}</a></p></div>`; return; }
   if (!list.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.search}</div><h2>No matches</h2><p>Nothing matches "${esc(st.q)}".</p></div>`; return; }
   const fav = (x, sm) => `<button class="fav${x.isFavorite ? ' on' : ''}"${sm ? ' style="position:static;width:28px;height:28px"' : ''} data-fav="${esc(x.id)}" aria-label="${x.isFavorite ? 'Remove from' : 'Add to'} favorites">${x.isFavorite ? I.starFill : I.star}</button>`;
@@ -3357,14 +3453,14 @@ function wireValueCard(t, x) {
 /* while a form has unsaved typing, a value change only redraws the value card */
 function swapValueCardIfOnly(t, x) {
   const c = document.getElementById('valueCard'); if (!c || !editing || editing.id !== x.id) return false;
-  const strip = o => JSON.stringify(Object.assign({}, o, { values: null, colorway: null, refImage: null, refUrl: null, refSource: null, stockThumb: null, stockPhotoId: null, kitStock: null, kitStockCover: null, summaryHidden: null, summaryExtra: null, description: null, descriptionOwn: null, name: null, updatedAt: null, createdIso: null, _date: null }));
+  const strip = o => JSON.stringify(Object.assign({}, o, { values: null, colorway: null, refImage: null, refUrl: null, refSource: null, doneAt: null, inQueue: null, stockThumb: null, stockPhotoId: null, kitStock: null, kitStockCover: null, kitLinks: null, summaryHidden: null, summaryExtra: null, description: null, descriptionOwn: null, name: null, updatedAt: null, createdIso: null, _date: null }));
   if (strip(editing) !== strip(x)) return false;
   c.outerHTML = valueCardHtml(t, x); wireValueCard(t, x);
   const cw = document.getElementById('cwCard'); if (cw && t === 'keyboards') { cw.outerHTML = colorwayCardHtml(x); wireColorwayCard(x); }
   const rc = document.getElementById('refCard'); if (rc && rc.querySelector('#refForm')?.hidden !== false) { rc.outerHTML = refCardHtml(t, x); wireRefCard(t, x); }
   if (document.getElementById('photoGrid') && currentPhotos.length) drawPhotoGrid(x);
   if (t === 'keycaps' && document.getElementById('kitGallery')) drawKitGallery(x);
-  editing = Object.assign({}, editing, { values: x.values, colorway: x.colorway, refImage: x.refImage, refUrl: x.refUrl, refSource: x.refSource, stockThumb: x.stockThumb, stockPhotoId: x.stockPhotoId, kitStock: x.kitStock, kitStockCover: x.kitStockCover, summaryHidden: x.summaryHidden, summaryExtra: x.summaryExtra, description: x.description, descriptionOwn: x.descriptionOwn, name: x.name });
+  editing = Object.assign({}, editing, { values: x.values, colorway: x.colorway, refImage: x.refImage, refUrl: x.refUrl, refSource: x.refSource, stockThumb: x.stockThumb, stockPhotoId: x.stockPhotoId, doneAt: x.doneAt, inQueue: x.inQueue, kitStock: x.kitStock, kitStockCover: x.kitStockCover, kitLinks: x.kitLinks, summaryHidden: x.summaryHidden, summaryExtra: x.summaryExtra, description: x.description, descriptionOwn: x.descriptionOwn, name: x.name });
   const sp = document.querySelector('#view [data-panel="summary"]'); if (sp && !sp.hidden && !sp.querySelector('.sumed')) drawSummary(document.getElementById('view'), x, t);
   return true;
 }
@@ -3895,7 +3991,7 @@ function kitGalleryTiles(s) {
   else if (photos.length) { kind = 'photos'; base = photos.map(p => ({ name: p.name, img: p.url, more: [], ck: { name: p.name }, yours: true })); }
   let spare = photos;
   if (kind === 'catalog' && photos.length) { const pp = pairKits(photos, base); pp.forEach((p, b) => { b.more = [b.img, ...b.more].filter(Boolean); b.img = p.url; b.yours = true; }); spare = photos.filter(p => ![...pp.values()].includes(p)); }
-  const pairs = pairKits(mine, base);
+  const pairs = pairKits(mine, base, (live && live.kitLinks) || {});
   base.forEach(b => { const own = pairs.get(b); tiles.push(Object.assign({}, b, { inList: true, owned: !!own, kit: own, on: own ? where(own) : '' })); });
   const extras = mine.filter(k => !tiles.some(t => t.kit === k)), ep = kind === 'catalog' ? pairKits(spare, extras.map(k => ({ name: k.name, k }))) : new Map();
   extras.forEach(k => { const hit = [...ep.entries()].find(([e]) => e.k === k); tiles.push({ name: k.name, owned: true, kit: k, on: where(k), extra: !!base.length, img: hit ? hit[1].url : '', yours: !!hit }); });
@@ -3940,11 +4036,19 @@ function openKitView(s, t) {
   d.innerHTML = `<div class="card kv-card"><div class="sec-title"><h3>${esc(t.name)} <span class="chip ${t.owned ? 'kvown' : ''}">${t.owned ? '✓ Owned' : 'Not owned'}</span></h3><button class="btn" data-x>✕</button></div>
     ${imgs.length ? `<div class="kvimg"><img id="kvMain" src="${esc(imgs[0])}" alt="" referrerpolicy="no-referrer"></div>${imgs.length > 1 ? `<div class="kvthumbs">${imgs.map((u, i) => `<img src="${esc(u)}" data-kvi="${i}" alt="" loading="lazy" referrerpolicy="no-referrer">`).join('')}</div>` : ''}` : ''}
     <p class="sub" style="margin:10px 0 0">${[t.price ? 'Group-buy price ' + t.price : '', t.qty ? 'Made: ' + esc(t.qty) : '', t.on ? 'Installed on ' + esc(t.on) : '', t.extra ? 'This kit of yours has no match in the kit list' : '', t.stock ? 'Your stock picture for this kit' : t.yours ? 'Picture from your Keycap Collection app' : ''].filter(Boolean).join(' · ')}</p>
+    ${(() => { const refId = document.getElementById('f_gmkRef')?.value || '', ref = refId && gmkSets ? gmkSets.find(x => x.id === refId) : null; if (!ref || !t.owned || !s || !s.id || !t.kit) return '';
+      const live = savedKeycaps.find(x => x.id === s.id) || s, cur = (live.kitLinks || {})[kitKey(t.kit.name)] || '';
+      return `<div class="fld" style="margin-top:12px"><label for="kvLink">Your kit “${esc(t.kit.name)}” is this catalog kit</label><select class="input" id="kvLink" data-kitname="${esc(t.kit.name)}"><option value="">Match by name (automatic)</option>${ref.kits.map(ck => `<option value="${esc(ck.name)}"${cur === ck.name ? ' selected' : ''}>${esc(ck.name)}</option>`).join('')}<option value="-"${cur === '-' ? ' selected' : ''}>Not in the catalog (counts as an extra kit)</option></select>
+        <p class="sub" style="margin:4px 0 0">${t.extra && cur !== '-' ? 'No catalog kit has this name. Pick the right one, or confirm it is not in the catalog.' : 'Change this only if the automatic match is wrong.'} Saved straight away.</p></div>`; })()}
     <div class="btnrow" style="margin-top:12px">
       ${t.owned ? '<button class="btn" id="kvShow">Show in Kits tab</button>' : `<button class="btn primary" id="kvOwn" title="Adds this kit to the Kits tab; click Save to keep it">I own this kit</button>${s ? (onWish ? '<span class="chip">On wishlist</span>' : '<button class="btn" id="kvWish">+ Wishlist</button>') : ''}`}
       <span style="margin-left:auto">${matrixLinkHtml(t.cat ? gmkSets.find(x => x.id === document.getElementById('f_gmkRef').value) : null)}</span></div></div>`;
   document.body.appendChild(d);
   const toKits = () => { d.remove(); document.querySelector('.tabs [data-tab="kits"]').click(); };
+  const kl = d.querySelector('#kvLink'); if (kl) kl.onchange = async () => { const live = savedKeycaps.find(x => x.id === s.id) || s, links = Object.assign({}, live.kitLinks || {}), key = kitKey(kl.dataset.kitname);
+    if (kl.value) links[key] = kl.value; else delete links[key];
+    try { await withTimeout(kcCol().doc(s.id).update({ kitLinks: Object.keys(links).length ? links : firebase.firestore.FieldValue.delete(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); toast('Kit match saved'); d.remove(); }
+    catch (e) { toast('Not saved: ' + explain(e)); } };
   d.onclick = async e => {
     if (e.target === d || e.target.closest('[data-x]')) { d.remove(); return; }
     const th = e.target.closest('[data-kvi]'); if (th) { document.getElementById('kvMain').src = imgs[+th.dataset.kvi]; return; }
@@ -4329,26 +4433,34 @@ function kitKey(t) { return gmkNorm(t).replace(/kits?$/, '').replace(/ies$/, 'y'
 function kitMatch(a, b) { const x = kitKey(a), y = kitKey(b); return !!x && !!y && (x === y || (Math.min(x.length, y.length) >= 3 && (x.includes(y) || y.includes(x)))); }
 /* One owned kit counts for one catalog kit: exact names first, then loose matches, closest length first.
    So "Base Kit" is Olivia R3's "Base", not also its "Dark Base". Returns Map(catalog kit -> owned kit). */
-function pairKits(owned, cat) {
-  const pairs = new Map(), used = new Set();
-  owned.forEach(o => { const c = cat.find(ck => !pairs.has(ck) && kitKey(ck.name) === kitKey(o.name)); if (c) { pairs.set(c, o); used.add(o); } });
+/* v0.62.0: (1) your own choice wins: links = { kitKey(your kit name): catalog kit name, or '-' for "not in the catalog" };
+   (2) same words in another order match ("Light Base Kit" = "Base Light"); (3) then exact and loose names as before. */
+const kitWords = t => String(t || '').toLowerCase().replace(/[^a-z0-9%]+/g, ' ').split(' ').filter(w => w && !/^kits?$/.test(w)).map(w => w.replace(/ies$/, 'y').replace(/s$/, '')).sort().join(' ');
+function pairKits(owned, cat, links) {
+  const pairs = new Map(), used = new Set(); links = links || {};
+  owned.forEach(o => { const l = links[kitKey(o.name)]; if (!l) return; used.add(o); if (l === '-') return; const c = cat.find(ck => !pairs.has(ck) && ck.name === l); if (c) pairs.set(c, o); else used.delete(o); });
+  owned.filter(o => !used.has(o)).forEach(o => { const c = cat.find(ck => !pairs.has(ck) && kitKey(ck.name) === kitKey(o.name)); if (c) { pairs.set(c, o); used.add(o); } });
+  owned.filter(o => !used.has(o)).forEach(o => { const c = cat.find(ck => !pairs.has(ck) && kitWords(ck.name) && kitWords(ck.name) === kitWords(o.name)); if (c) { pairs.set(c, o); used.add(o); } });
   owned.filter(o => !used.has(o)).forEach(o => { const c = cat.filter(ck => !pairs.has(ck) && kitMatch(o.name, ck.name)).sort((p, q) => Math.abs(kitKey(p.name).length - kitKey(o.name).length) - Math.abs(kitKey(q.name).length - kitKey(o.name).length))[0]; if (c) pairs.set(c, o); });
   return pairs;
 }
 function completionOf(s) {
   const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef); if (!ref || !(ref.kits || []).length) return null;
-  const pairs = pairKits(kitsOf(s), ref.kits), have = ref.kits.filter(ck => pairs.has(ck));
-  return { ref, have: have.length, total: ref.kits.length, pct: Math.round(have.length / ref.kits.length * 100), missing: ref.kits.filter(ck => !have.includes(ck)) };
+  const mine = kitsOf(s), links = s.kitLinks || {}, pairs = pairKits(mine, ref.kits, links), have = ref.kits.filter(ck => pairs.has(ck)), paired = new Set(pairs.values());
+  const extra = mine.filter(k => !paired.has(k)), check = extra.filter(k => links[kitKey(k.name)] !== '-');   // extra = yours but not in the catalog's list; check = not yet confirmed by you
+  const n = have.length + extra.length, total = ref.kits.length + extra.length;   // a kit you own always counts, even when the catalog does not list it
+  return { ref, have: n, total, pct: Math.round(n / total * 100), missing: ref.kits.filter(ck => !have.includes(ck)), extra, check };
 }
-function completionHtml(s) { const c = completionOf(s); return c ? `<span class="cbar" title="${c.have} of ${c.total} catalog kits"><span class="cfill" style="width:${c.pct}%"></span></span><span class="cnum">${c.have}/${c.total} kits · ${c.pct}%</span>` : ''; }
+function completionHtml(s) { const c = completionOf(s); return c ? `<span class="cbar" title="${c.have} of ${c.total} kits${c.extra.length ? ` (the catalog lists ${c.ref.kits.length}; ${c.extra.length} of yours ${c.extra.length === 1 ? 'is' : 'are'} not in its list)` : ''}"><span class="cfill" style="width:${c.pct}%"></span></span><span class="cnum">${c.have}/${c.total} kits · ${c.pct}%${c.check.length ? ' <span title="A kit name does not match the catalog. Open the Kit gallery to check it." style="color:var(--warn)">⚠</span>' : ''}</span>` : ''; }
 function kcChipsHtml() {
   const profiles = [...new Set(savedKeycaps.map(s => s.profile).filter(Boolean))].sort();
   const chip = (v, t) => `<button class="pchip${kcChip === v ? ' on' : ''}" data-kchip="${esc(v)}">${t}</button>`;
-  return `<div class="pchips" id="kcChips">${chip('', 'All')}${chip('fav', '★ Favorites')}${chip('incomplete', 'Missing kits')}${profiles.map(p => chip('profile:' + p, esc(p))).join('')}</div>`;
+  return `<div class="pchips" id="kcChips">${chip('', 'All')}${chip('fav', '★ Favorites')}${chip('incomplete', 'Missing kits')}${(() => { const n = savedKeycaps.filter(x => { const c = completionOf(x); return c && c.check.length; }).length; return n ? chip('kitcheck', `⚠ Kit names to check (${n})`) : ''; })()}${profiles.map(p => chip('profile:' + p, esc(p))).join('')}</div>`;
 }
 function kcChipOk(s) {
   if (!kcChip) return true; if (kcChip === 'fav') return !!s.isFavorite;
   if (kcChip === 'incomplete') { const c = completionOf(s); return !!c && c.pct < 100; }
+  if (kcChip === 'kitcheck') { const c = completionOf(s); return !!c && c.check.length > 0; }
   return s.profile === kcChip.slice(8);
 }
 function wishHas(setName, kitName) { const nm = t => gmkNorm(t || '').replace(/^gmk/, ''); return savedWish.some(w => w.status !== 'bought' && nm(w.name) === nm(setName) && kitMatch(w.version || '', kitName)); }
