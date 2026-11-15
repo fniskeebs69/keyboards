@@ -363,6 +363,7 @@
   .savebar.hasTop #btnSave, .savebar.hasTop #btnCancel { display: none; }
   .sumrow { display: flex; gap: 8px; align-items: flex-start; } .sumrow .sumv { flex: 1; min-width: 0; } .sumacts { display: flex; gap: 8px; opacity: 0; transition: opacity .15s; flex-shrink: 0; }
   .sumrow:hover .sumacts, .sumrow:focus-within .sumacts, .sumacts.on { opacity: 1; } .sumacts .lnk { font-size: 12px; color: var(--text-3); } .sumacts .lnk:hover { color: var(--text); }
+  .sumheadtxt { flex: 1; min-width: 0; display: grid; gap: 2px; } .sumheadtxt .sumrow { align-items: center; } .sumheadtxt textarea.sumed { min-height: 80px; }
   .sumhid { opacity: .45; } .sumrow .sumed { flex: 1; } .sumadd { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 8px; margin-top: 8px; }
   @media (hover: none) { .sumacts { opacity: 1; } } @media (max-width: 700px) { .sumadd { grid-template-columns: 1fr; } }
   .sndlist { display: grid; gap: 10px; margin-top: 10px; } .snditem { border: 1px solid var(--line); border-radius: 10px; padding: 8px; display: grid; gap: 6px; }
@@ -480,7 +481,7 @@
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.52.0';
+const APP_VERSION = 'v0.53.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -2967,14 +2968,14 @@ function wireValueCard(t, x) {
 /* while a form has unsaved typing, a value change only redraws the value card */
 function swapValueCardIfOnly(t, x) {
   const c = document.getElementById('valueCard'); if (!c || !editing || editing.id !== x.id) return false;
-  const strip = o => JSON.stringify(Object.assign({}, o, { values: null, colorway: null, refImage: null, refUrl: null, refSource: null, stockThumb: null, stockPhotoId: null, kitStock: null, summaryHidden: null, summaryExtra: null, updatedAt: null, createdIso: null, _date: null }));
+  const strip = o => JSON.stringify(Object.assign({}, o, { values: null, colorway: null, refImage: null, refUrl: null, refSource: null, stockThumb: null, stockPhotoId: null, kitStock: null, summaryHidden: null, summaryExtra: null, description: null, descriptionOwn: null, updatedAt: null, createdIso: null, _date: null }));
   if (strip(editing) !== strip(x)) return false;
   c.outerHTML = valueCardHtml(t, x); wireValueCard(t, x);
   const cw = document.getElementById('cwCard'); if (cw && t === 'keyboards') { cw.outerHTML = colorwayCardHtml(x); wireColorwayCard(x); }
   const rc = document.getElementById('refCard'); if (rc && rc.querySelector('#refForm')?.hidden !== false) { rc.outerHTML = refCardHtml(t, x); wireRefCard(t, x); }
   if (document.getElementById('photoGrid') && currentPhotos.length) drawPhotoGrid(x);
   if (t === 'keycaps' && document.getElementById('kitGallery')) drawKitGallery(x);
-  editing = Object.assign({}, editing, { values: x.values, colorway: x.colorway, refImage: x.refImage, refUrl: x.refUrl, refSource: x.refSource, stockThumb: x.stockThumb, stockPhotoId: x.stockPhotoId, kitStock: x.kitStock, summaryHidden: x.summaryHidden, summaryExtra: x.summaryExtra });
+  editing = Object.assign({}, editing, { values: x.values, colorway: x.colorway, refImage: x.refImage, refUrl: x.refUrl, refSource: x.refSource, stockThumb: x.stockThumb, stockPhotoId: x.stockPhotoId, kitStock: x.kitStock, summaryHidden: x.summaryHidden, summaryExtra: x.summaryExtra, description: x.description, descriptionOwn: x.descriptionOwn });
   const sp = document.querySelector('#view [data-panel="summary"]'); if (sp && !sp.hidden && !sp.querySelector('.sumed')) drawSummary(document.getElementById('view'), x, t);
   return true;
 }
@@ -3616,6 +3617,23 @@ async function summaryAction(view, x, type, e) {
   const write = async data => { try { await withTimeout(colOfType(type).doc(x.id).update(Object.assign(data, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() }))); return true; } catch (err) { toast('Could not save: ' + explain(err)); return false; } };
   const redraw = data => drawSummary(view, Object.assign({}, latest(), data), type);
   const row = e.target.closest('.sumrow');
+  const he = e.target.closest('[data-sumheadedit]');
+  if (he && row) {   // header: name edits the Name field (Save keeps it); description saves straight away
+    const which = he.dataset.sumheadedit, cur = which === 'name' ? (document.getElementById('f_name')?.value || '') : (document.getElementById('f_description')?.value ?? latest().description ?? '');
+    const ed = document.createElement(which === 'name' ? 'input' : 'textarea'); ed.className = 'input sumed'; ed.value = cur; if (which === 'desc') { ed.rows = 4; ed.placeholder = 'A few lines about this item, in your own words'; }
+    row.innerHTML = ''; row.appendChild(ed); row.insertAdjacentHTML('beforeend', `<span class="sumacts on"><button class="btn primary" data-sumheadok="${which}">${which === 'desc' ? 'Save' : 'OK'}</button><button class="btn" data-sumcancel>Cancel</button></span>`);
+    ed.focus(); ed.onkeydown = ev => { if (ev.key === 'Enter' && which === 'name') { ev.preventDefault(); row.querySelector('[data-sumheadok]').click(); } if (ev.key === 'Escape') row.querySelector('[data-sumcancel]').click(); };
+    return; }
+  const hok = e.target.closest('[data-sumheadok]');
+  if (hok && row) {
+    const which = hok.dataset.sumheadok, v = row.querySelector('.sumed').value;
+    if (which === 'name') { const c = document.getElementById('f_name'); if (!v.trim()) { toast('The name cannot be empty'); return; }
+      if (c && c.value !== v) { c.value = v; c.dispatchEvent(new Event('input', { bubbles: true })); c.dispatchEvent(new Event('change', { bubbles: true })); toast('Changed. Press Save changes at the top to keep it.'); } redraw({}); return; }
+    const d = v.trim(), del = firebase.firestore.FieldValue.delete(), fd = document.getElementById('f_description');
+    if (await write({ description: d || del, descriptionOwn: d ? true : del })) {
+      if (fd) fd.value = d; if (editing && editing.id === x.id) editing = Object.assign({}, editing, { description: d || undefined, descriptionOwn: d ? true : undefined });
+      redraw({ description: d || undefined, descriptionOwn: d ? true : undefined }); toast(d ? 'Description saved' : 'Description removed'); }
+    return; }
   if (e.target.closest('[data-sumedit]') && row) {
     const c = document.getElementById(row.dataset.sc); if (!c) return;
     let ed; if (c.tagName === 'SELECT') { ed = c.cloneNode(true); ed.removeAttribute('id'); ed.value = c.value; }
@@ -3710,10 +3728,10 @@ function drawSummary(view, x, type) {
   const vals = (live.values || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
   if (vals.length) links.push(['Market value', `${money(vals[0].value)} (${fmtDate(vals[0].date)}${vals[0].source ? ', ' + vals[0].source : ''})`, '']);
   const cover = live.coverThumb || (type === 'keycaps' ? setPhotoCoverOf(live) : live.stockThumb || live.refImage || '');
-  box.innerHTML = `<div class="sumhead">${cover ? `<img src="${esc(cover)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<div><h3 style="margin:0">${esc(live.name || '')}${live.isFavorite ? ' <span style="color:#fbbf24">★</span>' : ''}</h3>
+  box.innerHTML = `<div class="sumhead">${cover ? `<img src="${esc(cover)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<div class="sumheadtxt"><div class="sumrow" data-sumhead="name"><h3 style="margin:0" class="sumv">${esc((view.querySelector('#f_name')?.value ?? live.name ?? '').trim())}${live.isFavorite ? ' <span style="color:#fbbf24">★</span>' : ''}</h3>${view.querySelector('#f_name') ? '<span class="sumacts"><button class="lnk" data-sumheadedit="name" title="Change the name">✎</button></span>' : ''}</div>
       ${(() => { const d = (view.querySelector('#f_description')?.value ?? live.description ?? '').trim();
-        return d ? `<p class="sumdesc">${esc(d).replace(/\n/g, '<br>')}</p>${live.refSource ? `<p class="sub" style="margin:2px 0 0;font-size:11.5px">Description from ${live.refUrl ? `<a class="lnk" href="${esc(live.refUrl)}" target="_blank" rel="noopener">${esc(live.refSource)}</a>` : esc(live.refSource)}</p>` : ''}`
-          : '<p class="sub" style="margin:4px 0 0">Everything filled in so far. Use Edit on a section, or the tabs above, to add or change details.</p>'; })()}</div></div>
+        return d ? `<div class="sumrow" data-sumhead="desc"><p class="sumdesc sumv">${esc(d).replace(/\n/g, '<br>')}</p><span class="sumacts"><button class="lnk" data-sumheadedit="desc" title="Change the description">✎</button></span></div>${live.refSource && !live.descriptionOwn ? `<p class="sub" style="margin:2px 0 0;font-size:11.5px">Description from ${live.refUrl ? `<a class="lnk" href="${esc(live.refUrl)}" target="_blank" rel="noopener">${esc(live.refSource)}</a>` : esc(live.refSource)}</p>` : ''}`
+          : '<div class="sumrow" data-sumhead="desc"><p class="sub sumv" style="margin:4px 0 0">No description yet. <button class="lnk" data-sumheadedit="desc">+ Add a description</button></p></div>'; })()}</div></div>
     ${links.length ? `<div class="sumsec"><h4>Linked</h4><dl class="sumdl">${links.map(([k, v, h]) => `<dt>${esc(k)}</dt><dd>${h ? `<a class="lnk" href="${h}">${esc(v)}</a>` : esc(v)}</dd>`).join('')}</dl></div>` : ''}
     ${secs.join('') || '<p class="sub">Nothing filled in yet. Open the other tabs to add details.</p>'}`;
 }
