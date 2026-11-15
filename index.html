@@ -371,6 +371,7 @@
   .sndform { display: grid; gap: 8px; } .sndrec { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
   .snddot { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; display: inline-block; margin-right: 6px; flex-shrink: 0; } .sndrec.on .snddot { animation: sndpulse 1s infinite; }
   @keyframes sndpulse { 50% { opacity: .25; } }
+  .askdlg { z-index: 200; } .gdlg > .askcard { width: min(440px, 100%); } .askmsg { margin: 0; font-size: 15px; line-height: 1.5; } .askcard .btn.danger { background: #b4232f; border-color: #d43c48; color: #fff; }
   .pstock { position: absolute; top: 6px; right: 6px; max-width: 80%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .cwmatrow { grid-column: 1 / -1; margin-top: 4px; } .cwmatrow .cwmat { width: 100%; }
   .sumdesc { margin: 6px 0 0; color: var(--text-2); line-height: 1.5; }
@@ -481,7 +482,7 @@
 
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.55.0';
+const APP_VERSION = 'v0.57.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -643,10 +644,42 @@ function activeSamples() { return hasImported() ? [] : SAMPLE_KEYBOARDS; }
 function allKeyboards() { return savedKeyboards.concat(activeSamples()); }
 function sortDate(k) { return k.datePurchased || k.createdIso || ''; }
 
+/* Styled "Are you sure?" box (replaces the browser's own). Resolves true or false. Enter = yes, Esc = no. */
+function askConfirm(msg, o = {}) {
+  return new Promise(res => {
+    const danger = o.danger ?? /^(delete|remove|cancel and throw|sign out|unlink|restore|move )/i.test(msg);
+    const ok = o.ok || (/^delete/i.test(msg) ? 'Delete' : /^remove/i.test(msg) ? 'Remove' : /^sign out/i.test(msg) ? 'Sign out' : /^restore/i.test(msg) ? 'Restore' : /^unlink/i.test(msg) ? 'Unlink' : 'Continue');
+    const prev = document.activeElement, d = document.createElement('div'); d.className = 'gdlg askdlg'; d.setAttribute('role', 'alertdialog'); d.setAttribute('aria-modal', 'true');
+    d.innerHTML = `<div class="card askcard"><p class="askmsg">${esc(msg).replace(/\n/g, '<br>')}</p><div class="btnrow" style="justify-content:flex-end;margin-top:16px"><button class="btn" id="askNo">${esc(o.cancel || 'Cancel')}</button><button class="btn ${danger ? 'danger' : 'primary'}" id="askOk">${esc(ok)}</button></div></div>`;
+    const done = v => { document.removeEventListener('keydown', onKey, true); d.remove(); try { prev && prev.focus && prev.focus(); } catch (e) {} res(v); };
+    const onKey = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(false); } else if (e.key === 'Enter' && !e.repeat) { e.preventDefault(); e.stopPropagation(); done(true); } else if (e.key === 'Tab') { e.preventDefault(); (document.activeElement === d.querySelector('#askOk') ? d.querySelector('#askNo') : d.querySelector('#askOk')).focus(); } };
+    d.onclick = e => { if (e.target === d || e.target.id === 'askNo') done(false); else if (e.target.id === 'askOk') done(true); };
+    document.addEventListener('keydown', onKey, true); document.body.appendChild(d); d.querySelector('#askOk').focus();
+  });
+}
 /* ===================== Router ===================== */
 let currentView = '';
+/* Remember list settings: sort, gallery/list view and tab filters stay after closing the app (this device);
+   search text stays until the browser tab is closed. */
+let listPrefsReady = false, listPrefsLast = '';
+function listPrefsNow() { const parts = {}; Object.keys(partState).forEach(t => { parts[t] = { sort: partState[t].sort, view: partState[t].view }; });
+  return [{ kbSort, kbView, swSort, swView, kcSort, kcView, wishFilter, valFilter, parts }, { kb: kbQuery, sw: swQuery, kc: kcQuery, parts: Object.fromEntries(Object.keys(partState).map(t => [t, partState[t].q || ''])) }]; }
+function restoreListPrefs() {
+  listPrefsReady = true;
+  try { const p = lsGet('kbc_list_prefs') || {}, q = JSON.parse(sessionStorage.getItem('kbc_list_q') || '{}'), V = ['gallery', 'list'];
+    if (SORTS[p.kbSort]) kbSort = p.kbSort; if (V.includes(p.kbView)) kbView = p.kbView;
+    if (SORTS[p.swSort]) swSort = p.swSort; if (V.includes(p.swView)) swView = p.swView;
+    if (SORTS[p.kcSort] || p.kcSort === 'completion') kcSort = p.kcSort; if (V.includes(p.kcView)) kcView = p.kcView;
+    if (['open', 'bought', 'all'].includes(p.wishFilter)) wishFilter = p.wishFilter; if (typeof p.valFilter === 'string' && (['all', 'none'].includes(p.valFilter) || VALUE_TYPES.includes(p.valFilter))) valFilter = p.valFilter;
+    PART_IDS.forEach(t => { const pp = (p.parts || {})[t] || {}, qq = (q.parts || {})[t] || ''; if (pp.sort || pp.view || qq) partState[t] = { sort: pp.sort || 'newest', view: V.includes(pp.view) ? pp.view : 'gallery', q: qq }; });
+    if (typeof q.kb === 'string') kbQuery = q.kb; if (typeof q.sw === 'string') swQuery = q.sw; if (typeof q.kc === 'string') kcQuery = q.kc;
+  } catch (e) {}
+  let tm = null; const save = () => { clearTimeout(tm); tm = setTimeout(() => { try { const [p, q] = listPrefsNow(), key = JSON.stringify([p, q]); if (key === listPrefsLast) return; listPrefsLast = key; lsSet('kbc_list_prefs', p); sessionStorage.setItem('kbc_list_q', JSON.stringify(q)); } catch (e) {} }, 400); };
+  ['click', 'change', 'input'].forEach(ev => document.addEventListener(ev, save, true));
+}
 function route() {
-  stopTestListener(); stopPhotoListener(); stopMetaListener(); stopSoundListener(!(soundRec && location.hash.includes(soundRec.itemId)));
+  if (!listPrefsReady) restoreListPrefs();
+  stopTestListener(); stopPhotoListener(); stopMetaListener(); stopKbSounds(); stopSoundListener(!(soundRec && location.hash.includes(soundRec.itemId)));
   const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   if (parts[0] === 'connection-test') { location.replace('#/settings'); return; } // old v0.2.0 link
   const id = parts[0] || 'dashboard';
@@ -684,8 +717,9 @@ function route() {
 }
 window.addEventListener('hashchange', () => {
   if (formDirty && location.hash !== formDirty) {
-    if (!confirm('Leave without saving your changes?')) { history.replaceState(null, '', formDirty); return; }
-    formDirty = false;
+    const target = location.hash; history.replaceState(null, '', formDirty);   // stay put while asking
+    askConfirm('Leave without saving your changes?', { ok: 'Leave', cancel: 'Stay', danger: true }).then(yes => { if (yes) { formDirty = false; location.hash = target; } });
+    return;
   }
   route();
 });
@@ -860,7 +894,7 @@ function renderKeyboards() {
   document.getElementById('vGal').onclick = () => { kbView = 'gallery'; renderKeyboards(); };
   document.getElementById('vList').onclick = () => { kbView = 'list'; renderKeyboards(); };
   document.getElementById('kbSearch').oninput = e => { kbQuery = e.target.value; drawKeyboardResults(); };
-  wireShareList('keyboards', 'Keyboards', k => ({ name: k.name, sub: [k.brand, k.size].filter(Boolean).join(' · '), thumb: k.coverThumb, colors: shareColors(k.colorway) }));
+  wireShareList('keyboards', 'Keyboards', k => ({ name: k.name, sub: [k.brand, k.size].filter(Boolean).join(' · '), thumb: k.coverThumb || k.stockThumb, colors: shareColors(k.colorway) }));
   drawKeyboardResults();
 }
 function drawKeyboardResults() {
@@ -936,10 +970,6 @@ function renderKeyboardDetail(id) {
     </div>`;
 }
 
-function modsHtml(mods) {
-  const list = mods ? mods.split(/,\s*(?![^()]*\))/).map(m => m.trim()).filter(Boolean) : [];
-  return list.length > 1 ? '<ul class="modlist">' + list.map(m => '<li>' + esc(m) + '</li>').join('') + '</ul>' : esc(mods || '');
-}
 /* ===================== Step 2.2: Add keyboard form (Overview tab) ===================== */
 const KB_TYPES = { custom: 'Custom keyboard', prebuilt: 'Pre-Built keyboard', oem: 'OEM keyboard', vintage: 'Vintage keyboard' };
 const KB_SIZES = ['Macropad', 'Numpad', '40%', '60%', '65%', '75%', 'TKL (80%)', '96%', '1800', 'Full Size (100%)', 'Other'];
@@ -1051,7 +1081,7 @@ ${purchasePanelHtml(savedKeyboards)}
       </div>
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
-        ${k ? valueCardHtml('keyboards', k) + colorwayCardHtml(k) + refCardHtml('keyboards', k) + photoCardHtml(k) + switchesOnKeyboardCardHtml(k) + keycapsOnKeyboardCardHtml(k) + partsOnKeyboardCardHtml(k) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the keyboard first, then drop photos on its page.</p></div>'}
+        ${k ? valueCardHtml('keyboards', k) + colorwayCardHtml(k) + refCardHtml('keyboards', k) + photoCardHtml(k) + switchesOnKeyboardCardHtml(k) + kbSoundCardHtml(k) + keycapsOnKeyboardCardHtml(k) + partsOnKeyboardCardHtml(k) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the keyboard first, then drop photos on its page.</p></div>'}
         <div class="card side-card stack savebar">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${k ? 'Save changes' : 'Save keyboard'}</button>
           <button class="btn" id="btnCancel">${k ? 'Discard changes' : 'Cancel'}</button>
@@ -1083,16 +1113,16 @@ ${purchasePanelHtml(savedKeyboards)}
   formEl.addEventListener('change', onEdit); wireBuildSlots();
   if (k) {
     document.getElementById('btnBuildCard').onclick = () => { const cur = savedKeyboards.find(x => x.id === k.id) || k; openShareDialog(`Build card · ${cur.name}`, withSpend => buildCardCanvas(cur, withSpend), { spendToggle: true, file: shareFileName('fsn-' + cur.name) }); };
-    fillKeyboardForm(k); setEditState(false); wirePhotos(k); wireValueCard('keyboards', k); wireRefCard('keyboards', k); wireColorwayCard(k); wireSwitchesOnKeyboard(k); wireKeycapsOnKeyboard(k); wirePartsOnKeyboard(k);
+    fillKeyboardForm(k); setEditState(false); wirePhotos(k); wireValueCard('keyboards', k); wireRefCard('keyboards', k); wireColorwayCard(k); wireSwitchesOnKeyboard(k); wireKbSounds(k); wireKeycapsOnKeyboard(k); wirePartsOnKeyboard(k);
     document.getElementById('btnCancel').onclick = () => { formDirty = false; renderKeyboardForm(savedKeyboards.find(x => x.id === k.id) || k); toast('Changes discarded'); };
     document.getElementById('btnDelete').onclick = async () => {
-      if (!confirm(`Delete "${k.name}" and its photos? This cannot be undone.`)) return;
+      if (!await askConfirm(`Delete "${k.name}" and its photos? This cannot be undone.`)) return;
       try { await withTimeout(deletePhotosOf(k.id), 30000); await withTimeout(removeKeyboardFromAllocations(k.id), 30000); await withTimeout(removeKeyboardFromKits(k.id), 30000); await withTimeout(removeKeyboardFromParts(k.id), 30000); await withTimeout(kbCol().doc(k.id).delete()); formDirty = false; toast('Keyboard deleted'); location.hash = '#/keyboards'; }
       catch (e) { toast('Delete failed: ' + explain(e)); }
     };
   } else {
-    document.getElementById('btnCancel').onclick = () => {
-      if (hasContent(formState()) && !confirm('Cancel and throw away this keyboard?')) return;
+    document.getElementById('btnCancel').onclick = async () => {
+      if (hasContent(formState()) && !await askConfirm('Cancel and throw away this keyboard?')) return;
       clearTimeout(draftTimer); lsDel(DRAFT_KEY); location.hash = '#/keyboards';
     };
     offerDraft();
@@ -1357,7 +1387,7 @@ function drawPhotoGrid(k) {
       ${p.id === cur.coverPhotoId ? '<span class="chip acc pbadge">Default</span>' : ''}${stockLabelOf(cur, p) ? `<span class="chip pbadge pstock">${esc(stockLabelOf(cur, p))}</span>` : ''}
       <div class="pacts">
         ${p.id === cur.coverPhotoId ? '' : `<button class="btn" data-pact="default" data-pid="${p.id}">Set as default</button>`}
-        ${photoType !== 'keycaps' && cur.stockPhotoId === p.id ? `<button class="btn" data-pact="unstock" data-pid="${p.id}">Remove stock</button>` : `<button class="btn" data-pact="stock" data-pid="${p.id}">${photoType === 'keycaps' ? 'Use as kit picture' : 'Use as stock picture'}</button>`}
+        ${photoType !== 'keycaps' && cur.stockPhotoId === p.id ? `<button class="btn" data-pact="unstock" data-pid="${p.id}">Remove stock</button>` : `<button class="btn" data-pact="stock" data-pid="${p.id}" title="${photoType === 'keycaps' ? 'Shows this photo on one kit in the Kit gallery' : 'Shows this photo on the Summary and the Product page card, in place of the shop picture. The list card keeps your default photo.'}">${photoType === 'keycaps' ? 'Use as kit picture' : 'Use as stock picture'}</button>`}
         <button class="btn" data-pact="crop" data-pid="${p.id}">Crop</button>
         <button class="btn danger" data-pact="delete" data-pid="${p.id}" aria-label="Delete photo">Delete</button>
       </div></div>`).join('') + `<p class="sub" style="margin:4px 0 0;grid-column:1/-1">${currentPhotos.length} photo${currentPhotos.length === 1 ? '' : 's'}</p>`;
@@ -1383,7 +1413,7 @@ function stockLabelOf(cur, p) {
 }
 async function setStockPhoto(type, itemId, p) {
   const del = firebase.firestore.FieldValue.delete();
-  try { await withTimeout(colOfType(type).doc(itemId).update({ stockPhotoId: p ? p.id : del, stockThumb: p ? p.thumb : del, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); toast(p ? 'Stock picture set' : 'Back to the shop picture'); }
+  try { await withTimeout(colOfType(type).doc(itemId).update({ stockPhotoId: p ? p.id : del, stockThumb: p ? p.thumb : del, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); toast(p ? 'Stock picture set: shown on the Summary and the Product page card' : 'Stock picture removed'); }
   catch (e) { toast('Could not set the stock picture: ' + explain(e)); }
 }
 /* Kit pictures are stored as links to your photos ({key, name, photoId}), not copies, so a set with many kit
@@ -1463,7 +1493,7 @@ async function replacePhoto(k, p, out) {
   } catch (e) { toast('Crop not saved: ' + explain(e)); }
 }
 async function deletePhoto(k, p) {
-  if (!confirm('Delete this photo? This cannot be undone.')) return;
+  if (!await askConfirm('Delete this photo? This cannot be undone.')) return;
   try {
     await withTimeout(photoCol().doc(p.id).delete());
     await metaRef().set({ photoCount: firebase.firestore.FieldValue.increment(-1), photoBytes: firebase.firestore.FieldValue.increment(-(p.bytes || 0)) }, { merge: true });
@@ -1594,11 +1624,6 @@ function startSwitchListener() {
 let swSort = 'newest', swView = 'gallery', swQuery = '';
 const swMain = w => [w.manufacturer, w.name, w.switchType, w.mechanism];
 const swExtra = w => [w.location, w.notes, w.specsText, w.purchasedFrom].concat(SW_SPEC_FIELDS.map(f => w[f[0]]));
-function swMatches(w, q) {
-  if (!q) return true;
-  const hay = [w.manufacturer, w.name, w.switchType, w.mechanism, w.location, w.notes, w.specsText, w.purchasedFrom].concat(SW_SPEC_FIELDS.map(f => w[f[0]])).join(' ').toLowerCase();
-  return q.toLowerCase().split(/\s+/).every(t => hay.includes(t));
-}
 function sortSwitches(list) {
   const by = (f, dir) => (a, b) => dir * String(f(a) || '').localeCompare(String(f(b) || ''), 'en', { sensitivity: 'base' });
   return [...list].sort({ newest: by(sortDate, -1), oldest: by(sortDate, 1), nameAZ: by(w => w.name, 1), nameZA: by(w => w.name, -1), brandAZ: by(w => w.manufacturer, 1), brandZA: by(w => w.manufacturer, -1) }[swSort]);
@@ -1617,7 +1642,7 @@ function renderSwitches() {
   document.getElementById('swGal').onclick = () => { swView = 'gallery'; renderSwitches(); };
   document.getElementById('swList').onclick = () => { swView = 'list'; renderSwitches(); };
   document.getElementById('swSearch').oninput = e => { swQuery = e.target.value; drawSwitchResults(); };
-  wireShareList('switches', 'Switches', w => ({ name: w.name, sub: [w.manufacturer, w.switchType].filter(Boolean).join(' · '), thumb: w.coverThumb }));
+  wireShareList('switches', 'Switches', w => ({ name: w.name, sub: [w.manufacturer, w.switchType].filter(Boolean).join(' · '), thumb: w.coverThumb || w.stockThumb }));
   drawSwitchResults();
 }
 function drawSwitchResults() {
@@ -1750,7 +1775,7 @@ function renderSwitchForm(w = null) {
     fillSwitchForm(w); setEditState(false); wirePhotos(w, 'switches'); wireValueCard('switches', w); wireRefCard('switches', w); wireSounds(w); wireInstalledOn(w);
     document.getElementById('btnCancel').onclick = () => { formDirty = false; renderSwitchForm(savedSwitches.find(x => x.id === w.id) || w); toast('Changes discarded'); };
     document.getElementById('btnDelete').onclick = async () => {
-      if (!confirm(`Delete "${w.name}"? This cannot be undone.`)) return;
+      if (!await askConfirm(`Delete "${w.name}"? This cannot be undone.`)) return;
       try { await withTimeout(deletePhotosOf(w.id), 30000); await withTimeout(deleteSoundsOf(w.id), 30000); await withTimeout(swCol().doc(w.id).delete()); formDirty = false; toast('Switches deleted'); location.hash = '#/switches'; }
       catch (e) { toast('Delete failed: ' + explain(e)); }
     };
@@ -1863,7 +1888,6 @@ function textHit(parts, q) { const hay = parts.filter(Boolean).join(' ').toLower
 function twoPass(all, q, main, extra) { if (!q) return { list: all, deep: false }; const a = all.filter(x => textHit(main(x), q)); return a.length ? { list: a, deep: false } : { list: all.filter(x => textHit(main(x).concat(extra(x)), q)), deep: true }; }
 const kcMain = s => [s.name, s.manufacturer, s.designer, s.profile].concat(kitsOf(s).map(k => k.name + ' ' + (k.kitType || '')));
 const kcExtra = s => [s.colorsText, s.material, s.notes, s.location];
-function kcMatches(s, q) { return !q || textHit(kcMain(s).concat(kcExtra(s)), q); }
 function sortKeycaps(list) {
   const by = (f, dir) => (a, b) => dir * String(f(a) || '').localeCompare(String(f(b) || ''), 'en', { sensitivity: 'base' });
   const pct = s => { const c = completionOf(s); return c ? c.pct : -1; };
@@ -1882,7 +1906,7 @@ function renderKeycaps() {
     <div class="tools" style="margin-bottom:10px"><label class="search">${I.search}<input class="input" id="kcSearch" placeholder="Search by set, maker, designer, profile, colors or kit" value="${esc(kcQuery)}"></label></div>
     ${kcChipsHtml()}
     <div id="kcResults"></div>`;
-  wireShareList('keycaps', 'Keycaps', s => ({ name: s.name, sub: [s.manufacturer, s.profile, `${kitsOf(s).length} kit${kitsOf(s).length === 1 ? '' : 's'}`].filter(Boolean).join(' · '), thumb: s.coverThumb, colors: shareColors(paletteOf(s)) }));
+  wireShareList('keycaps', 'Keycaps', s => ({ name: s.name, sub: [s.manufacturer, s.profile, `${kitsOf(s).length} kit${kitsOf(s).length === 1 ? '' : 's'}`].filter(Boolean).join(' · '), thumb: s.coverThumb || (s.kitStockCover && s.kitStockCover.thumb), colors: shareColors(paletteOf(s)) }));
   document.getElementById('kcStats').onclick = () => (gmkSets ? Promise.resolve() : loadGmk().catch(() => {})).then(openKeycapStats);
   document.getElementById('kcChips').onclick = e => { const b = e.target.closest('[data-kchip]'); if (!b) return; kcChip = b.dataset.kchip; document.getElementById('kcChips').outerHTML = kcChipsHtml(); renderKeycaps(); };
   if (!gmkSets && db && !isFile) loadGmk().then(() => drawKeycapResults()).catch(() => {});
@@ -2060,14 +2084,14 @@ function renderKeycapForm(s = null) {
     list.insertAdjacentHTML('beforeend', colorCardHtml({ id: 'c' + Math.random().toString(36).slice(2, 10), source: 'manual' }));
     list.lastElementChild.querySelector('.c-name').focus(); colorCount(); markDirty();
   };
-  document.getElementById('colorList').addEventListener('click', e => {
+  document.getElementById('colorList').addEventListener('click', async e => {
     const pk = e.target.closest('.c-pick');
     if (pk) { const card = pk.closest('.pcard'), hexIn = card.querySelector('.c-hex'), cur = editing && savedKeycaps.find(x => x.id === editing.id);
       openColorWheel(pk, hexIn.value, hx => { hexIn.value = hx; hexIn.dispatchEvent(new Event('input', { bubbles: true })); },
         { title: card.querySelector('.c-name').value || 'Color', photoId: cur?.coverPhotoId, photoThumb: cur?.coverThumb }); return; }
     const d = e.target.closest('.c-del'); if (!d) return;
     const card = d.closest('.pcard'), nm = card.querySelector('.c-name').value.trim();
-    if (nm && !confirm(`Remove the color "${nm}"?`)) return;
+    if (nm && !await askConfirm(`Remove the color "${nm}"?`)) return;
     card.remove(); colorCount(); markDirty();
   });
   document.getElementById('addKit').onclick = () => {
@@ -2075,10 +2099,10 @@ function renderKeycapForm(s = null) {
     list.insertAdjacentHTML('beforeend', kitRowHtml({ id: newKitId(), quantity: 1 }, -1));
     list.lastElementChild.querySelector('.k-name').focus(); kitCountUpdate(); markDirty();
   };
-  document.getElementById('kitList').addEventListener('click', e => {
+  document.getElementById('kitList').addEventListener('click', async e => {
     const d = e.target.closest('.k-del'); if (!d) return;
     const row = d.closest('.kit'), name = row.querySelector('.k-name').value.trim();
-    if (name && !confirm(`Remove the kit "${name}" from this set?`)) return;
+    if (name && !await askConfirm(`Remove the kit "${name}" from this set?`)) return;
     row.remove(); kitCountUpdate(); updateSetTotal(); markDirty();
   });
   document.getElementById('btnSave').onclick = saveKeycapSet;
@@ -2094,7 +2118,7 @@ function renderKeycapForm(s = null) {
     setEditState(false); wirePhotos(s, 'keycaps'); wireValueCard('keycaps', s); wireKitInstall(s); wireMergeCard(s);
     document.getElementById('btnCancel').onclick = () => { formDirty = false; renderKeycapForm(savedKeycaps.find(x => x.id === s.id) || s); toast('Changes discarded'); };
     document.getElementById('btnDelete').onclick = async () => {
-      if (!confirm(`Delete "${s.name}" with all its kits and photos? This cannot be undone.`)) return;
+      if (!await askConfirm(`Delete "${s.name}" with all its kits and photos? This cannot be undone.`)) return;
       try { await withTimeout(deletePhotosOf(s.id), 30000); await withTimeout(kcCol().doc(s.id).delete()); formDirty = false; toast('Keycap set deleted'); location.hash = '#/keycaps'; }
       catch (e) { toast('Delete failed: ' + explain(e)); }
     };
@@ -2306,7 +2330,7 @@ function wireSounds(w) {
     if (b.dataset.sact === 'edit') { soundEditId = id; drawSoundList(w); return; }
     if (b.dataset.sact === 'cancel') { soundEditId = ''; drawSoundList(w); return; }
     if (b.dataset.sact === 'save') { try { await withTimeout(soundCol().doc(id).update(readSoundForm())); soundEditId = ''; toast('Recording details saved'); } catch (err) { toast('Not saved: ' + explain(err)); } return; }
-    if (b.dataset.sact === 'delete') { if (!confirm('Delete this recording? This cannot be undone.')) return;
+    if (b.dataset.sact === 'delete') { if (!await askConfirm('Delete this recording? This cannot be undone.')) return;
       try { await withTimeout(soundCol().doc(id).delete()); await metaRef().set({ soundCount: firebase.firestore.FieldValue.increment(-1), soundBytes: firebase.firestore.FieldValue.increment(-(r.bytes || 0)) }, { merge: true }); toast('Recording deleted'); } catch (err) { toast('Delete failed: ' + explain(err)); } }
   };
   soundUnsub = soundCol().where('itemId', '==', w.id).onSnapshot(snap => {
@@ -2318,6 +2342,21 @@ async function deleteSoundsOf(itemId) {
   const snap = await soundCol().where('itemId', '==', itemId).get(); let n = 0, bytes = 0;
   for (const d of snap.docs) { bytes += d.data().bytes || 0; n++; await d.ref.delete(); }
   if (n) await metaRef().set({ soundCount: firebase.firestore.FieldValue.increment(-n), soundBytes: firebase.firestore.FieldValue.increment(-bytes) }, { merge: true });
+}
+/* Keyboard page: sound tests recorded on this board (they are made on the switch page) */
+let kbSoundUnsub = null;
+function stopKbSounds() { if (kbSoundUnsub) { kbSoundUnsub(); kbSoundUnsub = null; } }
+function kbSoundCardHtml(k) { return `<div class="card side-card" id="kbSoundCard"><h3>Sound tests</h3><p class="sub" style="margin:0 0 8px">Recordings made with this keyboard.</p><div id="kbSoundList" class="sndlist" style="margin-top:0"><span class="sub">Loading recordings…</span></div><div id="kbSoundRec" style="margin-top:8px"></div></div>`; }
+function wireKbSounds(k) {
+  stopKbSounds(); const list = document.getElementById('kbSoundList'), rec = document.getElementById('kbSoundRec'); if (!list) return;
+  if (!db || isFile) { list.innerHTML = '<span class="sub">Recordings need Firebase.</span>'; return; }
+  const on = switchesOn(k.id);
+  rec.innerHTML = on.length ? `<p class="sub" style="margin:0 0 6px">Record a new one from the switch page:</p><div class="btnrow">${on.map(({ w }) => `<a class="btn" href="#/switches/${esc(w.id)}"><span class="snddot"></span>${esc([w.manufacturer, w.name].filter(Boolean).join(' '))}</a>`).join('')}</div>` : '<p class="sub" style="margin:0">Install switches on this keyboard, then record from the switch page.</p>';
+  kbSoundUnsub = soundCol().where('keyboardId', '==', k.id).onSnapshot(snap => {
+    const rows = snap.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => ((b.createdAt && b.createdAt.toDate ? b.createdAt.toDate() : 0) - (a.createdAt && a.createdAt.toDate ? a.createdAt.toDate() : 0)));
+    list.innerHTML = rows.length ? rows.map(r => { const w = savedSwitches.find(x => x.id === r.itemId), when = r.createdAt && r.createdAt.toDate ? fmtDate(r.createdAt.toDate().toISOString().slice(0, 10)) : '';
+      return `<div class="snditem"><audio controls preload="none" src="${r.audio}"></audio><div class="sndmeta"><b>${w ? `<a class="lnk" href="#/switches/${esc(w.id)}">${esc([w.manufacturer, w.name].filter(Boolean).join(' '))}</a>` : 'Switches no longer in the app'}</b>${r.keycapLabel ? `<span>Keycaps: ${esc(r.keycapLabel)}</span>` : ''}${r.note ? `<span>${esc(r.note)}</span>` : ''}<span class="sub" style="margin:0">${[when, r.seconds ? fmtSec(r.seconds) : ''].filter(Boolean).join(' · ')}</span></div></div>`; }).join('') : '<span class="sub">No recordings with this keyboard yet.</span>';
+  }, err => { list.innerHTML = `<span class="sub">Could not load recordings: ${esc(explain(err))}</span>`; });
 }
 function installedOnCardHtml(w) {
   const allocs = allocsOf(w), loose = looseCount(w);
@@ -2383,7 +2422,6 @@ const PAL_GROUPS = [['alpha', 'Alpha'], ['modifier', 'Modifier'], ['accent', 'Ac
 const PAL_USES = [['base', 'Base'], ['legend', 'Legend']];
 function paletteOf(s) { return Array.isArray(s?.palette) ? s.palette : []; }
 function normHex(v) { v = String(v || '').trim().replace(/^#/, ''); if (/^[0-9a-f]{3}$/i.test(v)) v = v.split('').map(c => c + c).join(''); return /^[0-9a-f]{6}$/i.test(v) ? '#' + v.toUpperCase() : null; }
-function roleLabel(r) { const [g, u] = r.split('-'); return (PAL_GROUPS.find(x => x[0] === g)?.[1] || g) + ' ' + (PAL_USES.find(x => x[0] === u)?.[1] || u).toLowerCase(); }
 function colorCardHtml(c) {
   const hex = normHex(c.hex), val = v => v != null ? esc(String(v)) : '';
   return `<div class="pcard" data-color="${esc(c.id)}" data-source="${['catalog', 'excel'].includes(c.source) ? c.source : 'manual'}">
@@ -2526,11 +2564,6 @@ function guessFromHint(hint) {   // "Qwertykeys Neo65 Cu Keyboard — Anodized T
 }
 function partsOn(kbId) { return PART_IDS.flatMap(t => savedParts[t].filter(x => x.installedOn === kbId).map(x => ({ t, x }))); }
 /* ---------- list ---------- */
-function partMatches(t, x, q) {
-  if (!q) return true;
-  const hay = PART_TYPES[t].fields.map(f => x[f[0]]).concat([x.notes, x.mods, x.purchasedFrom, x.belongsToText]).join(' ').toLowerCase();
-  return q.toLowerCase().split(/\s+/).every(w => hay.includes(w));
-}
 function renderParts(t) {
   const P = PART_TYPES[t], st = partState[t] = partState[t] || { sort: 'newest', view: 'gallery', q: '' };
   document.getElementById('view').innerHTML = `
@@ -2546,7 +2579,7 @@ function renderParts(t) {
   document.getElementById('ptGal').onclick = () => { st.view = 'gallery'; renderParts(t); };
   document.getElementById('ptList').onclick = () => { st.view = 'list'; renderParts(t); };
   document.getElementById('ptSearch').oninput = e => { st.q = e.target.value; drawPartResults(t); };
-  wireShareList(t, P.title, x => ({ name: x.name, sub: P.sub(x), thumb: x.coverThumb }));
+  wireShareList(t, P.title, x => ({ name: x.name, sub: P.sub(x), thumb: x.coverThumb || x.stockThumb }));
   drawPartResults(t);
 }
 function drawPartResults(t) {
@@ -2683,7 +2716,7 @@ ${purchasePanelHtml(all)}
     setEditState(false); wirePhotos(x, t); wireValueCard(t, x); wireRefCard(t, x); wirePartInstall(t, x);
     document.getElementById('btnCancel').onclick = () => { formDirty = false; renderPartForm(t, savedParts[t].find(y => y.id === x.id) || x); toast('Changes discarded'); };
     document.getElementById('btnDelete').onclick = async () => {
-      if (!confirm(`Delete "${x.name}" and its photos? This cannot be undone.`)) return;
+      if (!await askConfirm(`Delete "${x.name}" and its photos? This cannot be undone.`)) return;
       try { await withTimeout(deletePhotosOf(x.id), 30000); await withTimeout(partCol(t).doc(x.id).delete()); formDirty = false; toast(`${P.singular[0].toUpperCase() + P.singular.slice(1)} deleted`); location.hash = '#/' + t; }
       catch (e) { toast('Delete failed: ' + explain(e)); }
     };
@@ -2919,7 +2952,7 @@ function openWishForm(w) {
   const form = document.getElementById('wishForm'); form.addEventListener('input', () => form.classList.add('dirty'));
   document.getElementById('w_name').focus();
   document.getElementById('w_cancel').onclick = () => { box.innerHTML = ''; drawWishlist(); };
-  if (w) document.getElementById('w_del').onclick = async () => { if (!confirm(`Delete "${w.name}${w.version ? ' — ' + w.version : ''}" from the wishlist?`)) return;
+  if (w) document.getElementById('w_del').onclick = async () => { if (!await askConfirm(`Delete "${w.name}${w.version ? ' — ' + w.version : ''}" from the wishlist?`)) return;
     try { await withTimeout(wishCol().doc(w.id).delete()); box.innerHTML = ''; toast('Deleted'); } catch (e) { toast('Delete failed: ' + explain(e)); } };
   document.getElementById('w_save').onclick = async () => {
     const g = id => document.getElementById(id).value.trim(), data = {}, del = firebase.firestore.FieldValue.delete();
@@ -2968,7 +3001,7 @@ function wireValueCard(t, x) {
   const latest = () => itemsOfType(t).find(y => y.id === x.id) || x;
   card.onclick = async e => {
     const d = e.target.closest('[data-vdel]');
-    if (d) { if (!confirm('Remove this value from the history?')) return; if (await write(valuesOf(latest()).filter(v => v.id !== d.dataset.vdel))) toast('Value removed'); return; }
+    if (d) { if (!await askConfirm('Remove this value from the history?')) return; if (await write(valuesOf(latest()).filter(v => v.id !== d.dataset.vdel))) toast('Value removed'); return; }
     if (e.target.id !== 'vAdd') return;
     const val = document.getElementById('vVal').value.trim(), date = document.getElementById('vDate').value, src = document.getElementById('vSrc').value.trim(), msg = document.getElementById('vMsg');
     if (val === '' || !isFinite(Number(val)) || Number(val) < 0) { msg.textContent = 'Enter a value of 0 or more'; return; }
@@ -2981,14 +3014,14 @@ function wireValueCard(t, x) {
 /* while a form has unsaved typing, a value change only redraws the value card */
 function swapValueCardIfOnly(t, x) {
   const c = document.getElementById('valueCard'); if (!c || !editing || editing.id !== x.id) return false;
-  const strip = o => JSON.stringify(Object.assign({}, o, { values: null, colorway: null, refImage: null, refUrl: null, refSource: null, stockThumb: null, stockPhotoId: null, kitStock: null, kitStockCover: null, summaryHidden: null, summaryExtra: null, description: null, descriptionOwn: null, updatedAt: null, createdIso: null, _date: null }));
+  const strip = o => JSON.stringify(Object.assign({}, o, { values: null, colorway: null, refImage: null, refUrl: null, refSource: null, stockThumb: null, stockPhotoId: null, kitStock: null, kitStockCover: null, summaryHidden: null, summaryExtra: null, description: null, descriptionOwn: null, name: null, updatedAt: null, createdIso: null, _date: null }));
   if (strip(editing) !== strip(x)) return false;
   c.outerHTML = valueCardHtml(t, x); wireValueCard(t, x);
   const cw = document.getElementById('cwCard'); if (cw && t === 'keyboards') { cw.outerHTML = colorwayCardHtml(x); wireColorwayCard(x); }
   const rc = document.getElementById('refCard'); if (rc && rc.querySelector('#refForm')?.hidden !== false) { rc.outerHTML = refCardHtml(t, x); wireRefCard(t, x); }
   if (document.getElementById('photoGrid') && currentPhotos.length) drawPhotoGrid(x);
   if (t === 'keycaps' && document.getElementById('kitGallery')) drawKitGallery(x);
-  editing = Object.assign({}, editing, { values: x.values, colorway: x.colorway, refImage: x.refImage, refUrl: x.refUrl, refSource: x.refSource, stockThumb: x.stockThumb, stockPhotoId: x.stockPhotoId, kitStock: x.kitStock, kitStockCover: x.kitStockCover, summaryHidden: x.summaryHidden, summaryExtra: x.summaryExtra, description: x.description, descriptionOwn: x.descriptionOwn });
+  editing = Object.assign({}, editing, { values: x.values, colorway: x.colorway, refImage: x.refImage, refUrl: x.refUrl, refSource: x.refSource, stockThumb: x.stockThumb, stockPhotoId: x.stockPhotoId, kitStock: x.kitStock, kitStockCover: x.kitStockCover, summaryHidden: x.summaryHidden, summaryExtra: x.summaryExtra, description: x.description, descriptionOwn: x.descriptionOwn, name: x.name });
   const sp = document.querySelector('#view [data-panel="summary"]'); if (sp && !sp.hidden && !sp.querySelector('.sumed')) drawSummary(document.getElementById('view'), x, t);
   return true;
 }
@@ -3063,7 +3096,7 @@ function drawGmkImportPreview() {
 }
 async function runGmkImport() {
   const btn = document.getElementById('gmkGo'), st = document.getElementById('gmkStatus');
-  if (!confirm(`Load ${gmkImport.count} GMK reference sets into your private Firebase catalog?`)) return;
+  if (!await askConfirm(`Load ${gmkImport.count} GMK reference sets into your private Firebase catalog?`)) return;
   btn.disabled = true;
   try {
     const old = await gmkCol().get(), keep = new Set(gmkImport.gmk_catalog.map(s => s.id));
@@ -3254,7 +3287,7 @@ function drawExcelColorsPreview() {
 }
 async function runExcelColors(p) {
   const st = document.getElementById('xlStatus'), btn = document.getElementById('xlGo');
-  if (!confirm(`Add Excel colors to ${p.sets.length} keycap sets and ${p.kbs.length} keyboards? Your own colors are kept.`)) return;
+  if (!await askConfirm(`Add Excel colors to ${p.sets.length} keycap sets and ${p.kbs.length} keyboards? Your own colors are kept.`)) return;
   btn.disabled = true; const now = firebase.firestore.FieldValue.serverTimestamp();
   const ops = [];
   p.sets.forEach(e => {
@@ -3306,11 +3339,11 @@ function wireColorwayCard(k) {
   const latest = () => savedKeyboards.find(x => x.id === k.id) || k;
   const write = async list => { try { await withTimeout(kbCol().doc(k.id).update({ colorway: list, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); return true; } catch (e) { toast('Could not save the color: ' + explain(e)); return false; } };
   const photo = () => ({ photoId: latest().coverPhotoId, photoThumb: latest().coverThumb });
-  card.onclick = e => {
+  card.onclick = async e => {
     const p = e.target.closest('[data-cwpick]'), d = e.target.closest('[data-cwdel]');
     if (p) { const c = (latest().colorway || []).find(x => x.id === p.dataset.cwpick);
       openColorWheel(p, normHex(c.hex) || '#808080', hx => write((latest().colorway || []).map(x => x.id === c.id ? Object.assign({}, x, { hex: hx, source: 'manual' }) : x)).then(ok => ok && toast('Color saved')), Object.assign({ title: c.label || 'Color' }, photo())); return; }
-    if (d) { if (confirm('Remove this color?')) write((latest().colorway || []).filter(x => x.id !== d.dataset.cwdel)); return; }
+    if (d) { if (await askConfirm('Remove this color?')) write((latest().colorway || []).filter(x => x.id !== d.dataset.cwdel)); return; }
     if (e.target.id === 'cwAdd') { const label = document.getElementById('cwLabel').value.trim() || 'Color';
       const mid = document.getElementById('cwMatNew')?.value, m = /weight/i.test(label) && matOf(mid);
       if (m) { write((latest().colorway || []).concat([{ id: 'w' + Math.random().toString(36).slice(2, 10), label, hex: m[2], material: m[0], source: 'material' }])).then(ok => ok && toast('Weight added')); return; }
@@ -3381,16 +3414,16 @@ function drawGmkMatch() {
   box.onclick = async e => {
     const mp = e.target.closest('[data-mpick]'); if (mp) { const ch = matchChoice[mp.closest('[data-ms]').dataset.ms]; ch.ref = mp.dataset.mpick; ch.on = true; drawGmkMatch(); return; }
     const un = e.target.closest('[data-unlink]');
-    if (un) { if (!confirm('Unlink this set from the catalog? Its colors stay as they are.')) return;
+    if (un) { if (!await askConfirm('Unlink this set from the catalog? Its colors stay as they are.')) return;
       try { await withTimeout(kcCol().doc(un.dataset.unlink).update({ gmkRef: firebase.firestore.FieldValue.delete() })); matchChoice[un.dataset.unlink] = { ref: '', on: false }; toast('Unlinked'); } catch (err) { toast('Could not unlink: ' + explain(err)); } return; }
     if (e.target.id === 'mLink') {
-      if (!confirm(`Link ${toLink.length} set${toLink.length === 1 ? '' : 's'} to the catalog sets shown? This only saves the link; nothing else changes.`)) return;
+      if (!await askConfirm(`Link ${toLink.length} set${toLink.length === 1 ? '' : 's'} to the catalog sets shown? This only saves the link; nothing else changes.`)) return;
       try { const b = db.batch(); toLink.forEach(s => b.update(kcCol().doc(s.id), { gmkRef: matchChoice[s.id].ref, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); await withTimeout(b.commit(), 60000);
         toast(`Linked ${toLink.length} sets`); } catch (err) { document.getElementById('mStatus').textContent = 'Could not link: ' + explain(err); } return; }
     if (e.target.id === 'mFill') {
       const plans = linkedSets.map(s => ({ s, ...mergeCatalogFill(s, gmkSets.find(x => x.id === s.gmkRef)) }));
       const nColors = plans.reduce((n, p) => n + p.add, 0), nFields = plans.reduce((n, p) => n + p.fields.length, 0);
-      if (!confirm(`Fill ${plans.length} linked sets: ${nColors} catalog colors and ${nFields} empty fields. Your own and Excel colors are kept. Continue?`)) return;
+      if (!await askConfirm(`Fill ${plans.length} linked sets: ${nColors} catalog colors and ${nFields} empty fields. Your own and Excel colors are kept. Continue?`)) return;
       try { for (let i = 0; i < plans.length; i += 400) { const b = db.batch(); plans.slice(i, i + 400).forEach(p => b.update(kcCol().doc(p.s.id), Object.assign(p.upd, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() }))); await withTimeout(b.commit(), 60000); }
         document.getElementById('mStatus').textContent = `Done: filled ${plans.length} sets (${nColors} colors, ${nFields} fields).`; toast('Filled from the catalog'); }
       catch (err) { document.getElementById('mStatus').textContent = 'Could not fill: ' + explain(err) + ' Some sets may have been updated; running it again is safe.'; } }
@@ -3457,7 +3490,7 @@ function wireMergeCard(s) {
   go.onclick = async () => {
     const d = savedKeycaps.find(x => x.id === pick.value); if (!d) return;
     if (formDirty) { toast('Save or discard your changes first.'); return; }
-    if (!confirm(`Move ${kitsOf(d).length} kit${kitsOf(d).length === 1 ? '' : 's'} and the photos, colors and values of "${d.name}" into "${s.name}", then delete "${d.name}"?`)) return;
+    if (!await askConfirm(`Move ${kitsOf(d).length} kit${kitsOf(d).length === 1 ? '' : 's'} and the photos, colors and values of "${d.name}" into "${s.name}", then delete "${d.name}"?`)) return;
     go.disabled = true; go.textContent = 'Merging…';
     try { const n = await mergeKeycapSets(savedKeycaps.find(x => x.id === s.id) || s, d); toast(`Merged "${d.name}" into "${s.name}"${n ? ` (${n} photo${n === 1 ? '' : 's'} moved)` : ''}`); }
     catch (e) { toast('Merge failed: ' + explain(e)); go.disabled = false; go.textContent = 'Merge into this set'; }
@@ -3586,7 +3619,7 @@ function openKitView(s, t) {
 function refCardHtml(t, x) {
   const has = x.refImage || x.refUrl;
   return `<div class="card side-card" id="refCard"><h3>Product page</h3>
-    ${x.stockThumb ? `<img class="refimg" src="${x.stockThumb}" alt=""><p class="sub" style="margin:6px 0 0">Stock picture: your own photo. <button class="btn" id="refStockOff" style="padding:2px 8px">Use the shop picture</button></p>` : x.refImage ? `<a href="${esc(x.refUrl || x.refImage)}" target="_blank" rel="noopener"><img class="refimg" src="${esc(x.refImage)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>` : ''}
+    ${x.stockThumb ? `<img class="refimg" src="${x.stockThumb}" alt=""><p class="sub" style="margin:6px 0 0">Stock picture: your own photo. It is also the picture on the Summary; the list card shows your default photo. <button class="btn" id="refStockOff" style="padding:2px 8px">Use the shop picture</button></p>` : x.refImage ? `<a href="${esc(x.refUrl || x.refImage)}" target="_blank" rel="noopener"><img class="refimg" src="${esc(x.refImage)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>` : ''}
     <p class="sub" style="margin:8px 0 0">${has ? `Stock picture and details from ${esc(x.refSource || 'the product page')}${x.refUrl ? ` · <a class="lnk" href="${esc(x.refUrl)}" target="_blank" rel="noopener">open page ↗</a>` : ''}. Your own photos replace this picture on the card.` : 'No product page yet. Add a link to the maker’s or shop’s page and its picture.'}</p>
     <div class="btnrow" style="margin-top:10px"><button class="btn" id="refEditBtn">${has ? 'Edit' : '+ Add product page'}</button></div>
     <div id="refForm" hidden><div style="margin-top:10px;display:grid;gap:8px">
@@ -3614,7 +3647,7 @@ function wireRefCard(t, x) {
     if (await write({ refUrl: u || del, refImage: im || del, refSource: (u || im) ? (source || del) : del }, { refUrl: u || undefined, refImage: im || undefined, refSource: (u || im) ? (source || undefined) : undefined })) toast('Product page saved');
   };
   const so = $('refStockOff'); if (so) so.onclick = () => setStockPhoto(t, x.id, null);
-  const c = $('refClear'); if (c) c.onclick = async () => { if (!confirm('Remove the product page link and stock picture from this item? Your own photos are not touched.')) return; const del = firebase.firestore.FieldValue.delete(); if (await write({ refUrl: del, refImage: del, refSource: del }, { refUrl: undefined, refImage: undefined, refSource: undefined })) toast('Product page removed'); };
+  const c = $('refClear'); if (c) c.onclick = async () => { if (!await askConfirm('Remove the product page link and stock picture from this item? Your own photos are not touched.')) return; const del = firebase.firestore.FieldValue.delete(); if (await write({ refUrl: del, refImage: del, refSource: del }, { refUrl: undefined, refImage: undefined, refSource: undefined })) toast('Product page removed'); };
 }
 function addSummaryTab(view, x, type) {
   const tabs = view.querySelector('.tabs'); if (!tabs || tabs.querySelector('[data-tab="summary"]')) return;
@@ -3635,14 +3668,18 @@ async function summaryAction(view, x, type, e) {
   if (he && row) {   // header: name edits the Name field (Save keeps it); description saves straight away
     const which = he.dataset.sumheadedit, cur = which === 'name' ? (document.getElementById('f_name')?.value || '') : (document.getElementById('f_description')?.value ?? latest().description ?? '');
     const ed = document.createElement(which === 'name' ? 'input' : 'textarea'); ed.className = 'input sumed'; ed.value = cur; if (which === 'desc') { ed.rows = 4; ed.placeholder = 'A few lines about this item, in your own words'; }
-    row.innerHTML = ''; row.appendChild(ed); row.insertAdjacentHTML('beforeend', `<span class="sumacts on"><button class="btn primary" data-sumheadok="${which}">${which === 'desc' ? 'Save' : 'OK'}</button><button class="btn" data-sumcancel>Cancel</button></span>`);
+    row.innerHTML = ''; row.appendChild(ed); row.insertAdjacentHTML('beforeend', `<span class="sumacts on"><button class="btn primary" data-sumheadok="${which}">Save</button><button class="btn" data-sumcancel>Cancel</button></span>`);
     ed.focus(); ed.onkeydown = ev => { if (ev.key === 'Enter' && which === 'name') { ev.preventDefault(); row.querySelector('[data-sumheadok]').click(); } if (ev.key === 'Escape') row.querySelector('[data-sumcancel]').click(); };
     return; }
   const hok = e.target.closest('[data-sumheadok]');
   if (hok && row) {
     const which = hok.dataset.sumheadok, v = row.querySelector('.sumed').value;
-    if (which === 'name') { const c = document.getElementById('f_name'); if (!v.trim()) { toast('The name cannot be empty'); return; }
-      if (c && c.value !== v) { c.value = v; c.dispatchEvent(new Event('input', { bubbles: true })); c.dispatchEvent(new Event('change', { bubbles: true })); toast('Changed. Press Save changes at the top to keep it.'); } redraw({}); return; }
+    if (which === 'name') { const c = document.getElementById('f_name'), nm = v.trim(); if (!nm) { toast('The name cannot be empty'); return; }
+      if (nm === String(latest().name || '') && (!c || c.value === nm)) { redraw({}); return; }
+      if (await write({ name: nm })) { if (c) c.value = nm; if (editing && editing.id === x.id) editing = Object.assign({}, editing, { name: nm });
+        const h1 = document.querySelector('#view .pagehead h1'); if (h1 && h1.textContent.trim() === String(latest().name || '').trim()) h1.textContent = nm;
+        redraw({ name: nm }); toast('Name saved'); }
+      return; }
     const d = v.trim(), del = firebase.firestore.FieldValue.delete(), fd = document.getElementById('f_description');
     if (await write({ description: d || del, descriptionOwn: d ? true : del })) {
       if (fd) fd.value = d; if (editing && editing.id === x.id) editing = Object.assign({}, editing, { description: d || undefined, descriptionOwn: d ? true : undefined });
@@ -3725,11 +3762,6 @@ function drawSummary(view, x, type) {
     if (rows.length || extra) secs.push(`<div class="sumsec"><div class="sec-title"><h4>${esc(title)}</h4><button class="lnk" data-goto="${t}">Edit</button></div>
       ${rows.length ? `<dl class="sumdl">${rows.map(r => `<dt class="${r.hid ? 'sumhid' : ''}">${esc(r.k)}</dt><dd class="sumrow${r.hid ? ' sumhid' : ''}" data-sk="${esc(r.key)}"${r.cid ? ` data-sc="${esc(r.cid)}"` : ''}><span class="sumv">${sumDd(r.v, r.kind)}</span><span class="sumacts">${r.cid && !r.hid ? '<button class="lnk" data-sumedit title="Change this value">✎</button>' : ''}<button class="lnk" data-sumhide title="${r.hid ? 'Show on the Summary' : 'Hide from the Summary'}">${r.hid ? 'Unhide' : 'Hide'}</button></span></dd>`).join('')}</dl>` : ''}${extra}</div>`);
   });
-  const ext = live.summaryExtra || [];
-  secs.push(`<div class="sumsec" id="sumExtra"><h4>Your details</h4>
-    ${ext.length ? `<dl class="sumdl">${ext.map(e => `<dt>${esc(e.label)}</dt><dd class="sumrow"><span class="sumv">${sumDd(e.value || '', '')}</span><span class="sumacts"><button class="lnk" data-sumxdel="${esc(e.id)}" title="Remove this row">Remove</button></span></dd>`).join('')}</dl>` : '<p class="sub" style="margin:0 0 6px">Add any detail that has no field, e.g. Lube, Film, Mods, Serial number.</p>'}
-    <div class="sumadd"><input class="input" id="sumxLabel" placeholder="Label, e.g. Lube"><input class="input" id="sumxValue" placeholder="Value, e.g. Krytox 205g0"><button class="btn" id="sumxAdd">+ Add row</button></div>
-    ${nHidden ? `<p class="sub" style="margin:10px 0 0">${nHidden} row${nHidden === 1 ? '' : 's'} hidden. <button class="lnk" id="sumToggleHidden">${sumShowHidden ? 'Hide them again' : 'Show hidden rows'}</button></p>` : ''}</div>`);
   const links = [];
   if (type === 'keyboards') {
     switchesOn(live.id).forEach(({ w, a }) => links.push(['Switches', `${[w.manufacturer, w.name].filter(Boolean).join(' ')} × ${a.count}`, '#/switches/' + w.id]));
@@ -3741,12 +3773,19 @@ function drawSummary(view, x, type) {
   else if (live.installedOn) { const kb = savedKeyboards.find(b => b.id === live.installedOn); if (kb) links.push(['Installed on', kb.name, '#/keyboards/' + kb.id]); }
   const vals = (live.values || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
   if (vals.length) links.push(['Market value', `${money(vals[0].value)} (${fmtDate(vals[0].date)}${vals[0].source ? ', ' + vals[0].source : ''})`, '']);
-  const cover = live.coverThumb || (type === 'keycaps' ? setPhotoCoverOf(live) : live.stockThumb || live.refImage || '');
+  const linkedHtml = (() => { const rows = links.map(([k, v, h]) => { const key = 'linked|' + k + '|' + v, hid = hidden.includes(key); if (hid) nHidden++; return { k, v, h, key, hid }; }).filter(r => !r.hid || sumShowHidden);
+      return rows.length ? `<div class="sumsec"><h4>Linked</h4><dl class="sumdl">${rows.map(r => `<dt class="${r.hid ? 'sumhid' : ''}">${esc(r.k)}</dt><dd class="sumrow${r.hid ? ' sumhid' : ''}" data-sk="${esc(r.key)}"><span class="sumv">${r.h ? `<a class="lnk" href="${r.h}">${esc(r.v)}</a>` : esc(r.v)}</span><span class="sumacts"><button class="lnk" data-sumhide title="${r.hid ? 'Show on the Summary' : 'Hide from the Summary'}">${r.hid ? 'Unhide' : 'Hide'}</button></span></dd>`).join('')}</dl></div>` : ''; })();
+  const ext = live.summaryExtra || [];
+  secs.push(`<div class="sumsec" id="sumExtra"><h4>Your details</h4>
+    ${ext.length ? `<dl class="sumdl">${ext.map(e => `<dt>${esc(e.label)}</dt><dd class="sumrow"><span class="sumv">${sumDd(e.value || '', '')}</span><span class="sumacts"><button class="lnk" data-sumxdel="${esc(e.id)}" title="Remove this row">Remove</button></span></dd>`).join('')}</dl>` : '<p class="sub" style="margin:0 0 6px">Add any detail that has no field, e.g. Lube, Film, Mods, Serial number.</p>'}
+    <div class="sumadd"><input class="input" id="sumxLabel" placeholder="Label, e.g. Lube"><input class="input" id="sumxValue" placeholder="Value, e.g. Krytox 205g0"><button class="btn" id="sumxAdd">+ Add row</button></div>
+    ${nHidden ? `<p class="sub" style="margin:10px 0 0">${nHidden} row${nHidden === 1 ? '' : 's'} hidden. <button class="lnk" id="sumToggleHidden">${sumShowHidden ? 'Hide them again' : 'Show hidden rows'}</button></p>` : ''}</div>`);
+  const cover = type === 'keycaps' ? (live.coverThumb || setPhotoCoverOf(live)) : (live.stockThumb || live.coverThumb || live.refImage || '');
   box.innerHTML = `<div class="sumhead">${cover ? `<img src="${esc(cover)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<div class="sumheadtxt"><div class="sumrow" data-sumhead="name"><h3 style="margin:0" class="sumv">${esc((view.querySelector('#f_name')?.value ?? live.name ?? '').trim())}${live.isFavorite ? ' <span style="color:#fbbf24">★</span>' : ''}</h3>${view.querySelector('#f_name') ? '<span class="sumacts"><button class="lnk" data-sumheadedit="name" title="Change the name">✎</button></span>' : ''}</div>
       ${(() => { const d = (view.querySelector('#f_description')?.value ?? live.description ?? '').trim();
         return d ? `<div class="sumrow" data-sumhead="desc"><p class="sumdesc sumv">${esc(d).replace(/\n/g, '<br>')}</p><span class="sumacts"><button class="lnk" data-sumheadedit="desc" title="Change the description">✎</button></span></div>${live.refSource && !live.descriptionOwn ? `<p class="sub" style="margin:2px 0 0;font-size:11.5px">Description from ${live.refUrl ? `<a class="lnk" href="${esc(live.refUrl)}" target="_blank" rel="noopener">${esc(live.refSource)}</a>` : esc(live.refSource)}</p>` : ''}`
           : '<div class="sumrow" data-sumhead="desc"><p class="sub sumv" style="margin:4px 0 0">No description yet. <button class="lnk" data-sumheadedit="desc">+ Add a description</button></p></div>'; })()}</div></div>
-    ${links.length ? `<div class="sumsec"><h4>Linked</h4><dl class="sumdl">${links.map(([k, v, h]) => `<dt>${esc(k)}</dt><dd>${h ? `<a class="lnk" href="${h}">${esc(v)}</a>` : esc(v)}</dd>`).join('')}</dl></div>` : ''}
+    ${linkedHtml}
     ${secs.join('') || '<p class="sub">Nothing filled in yet. Open the other tabs to add details.</p>'}`;
 }
 
@@ -3845,7 +3884,7 @@ function drawOldPhotosPreview() {
 }
 async function runOldPhotos() {
   const by = {}; oldPhotos.sets.forEach(o => { const id = oldPhotoPicks[o.oldId].id; if (!id) return; (by[id] = by[id] || []).push(...o.kits.filter(k => k.url).map(k => ({ name: k.name, url: k.url }))); });
-  const ids = Object.keys(by); if (!confirm(`Add ${Object.values(by).reduce((n, l) => n + l.length, 0)} photo links to ${ids.length} keycap sets? Photos already added this way are replaced.`)) return;
+  const ids = Object.keys(by); if (!await askConfirm(`Add ${Object.values(by).reduce((n, l) => n + l.length, 0)} photo links to ${ids.length} keycap sets? Photos already added this way are replaced.`)) return;
   const st = document.getElementById('oldStatus'), btn = document.getElementById('oldGo'); btn.disabled = true;
   try { const b = db.batch(), now = firebase.firestore.FieldValue.serverTimestamp(); ids.forEach(id => b.update(kcCol().doc(id), { kitPhotos: by[id], kitPhotosFrom: oldPhotos.source || 'Keycap Collection app', updatedAt: now }));
     await withTimeout(b.commit(), 30000); st.textContent = `Done: photos linked on ${ids.length} sets.`; toast('Kit photos added'); }
@@ -3859,9 +3898,6 @@ const SHARE_FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neu
 function loadImg(src) { return new Promise(r => { if (!src) return r(null); const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; }); }
 function shareColors(list) { return (list || []).filter(c => c.source !== 'catalog').map(c => normHex(c.hex)).filter(Boolean); }
 function fitText(ctx, t, w) { t = String(t || ''); if (ctx.measureText(t).width <= w) return t; while (t.length > 1 && ctx.measureText(t + '…').width > w) t = t.slice(0, -1); return t.trimEnd() + '…'; }
-function wrapText(ctx, t, w, maxLines) { const words = String(t || '').split(/\s+/), out = []; let line = '';
-  for (const wd of words) { const tryL = line ? line + ' ' + wd : wd; if (ctx.measureText(tryL).width <= w || !line) line = tryL; else { out.push(line); line = wd; } }
-  if (line) out.push(line); if (out.length > maxLines) { out.length = maxLines; out[maxLines - 1] = fitText(ctx, out[maxLines - 1] + ' …', w); } return out; }
 function rrect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 function drawCover(ctx, img, x, y, w, h) { const s = Math.max(w / img.width, h / img.height), sw = w / s, sh = h / s; ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, x, y, w, h); }
 function drawStrip(ctx, colors, x, y, w, h) { if (!colors.length) return; const cw = Math.min(w / colors.length, 34); ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 1; colors.slice(0, Math.floor(w / 6)).forEach((c, i) => { ctx.fillStyle = c; rrect(ctx, x + i * cw + .5, y + .5, cw - 4, h - 1, 3); ctx.fill(); ctx.stroke(); }); }
@@ -3890,7 +3926,7 @@ async function shareGridCanvas(title, items) {
 async function buildCardCanvas(k, withSpend) {
   const W = 1080, P = 56; let full = null;
   if (k.coverPhotoId && db && !isFile) { try { const d = await withTimeout(photoCol().doc(k.coverPhotoId).get()); full = d.exists ? d.data().full : null; } catch (e) { full = null; } }
-  const img = await loadImg(full || k.coverThumb);
+  const img = await loadImg(full || k.coverThumb || k.stockThumb);
   const sw = switchesOn(k.id).map(({ w, a }) => [[w.manufacturer, w.name].filter(Boolean).join(' '), `× ${a.count}`]);
   const kc = kitsOn(k.id).map(({ s, k: kit }) => [s.name, kit.name]);
   const pt = partsOn(k.id).map(({ t, x }) => [x.name, partRole(t, x)]);
@@ -4166,7 +4202,6 @@ function keycapRecord(r) {
   rec.kits = kits;
   return rec;
 }
-function setExcelSum(s) { return kitsOf(s).filter(k => k.source === 'excel').reduce((t, k) => t + kbTotal(k), 0); }
 
 
 function impWord(T, n) {
@@ -4282,7 +4317,7 @@ function drawImportPreview() {
 async function runImport(rows) {
   const T = importType, btn = document.getElementById('impGo'), st = document.getElementById('impStatus');
   const todo = rows.filter(r => r.status !== 'same');
-  if (!confirm(`Import ${todo.length} ${impWord(T, todo.length)} into the app?`)) return;
+  if (!await askConfirm(`Import ${todo.length} ${impWord(T, todo.length)} into the app?`)) return;
   btn.disabled = true;
   const now = firebase.firestore.FieldValue.serverTimestamp(), del = firebase.firestore.FieldValue.delete();
   let done = 0;
@@ -4434,7 +4469,7 @@ function drawRestorePreview(note) {
 async function runRestore() {
   const d = restoreData; if (!d) return; const msg = document.getElementById('restoreMsg'), btn = document.getElementById('btnRestoreGo');
   const cols = Object.keys(d.collections).filter(c => BACKUP_COLS.concat(BACKUP_BLOBS).includes(c)), n = cols.reduce((a, c) => a + Object.keys(d.collections[c]).length, 0);
-  if (!confirm(`Restore ${n} records from the backup of ${fmtDate(String(d.createdAt).slice(0, 10))}?\n\nEach record in the file replaces the current one. Changes made to those records after the backup are lost. Records not in the file are kept.`)) return;
+  if (!await askConfirm(`Restore ${n} records from the backup of ${fmtDate(String(d.createdAt).slice(0, 10))}?\n\nEach record in the file replaces the current one. Changes made to those records after the backup are lost. Records not in the file are kept.`)) return;
   btn.disabled = true; let done = 0;
   try {
     for (const c of cols) {
@@ -4458,7 +4493,7 @@ function wireBackup() {
   const $ = id => document.getElementById(id); if (!$('btnBackup')) return;
   if (!db || isFile) { ['btnBackup', 'btnBackupFull', 'btnRestorePick', 'btnRecount'].forEach(i => { if ($(i)) $(i).disabled = true; }); return; }
   $('btnBackup').onclick = () => makeBackup(false);
-  $('btnBackupFull').onclick = () => { if (confirm('This reads every photo and recording, so it can take a few minutes and make a large file. Continue?')) makeBackup(true); };
+  $('btnBackupFull').onclick = async () => { if (await askConfirm('This reads every photo and recording, so it can take a few minutes and make a large file. Continue?')) makeBackup(true); };
   $('btnRestorePick').onclick = () => $('restoreFile').click();
   $('restoreFile').onchange = async () => { const f = $('restoreFile').files[0]; $('restoreFile').value = ''; if (!f) return; restoreData = null;
     try { const d = JSON.parse(await f.text()); if (!d || d.kind !== 'kbc_backup' || !d.collections) throw new Error('This is not a Keyboard Collection backup file.'); restoreData = d; drawRestorePreview(); }
@@ -4587,7 +4622,7 @@ async function signInGoogle() {
   }
 }
 async function signOutApp() {
-  if (!confirm('Sign out of Keyboard Collection on this device?')) return;
+  if (!await askConfirm('Sign out of Keyboard Collection on this device?')) return;
   try { await auth.signOut(); } catch (e) { toast('Could not sign out: ' + (e.code || e.message)); return; }
   location.hash = '#/dashboard'; location.reload();
 }
