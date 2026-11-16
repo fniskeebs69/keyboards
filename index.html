@@ -489,6 +489,18 @@
   .donebtn.on { background: var(--ok-bg); color: var(--ok-on); border-color: transparent; } .donebtn.inq { border-color: var(--warn); color: var(--warn); } .btn.donestate { background: var(--ok-bg); color: var(--ok-on); border-color: transparent; }
   @media (hover: none) { .donebtn { opacity: 1; } }
   .bulkrow { display: grid; grid-template-columns: 1fr 1.3fr auto; gap: 8px; margin-top: 8px; align-items: center; } @media (max-width: 700px) { .bulkrow { grid-template-columns: 1fr; } }
+  .kcard .ph { overflow: hidden; }
+  .sumcar { position: relative; width: 220px; aspect-ratio: 4/3; flex: none; border-radius: var(--radius-s); overflow: hidden; background: var(--well); } .sumcar[hidden] { display: none; }
+  .sumcarimg { display: block; width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; } .sumhead .sumcar img { width: 100%; height: 100%; object-fit: cover; aspect-ratio: auto; border-radius: 0; display: block; }
+  .sumcarnav { position: absolute; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 50%; border: 0; background: rgba(0,0,0,.55); color: #fff; font-size: 18px; line-height: 1; cursor: pointer; opacity: 0; transition: opacity .15s; } .sumcarnav.l { left: 6px; } .sumcarnav.r { right: 6px; }
+  .sumcar:hover .sumcarnav, .sumcar:hover .sumcarfit { opacity: 1; } .sumcarn { position: absolute; left: 6px; bottom: 6px; font-size: 11px; background: rgba(0,0,0,.55); color: #fff; padding: 1px 7px; border-radius: 999px; }
+  .sumcarfit { position: absolute; right: 6px; bottom: 6px; font: inherit; font-size: 11px; background: rgba(0,0,0,.55); color: #fff; border: 0; padding: 2px 8px; border-radius: 999px; cursor: pointer; opacity: 0; transition: opacity .15s; }
+  @media (hover: none) { .sumcarnav, .sumcarfit { opacity: 1; } } @media (max-width: 700px) { .sumcar { width: 132px; } .sumhead { align-items: flex-start; } }
+  .fitbox { width: 100%; aspect-ratio: 4/3; overflow: hidden; border-radius: var(--radius-s); background: var(--well); touch-action: none; user-select: none; } .fitbox img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+  .lbox { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,.94); display: flex; flex-direction: column; color: #fff; } .lbtop { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; font-size: 13px; gap: 10px; }
+  .lbtools { display: flex; gap: 6px; } .lbtools button, .lbnav { background: rgba(255,255,255,.14); color: #fff; border: 0; border-radius: 8px; min-width: 36px; height: 34px; font-size: 15px; cursor: pointer; padding: 0 10px; } .lbtools button:hover, .lbnav:hover { background: rgba(255,255,255,.26); }
+  .lbstage { flex: 1; overflow: hidden; display: grid; place-items: center; touch-action: none; user-select: none; } .lbstage img { max-width: 100%; max-height: 100%; object-fit: contain; transform-origin: center; will-change: transform; pointer-events: none; }
+  .lbnav { position: absolute; top: 50%; transform: translateY(-50%); height: 54px; font-size: 26px; } .lbnav.l { left: 10px; } .lbnav.r { right: 10px; }
   /* theme picker */
   .thgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
   .thcard { border: 2px solid var(--line); border-radius: var(--radius-s); padding: 0; overflow: hidden; cursor: pointer; background: none; text-align: left; color: inherit; }
@@ -537,7 +549,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.62.0';
+const APP_VERSION = 'v0.63.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -716,10 +728,11 @@ function askConfirm(msg, o = {}) {
     const ok = o.ok || (/^delete/i.test(msg) ? 'Delete' : /^remove/i.test(msg) ? 'Remove' : /^sign out/i.test(msg) ? 'Sign out' : /^restore/i.test(msg) ? 'Restore' : /^unlink/i.test(msg) ? 'Unlink' : 'Continue');
     const prev = document.activeElement, d = document.createElement('div'); d.className = 'gdlg askdlg'; d.setAttribute('role', 'alertdialog'); d.setAttribute('aria-modal', 'true');
     d.innerHTML = `<div class="card askcard"><p class="askmsg">${esc(msg).replace(/\n/g, '<br>')}</p><div class="btnrow" style="justify-content:flex-end;margin-top:16px"><button class="btn" id="askNo">${esc(o.cancel || 'Cancel')}</button><button class="btn ${danger ? 'danger' : 'primary'}" id="askOk">${esc(ok)}</button></div></div>`;
-    const done = v => { document.removeEventListener('keydown', onKey, true); d.remove(); try { prev && prev.focus && prev.focus(); } catch (e) {} res(v); };
+    const onNav = () => done(false);   // moving to another page answers "no"
+    const done = v => { document.removeEventListener('keydown', onKey, true); window.removeEventListener('hashchange', onNav); d.remove(); try { prev && prev.focus && prev.focus(); } catch (e) {} res(v); };
     const onKey = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(false); } else if (e.key === 'Enter' && !e.repeat) { e.preventDefault(); e.stopPropagation(); done(true); } else if (e.key === 'Tab') { e.preventDefault(); (document.activeElement === d.querySelector('#askOk') ? d.querySelector('#askNo') : d.querySelector('#askOk')).focus(); } };
     d.onclick = e => { if (e.target === d || e.target.id === 'askNo') done(false); else if (e.target.id === 'askOk') done(true); };
-    document.addEventListener('keydown', onKey, true); document.body.appendChild(d); d.querySelector('#askOk').focus();
+    document.addEventListener('keydown', onKey, true); document.body.appendChild(d); d.querySelector('#askOk').focus(); setTimeout(() => window.addEventListener('hashchange', onNav), 0);
   });
 }
 /* ===================== Delete with undo, duplicate, bulk select, shortcuts (v0.58.0) =====================
@@ -757,15 +770,49 @@ function undoToast(msg, list) {
 }
 /* ---------- Duplicate ---------- */
 const DUP_DROP = ['id', 'coverPhotoId', 'coverThumb', 'stockPhotoId', 'stockThumb', 'kitStock', 'kitStockCover', 'values', 'allocations', 'importKey', 'importAliases', 'importNotes', 'excelRow', 'excelRows', 'excelTotal', 'excelTab', 'importedTotal', 'formFactorExcel', 'installedOn', 'installedOnText', 'belongsToText', 'isFavorite', 'isSample', 'createdAt', 'updatedAt'];
-async function duplicateItem(type, id) {
+const DUP_GROUPS = [   // [key, label, fields, on by default]
+  ['purchase', 'Purchase details (price, tax, shipping, dates, seller, receipt)', ['price', 'taxRate', 'shipping', 'discounts', 'datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'pictureLink', 'acquisition', 'orderNumber'], true],
+  ['notes', 'Notes and review', ['notes', 'reviewText', 'ratings', 'review', 'mods', 'currentBuildText'], true],
+  ['colors', 'Colors (palette or colorway)', ['palette', 'colorway', 'colorsText', 'keycapColor', 'legendColor'], true],
+  ['product', 'Product page, description and descriptors', ['refUrl', 'refImage', 'refSource', 'description', 'descriptionOwn', 'descriptors'], true],
+  ['summary', 'Your Summary rows and hidden rows', ['summaryExtra', 'summaryHidden'], true],
+  ['values', 'Market value history', ['values'], false],
+  ['fav', 'Favorite star', ['isFavorite'], false],
+  ['photos', 'Photos (copies each photo; uses storage)', [], false]];
+function duplicateDialog(type, id) {
   if (formDirty) { toast('Save or discard your changes first'); return; }
   const src = itemsOfType(type).find(x => x.id === id); if (!src) return;
-  const snap = await withTimeout(colOfType(type).doc(id).get()), d = Object.assign({}, snap.data()); DUP_DROP.forEach(k => delete d[k]);
-  const names = itemsOfType(type).map(x => x.name); let nm = (d.name || 'Item') + ' (copy)', i = 2; while (names.includes(nm)) nm = `${d.name} (copy ${i++})`;
-  d.name = nm; d.source = 'app'; d.appVersion = APP_VERSION; d.createdAt = d.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-  if (type === 'keycaps') d.kits = (d.kits || []).map(k => { const c = Object.assign({}, k, { id: 'k' + Math.random().toString(36).slice(2, 10), source: 'app' }); ['installedOn', 'installedOnText', 'importKey', 'excelRow', 'excelTotal', 'importedTotal', 'kitsPurchasedExcel'].forEach(f => delete c[f]); return c; });
-  try { const ref = colOfType(type).doc(); await withTimeout(ref.set(d)); toast('Copy made. Photos, market values and links to other items were not copied.', { ms: 5000 }); location.hash = `#/${type}/${ref.id}`; }
-  catch (e) { toast('Could not duplicate: ' + explain(e)); }
+  const names = itemsOfType(type).map(x => x.name); let nm = (src.name || 'Item') + ' (copy)', i = 2; while (names.includes(nm)) nm = `${src.name} (copy ${i++})`;
+  const groups = DUP_GROUPS.concat(type === 'keycaps' ? [['kits', `Kits (${kitsOf(src).length}) with their purchase details`, [], true], ['kitpics', 'Kit pictures and catalog link', ['kitPhotos', 'gmkRef', 'kitLinks'], true]] : []);
+  const d = document.createElement('div'); d.className = 'gdlg askdlg'; d.id = 'dupDlg';
+  d.innerHTML = `<div class="card askcard" style="width:min(520px,100%)"><p class="askmsg"><b>Duplicate “${esc(src.name)}”</b></p>
+    <div class="fld" style="margin-top:10px"><label for="dupName">Name of the copy</label><input class="input" id="dupName" value="${esc(nm)}"></div>
+    <p class="sub" style="margin:12px 0 6px">The basic details are always copied. Tick what else to copy:</p>
+    <div style="display:grid;gap:7px">${groups.map(([k, l, , on]) => `<label style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" data-dup="${k}"${on ? ' checked' : ''}><span>${esc(l)}</span></label>`).join('')}</div>
+    <p class="sub" style="margin:12px 0 0">Never copied: links to other items (installed on, switch counts), the Excel import keys, done marks.</p>
+    <div class="btnrow" style="justify-content:flex-end;margin-top:14px"><button class="btn" id="dupNo">Cancel</button><button class="btn primary" id="dupGo">Duplicate</button></div><p class="sub" id="dupMsg" style="margin:6px 0 0"></p></div>`;
+  document.body.appendChild(d); d.querySelector('#dupName').select();
+  d.onclick = async e => { if (e.target.id === 'dupNo' || e.target === d) { d.remove(); return; } if (e.target.id !== 'dupGo') return;
+    const name = d.querySelector('#dupName').value.trim(); if (!name) { d.querySelector('#dupMsg').textContent = 'Give the copy a name.'; return; }
+    const opts = {}; d.querySelectorAll('[data-dup]').forEach(c => { opts[c.dataset.dup] = c.checked; }); e.target.disabled = true; d.querySelector('#dupMsg').textContent = 'Copying…';
+    const ok = await duplicateItem(type, id, opts, name, groups); if (ok) d.remove(); else e.target.disabled = false; };
+}
+async function duplicateItem(type, id, opts, name, groups) {
+  try {
+    const snap = await withTimeout(colOfType(type).doc(id).get()), d = Object.assign({}, snap.data()); DUP_DROP.concat(['doneAt', 'inQueue', 'coverFit']).forEach(k => delete d[k]);
+    groups.forEach(([k, , fields]) => { if (!opts[k]) fields.forEach(f => delete d[f]); });
+    if (opts.fav) d.isFavorite = !!snap.data().isFavorite; if (opts.values) d.values = snap.data().values || [];
+    d.name = name; d.source = 'app'; d.appVersion = APP_VERSION; d.createdAt = d.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+    if (type === 'keycaps') d.kits = opts.kits ? (d.kits || []).map(k => { const c = Object.assign({}, k, { id: 'k' + Math.random().toString(36).slice(2, 10), source: 'app' }); ['installedOn', 'installedOnText', 'importKey', 'excelRow', 'excelTotal', 'importedTotal', 'kitsPurchasedExcel'].forEach(f => delete c[f]); return c; }) : [];
+    const ref = colOfType(type).doc(); let nPhotos = 0;
+    if (opts.photos) {
+      const ps = await withTimeout(photoCol().where('itemId', '==', id).get(), 60000), src = snap.data(); let bytes = 0;
+      for (const p of ps.docs) { const pd = Object.assign({}, p.data(), { itemId: ref.id, createdAt: firebase.firestore.FieldValue.serverTimestamp() }), nref = photoCol().doc(); await withTimeout(nref.set(pd), 30000); bytes += pd.bytes || 0; nPhotos++;
+        if (src.coverPhotoId === p.id) { d.coverPhotoId = nref.id; d.coverThumb = src.coverThumb; if (src.coverFit) d.coverFit = src.coverFit; } if (src.stockPhotoId === p.id) { d.stockPhotoId = nref.id; d.stockThumb = src.stockThumb; } }
+      if (nPhotos) await metaRef().set({ photoCount: firebase.firestore.FieldValue.increment(nPhotos), photoBytes: firebase.firestore.FieldValue.increment(bytes) }, { merge: true });
+    }
+    await withTimeout(ref.set(d)); toast(`Copy made${nPhotos ? ` with ${nPhotos} photo${nPhotos === 1 ? '' : 's'}` : ''}`); location.hash = `#/${type}/${ref.id}`; return true;
+  } catch (e) { toast('Could not duplicate: ' + explain(e)); return false; }
 }
 /* ---------- Bulk select on list pages ---------- */
 const LIST_TYPES = ['keyboards', 'switches', 'keycaps', 'pcbs', 'artisans', 'accessories'], LOC_TYPES = ['keyboards', 'switches', 'keycaps'];
@@ -816,7 +863,7 @@ function ensureListTools() {   // adds Select (list pages) and Duplicate (item p
   if (lt && !document.getElementById('btnSelect') && db && !isFile) { tools.insertAdjacentHTML('afterbegin', '<button class="btn" id="btnSelect" type="button" title="Pick several items to favorite, move or delete">Select</button>'); document.getElementById('btnSelect').onclick = () => setSelMode(!selMode); }
   if (selMode && lt === selType) { document.getElementById('view').classList.add('selmode'); markSel(); const b = document.getElementById('btnSelect'); if (b && b.textContent !== 'Done') { b.textContent = 'Done'; b.classList.add('primary'); } }
   const del = tools.querySelector('#btnDelete'), m = location.hash.match(/^#\/(\w+)\/([^/]+)$/);
-  if (del && m && LIST_TYPES.includes(m[1]) && m[2] !== 'new' && !document.getElementById('btnDup')) { del.insertAdjacentHTML('beforebegin', '<button class="btn" id="btnDup" type="button" title="Make a copy of this item (without photos)">Duplicate</button>'); document.getElementById('btnDup').onclick = () => duplicateItem(m[1], m[2]);
+  if (del && m && LIST_TYPES.includes(m[1]) && m[2] !== 'new' && !document.getElementById('btnDup')) { del.insertAdjacentHTML('beforebegin', '<button class="btn" id="btnDup" type="button" title="Make a copy of this item and choose what to copy">Duplicate…</button>'); document.getElementById('btnDup').onclick = () => duplicateDialog(m[1], m[2]);
     del.insertAdjacentHTML('beforebegin', '<button class="btn" id="btnQr" type="button" title="A printable label with a code that opens this item on your phone">QR label</button>'); document.getElementById('btnQr').onclick = () => { const x = itemsOfType(m[1]).find(y => y.id === m[2]); if (x) showQrLabels([{ t: m[1], x }]); }; }
 }
 new MutationObserver(() => ensureListTools()).observe(document.getElementById('view'), { childList: true, subtree: true });
@@ -907,6 +954,92 @@ function bulkEditDialog(t, ids) {
     } catch (err) { msg.textContent = `Stopped after ${done} of ${ids.length}: ${explain(err)}`; e.target.disabled = false; }
   };
 }
+/* ---------- v0.63.0: picture framing, Summary carousel + zoom viewer, price per switch ---------- */
+/* coverFit { z: zoom 1–4, x, y: focus point 0–100, fit: 'contain' | undefined } frames the display picture on cards and the Summary */
+const coverSrcOf = (t, x) => t === 'keycaps' ? (x.coverThumb || setPhotoCoverOf(x) || '') : (x.coverThumb || x.stockThumb || x.refImage || '');
+function fitStyle(f) { if (!f) return ''; if (f.fit === 'contain') return 'object-fit:contain;object-position:50% 50%;transform:none;'; const x = f.x == null ? 50 : f.x, y = f.y == null ? 50 : f.y; return `object-fit:cover;object-position:${x}% ${y}%;transform:scale(${f.z || 1});transform-origin:${x}% ${y}%;`; }
+function applyFits() {
+  const lt = listTypeNow();
+  if (lt) document.querySelectorAll('#view a.kcard').forEach(el => { const x = itemsOfType(lt).find(y => y.id === idOfEl(el)), img = el.querySelector('.ph img'); if (!img) return; const st = x && x.coverFit ? fitStyle(x.coverFit) : ''; if ((img.dataset.fit || '') !== st) { img.dataset.fit = st; img.style.cssText = st; } });
+}
+new MutationObserver(() => { applyFits(); wireUnitPrice(); }).observe(document.getElementById('view'), { childList: true, subtree: true });
+function adjustPictureDialog(t, id) {
+  const x = itemsOfType(t).find(y => y.id === id), src = x && coverSrcOf(t, x); if (!src) { toast('This entry has no picture to adjust yet'); return; }
+  const f = Object.assign({ z: 1, x: 50, y: 50 }, x.coverFit || {}), d = document.createElement('div'); d.className = 'gdlg'; d.id = 'fitDlg';
+  d.innerHTML = `<div class="card kv-card" style="max-width:520px"><div class="sec-title"><h3>Adjust the display picture</h3><button class="btn" data-x>✕</button></div><p class="sub">This is how the picture shows on the card and the Summary. Drag the picture to move it, use the slider to zoom. The picture itself is not changed.</p>
+    <div class="fitbox" id="fitBox"><img id="fitImg" src="${src.startsWith('data:') ? src : esc(src)}" alt="" draggable="false" referrerpolicy="no-referrer"></div>
+    <div class="fld" style="margin-top:10px"><label for="fitZoom" style="display:flex;justify-content:space-between"><span>Zoom</span><span id="fitZoomV"></span></label><input type="range" id="fitZoom" min="1" max="4" step="0.05" style="width:100%;accent-color:var(--accent)"></div>
+    <label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="fitWhole"> Show the whole picture (no cropping; adds bars at the sides)</label>
+    <div class="btnrow" style="margin-top:14px"><button class="btn primary" id="fitSave">Save</button><button class="btn" id="fitReset">Reset</button></div></div>`;
+  document.body.appendChild(d); const img = d.querySelector('#fitImg'), box = d.querySelector('#fitBox'), zo = d.querySelector('#fitZoom'), wh = d.querySelector('#fitWhole');
+  const draw = () => { img.style.cssText = fitStyle(wh.checked ? { fit: 'contain' } : f); zo.value = f.z; zo.disabled = wh.checked; d.querySelector('#fitZoomV').textContent = wh.checked ? '—' : Math.round(f.z * 100) + '%'; box.style.cursor = wh.checked ? 'default' : 'grab'; };
+  wh.checked = f.fit === 'contain'; draw();
+  zo.oninput = () => { f.z = +zo.value; draw(); }; wh.onchange = draw;
+  let drag = null; box.onpointerdown = e => { if (wh.checked) return; drag = { x: e.clientX, y: e.clientY, fx: f.x, fy: f.y }; box.setPointerCapture(e.pointerId); };
+  box.onpointermove = e => { if (!drag) return; const r = box.getBoundingClientRect(); f.x = Math.max(0, Math.min(100, drag.fx - (e.clientX - drag.x) / r.width * 100 / Math.max(.6, f.z * .8))); f.y = Math.max(0, Math.min(100, drag.fy - (e.clientY - drag.y) / r.height * 100 / Math.max(.6, f.z * .8))); draw(); };
+  box.onpointerup = box.onpointercancel = () => { drag = null; };
+  box.onwheel = e => { if (wh.checked) return; e.preventDefault(); f.z = Math.max(1, Math.min(4, f.z + (e.deltaY < 0 ? .1 : -.1))); draw(); };
+  d.onclick = async e => { if (e.target === d || e.target.closest('[data-x]')) { d.remove(); return; }
+    if (e.target.id !== 'fitSave' && e.target.id !== 'fitReset') return;
+    const val = e.target.id === 'fitReset' ? firebase.firestore.FieldValue.delete() : wh.checked ? { fit: 'contain' } : { z: Math.round(f.z * 100) / 100, x: Math.round(f.x * 10) / 10, y: Math.round(f.y * 10) / 10 };
+    try { await withTimeout(colOfType(t).doc(id).update({ coverFit: val })); toast(e.target.id === 'fitReset' ? 'Picture reset' : 'Picture saved'); d.remove(); setTimeout(drawSumCarousel, 300); } catch (err) { toast('Not saved: ' + explain(err)); } };
+}
+/* Summary carousel: the display picture first, then your photos, the product picture and (keycaps) kit pictures */
+let sumCarIdx = 0, sumCarFor = '';
+function sumCarSlides(t, x) {
+  const out = [], seen = new Set(), add = (src, full, cap) => { if (!src || seen.has(src)) return; seen.add(src); out.push({ src, full: full || src, cap: cap || '' }); };
+  const cover = coverSrcOf(t, x); if (t === 'keycaps' ? true : !x.stockThumb) add(cover, ((currentPhotos.find(p => p.id === x.coverPhotoId) || {}).full) || cover, 'Display picture');
+  if (x.stockThumb) add(x.stockThumb, ((currentPhotos.find(p => p.id === x.stockPhotoId) || {}).full) || x.stockThumb, 'Stock picture');
+  currentPhotos.filter(p => p.itemId === x.id).forEach(p => add(p.thumb, p.full, p.fileName || 'Your photo'));
+  if (x.refImage) add(x.refImage, x.refImage, 'Picture from ' + (x.refSource || 'the product page'));
+  if (t === 'keycaps') (x.kitPhotos || []).forEach(k => add(k.url, k.url, k.name));
+  return out;
+}
+function drawSumCarousel() {
+  const box = document.getElementById('sumCar'); if (!box) return; const t = box.dataset.type, x = itemsOfType(t).find(y => y.id === box.dataset.id); if (!x) { box.innerHTML = box.dataset.cover ? `<img src="${box.dataset.cover}" alt="">` : ''; box.hidden = !box.dataset.cover; return; }
+  const slides = sumCarSlides(t, x); box.hidden = !slides.length; if (!slides.length) return;
+  if (sumCarFor !== x.id) { sumCarFor = x.id; sumCarIdx = 0; } sumCarIdx = Math.max(0, Math.min(slides.length - 1, sumCarIdx)); const sl = slides[sumCarIdx], isCover = sl.src === coverSrcOf(t, x);
+  box.innerHTML = `<button type="button" class="sumcarimg" data-car="open" title="Click to enlarge and zoom"><img src="${sl.src.startsWith('data:') ? sl.src : esc(sl.src)}" alt="" referrerpolicy="no-referrer" style="${isCover && x.coverFit ? fitStyle(x.coverFit) : ''}"></button>
+    ${slides.length > 1 ? `<button type="button" class="sumcarnav l" data-car="prev" aria-label="Previous picture">‹</button><button type="button" class="sumcarnav r" data-car="next" aria-label="Next picture">›</button><span class="sumcarn">${sumCarIdx + 1} / ${slides.length}</span>` : ''}
+    ${isCover ? '<button type="button" class="sumcarfit" data-car="fit" title="Adjust zoom and position of the display picture">Adjust</button>' : ''}`;
+  box.onclick = e => { const b = e.target.closest('[data-car]'); if (!b) return; const a = b.dataset.car;
+    if (a === 'prev' || a === 'next') { sumCarIdx = (sumCarIdx + (a === 'next' ? 1 : slides.length - 1)) % slides.length; drawSumCarousel(); }
+    else if (a === 'fit') adjustPictureDialog(t, x.id); else openLightbox(slides, sumCarIdx, i => { sumCarIdx = i; drawSumCarousel(); }); };
+}
+new MutationObserver(() => { const b = document.getElementById('sumCar'); if (b && !b.dataset.drawn) { b.dataset.drawn = '1'; drawSumCarousel(); } }).observe(document.getElementById('view'), { childList: true, subtree: true });
+/* full-screen viewer: wheel or pinch to zoom, drag to move, double-click to zoom in and out, arrows for the next picture */
+function openLightbox(slides, start, onMove) {
+  let i = start, z = 1, tx = 0, ty = 0; const d = document.createElement('div'); d.className = 'lbox'; d.id = 'lbox';
+  d.innerHTML = `<div class="lbtop"><span id="lbCap"></span><span class="lbtools"><button data-lb="out" title="Zoom out">−</button><button data-lb="reset" title="Fit to screen">Fit</button><button data-lb="in" title="Zoom in">+</button><button data-lb="x" title="Close">✕</button></span></div>
+    <div class="lbstage" id="lbStage"><img id="lbImg" alt="" draggable="false" referrerpolicy="no-referrer"></div>${slides.length > 1 ? '<button class="lbnav l" data-lb="prev" aria-label="Previous">‹</button><button class="lbnav r" data-lb="next" aria-label="Next">›</button>' : ''}`;
+  document.body.appendChild(d); const img = d.querySelector('#lbImg'), stage = d.querySelector('#lbStage');
+  const show = () => { img.style.transform = `translate(${tx}px, ${ty}px) scale(${z})`; stage.style.cursor = z > 1 ? 'grab' : 'zoom-in'; };
+  const load = () => { z = 1; tx = ty = 0; const s2 = slides[i]; img.src = s2.full; d.querySelector('#lbCap').textContent = (s2.cap ? s2.cap + ' · ' : '') + (i + 1) + ' of ' + slides.length; show(); if (onMove) onMove(i); };
+  const zoom = (nz, cx, cy) => { nz = Math.max(1, Math.min(8, nz)); const r = stage.getBoundingClientRect(), px = (cx == null ? r.width / 2 : cx - r.left) - r.width / 2, py = (cy == null ? r.height / 2 : cy - r.top) - r.height / 2; tx = px - (px - tx) * nz / z; ty = py - (py - ty) * nz / z; z = nz; if (z === 1) tx = ty = 0; show(); };
+  const close = () => { document.removeEventListener('keydown', key, true); d.remove(); };
+  const key = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } else if (e.key === 'ArrowRight' && slides.length > 1) { i = (i + 1) % slides.length; load(); } else if (e.key === 'ArrowLeft' && slides.length > 1) { i = (i + slides.length - 1) % slides.length; load(); } else if (e.key === '+' || e.key === '=') zoom(z * 1.4); else if (e.key === '-') zoom(z / 1.4); };
+  document.addEventListener('keydown', key, true);
+  d.onclick = e => { const b = e.target.closest('[data-lb]'); if (!b) { if (e.target === d || e.target === stage) { if (z === 1 && !moved) close(); } return; } const a = b.dataset.lb;
+    if (a === 'x') close(); else if (a === 'in') zoom(z * 1.5); else if (a === 'out') zoom(z / 1.5); else if (a === 'reset') zoom(1); else { i = (i + (a === 'next' ? 1 : slides.length - 1)) % slides.length; load(); } };
+  stage.onwheel = e => { e.preventDefault(); zoom(z * (e.deltaY < 0 ? 1.2 : 1 / 1.2), e.clientX, e.clientY); };
+  stage.ondblclick = e => zoom(z > 1 ? 1 : 2.5, e.clientX, e.clientY);
+  const pts = new Map(); let drag = null, pinch = 0, moved = false;
+  stage.onpointerdown = e => { pts.set(e.pointerId, e); moved = false; stage.setPointerCapture(e.pointerId); if (pts.size === 1) drag = { x: e.clientX, y: e.clientY, tx, ty }; else if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) / z; drag = null; } };
+  stage.onpointermove = e => { if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, e);
+    if (pts.size === 2 && pinch) { const [a, b] = [...pts.values()]; zoom(Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) / pinch, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2); moved = true; }
+    else if (drag && z > 1) { tx = drag.tx + e.clientX - drag.x; ty = drag.ty + e.clientY - drag.y; moved = true; show(); }
+    else if (drag && slides.length > 1 && Math.abs(e.clientX - drag.x) > 70 && pts.size === 1) { i = (i + (e.clientX < drag.x ? 1 : slides.length - 1)) % slides.length; drag = null; moved = true; load(); } };
+  stage.onpointerup = stage.onpointercancel = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = 0; if (!pts.size) drag = null; };
+  load();
+}
+/* price per switch: a second box next to Price on a switch entry; the stored price stays the total for the lot */
+function wireUnitPrice() {
+  if (!/^#\/switches\//.test(location.hash)) return; const pr = document.getElementById('f_price'), cnt = document.getElementById('f_totalCount'); if (!pr || !cnt || document.getElementById('f_priceEach')) return;
+  const wrap = pr.closest('.fld') || pr.parentElement; wrap.insertAdjacentHTML('afterend', `<div class="fld"><label for="f_priceEach">Price per switch</label><div class="money-in"><span>$</span><input class="input" type="number" min="0" step="0.001" inputmode="decimal" id="f_priceEach" placeholder="0.00" title="Type the price of one switch and the total is worked out from Total count, or type the total and this shows the price of one."></div></div>`);
+  const each = document.getElementById('f_priceEach'), n = () => Number(cnt.value) || 0, fromTotal = () => { each.value = pr.value === '' || !n() ? '' : Math.round(Number(pr.value) / n() * 1000) / 1000; };
+  fromTotal(); pr.addEventListener('input', fromTotal); cnt.addEventListener('input', fromTotal);
+  each.addEventListener('input', e => { e.stopPropagation(); if (!n()) { toast('Fill in Total count first'); return; } pr.value = each.value === '' ? '' : Math.round(Number(each.value) * n() * 100) / 100; pr.dispatchEvent(new Event('input', { bubbles: true })); pr.dispatchEvent(new Event('change', { bubbles: true })); });
+}
 /* ---------- Keyboard shortcuts ---------- */
 const SHORTCUTS = [['/', 'Jump to the search box'], ['N', 'Add a new item (on a list page)'], ['Ctrl + S', 'Save changes'], ['Esc', 'Close a box, or leave select mode'], ['G then D / K / S / C', 'Go to Dashboard / Keyboards / Switches / Keycaps'], ['?', 'Show this list']];
 function showShortcuts() { if (document.getElementById('keysDlg')) return; const d = document.createElement('div'); d.className = 'gdlg'; d.id = 'keysDlg';
@@ -916,7 +1049,7 @@ let gKeyAt = 0;
 document.addEventListener('keydown', e => {
   const el = e.target, typing = el && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable);
   if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 's') { const sv = document.getElementById('btnSave'); if (sv) { e.preventDefault(); if (!sv.disabled) { if (typing) el.blur(); sv.click(); } } return; }
-  if (e.key === 'Escape') { if (document.querySelector('.askdlg')) return; const k = document.getElementById('keysDlg') || document.getElementById('kitStockDlg') || document.getElementById('pickDlg') || document.getElementById('qrDlg'); if (k) { k.remove(); return; } if (selMode) { setSelMode(false); return; } if (typing && /Search$/.test(el.id || '')) el.blur(); return; }
+  if (e.key === 'Escape') { if (document.querySelector('.askdlg')) return; const k = document.getElementById('fitDlg') || document.getElementById('dupDlg') || document.getElementById('kitView') || document.getElementById('keysDlg') || document.getElementById('kitStockDlg') || document.getElementById('pickDlg') || document.getElementById('qrDlg'); if (k) { k.remove(); return; } if (selMode) { setSelMode(false); return; } if (typing && /Search$/.test(el.id || '')) el.blur(); return; }
   if (typing || e.ctrlKey || e.metaKey || e.altKey || document.querySelector('.gdlg, .modal.show')) return;
   if (e.key === '/') { const sb = document.querySelector('#view input[id$="Search"], #view input[type="search"]'); if (sb) { e.preventDefault(); sb.focus(); sb.select(); } return; }
   if (e.key === '?') { showShortcuts(); return; }
@@ -1805,7 +1938,7 @@ function wirePhotos(k, type = 'keyboards') {
   photoUnsub = photoCol().where('itemId', '==', k.id).onSnapshot(snap => {
     currentPhotos = snap.docs.map(d => Object.assign({ id: d.id }, d.data()))
       .sort((a, b) => ((a.createdAt && a.createdAt.toDate ? a.createdAt.toDate() : 0) - (b.createdAt && b.createdAt.toDate ? b.createdAt.toDate() : 0)));
-    drawPhotoGrid(k);
+    drawPhotoGrid(k); drawSumCarousel();
     if (type === 'keycaps') { const gp = document.querySelector('[data-panel="gallery"]'); if (gp && !gp.hidden) drawKitGallery(k); migrateKitStock(k); }
   }, err => { document.getElementById('photoGrid').innerHTML = `<span class="sub">Could not load photos: ${esc(explain(err))}</span>`; });
 }
@@ -2404,6 +2537,7 @@ function kitRowHtml(k, i) {
         <div class="kacq"><span>Acquisition</span>${ACQUISITION.map(([v, t]) => `<label class="check"><input type="checkbox" class="k-acq" value="${v}"${(k.acquisition || []).includes(v) ? ' checked' : ''}> ${t}</label>`).join('')}</div>
         <label class="wide">Receipt<input class="input k-receipt" placeholder="Order number or link" value="${val(k.receipt)}"></label>
         <label class="wide">Kit notes<input class="input k-notes" placeholder="e.g. Sealed, extra keys, sold the spares" value="${val(k.kitNotes)}"></label>
+        <label class="check wide" style="display:flex;gap:8px;align-items:center" title="Untick for a kit you do not own (any more). It stays in your records and totals, but shows as not owned in the Kit gallery and does not count toward completion."><input type="checkbox" class="k-owned"${k.notOwned ? '' : ' checked'}> I own this kit</label>
         ${k.installedOnText ? `<p class="sub wide" style="margin:0">Excel "Installed On": ${esc(k.installedOnText)}</p>` : ''}
         ${k.excelRow ? `<p class="sub wide" style="margin:0">From Excel row ${k.excelRow}${k.kitsPurchasedExcel && k.kitsPurchasedExcel !== k.name ? ` · "${esc(k.kitsPurchasedExcel)}"` : ''}</p>` : ''}
       </div></details>
@@ -2570,8 +2704,9 @@ function readKitRow(row) {
   const q = c => row.querySelector(c).value.trim(), n = c => { const v = q(c); return v === '' ? null : Number(v); };
   return { id: row.dataset.kit, name: q('.k-name'), kitType: q('.k-type'), quantity: n('.k-qty'), datePurchased: q('.k-date'), purchasedFrom: q('.k-from'),
     price: n('.k-price'), taxRate: n('.k-tax') == null ? null : n('.k-tax') / 100, shipping: n('.k-ship'), discounts: n('.k-disc'), receipt: q('.k-receipt'),
-    dateReceived: q('.k-recv'), keyCount: n('.k-keys'), kitNotes: q('.k-notes'), acquisition: [...row.querySelectorAll('.k-acq:checked')].map(c => c.value) };
+    dateReceived: q('.k-recv'), keyCount: n('.k-keys'), kitNotes: q('.k-notes'), acquisition: [...row.querySelectorAll('.k-acq:checked')].map(c => c.value), ...(row.querySelector('.k-owned') && !row.querySelector('.k-owned').checked ? { notOwned: true } : {}) };
 }
+const ownedKits = s => kitsOf(s).filter(k => !k.notOwned);
 function updateSetTotal() { const t = [...document.querySelectorAll('#kitList .kit')].reduce((s, r) => s + kbTotal(readKitRow(r)), 0); const el = document.getElementById('setTotal'); if (el) el.textContent = money(t); }
 async function saveKeycapSet() {
   const btn = document.getElementById('btnSave'), errBox = document.getElementById('formErr');
@@ -2597,6 +2732,7 @@ async function saveKeycapSet() {
     const merged = Object.assign({}, old.get(k.id) || {}, { id: k.id, name: k.name, quantity: k.quantity ?? 1 });
     if (k.keyCount != null) merged.keyCount = k.keyCount; else delete merged.keyCount;
     if (k.acquisition.length) merged.acquisition = k.acquisition; else delete merged.acquisition;
+    if (k.notOwned) merged.notOwned = true; else delete merged.notOwned;
     [['kitType', k.kitType], ['datePurchased', k.datePurchased], ['dateReceived', k.dateReceived], ['purchasedFrom', k.purchasedFrom], ['receipt', k.receipt], ['kitNotes', k.kitNotes]].forEach(([f, x]) => { if (x) merged[f] = x; else delete merged[f]; });
     [['price', k.price, 100], ['taxRate', k.taxRate, 1e8], ['shipping', k.shipping, 100], ['discounts', k.discounts, 100]].forEach(([f, x, r]) => {
       const o = old.get(k.id);
@@ -3339,13 +3475,16 @@ function startWishListener() {
 }
 function wishRank(w) { const p = WISH_PRIO.indexOf(w.priority); return { wanted: 0, todo: 10, owned: 20, bought: 30 }[w.status] + (p < 0 ? 5 : p); }   // wanted by priority, then to-do, owned, bought
 function ownedSetFor(w) { if (w.category !== 'Keycaps') return null; const n = w.name.toLowerCase(); return savedKeycaps.find(s => s.name.toLowerCase() === n) || null; }
+let wishQuery = '';
 function renderWishlist() {
   document.getElementById('view').innerHTML = `
     <div class="pagehead"><div><h1>Wishlist</h1><p id="wishSum">Things to complete a set or buy next. Not counted in your totals.</p></div>
       <div class="tools"><div class="seg" role="group" aria-label="Show" id="wishSeg">${[['open', 'Open'], ['bought', 'Bought'], ['all', 'All']].map(([v, t]) => `<button data-wf="${v}" class="${v === wishFilter ? 'on' : ''}">${t}</button>`).join('')}</div>
       <button class="btn primary" id="wishAdd">${I.plus}Add to wishlist</button></div></div>
     <div id="wishFormBox"></div>
+    <div class="search" style="margin-bottom:12px">${I.search}<input type="search" id="wishSearch" placeholder="Search the wishlist by name, kit, maker, category or notes" value="${esc(wishQuery)}" autocomplete="off"></div>
     <div id="wishTable"></div>`;
+  document.getElementById('wishSearch').oninput = e => { wishQuery = e.target.value; drawWishlist(); };
   document.getElementById('wishSeg').onclick = e => { const b = e.target.closest('[data-wf]'); if (!b) return; wishFilter = b.dataset.wf; renderWishlist(); };
   document.getElementById('wishAdd').onclick = () => openWishForm(null);
   drawWishlist();
@@ -3353,7 +3492,8 @@ function renderWishlist() {
 function drawWishlist() {
   const box = document.getElementById('wishTable'); if (!box) return;
   const open = savedWish.filter(w => w.status !== 'bought');
-  const list = savedWish.filter(w => wishFilter === 'all' || (wishFilter === 'bought' ? w.status === 'bought' : w.status !== 'bought'))
+  const wq = wishQuery.trim().toLowerCase(), wHit = w => !wq || [w.name, w.version, w.platform, w.category, w.notes, w.status].some(v => String(v || '').toLowerCase().includes(wq));
+  const list = savedWish.filter(w => wHit(w) && (wishFilter === 'all' || (wishFilter === 'bought' ? w.status === 'bought' : w.status !== 'bought')))
     .sort((a, b) => wishRank(a) - wishRank(b) || a.name.localeCompare(b.name) || (a.version || '').localeCompare(b.version || ''));
   const est = open.filter(w => w.status !== 'owned').reduce((t, w) => t + (Number(w.estPrice) || 0), 0);
   document.getElementById('wishSum').textContent = `${open.length} open item${open.length === 1 ? '' : 's'} · about ${money(est)} to buy everything wanted` + (db && !isFile && !wishLoaded ? ' · loading…' : '');
@@ -3427,10 +3567,10 @@ function trendOf(x) { const v = valuesOf(x); if (v.length < 2) return '—'; con
 function valueCardHtml(t, x) {
   const v = valuesOf(x), cur = currentValue(x), paid = paidFor(t, x);
   return `<div class="card side-card" id="valueCard"><h3>Market value</h3>
-    ${cur ? `<div class="vnow"><b>${money(cur.value)}</b><span>${deltaHtml(paid, cur.value)} vs ${money(paid)} paid · ${trendOf(x)}</span></div><p class="sub" style="margin:4px 0 10px">Checked ${esc(fmtDate(cur.date))}${cur.source ? ' · ' + esc(cur.source) : ''}</p>`
+    ${cur ? `<div class="vnow"><b>${money(cur.value)}</b>${t === 'switches' && Number(x.totalCount) > 0 ? `<span style="display:block">${money(cur.value / x.totalCount)} per switch · you paid ${money(paid / x.totalCount)} per switch</span>` : ''}<span>${deltaHtml(paid, cur.value)} vs ${money(paid)} paid · ${trendOf(x)}</span></div><p class="sub" style="margin:4px 0 10px">Checked ${esc(fmtDate(cur.date))}${cur.source ? ' · ' + esc(cur.source) : ''}</p>`
       : `<p class="sub" style="margin:0 0 10px">Not valued yet. You paid ${money(paid)}.</p>`}
     ${v.length ? `<div class="alist">${v.slice().reverse().slice(0, 6).map(e => `<div class="arow" style="grid-template-columns:auto 1fr auto"><span class="sub" style="margin:0">${esc(fmtDate(e.date))}</span><span style="text-align:right;font-variant-numeric:tabular-nums">${money(e.value)}</span><button class="btn" data-vdel="${esc(e.id)}" aria-label="Remove this value">✕</button></div>`).join('')}${v.length > 6 ? `<p class="sub" style="margin:4px 0 0">+ ${v.length - 6} older</p>` : ''}</div>` : ''}
-    <div class="vadd"><input class="input" id="vVal" type="number" min="0" step="0.01" placeholder="Value $"><input class="input" id="vDate" type="date" value="${todayIso()}"><input class="input" id="vSrc" placeholder="Source, e.g. eBay sold listings" list="dlValSrc"><button class="btn primary" id="vAdd">Add value</button></div>
+    <div class="vadd">${t === 'switches' && Number(x.totalCount) > 0 ? `<input class="input" id="vEach" type="number" min="0" step="0.001" placeholder="Per switch $" title="Value of one switch. The total is worked out from your count of ${x.totalCount}." data-count="${x.totalCount}">` : ''}<input class="input" id="vVal" type="number" min="0" step="0.01" placeholder="${t === 'switches' ? 'Whole lot $' : 'Value $'}"><input class="input" id="vDate" type="date" value="${todayIso()}"><input class="input" id="vSrc" placeholder="Source, e.g. eBay sold listings" list="dlValSrc"><button class="btn primary" id="vAdd">Add value</button></div>
     <datalist id="dlValSrc">${['eBay sold listings', 'r/mechmarket', 'Discord market', 'Retail price', 'Estimate'].map(o => `<option value="${o}">`).join('')}</datalist>
     <div class="msg" id="vMsg" style="color:var(--bad-text);font-size:12px;margin-top:6px"></div></div>`;
 }
@@ -3438,6 +3578,8 @@ function wireValueCard(t, x) {
   const card = document.getElementById('valueCard'); if (!card) return;
   const write = async list => { try { await withTimeout(colOfType(t).doc(x.id).update({ values: list, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); return true; } catch (e) { toast('Could not save the value: ' + explain(e)); return false; } };
   const latest = () => itemsOfType(t).find(y => y.id === x.id) || x;
+  const ve = document.getElementById('vEach'), vv = document.getElementById('vVal');
+  if (ve && vv) { const n = Number(ve.dataset.count) || 0; ve.oninput = () => { vv.value = ve.value === '' ? '' : (Math.round(Number(ve.value) * n * 100) / 100); }; vv.oninput = () => { ve.value = vv.value === '' || !n ? '' : (Math.round(Number(vv.value) / n * 1000) / 1000); }; }
   card.onclick = async e => {
     const d = e.target.closest('[data-vdel]');
     if (d) { if (!await askConfirm('Remove this value from the history?')) return; if (await write(valuesOf(latest()).filter(v => v.id !== d.dataset.vdel))) toast('Value removed'); return; }
@@ -3453,14 +3595,14 @@ function wireValueCard(t, x) {
 /* while a form has unsaved typing, a value change only redraws the value card */
 function swapValueCardIfOnly(t, x) {
   const c = document.getElementById('valueCard'); if (!c || !editing || editing.id !== x.id) return false;
-  const strip = o => JSON.stringify(Object.assign({}, o, { values: null, colorway: null, refImage: null, refUrl: null, refSource: null, doneAt: null, inQueue: null, stockThumb: null, stockPhotoId: null, kitStock: null, kitStockCover: null, kitLinks: null, summaryHidden: null, summaryExtra: null, description: null, descriptionOwn: null, name: null, updatedAt: null, createdIso: null, _date: null }));
+  const strip = o => JSON.stringify(Object.assign({}, o, { values: null, colorway: null, refImage: null, refUrl: null, refSource: null, doneAt: null, inQueue: null, coverFit: null, stockThumb: null, stockPhotoId: null, kitStock: null, kitStockCover: null, kitLinks: null, summaryHidden: null, summaryExtra: null, description: null, descriptionOwn: null, name: null, updatedAt: null, createdIso: null, _date: null }));
   if (strip(editing) !== strip(x)) return false;
   c.outerHTML = valueCardHtml(t, x); wireValueCard(t, x);
   const cw = document.getElementById('cwCard'); if (cw && t === 'keyboards') { cw.outerHTML = colorwayCardHtml(x); wireColorwayCard(x); }
   const rc = document.getElementById('refCard'); if (rc && rc.querySelector('#refForm')?.hidden !== false) { rc.outerHTML = refCardHtml(t, x); wireRefCard(t, x); }
   if (document.getElementById('photoGrid') && currentPhotos.length) drawPhotoGrid(x);
   if (t === 'keycaps' && document.getElementById('kitGallery')) drawKitGallery(x);
-  editing = Object.assign({}, editing, { values: x.values, colorway: x.colorway, refImage: x.refImage, refUrl: x.refUrl, refSource: x.refSource, stockThumb: x.stockThumb, stockPhotoId: x.stockPhotoId, doneAt: x.doneAt, inQueue: x.inQueue, kitStock: x.kitStock, kitStockCover: x.kitStockCover, kitLinks: x.kitLinks, summaryHidden: x.summaryHidden, summaryExtra: x.summaryExtra, description: x.description, descriptionOwn: x.descriptionOwn, name: x.name });
+  editing = Object.assign({}, editing, { values: x.values, colorway: x.colorway, refImage: x.refImage, refUrl: x.refUrl, refSource: x.refSource, stockThumb: x.stockThumb, stockPhotoId: x.stockPhotoId, doneAt: x.doneAt, inQueue: x.inQueue, coverFit: x.coverFit, kitStock: x.kitStock, kitStockCover: x.kitStockCover, kitLinks: x.kitLinks, summaryHidden: x.summaryHidden, summaryExtra: x.summaryExtra, description: x.description, descriptionOwn: x.descriptionOwn, name: x.name });
   const sp = document.querySelector('#view [data-panel="summary"]'); if (sp && !sp.hidden && !sp.querySelector('.sumed')) drawSummary(document.getElementById('view'), x, t);
   return true;
 }
@@ -3984,7 +4126,7 @@ function formKits() { return [...document.querySelectorAll('#kitList .kit')].map
 function kitGalleryTiles(s) {
   const refId = document.getElementById('f_gmkRef')?.value || '', ref = refId && gmkSets ? gmkSets.find(x => x.id === refId) : null;
   const live = s ? savedKeycaps.find(x => x.id === s.id) || s : null, photos = (live && live.kitPhotos) || [];
-  const mine = formKits(), saved = live ? kitsOf(live) : [], tiles = [];
+  const mine = formKits().filter(k => !k.notOwned), saved = live ? kitsOf(live) : [], tiles = [];
   const where = k => { const sk = saved.find(x => x.id === k.id); const kb = sk && sk.installedOn && savedKeyboards.find(b => b.id === sk.installedOn); return kb ? kb.name : ''; };
   let kind = '', base = [];
   if (ref) { kind = 'catalog'; base = (ref.kits || []).map(ck => ({ name: ck.name, img: ck.img, more: ck.moreImgs || [], price: gmkKitPrice(ck), qty: ck.quantity, ck, cat: true })); }
@@ -4041,7 +4183,7 @@ function openKitView(s, t) {
       return `<div class="fld" style="margin-top:12px"><label for="kvLink">Your kit “${esc(t.kit.name)}” is this catalog kit</label><select class="input" id="kvLink" data-kitname="${esc(t.kit.name)}"><option value="">Match by name (automatic)</option>${ref.kits.map(ck => `<option value="${esc(ck.name)}"${cur === ck.name ? ' selected' : ''}>${esc(ck.name)}</option>`).join('')}<option value="-"${cur === '-' ? ' selected' : ''}>Not in the catalog (counts as an extra kit)</option></select>
         <p class="sub" style="margin:4px 0 0">${t.extra && cur !== '-' ? 'No catalog kit has this name. Pick the right one, or confirm it is not in the catalog.' : 'Change this only if the automatic match is wrong.'} Saved straight away.</p></div>`; })()}
     <div class="btnrow" style="margin-top:12px">
-      ${t.owned ? '<button class="btn" id="kvShow">Show in Kits tab</button>' : `<button class="btn primary" id="kvOwn" title="Adds this kit to the Kits tab; click Save to keep it">I own this kit</button>${s ? (onWish ? '<span class="chip">On wishlist</span>' : '<button class="btn" id="kvWish">+ Wishlist</button>') : ''}`}
+      ${t.owned ? '<button class="btn" id="kvShow">Show in Kits tab</button><button class="btn" id="kvUnown" title="Marks this kit as not owned; click Save to keep it">I don’t own this kit</button>' : `<button class="btn primary" id="kvOwn" title="Adds this kit to the Kits tab; click Save to keep it">I own this kit</button>${s ? (onWish ? '<span class="chip">On wishlist</span>' : '<button class="btn" id="kvWish">+ Wishlist</button>') : ''}`}
       <span style="margin-left:auto">${matrixLinkHtml(t.cat ? gmkSets.find(x => x.id === document.getElementById('f_gmkRef').value) : null)}</span></div></div>`;
   document.body.appendChild(d);
   const toKits = () => { d.remove(); document.querySelector('.tabs [data-tab="kits"]').click(); };
@@ -4053,6 +4195,9 @@ function openKitView(s, t) {
     if (e.target === d || e.target.closest('[data-x]')) { d.remove(); return; }
     const th = e.target.closest('[data-kvi]'); if (th) { document.getElementById('kvMain').src = imgs[+th.dataset.kvi]; return; }
     if (e.target.id === 'kvShow') { toKits(); const row = [...document.querySelectorAll('#kitList .kit')].find(r => r.dataset.kit === t.kit.id); if (row) { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); row.classList.add('flash'); setTimeout(() => row.classList.remove('flash'), 1600); } }
+    if (e.target.id === 'kvUnown' || e.target.id === 'kvOwn') {   // a kit already on the Kits tab is ticked or unticked instead of being added twice
+      const want = e.target.id === 'kvOwn', row = [...document.querySelectorAll('#kitList .kit')].find(r => { const nm = r.querySelector('.k-name').value; return t.kit && r.dataset.kit === t.kit.id || (kitKey(nm) === kitKey(t.name) && r.querySelector('.k-owned').checked !== want); });
+      if (row) { const c = row.querySelector('.k-owned'); c.checked = want; c.dispatchEvent(new Event('input', { bubbles: true })); c.dispatchEvent(new Event('change', { bubbles: true })); d.remove(); drawKitGallery(s); toast(want ? 'Marked as owned. Click Save to keep it.' : 'Marked as not owned. Click Save to keep it.'); return; } }
     if (e.target.id === 'kvOwn') { toKits(); document.getElementById('addKit').click(); const rows = document.querySelectorAll('#kitList .kit'), row = rows[rows.length - 1], inp = row.querySelector('.k-name');
       inp.value = t.name; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); row.scrollIntoView({ behavior: 'smooth', block: 'center' }); toast(`Added ${t.name} to Kits. Fill in what you paid, then Save.`); }
     if (e.target.id === 'kvWish' && s) { await addKitToWishlist(s, t.ck); d.remove(); drawKitGallery(s); }
@@ -4228,7 +4373,7 @@ function drawSummary(view, x, type) {
     <div class="sumadd"><input class="input" id="sumxLabel" placeholder="Label, e.g. Lube"><input class="input" id="sumxValue" placeholder="Value, e.g. Krytox 205g0"><button class="btn" id="sumxAdd">+ Add row</button></div>
     ${nHidden ? `<p class="sub" style="margin:10px 0 0">${nHidden} row${nHidden === 1 ? '' : 's'} hidden. <button class="lnk" id="sumToggleHidden">${sumShowHidden ? 'Hide them again' : 'Show hidden rows'}</button></p>` : ''}</div>`);
   const cover = type === 'keycaps' ? (live.coverThumb || setPhotoCoverOf(live)) : (live.stockThumb || live.coverThumb || live.refImage || '');
-  box.innerHTML = `<div class="sumhead">${cover ? `<img src="${esc(cover)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<div class="sumheadtxt"><div class="sumrow" data-sumhead="name"><h3 style="margin:0" class="sumv">${esc((view.querySelector('#f_name')?.value ?? live.name ?? '').trim())}${live.isFavorite ? ' <span style="color:var(--warn)">★</span>' : ''}</h3>${view.querySelector('#f_name') ? '<span class="sumacts"><button class="lnk" data-sumheadedit="name" title="Change the name">✎</button></span>' : ''}</div>
+  box.innerHTML = `<div class="sumhead"><div class="sumcar" id="sumCar" data-type="${type}" data-id="${esc(live.id || '')}" data-cover="${esc(cover)}"></div><div class="sumheadtxt"><div class="sumrow" data-sumhead="name"><h3 style="margin:0" class="sumv">${esc((view.querySelector('#f_name')?.value ?? live.name ?? '').trim())}${live.isFavorite ? ' <span style="color:var(--warn)">★</span>' : ''}</h3>${view.querySelector('#f_name') ? '<span class="sumacts"><button class="lnk" data-sumheadedit="name" title="Change the name">✎</button></span>' : ''}</div>
       ${(() => { const d = (view.querySelector('#f_description')?.value ?? live.description ?? '').trim();
         return d ? `<div class="sumrow" data-sumhead="desc"><p class="sumdesc sumv">${esc(d).replace(/\n/g, '<br>')}</p><span class="sumacts"><button class="lnk" data-sumheadedit="desc" title="Change the description">✎</button></span></div>${live.refSource && !live.descriptionOwn ? `<p class="sub" style="margin:2px 0 0;font-size:11.5px">Description from ${live.refUrl ? `<a class="lnk" href="${esc(live.refUrl)}" target="_blank" rel="noopener">${esc(live.refSource)}</a>` : esc(live.refSource)}</p>` : ''}`
           : '<div class="sumrow" data-sumhead="desc"><p class="sub sumv" style="margin:4px 0 0">No description yet. <button class="lnk" data-sumheadedit="desc">+ Add a description</button></p></div>'; })()}</div></div>
@@ -4446,7 +4591,7 @@ function pairKits(owned, cat, links) {
 }
 function completionOf(s) {
   const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef); if (!ref || !(ref.kits || []).length) return null;
-  const mine = kitsOf(s), links = s.kitLinks || {}, pairs = pairKits(mine, ref.kits, links), have = ref.kits.filter(ck => pairs.has(ck)), paired = new Set(pairs.values());
+  const mine = ownedKits(s), links = s.kitLinks || {}, pairs = pairKits(mine, ref.kits, links), have = ref.kits.filter(ck => pairs.has(ck)), paired = new Set(pairs.values());
   const extra = mine.filter(k => !paired.has(k)), check = extra.filter(k => links[kitKey(k.name)] !== '-');   // extra = yours but not in the catalog's list; check = not yet confirmed by you
   const n = have.length + extra.length, total = ref.kits.length + extra.length;   // a kit you own always counts, even when the catalog does not list it
   return { ref, have: n, total, pct: Math.round(n / total * 100), missing: ref.kits.filter(ck => !have.includes(ck)), extra, check };
