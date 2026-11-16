@@ -229,6 +229,13 @@
   .cover { aspect-ratio: 4 / 3; border-radius: var(--radius-s); overflow: hidden; background: var(--bg-2); border: var(--bw) var(--bs) var(--line); display: grid; place-items: center; color: var(--text-3); font-size: 12.5px; margin-bottom: 12px; }
   .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .cover span { display: grid; justify-items: center; gap: 6px; } .cover svg { width: 36px; height: 36px; }
+  .rc-head { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; } .rc-f { display: grid; gap: 4px; font-size: 12px; color: var(--text-2); min-width: 0; } .rc-f .input { width: 100%; box-sizing: border-box; min-width: 0; }
+  .rc-row { border: var(--bw) var(--bs) var(--line); border-radius: var(--radius-s); padding: 10px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; background: var(--bg-2); } .rc-row + .rc-row { margin-top: 8px; } .rc-row.skip { opacity: .6; }
+  .rc-top { display: grid; grid-template-columns: minmax(0, 1fr) 120px auto; gap: 8px; align-items: start; } .rc-what .input { width: 100%; box-sizing: border-box; font-weight: 600; } .rc-opt { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+  .rc-amt .input { width: 100%; box-sizing: border-box; } .rc-del { padding: 6px 10px; }
+  .rc-to { display: flex; flex-wrap: wrap; gap: 6px; } .rc-to .select, .rc-to .input { padding: 7px 9px; font-size: 13px; min-width: 0; max-width: 100%; } .rc-to .rc-item, .rc-to .rc-name { flex: 1 1 220px; width: 0; } .rc-to .rc-kit { flex: 0 1 200px; }
+  .rc-calc { font-size: 12.5px; color: var(--text-2); line-height: 1.5; } .rc-rep { display: block; margin-top: 4px; color: var(--warn); } .rc-done { margin: 0 0 14px; padding-left: 18px; line-height: 1.9; }
+  @media (max-width: 700px) { .rc-head { grid-template-columns: 1fr 1fr; } .rc-top { grid-template-columns: minmax(0, 1fr) 96px auto; } }
   .drop { border: 1.5px dashed var(--line-2); border-radius: var(--radius-s); padding: 16px 12px; text-align: center; cursor: pointer; display: grid; gap: 4px; background: var(--bg-2); outline: none; }
   .drop b { font-size: 13px; } .drop span { font-size: 11.5px; color: var(--text-3); }
   .drop:hover, .drop:focus-visible, .drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--bg-2)); }
@@ -549,7 +556,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.63.0';
+const APP_VERSION = 'v0.64.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -692,7 +699,7 @@ function refreshIfShowing() {
   const id = (location.hash.replace(/^#\/?/, '').split('/')[0]) || 'dashboard';
   if (formDirty && editing && VALUE_TYPES.includes(id)) { const cur = itemsOfType(id).find(x => x.id === editing.id); if (cur && swapValueCardIfOnly(id, cur)) return; }
   if (id === 'dashboard') route();
-  else if (id === 'import') { clearTimeout(refreshIfShowing._t); refreshIfShowing._t = setTimeout(() => { if (location.hash.startsWith('#/import')) { drawImportPreview(); drawReconcile(); } }, 120); }   // many records arrive at once during an import: redraw once, not per record
+  else if (id === 'import') { clearTimeout(refreshIfShowing._t); refreshIfShowing._t = setTimeout(() => { if (location.hash === '#/import') { drawImportPreview(); drawReconcile(); } }, 120); }   // many records arrive at once during an import: redraw once, not per record
   else if (id === 'catalog' && document.getElementById('matchBox')) drawGmkMatch();
   else if (id === 'catalog') drawCatalog();
   else if (id === 'value') renderValue();
@@ -1271,6 +1278,7 @@ function route() {
     else renderParts(t);
   }
   else if (sec.id === 'settings') renderSettings();
+  else if (sec.id === 'import' && parts[1] === 'receipt') renderReceipt();
   else if (sec.id === 'import') renderImport();
   else if (sec.id === 'catalog' && parts[1] === 'match') renderGmkMatch();
   else if (sec.id === 'catalog') renderCatalog();
@@ -4830,18 +4838,363 @@ function planImport(file, T) {
   const inFile = new Set(items.map(x => x.importKey));
   return { rows, missing: saved.filter(k => k.importKey && !inFile.has(k.importKey)) };
 }
+/* ===================== B6: receipts read on this device (v0.64.0) ===================== */
+/* Small PDF text reader for PDFs saved from Chrome/Edge ("Save as PDF", Skia). Reads text only, in page order.
+   Not a general PDF library: no encryption, no object streams. Returns { pages: [text, ...] } or throws. */
+async function pdfText(bytes) {
+  const raw = new TextDecoder('latin1').decode(bytes);
+  if (!raw.startsWith('%PDF')) throw new Error('This is not a PDF file.');
+  if (/\/Encrypt\b/.test(raw.slice(-4096))) throw new Error('This PDF is password-protected.');
+  const objs = new Map(), re = /(\d+) (\d+) obj\b/g; let m;
+  while ((m = re.exec(raw))) { const start = m.index + m[0].length, end = raw.indexOf('endobj', start); if (end < 0) break;
+    const sIdx = raw.indexOf('stream', start), hasStream = sIdx > 0 && sIdx < end && /^stream\r?\n/.test(raw.slice(sIdx, sIdx + 8));
+    const o = { dict: raw.slice(start, hasStream ? sIdx : end) };
+    if (hasStream) { const ds = sIdx + (raw[sIdx + 6] === '\r' ? 8 : 7), es = raw.indexOf('endstream', ds); o.s0 = ds; o.s1 = es; re.lastIndex = es; }
+    objs.set(+m[1], o); }
+  if (!objs.size) throw new Error('This PDF could not be read (it may use a format this reader does not support).');
+  const inflate = async o => { let b = bytes.subarray(o.s0, o.s1); while (b.length && (b[b.length - 1] === 10 || b[b.length - 1] === 13)) b = b.subarray(0, b.length - 1);
+    if (!/\/FlateDecode/.test(o.dict)) return new TextDecoder('latin1').decode(b);
+    const ab = await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer(); return new TextDecoder('latin1').decode(ab); };
+  const ref = (dict, key) => { const r = new RegExp('/' + key + '\\s+(\\d+) \\d+ R').exec(dict); return r ? +r[1] : 0; };
+  // page order from the page tree
+  const pages = [], walk = (n, depth) => { const o = objs.get(n); if (!o || depth > 30) return; if (/\/Type\s*\/Pages\b/.test(o.dict)) { const k = /\/Kids\s*\[([^\]]*)\]/.exec(o.dict); if (k) (k[1].match(/\d+ \d+ R/g) || []).forEach(r => walk(+r.split(' ')[0], depth + 1)); } else if (/\/Type\s*\/Page\b/.test(o.dict)) pages.push(n); };
+  let root = 0; for (const [n, o] of objs) if (/\/Type\s*\/Catalog\b/.test(o.dict)) root = ref(o.dict, 'Pages'); walk(root, 0);
+  if (!pages.length) for (const [n, o] of objs) if (/\/Type\s*\/Page\b/.test(o.dict)) pages.push(n);
+  const cmapCache = new Map();
+  const widthsOf = f => { const w = new Map(); let dw = 500; if (!f) return { w, dw };
+    const df = /\/DescendantFonts\s*\[\s*(\d+) \d+ R/.exec(f.dict) || /\/DescendantFonts\s+(\d+) \d+ R/.exec(f.dict); let cd = df && objs.get(+df[1]); if (cd && !/\/W\b|\/DW\b|\/Subtype/.test(cd.dict)) { const inner = /(\d+) \d+ R/.exec(cd.dict); cd = inner && objs.get(+inner[1]); }
+    if (cd) { const d = /\/DW\s+([\d.]+)/.exec(cd.dict); if (d) dw = +d[1]; let wi = cd.dict.indexOf('/W'); while (wi >= 0 && /[A-Za-z]/.test(cd.dict[wi + 2] || '')) wi = cd.dict.indexOf('/W', wi + 2);
+      if (wi >= 0) { let body = cd.dict.slice(wi + 2).trimStart(); const wr = /^(\d+) \d+ R/.exec(body); if (wr && objs.get(+wr[1])) body = objs.get(+wr[1]).dict.trimStart();
+        if (body[0] === '[') { let depth = 0, end = 0; for (let i = 0; i < body.length; i++) { if (body[i] === '[') depth++; else if (body[i] === ']' && --depth === 0) { end = i; break; } }
+          const tk = body.slice(1, end).match(/\[|\]|[-\d.]+/g) || []; for (let i = 0; i < tk.length;) { const c = +tk[i]; if (tk[i + 1] === '[') { let j = i + 2, k = 0; while (j < tk.length && tk[j] !== ']') w.set(c + k++, +tk[j++]); i = j + 1; } else { const c2 = +tk[i + 1], ww = +tk[i + 2]; for (let q = c; q <= c2 && q - c < 65536; q++) w.set(q, ww); i += 3; } } } } }
+    else { const fc = /\/FirstChar\s+(\d+)/.exec(f.dict), ws = /\/Widths\s*\[([^\]]*)\]/.exec(f.dict), fm = /\/FontMatrix\s*\[\s*([-\d.]+)/.exec(f.dict), sc = fm ? +fm[1] * 1000 : 1; if (fc && ws) ws[1].trim().split(/\s+/).forEach((v, i) => w.set(+fc[1] + i, +v * sc)); }
+    return { w, dw }; };
+  const cmapOf = async fontNum => { if (cmapCache.has(fontNum)) return cmapCache.get(fontNum); const f = objs.get(fontNum), map = new Map(); let bytesPer = 2; cmapCache.set(fontNum, { map, get bytesPer() { return bytesPer; } });
+    const tu = f && ref(f.dict, 'ToUnicode'), to = tu && objs.get(tu); if (!to || to.s0 == null) { bytesPer = /\/Subtype\s*\/Type0/.test(f ? f.dict : '') ? 2 : 1; cmapCache.set(fontNum, Object.assign({ map, bytesPer }, widthsOf(f))); return cmapCache.get(fontNum); }
+    const t = await inflate(to), cs = /begincodespacerange\s*<([0-9A-Fa-f]+)>/.exec(t); if (cs) bytesPer = cs[1].length / 2;
+    const u = h => { let s = ''; for (let i = 0; i + 4 <= h.length; i += 4) s += String.fromCharCode(parseInt(h.slice(i, i + 4), 16)); return s; };
+    for (const blk of t.matchAll(/beginbfchar([\s\S]*?)endbfchar/g)) for (const p of blk[1].matchAll(/<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]*)>/g)) map.set(parseInt(p[1], 16), u(p[2]));
+    for (const blk of t.matchAll(/beginbfrange([\s\S]*?)endbfrange/g)) for (const p of blk[1].matchAll(/<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*(<[0-9A-Fa-f]*>|\[[^\]]*\])/g)) { const a = parseInt(p[1], 16), b = parseInt(p[2], 16);
+      if (p[3][0] === '[') { const arr = [...p[3].matchAll(/<([0-9A-Fa-f]*)>/g)].map(x => u(x[1])); for (let c = a; c <= b; c++) map.set(c, arr[c - a] || ''); }
+      else { const h = p[3].slice(1, -1), base = parseInt(h.slice(-4), 16), pre = u(h.slice(0, -4)); for (let c = a; c <= b && c - a < 65536; c++) map.set(c, pre + String.fromCharCode(base + c - a)); } }
+    const res = Object.assign({ map, bytesPer }, widthsOf(f)); cmapCache.set(fontNum, res); return res; };
+  const out = [];
+  for (const pn of pages) {
+    const pg = objs.get(pn); let resDict = pg.dict; const rr = ref(pg.dict, 'Resources'); if (rr && objs.get(rr)) resDict = objs.get(rr).dict;
+    let fontDict = ''; const fi = resDict.indexOf('/Font'); if (fi >= 0) { const after = resDict.slice(fi + 5).trimStart(); if (after.startsWith('<<')) fontDict = after.slice(2, after.indexOf('>>')); else { const fr = /^(\d+) \d+ R/.exec(after); if (fr && objs.get(+fr[1])) fontDict = objs.get(+fr[1]).dict; } }
+    const fonts = {}; for (const f of fontDict.matchAll(/\/([^\s/<>\[\]]+)\s+(\d+) \d+ R/g)) fonts[f[1]] = +f[2];
+    let cref = /\/Contents\s*\[([^\]]*)\]/.exec(pg.dict), cnums = cref ? (cref[1].match(/\d+ \d+ R/g) || []).map(r => +r.split(' ')[0]) : [ref(pg.dict, 'Contents')].filter(Boolean), content = '';
+    for (const c of cnums) { const o = objs.get(c); if (o && o.s0 != null) content += await inflate(o) + '\n'; }
+    for (const name of Object.keys(fonts)) await cmapOf(fonts[name]);
+    // walk the text operators
+    const runs = []; let font = null, fsize = 12, x = 0, y = 0, lx = 0, ly = 0, stack = [], gap = true, penX = -1e9, lastY = -1e9;
+    const tok = /\[|\]|<<|>>|<[0-9A-Fa-f\s]*>|\((?:\\.|[^\\()]|\((?:\\.|[^\\()])*\))*\)|\/[^\s/<>\[\]()]+|[-+]?\d*\.?\d+|[A-Za-z'"*]+/g; let t, inArr = null;
+    let lastW = 0; const wOf = (cm, code) => cm && cm.w ? (cm.w.has(code) ? cm.w.get(code) : cm.dw) : 500;
+    const decode = s => { const cm = font && cmapCache.get(font); let str = ''; lastW = 0;
+      if (s[0] === '<') { const h = s.slice(1, -1).replace(/\s+/g, ''), n = (cm ? cm.bytesPer : 2) * 2; for (let i = 0; i + n <= h.length; i += n) { const code = parseInt(h.slice(i, i + n), 16); lastW += wOf(cm, code); str += cm && cm.map.has(code) ? cm.map.get(code) : (n === 2 && code >= 32 && code < 127 ? String.fromCharCode(code) : ''); } }
+      else { const body = s.slice(1, -1).replace(/\\([nrtbf()\\]|[0-7]{1,3})/g, (q, e) => ({ n: '\n', r: '\r', t: '\t', b: '\b', f: '\f' }[e] || (/^[0-7]/.test(e) ? String.fromCharCode(parseInt(e, 8)) : e)));
+        const n = cm ? cm.bytesPer : 1; for (let i = 0; i + n <= body.length; i += n) { const code = n === 2 ? (body.charCodeAt(i) << 8) | body.charCodeAt(i + 1) : body.charCodeAt(i); lastW += wOf(cm, code); str += cm && cm.map.has(code) ? cm.map.get(code) : (n === 1 ? String.fromCharCode(code) : ''); } }
+      return str; };
+    const emit = s => { if (s) { runs.push({ x, y, s, gap }); gap = false; lastY = y; } penX = x + lastW / 1000 * fsize; };   // where the next letter would start
+    const place = () => { gap = Math.abs(y - lastY) > 1.5 || x - penX > fsize * .17 || x < penX - fsize; };
+    while ((t = tok.exec(content))) { const v = t[0];
+      if (v === '[') { inArr = []; continue; } if (v === ']') { stack.push(inArr); inArr = null; continue; }
+      if (inArr) { inArr.push(v); continue; }
+      if (/^[A-Za-z'"*]+$/.test(v)) {
+        if (v === 'BT') { x = y = lx = ly = 0; }
+        else if (v === 'Tf') { font = fonts[String(stack[stack.length - 2] || '').slice(1)] || null; fsize = Math.abs(+stack[stack.length - 1]) || 12; }
+        else if (v === 'Tm') { const a = stack.slice(-6).map(Number); x = lx = a[4]; y = ly = a[5]; place(); }
+        else if (v === 'Td' || v === 'TD') { const a = stack.slice(-2).map(Number); lx += a[0]; ly += a[1]; x = lx; y = ly; place(); }
+        else if (v === 'T*') { ly -= 12; y = ly; x = lx; }
+        else if (v === 'Tj' || v === "'" || v === '"') emit(decode(String(stack[stack.length - 1] || '')));
+        else if (v === 'TJ') { const arr = stack[stack.length - 1] || []; let s = '', w = 0; for (const p of arr) { if (p[0] === '<' || p[0] === '(') { s += decode(p); w += lastW; } else { w -= +p; if (+p < -350 && s && !s.endsWith(' ')) s += ' '; } } lastW = w; emit(s); }
+        stack = []; }
+      else stack.push(v); }
+    // lines: a new line when the vertical position changes; a space between runs on one line
+    let text = '', last = null; for (const r of runs) { if (!last) text += r.s; else if (Math.abs(r.y - last.y) > 1.5) text += '\n' + r.s; else text += (!r.gap || /\s$/.test(text) || /^\s/.test(r.s) ? '' : ' ') + r.s; last = r; }
+    out.push(text.split('\n').map(l => l.replace(/[ \t ]+/g, ' ').trim()).filter(Boolean).join('\n'));
+  }
+  return { pages: out };
+}
+/* Reads the text of an order page saved as PDF and returns what was bought. Runs on the device; nothing is uploaded.
+   Known layouts: Drop, eBay, PayPal invoice, Shopify order pages (new account pages such as MechanicalKeyboards.com and
+   NovelKeys; classic order pages such as Divinikey). Anything else gets a best-effort read of the totals. */
+function parseReceipt(pages) {
+  const MON = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+  const num = s => { const m = /-?\$?\s*([\d,]+(?:\.\d+)?)/.exec(String(s)); return m ? parseFloat(m[1].replace(/,/g, '')) : null; };
+  const iso = (y, m, d) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  const fullDate = s => { const m = /\b([A-Za-z]{3})[a-z]*\.? (\d{1,2}),? (\d{4})\b/.exec(s || ''); return m && MON[m[1].toLowerCase()] ? iso(+m[3], MON[m[1].toLowerCase()], +m[2]) : ''; };
+  const all = pages.join('\n'), rawLines = all.split('\n').map(l => l.trim()).filter(Boolean);
+  const head = rawLines.find(l => /^\d{1,2}\/\d{1,2}\/\d{2,4}, \d{1,2}:\d{2} ?(AM|PM)/i.test(l)) || '', url = (rawLines.find(l => /^https?:\/\//.test(l)) || '').split(' ')[0];
+  const printed = (() => { const m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/.exec(head); return m ? iso(m[3].length === 2 ? 2000 + +m[3] : +m[3], +m[1], +m[2]) : ''; })();
+  const L = rawLines.filter(l => !/^\d{1,2}\/\d{1,2}\/\d{2,4}, \d{1,2}:\d{2} ?(AM|PM)/i.test(l) && !/^https?:\/\/\S+( \d+\/\d+)?$/.test(l) && !/^\d+\/\d+$/.test(l));
+  const host = (/^https?:\/\/([^/]+)/.exec(url) || [])[1] || '';
+  const SELLERS = { 'mechanicalkeyboards.com': 'MechanicalKeyboards.com', 'novelkeys.com': 'NovelKeys', 'divinikey.com': 'Divinikey', 'drop.com': 'Drop', 'kbdfans.com': 'KBDfans', 'cannonkeys.com': 'CannonKeys', 'keychron.com': 'Keychron', 'omnitype.com': 'Omnitype', 'milktooth.com': 'Milktooth', 'ebay.com': 'eBay', 'amazon.com': 'Amazon' };
+  const sellerFromHost = () => { const h = host.replace(/^(www|account|shop|store|checkout)\./, ''); return SELLERS[h] || (h ? h.replace(/\.(com|net|co|store|shop|io)$/, '').replace(/^./, c => c.toUpperCase()) : ''); };
+  const r = { kind: 'generic', seller: sellerFromHost(), orderNumber: '', date: '', dateNote: '', lines: [], subtotal: null, shipping: 0, tax: 0, discount: 0, total: null, warnings: [] };
+  const after = (re, n = 1) => { const i = L.findIndex(l => re.test(l)); return i >= 0 ? L[i + n] || '' : ''; };
+  const findNum = re => { for (const l of L) { const m = re.exec(l); if (m) return num(m[1]); } return null; };
+  const freeOr = s => /free/i.test(s) ? 0 : num(s);
+  if (/Transaction Receipt \| Drop|drop\.com\/transactions/i.test(all)) {
+    r.kind = 'drop'; r.seller = 'Drop'; r.date = fullDate(after(/^DATE PURCHASED$/)); r.orderNumber = after(/^ORDER #$/);
+    r.subtotal = findNum(/^SUBTOTAL (.+)$/); r.shipping = freeOr((L.find(l => /^SHIPPING & HANDLING /.test(l)) || '').replace('SHIPPING & HANDLING', '')) || 0; r.discount = Math.abs(findNum(/^DISCOUNT -?(.+)$/) || 0); r.tax = findNum(/^TAX (.+)$/) || 0; r.total = findNum(/^TOTAL (.+)$/);
+    let start = L.findIndex(l => /^TOTAL \$/.test(l)) + 1, name = [];
+    for (let i = start; i < L.length; i++) { const l = L[i];
+      if (l === 'BASE') { const it = { name: name.join(' '), option: '', qty: 1, unit: num(L[i + 1]) }; i++; if (L[i + 1] === 'QTY') { it.qty = parseInt(L[i + 2], 10) || 1; i += 2; } if (L[i + 1] === 'OPTION') { it.option = (L[i + 2] || '').replace(/^[^:]+:\s*/, ''); i += 2; } it.total = it.unit * it.qty; r.lines.push(it); name = []; }
+      else if (l === 'OPTION' && r.lines.length && !name.length) { r.lines[r.lines.length - 1].option = (L[i + 1] || '').replace(/^[^:]+:\s*/, ''); i++; }
+      else if (l === 'ORDER STATUS' || /^(Delivered|Shipped|Processing|Pending|Cancell?ed|Refunded|In transit|Out for delivery|UPS|USPS|FedEx|DHL|Tracking)\b/i.test(l)) { /* status lines between items */ }
+      else name.push(l); }
+  } else if (/Item number:/.test(all) && /Order total/.test(all) && /Sold by/.test(all)) {
+    r.kind = 'ebay'; const sb = (L.find(l => /^Sold by /.test(l)) || '').replace('Sold by ', ''); r.seller = 'eBay' + (sb ? ' (' + sb + ')' : '');
+    r.date = fullDate(L.find(l => /^Time placed /.test(l))); r.orderNumber = (L.find(l => /^Order number /.test(l)) || '').replace('Order number ', '');
+    for (let i = L.indexOf('Item info') + 1, name = []; i > 0 && i < L.length; i++) { const l = L[i]; if (/^(Shipping address|Payment info)$/.test(l)) break;
+      if (/^\$[\d,.]+$/.test(l)) { const qm = /^Quantity:? (\d+)/i.exec(L[i + 1] || ''); r.lines.push({ name: name.join(' '), option: '', qty: qm ? +qm[1] : 1, unit: num(l), total: num(l) * (qm ? +qm[1] : 1) }); name = []; }
+      else if (/^(Item number:|Returns? |Buy again|Other actions|More actions|Quantity)/i.test(l)) { /* skip */ } else name.push(l); }
+    const iItem = L.findIndex(l => /^\d+ items?$/.test(l)); r.subtotal = iItem >= 0 ? num(L[iItem + 1]) : null;
+    const iShip = L.findIndex((l, i) => i > iItem && l === 'Shipping'); r.shipping = iShip >= 0 ? freeOr(L[iShip + 1]) || 0 : 0;
+    const iTax = L.findIndex(l => /^Tax\*?$/.test(l)); r.tax = iTax >= 0 ? num(L[iTax + 1]) || 0 : 0;
+    const iDisc = L.findIndex((l, i) => i > iItem && /^(Discount|Coupon|Promotion)s?/i.test(l)); r.discount = iDisc >= 0 ? Math.abs(num(L[iDisc].replace(/^\D+/, '') || L[iDisc + 1]) || 0) : 0;
+    r.total = findNum(/^Order total (.+)$/);
+  } else if (/\bINVOICE\b/.test(all) && /Invoice #:/.test(all) && /Amount Due/i.test(all)) {
+    r.kind = 'paypal'; r.seller = /reddit\.com\/r\/mechmarket/i.test(all) ? 'r/mechmarket (PayPal invoice)' : 'PayPal invoice'; r.date = fullDate(L.find(l => /^Issued:/.test(l))); r.orderNumber = 'Invoice ' + ((L.find(l => /^Invoice #:/.test(l)) || '').replace(/^Invoice #:\s*/, ''));
+    const a = L.findIndex(l => /^# Items/.test(l)), b = L.findIndex(l => /^Subtotal/.test(l));
+    for (let i = a + 1, name = []; a >= 0 && i < (b < 0 ? L.length : b); i++) { const l = L[i], m = /^([\d.]+) \$([\d,.]+)$/.exec(l);
+      if (m) { r.lines.push({ name: name.join(' '), option: '', qty: +m[1], unit: num(m[2]), total: +m[1] * num(m[2]) }); name = []; }
+      else if (/^\d+$/.test(l) && !name.length) { /* line number */ } else if (/^https?:\/\/|^[\w_]+\/$/.test(l)) { /* a link under the item */ } else name.push(l); }
+    r.subtotal = b >= 0 ? num(L[b].replace('Subtotal', '') || L[b + 1]) : null; if (r.subtotal == null && b >= 0) r.subtotal = num(L[b + 1]);
+    r.shipping = findNum(/^Shipping \$?([\d,.]+)/) || 0; r.tax = findNum(/^Tax(?: \([^)]*\))? \$?([\d,.]+)/) || 0; r.discount = Math.abs(findNum(/^Discount -?\$?([\d,.]+)/) || 0); r.total = findNum(/^Total \$?([\d,.]+)/);
+  } else if (/^Subtotal · \d+ items?/m.test(all)) {
+    r.kind = 'shopify'; const t = /Order ([\w#-]+) - (.+?) - Account/.exec(head); r.orderNumber = (t ? t[1] : (L.find(l => /^Order [\w#-]+$/.test(l)) || '').replace('Order ', '')); if (!r.seller && t) r.seller = t[2];
+    const c = /^Confirmed ([A-Za-z]{3})[a-z]* (\d{1,2})(?:, (\d{4}))?/.exec(L.find(l => /^Confirmed [A-Za-z]{3}/.test(l)) || '');
+    if (c) { let y = c[3] ? +c[3] : (printed ? +printed.slice(0, 4) : new Date().getFullYear()); if (!c[3] && printed && iso(y, MON[c[1].toLowerCase()], +c[2]) > printed) y--; r.date = iso(y, MON[c[1].toLowerCase()], +c[2]); if (!c[3]) r.dateNote = 'The page shows no year; ' + y + ' was assumed.'; }
+    const end = L.findIndex(l => /^Subtotal · /.test(l)); let chunk = [];
+    for (let i = 0; i < end; i++) { const l = L[i];
+      if (/^\$[\d,.]+$/.test(l)) { let q = -1; for (let j = chunk.length - 1; j >= 1; j--) if (/^\d+$/.test(chunk[j])) { q = j; break; }
+        if (q >= 1) { const opts = chunk.slice(q + 1).filter(x => !/^(Product Type|Work Station|Vendor|SKU)\b/i.test(x)), qty = +chunk[q]; r.lines.push({ name: chunk[q - 1], option: opts.join(' / '), qty, unit: Math.round(num(l) / qty * 100) / 100, total: num(l) }); }
+        else r.warnings.push('A price of ' + l + ' could not be matched to an item.'); chunk = []; }
+      else chunk.push(l); }
+    r.subtotal = num(L[end].replace(/^Subtotal · \d+ items?/, '')); r.shipping = freeOr((L.find((l, i) => i > end && /^Shipping /.test(l)) || '').replace('Shipping', '')) || 0; r.tax = findNum(/^Taxes? (.+)$/) || 0;
+    r.discount = Math.abs(num((L.find((l, i) => i > end && /^(Discount|Savings)/i.test(l)) || '').replace(/^\D+/, '')) || 0); r.total = findNum(/^Total(?: [A-Z]{3})? (.+)$/);
+  } else if (/Product Quantity Total/.test(all) && /^Subtotal:/m.test(all)) {
+    r.kind = 'shopify-classic'; r.orderNumber = ((L.find(l => /^Order #/.test(l)) || '').replace('Order ', '')); r.date = fullDate(L.find(l => /^Placed on /.test(l)));
+    if (!r.seller) r.seller = ((/– (.+)$/.exec(head) || [])[1] || '').trim();
+    const a = L.findIndex(l => l === 'Order details'), b = L.findIndex(l => /^Subtotal:/.test(l)); let name = [];
+    for (let i = a + 1; i < b; i++) { const l = L[i], m = /^(\d+) \$([\d,.]+)$/.exec(l);
+      if (m) { const qty = +m[1], tot = num(m[2]); r.lines.push({ name: name.join(' ').replace(/\s+-\s*$/, ''), option: '', qty, unit: Math.round(tot / qty * 100) / 100, total: tot }); name = []; }
+      else if (/^\$[\d,.]+$/.test(l) || /^SKU:/i.test(l) || l === 'Product Quantity Total') { /* unit price, SKU, table header */ }
+      else if (i - a < 12 && /^(Account home|New Releases|Join our|DK Cash Back)/.test(l)) { /* site menu printed on page 1 */ } else name.push(l); }
+    r.subtotal = num(L[b].replace('Subtotal:', '')); const sh = L.find((l, i) => i > b && /^Shipping/.test(l)) || ''; r.shipping = freeOr(sh.replace(/^Shipping[^:]*:/, '')) || 0;
+    const ti = L.findIndex((l, i) => i > b && /^Tax/.test(l)); if (ti >= 0) { for (let j = ti; j < Math.min(ti + 4, L.length); j++) { const m = /\$([\d,.]+)\s*$/.exec(L[j]); if (m && !/^TOTAL/i.test(L[j])) { r.tax = num(m[1]); break; } } }
+    r.discount = Math.abs(num((L.find((l, i) => i > b && /^Discount/i.test(l)) || '').replace(/^[^$]*/, '')) || 0); r.total = findNum(/^TOTAL: (.+)$/i);
+    r.lines.forEach(it => { const m = /^(.*?) - ([^-]+ \/ .+)$/.exec(it.name); if (m) { it.name = m[1]; it.option = m[2]; } });
+  } else {
+    r.date = fullDate(all); r.orderNumber = ((/Order (?:number|#|No\.?):?\s*#?([\w-]{4,})/i.exec(all)) || [])[1] || '';
+    r.subtotal = findNum(/^Sub-?total:? (.+)$/i); r.shipping = freeOr((L.find(l => /^Shipping\b/i.test(l)) || '').replace(/^Shipping[^$F]*/i, '')) || 0; r.tax = findNum(/^(?:Sales )?Tax(?:es)?:? (.+)$/i) || 0; r.discount = Math.abs(findNum(/^Discounts?:? -?(.+)$/i) || 0); r.total = findNum(/^(?:Order |Grand )?Total:?(?: [A-Z]{3})? (.+)$/i);
+    r.warnings.push('This layout is not known yet, so the items could not be listed. The totals below were read as well as possible; send Claude a sample to add this seller.');
+  }
+  r.lines = r.lines.filter(it => it.name && it.unit != null && isFinite(it.unit));
+  const sum = Math.round(r.lines.reduce((a, it) => a + it.total, 0) * 100) / 100;
+  if (r.lines.length && r.subtotal != null && Math.abs(sum - r.subtotal) > 0.01) r.warnings.push(`The item prices add up to $${sum.toFixed(2)} but the receipt's subtotal is $${r.subtotal.toFixed(2)}.`);
+  if (r.subtotal == null && r.lines.length) r.subtotal = sum;
+  if (r.total != null && r.subtotal != null) { const calc = Math.round((r.subtotal + r.shipping + r.tax - r.discount) * 100) / 100; if (Math.abs(calc - r.total) > 0.01) r.warnings.push(`Subtotal + shipping + tax − discount is $${calc.toFixed(2)} but the receipt's total is $${r.total.toFixed(2)}.`); }
+  return r;
+}
+/* ---- Receipt review (B6). The file is read in the browser; only the lines approved below are saved, never the file. ---- */
+let rcpt = null, rcDone = null;
+const rcTypes = () => ['keyboards', 'keycaps', 'switches'].concat(Object.keys(PART_TYPES));
+const rcRound = (n, r = 100) => Math.round((Number(n) || 0) * r) / r;
+function rcLabel(t, x) { return t === 'keyboards' ? [x.brand, x.name, x.color].filter(Boolean).join(' ') : t === 'keycaps' ? (x.name || '') : [x.manufacturer, x.name].filter(Boolean).join(' '); }
+const RC_STOP = new Set('drop the and for with custom keycap set keyboard mechanical kit diy pack switch profile double shot abs pbt accessory x mito wireless'.split(' '));
+const RC_GENERIC = new Set('plate aluminum aluminium carbon fiber cf case weight base white black red blue green purple pink grey gray silver steel stainless brass copper pc pcb fr4 pom foam cable hotswap universal mx ansi iso linear tactile clicky gmk dcx dcd dcs sa kat cyl bar novelty alpha extra mod 65 75 80 tkl'.split(' '));
+function rcTok(s) { return [...new Set(String(s || '').toLowerCase().replace(/key\s?kobo/g, 'kkb').replace(/[^a-z0-9]+/g, ' ').split(' ').map(w => w.length > 3 ? w.replace(/ies$/, 'y').replace(/s$/, '') : w).map(w => w === 'spacebar' ? 'bar' : w).filter(w => w && !RC_STOP.has(w)))]; }
+function rcGuessType(name) {
+  if (/keycap|\b(gmk|dcx|dcd|dcs|cyl|kkb|sa|kat|mt3|pbtfans|jtk|epbt)\b|novelt|spacebars? kit/i.test(name)) return 'keycaps';
+  if (/keyboard|barebones/i.test(name)) return 'keyboards';
+  if (/switch/i.test(name)) return 'switches';
+  if (/\bpcbs?\b/i.test(name) && PART_TYPES.pcbs) return 'pcbs';
+  if (/artisan/i.test(name) && PART_TYPES.artisans) return 'artisans';
+  return PART_TYPES.accessories ? 'accessories' : Object.keys(PART_TYPES)[0];
+}
+function rcSuggest(line) {   // the saved entry this line most likely belongs to, or a new entry of a guessed type
+  const guess = rcGuessType(line.name), ln = rcTok(line.name), lnAll = rcTok(line.name + ' ' + line.option); let best = null;
+  rcTypes().forEach(t => itemsOfType(t).forEach(x => {
+    let it = rcTok(rcLabel(t, x)); const core = it.filter(w => !/^r\d+$/.test(w)); if (core.length) it = core; if (!it.length) return; const src = t === 'keycaps' ? ln : lnAll, hit = it.filter(w => src.includes(w)).length;
+    if (hit < 2 && !(it.length === 1 && hit === 1 && it[0].length >= 5)) return;
+    if (!it.some(w => src.includes(w) && !RC_GENERIC.has(w))) return;   // sharing only words like "plate" and "aluminum" is not a match
+    const score = hit / it.length - 0.1 * (src.length - hit) / Math.max(1, src.length) - (t === guess ? 0 : 0.3);
+    if (!best || score > best.score) best = { score, type: t, id: x.id, item: x };
+  }));
+  const row = { name: line.name, option: line.option || '', qty: line.qty || 1, total: rcRound(line.total), mode: 'new', type: guess, itemId: '', kitId: '', replace: false,
+    newName: guess === 'keycaps' ? line.name.replace(/^Drop (\+ \S+ )?/, '').replace(/ (Custom )?Keycap Sets?.*$/i, '').trim() : line.name, kitName: line.option || 'Base' };
+  if (best && best.score >= 0.6) { row.mode = 'existing'; row.type = best.type; row.itemId = best.id; if (best.type === 'keycaps') row.kitId = rcKitGuess(best.item, row); }
+  return row;
+}
+function rcKitGuess(s, row) {
+  const kits = kitsOf(s), o = rcTok(row.option || 'base'); let best = '', bs = 0;
+  kits.forEach(k => { const kt = rcTok(k.name || ''); const hit = kt.filter(w => o.includes(w)).length, sc = kt.length ? hit / Math.max(kt.length, o.length) : 0; if (sc > bs) { bs = sc; best = k.id; } });
+  return bs >= 0.5 ? best : (!row.option && kits.length === 1 ? kits[0].id : '');
+}
+function rcOpen(r, fileName) {
+  rcDone = null;
+  rcpt = { fileName, kind: r.kind, seller: r.seller || '', orderNumber: r.orderNumber || '', date: r.date || '', dateNote: r.dateNote || '', shipping: r.shipping || 0, tax: r.tax || 0, discount: r.discount || 0,
+    subtotal: r.subtotal, total: r.total, warnings: r.warnings || [], rows: r.lines.map(rcSuggest) };
+  if (location.hash === '#/import/receipt') renderReceipt(); else location.hash = '#/import/receipt';
+}
+async function rcReadFile(file, msg) {
+  msg.textContent = 'Reading ' + file.name + ' on this device…';
+  try {
+    if (/^image\//.test(file.type) || /\.(png|jpe?g|heic|webp)$/i.test(file.name)) throw new Error('This is a picture. The reader needs the order page saved as a PDF (Print → Save as PDF), because a picture has no text to read.');
+    const t = await pdfText(new Uint8Array(await file.arrayBuffer()));
+    if (!t.pages.join('').trim()) throw new Error('No text was found in this PDF. It may be a scan or a photo; save the order page with Print → Save as PDF instead.');
+    rcOpen(parseReceipt(t.pages), file.name);
+  } catch (e) { msg.innerHTML = `<span style="color:var(--bad-text)">Could not read ${esc(file.name)}: ${esc(e && e.message || String(e))}</span>`; }
+}
+function receiptCardHtml() {
+  return `<div class="card" id="rcCard"><h3>Read a receipt</h3>
+      <p class="sub">Drop an order page saved as a PDF (Print → Save as PDF). It is read <b>on this device only</b>: the file is never uploaded, stored or put online. You review every line, and only the prices, date, seller and order number you approve are saved. Known layouts: Drop, eBay, PayPal invoices, MechanicalKeyboards.com, NovelKeys, Divinikey and other Shopify stores.</p>
+      <div class="drop" id="rcDrop" tabindex="0" role="button"><b>Drop a receipt PDF here</b><span>or click to choose a file</span></div><input type="file" id="rcFile" accept=".pdf,application/pdf" hidden>
+      <details style="margin-top:10px"><summary class="sub" style="cursor:pointer;margin:0">Paste the text of an order page instead</summary>
+        <textarea class="input" id="rcPaste" rows="4" style="width:100%;box-sizing:border-box;margin-top:8px" placeholder="Paste the order page text here"></textarea><button class="btn" id="rcPasteGo" style="margin-top:8px">Read pasted text</button></details>
+      <div id="rcMsg" class="sub" style="margin:10px 0 0">${rcpt ? `<a class="lnk" href="#/import/receipt">Continue reviewing ${esc(rcpt.fileName)}</a>` : ''}</div></div>`;
+}
+function wireReceiptCard() {
+  const zone = document.getElementById('rcDrop'), inp = document.getElementById('rcFile'), msg = document.getElementById('rcMsg'); if (!zone) return;
+  zone.onclick = () => inp.click(); zone.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inp.click(); } };
+  ['dragenter', 'dragover'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.remove('over'); }));
+  zone.addEventListener('drop', e => { const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) rcReadFile(f, msg); });
+  inp.onchange = () => { const f = inp.files[0]; inp.value = ''; if (f) rcReadFile(f, msg); };
+  document.getElementById('rcPasteGo').onclick = () => { const t = document.getElementById('rcPaste').value; if (!t.trim()) { msg.textContent = 'Paste the text first.'; return; } try { rcOpen(parseReceipt([t]), 'pasted text'); } catch (e) { msg.textContent = 'Could not read the text: ' + (e.message || e); } };
+}
+function rcCalc() {   // per-line shares: tax rate = tax / subtotal; shipping and discount split by price, to the cent
+  const rows = rcpt.rows, sum = rcRound(rows.reduce((a, r) => a + (Number(r.total) || 0), 0)), rate = sum > 0 ? rcRound(rcpt.tax / sum, 1e8) : 0;
+  const split = amt => { const out = rows.map(r => sum > 0 ? rcRound(amt * (Number(r.total) || 0) / sum) : 0), diff = rcRound(amt - out.reduce((a, b) => a + b, 0)); if (diff && rows.length) { let m = 0; rows.forEach((r, i) => { if ((Number(r.total) || 0) > (Number(rows[m].total) || 0)) m = i; }); out[m] = rcRound(out[m] + diff); } return out; };
+  const ship = split(Number(rcpt.shipping) || 0), disc = split(Number(rcpt.discount) || 0);
+  return { sum, rate, lines: rows.map((r, i) => { const P = { price: rcRound(r.total), taxRate: rate, shipping: ship[i], discounts: disc[i] }; return { P, total: kbTotal(P) }; }) };
+}
+function rcTarget(r) { if (r.mode !== 'existing' || !r.itemId) return null; const x = itemsOfType(r.type).find(y => y.id === r.itemId); if (!x) return null; return r.type === 'keycaps' ? (r.kitId ? kitsOf(x).find(k => k.id === r.kitId) || null : null) : x; }
+function rcRowHtml(r, i) {
+  const types = rcTypes().map(t => `<option value="${t}"${t === r.type ? ' selected' : ''}>${esc(SEC[t].title)}</option>`).join('');
+  let pick = '';
+  if (r.mode === 'existing') {
+    const items = itemsOfType(r.type).map(x => [rcLabel(r.type, x) || '(no name)', x.id]).sort((a, b) => a[0].localeCompare(b[0]));
+    pick = `<select class="select rc-item" aria-label="Entry"><option value="">Choose the entry…</option>${items.map(([n, id]) => `<option value="${esc(id)}"${id === r.itemId ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>`;
+    if (r.type === 'keycaps' && r.itemId) { const s = savedKeycaps.find(x => x.id === r.itemId);
+      pick += `<select class="select rc-kit" aria-label="Kit"><option value="">Add as a new kit…</option>${kitsOf(s || {}).map(k => `<option value="${esc(k.id)}"${k.id === r.kitId ? ' selected' : ''}>Kit: ${esc(k.name || '(no name)')}</option>`).join('')}</select>`;
+      if (!r.kitId) pick += `<input class="input rc-kitname" aria-label="New kit name" placeholder="Kit name" value="${esc(r.kitName)}">`; }
+  } else if (r.mode === 'new') {
+    pick = `<input class="input rc-name" aria-label="Name for the new entry" placeholder="Name" value="${esc(r.newName)}">` + (r.type === 'keycaps' ? `<input class="input rc-kitname" aria-label="Kit name" placeholder="Kit name" value="${esc(r.kitName)}">` : '');
+  }
+  return `<div class="rc-row${r.mode === 'skip' ? ' skip' : ''}" data-i="${i}">
+    <div class="rc-top"><div class="rc-what"><input class="input rc-line" aria-label="Line from the receipt" value="${esc(r.name)}"><div class="rc-opt">${r.option ? esc(r.option) + ' · ' : ''}Qty ${esc(r.qty)}</div></div>
+      <div class="money-in rc-amt"><span>$</span><input class="input rc-total" type="number" step="0.01" min="0" inputmode="decimal" aria-label="Line price" value="${r.total === '' ? '' : esc(r.total)}"></div>
+      <button class="btn rc-del" title="Remove this line" aria-label="Remove this line">✕</button></div>
+    <div class="rc-to"><select class="select rc-mode" aria-label="What to do with this line"><option value="existing"${r.mode === 'existing' ? ' selected' : ''}>Update an entry I have</option><option value="new"${r.mode === 'new' ? ' selected' : ''}>Add as a new entry</option><option value="skip"${r.mode === 'skip' ? ' selected' : ''}>Skip this line</option></select>
+      ${r.mode === 'skip' ? '' : `<select class="select rc-type" aria-label="Category">${types}</select>${pick}`}</div>
+    <div class="rc-calc"></div></div>`;
+}
+function rcDrawCalc() {
+  if (!rcpt) return; const c = rcCalc(), pctTxt = (c.rate * 100).toFixed(3).replace(/\.?0+$/, '') + '%';
+  document.querySelectorAll('#rcRows .rc-row').forEach(el => { const i = +el.dataset.i, r = rcpt.rows[i], L = c.lines[i], box = el.querySelector('.rc-calc'); if (!r || !box) return;
+    if (r.mode === 'skip') { box.innerHTML = 'Skipped. Nothing is saved for this line; it still carries its share of shipping and discount.'; return; }
+    let h = `Saves price <b>${money(L.P.price)}</b> · tax ${pctTxt} · shipping ${money(L.P.shipping)}${L.P.discounts ? ' · discount ' + money(L.P.discounts) : ''} → paid <b>${money(L.total)}</b>`;
+    const o = rcTarget(r);
+    if (o && !blank(o.price)) { const same = Math.abs(kbTotal(o) - L.total) < 0.011;
+      h += same ? ` <span style="color:var(--ok-text)">✓ matches what is saved</span>` : `<label class="rc-rep"><input type="checkbox" class="rc-replace"${r.replace ? ' checked' : ''}> This entry already has a price (${money(o.price)}, paid ${money(kbTotal(o))}). Tick to replace its price, tax, shipping and discount with this receipt's. Unticked, they are left alone. Date, seller and receipt are only filled where empty.</label>`; }
+    else if (r.mode === 'existing' && r.type === 'keycaps' && r.itemId && !r.kitId) h += ' · added as a new kit on this set';
+    box.innerHTML = h; });
+  const act = rcpt.rows.map((r, i) => r.mode === 'skip' ? 0 : c.lines[i].total).reduce((a, b) => a + b, 0), calcTotal = rcRound(c.sum + (Number(rcpt.shipping) || 0) + (Number(rcpt.tax) || 0) - (Number(rcpt.discount) || 0));
+  const f = document.getElementById('rcFoot'); if (!f) return; const n = rcpt.rows.filter(r => r.mode !== 'skip').length, warn = [];
+  if (rcpt.total != null && Math.abs(calcTotal - rcpt.total) > 0.01) warn.push(`The lines, shipping, tax and discount add up to ${money(calcTotal)}, but the receipt's total is ${money(rcpt.total)}. Check the numbers before saving.`);
+  f.innerHTML = `<div><b>${n}</b> of ${rcpt.rows.length} lines will be saved · together <b>${money(act)}</b>${rcpt.total != null ? ` · receipt total ${money(rcpt.total)}` : ''} · items ${money(c.sum)} · tax rate ${pctTxt}</div>${warn.map(w => `<div style="color:var(--warn-text,var(--bad-text))">⚠ ${esc(w)}</div>`).join('')}`;
+}
+function renderReceipt() {
+  const view = document.getElementById('view');
+  if (rcDone) { view.innerHTML = `<a class="crumb" href="#/import">${I.back}Import</a><div class="card"><h3>Receipt saved</h3><p class="sub">${esc(rcDone.title)}. The receipt file itself was not kept anywhere.</p><ul class="rc-done">${rcDone.items.map(x => `<li><a class="lnk" href="#/${x.type}/${esc(x.id)}">${esc(x.label)}</a> <span class="chip">${esc(x.what)}</span></li>`).join('')}</ul><a class="btn primary" href="#/import" style="width:max-content">Read another receipt</a></div>`; return; }
+  if (!rcpt) { view.innerHTML = `<a class="crumb" href="#/import">${I.back}Import</a><div class="card empty"><h2>No receipt open</h2><p>Go to Import and drop a receipt PDF.</p></div>`; return; }
+  const m = (id, label, v) => `<label class="rc-f"><span>${label}</span><div class="money-in"><span>$</span><input class="input" id="${id}" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(v)}"></div></label>`;
+  view.innerHTML = `<a class="crumb" href="#/import">${I.back}Import</a>
+    <div class="pagehead"><div><h1>Review receipt</h1><p>Read from <b>${esc(rcpt.fileName)}</b> on this device. Nothing is saved until you press Save, and the file itself is never kept.</p></div></div>
+    ${rcpt.warnings.length ? `<div class="card" style="border-color:var(--warn,var(--bad))">${rcpt.warnings.map(w => `<p class="sub" style="margin:0 0 4px">⚠ ${esc(w)}</p>`).join('')}</div>` : ''}
+    <div class="card"${rcpt.warnings.length ? ' style="margin-top:16px"' : ''}><h3>Order</h3><div class="rc-head">
+      <label class="rc-f"><span>Seller</span><input class="input" id="rcSeller" value="${esc(rcpt.seller)}"></label>
+      <label class="rc-f"><span>Order number</span><input class="input" id="rcOrder" value="${esc(rcpt.orderNumber)}"></label>
+      <label class="rc-f"><span>Date purchased</span><input class="input" id="rcDate" type="date" value="${esc(rcpt.date)}"></label>
+      ${m('rcShip', 'Shipping', rcpt.shipping)}${m('rcTax', 'Tax', rcpt.tax)}${m('rcDisc', 'Discount', rcpt.discount)}</div>
+      ${rcpt.dateNote ? `<p class="sub" style="margin:10px 0 0">⚠ ${esc(rcpt.dateNote)} Check the date.</p>` : ''}
+      <p class="sub" style="margin:10px 0 0">Tax is saved as a rate (tax ÷ items). Shipping and discount are shared across the lines by price, so the lines add up to the receipt's total.</p></div>
+    <div class="card" style="margin-top:16px"><h3>Lines</h3><p class="sub">Each line was matched to an entry where the names agree; check every one. Lines that match nothing are set to become new entries.</p>
+      <div id="rcRows">${rcpt.rows.map(rcRowHtml).join('')}</div><button class="btn" id="rcAdd" style="margin-top:10px">+ Add a line</button></div>
+    <div class="card" style="margin-top:16px"><div id="rcFoot" class="sub" style="margin:0 0 12px"></div><div id="rcErr" class="sub" style="color:var(--bad-text);margin:0 0 10px"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="rcSave" ${db && !isFile ? '' : 'disabled'}>Save approved lines</button><button class="btn" id="rcClose">Close without saving</button></div></div>`;
+  [['rcSeller', 'seller'], ['rcOrder', 'orderNumber'], ['rcDate', 'date']].forEach(([id, k]) => document.getElementById(id).oninput = e => { rcpt[k] = e.target.value.trim(); });
+  [['rcShip', 'shipping'], ['rcTax', 'tax'], ['rcDisc', 'discount']].forEach(([id, k]) => document.getElementById(id).oninput = e => { rcpt[k] = Number(e.target.value) || 0; rcDrawCalc(); });
+  const rows = document.getElementById('rcRows'), redraw = i => { const el = rows.querySelector(`.rc-row[data-i="${i}"]`); if (el) el.outerHTML = rcRowHtml(rcpt.rows[i], i); rcDrawCalc(); };
+  rows.addEventListener('input', e => { const el = e.target.closest('.rc-row'); if (!el) return; const r = rcpt.rows[+el.dataset.i], c = e.target.classList;
+    if (c.contains('rc-total')) { r.total = e.target.value === '' ? '' : Number(e.target.value); rcDrawCalc(); } else if (c.contains('rc-name')) r.newName = e.target.value; else if (c.contains('rc-kitname')) r.kitName = e.target.value; else if (c.contains('rc-line')) r.name = e.target.value; });
+  rows.addEventListener('change', e => { const el = e.target.closest('.rc-row'); if (!el) return; const i = +el.dataset.i, r = rcpt.rows[i], c = e.target.classList;
+    if (c.contains('rc-mode')) { r.mode = e.target.value; redraw(i); } else if (c.contains('rc-type')) { r.type = e.target.value; r.itemId = ''; r.kitId = ''; r.replace = false; redraw(i); }
+    else if (c.contains('rc-item')) { r.itemId = e.target.value; r.replace = false; r.kitId = r.type === 'keycaps' && r.itemId ? rcKitGuess(savedKeycaps.find(x => x.id === r.itemId) || {}, r) : ''; redraw(i); }
+    else if (c.contains('rc-kit')) { r.kitId = e.target.value; r.replace = false; redraw(i); } else if (c.contains('rc-replace')) r.replace = e.target.checked; });
+  rows.addEventListener('click', e => { const b = e.target.closest('.rc-del'); if (!b) return; rcpt.rows.splice(+b.closest('.rc-row').dataset.i, 1); rows.innerHTML = rcpt.rows.map(rcRowHtml).join(''); rcDrawCalc(); });
+  document.getElementById('rcAdd').onclick = () => { rcpt.rows.push({ name: '', option: '', qty: 1, total: '', mode: 'new', type: 'accessories', itemId: '', kitId: '', replace: false, newName: '', kitName: 'Base' }); rows.insertAdjacentHTML('beforeend', rcRowHtml(rcpt.rows[rcpt.rows.length - 1], rcpt.rows.length - 1)); rcDrawCalc(); rows.lastElementChild.querySelector('.rc-line').focus(); };
+  document.getElementById('rcClose').onclick = async () => { if (!(await askConfirm('Close this receipt without saving anything?', { ok: 'Close', cancel: 'Keep reviewing' }))) return; rcpt = null; location.hash = '#/import'; };
+  document.getElementById('rcSave').onclick = rcSave;
+  rcDrawCalc();
+}
+async function rcSave() {
+  const err = document.getElementById('rcErr'), btn = document.getElementById('rcSave'), c = rcCalc(), bad = []; err.textContent = '';
+  const act = rcpt.rows.map((r, i) => ({ r, i, L: c.lines[i] })).filter(x => x.r.mode !== 'skip');
+  if (!act.length) { err.textContent = 'Every line is skipped, so there is nothing to save.'; return; }
+  act.forEach(({ r, i }) => { const n = `Line ${i + 1}${r.name ? ' (' + r.name.slice(0, 40) + ')' : ''}`;
+    if (r.total === '' || !isFinite(Number(r.total)) || Number(r.total) < 0) bad.push(n + ': enter a price.');
+    if (r.mode === 'existing' && !r.itemId) bad.push(n + ': choose the entry, or switch to "Add as a new entry".');
+    if (r.mode === 'existing' && r.itemId && !itemsOfType(r.type).some(x => x.id === r.itemId)) bad.push(n + ': that entry no longer exists.');
+    if (r.mode === 'new' && !String(r.newName).trim()) bad.push(n + ': enter a name for the new entry.');
+    if (r.type === 'keycaps' && (r.mode === 'new' || !r.kitId) && !String(r.kitName).trim()) bad.push(n + ': enter a kit name.'); });
+  if (rcpt.date && !/^\d{4}-\d{2}-\d{2}$/.test(rcpt.date)) bad.push('The date is not valid.');
+  if (bad.length) { err.innerHTML = bad.map(esc).join('<br>'); return; }
+  const T = {}; if (rcpt.date) T.datePurchased = rcpt.date; if (rcpt.seller) T.purchasedFrom = rcpt.seller; if (rcpt.orderNumber) T.receipt = /^(order|invoice)/i.test(rcpt.orderNumber) ? rcpt.orderNumber : 'Order ' + rcpt.orderNumber;
+  const apply = (o, P, replace) => { const u = {}; if (blank(o.price) || replace) Object.assign(u, P, P.discounts ? {} : { discounts: undefined }); Object.keys(T).forEach(f => { if (blank(o[f])) u[f] = T[f]; }); Object.keys(u).forEach(k => u[k] === undefined && delete u[k]); return u; };
+  const groups = new Map();   // one write per entry, even when several lines go to it
+  act.forEach(x => { const r = x.r, key = r.mode === 'existing' ? 'e|' + r.type + '|' + r.itemId : 'n|' + r.type + '|' + String(r.newName).trim().toLowerCase(); if (!groups.has(key)) groups.set(key, []); groups.get(key).push(x); });
+  const nNew = [...groups.keys()].filter(k => k[0] === 'n').length, nUpd = groups.size - nNew;
+  if (!(await askConfirm(`Save ${act.length} line${act.length === 1 ? '' : 's'} from this receipt? ${nNew} new entr${nNew === 1 ? 'y' : 'ies'} will be added and ${nUpd} existing entr${nUpd === 1 ? 'y' : 'ies'} updated.`, { ok: 'Save', cancel: 'Keep reviewing' }))) return;
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const now = firebase.firestore.FieldValue.serverTimestamp(), del = firebase.firestore.FieldValue.delete(), done = [], sumP = xs => xs.reduce((a, x) => ({ price: rcRound(a.price + x.L.P.price), taxRate: x.L.P.taxRate, shipping: rcRound(a.shipping + x.L.P.shipping), discounts: rcRound(a.discounts + x.L.P.discounts) }), { price: 0, taxRate: 0, shipping: 0, discounts: 0 });
+  const newKit = x => Object.assign({ id: newKitId(), name: String(x.r.kitName).trim(), quantity: x.r.qty || 1 }, apply({}, x.L.P, true));
+  try {
+    for (const [key, xs] of groups) { const r0 = xs[0].r, t = r0.type;
+      if (key[0] === 'e') { const item = itemsOfType(t).find(y => y.id === r0.itemId); let upd, what;
+        if (t === 'keycaps') { const kits = kitsOf(item).map(k => Object.assign({}, k)); let added = 0, changed = 0, same = 0;
+          xs.forEach(x => { const k = x.r.kitId && kits.find(y => y.id === x.r.kitId); if (k) { const u = apply(k, x.L.P, x.r.replace); if (x.r.replace && !x.L.P.discounts) delete k.discounts; Object.assign(k, u); delete k.notOwned; if (Object.keys(u).length) changed++; else same++; } else { kits.push(newKit(x)); added++; } });
+          upd = { kits }; what = [changed ? changed + ' kit' + (changed === 1 ? '' : 's') + ' updated' : '', added ? added + ' kit' + (added === 1 ? '' : 's') + ' added' : '', same ? same + ' left as ' + (same === 1 ? 'it was' : 'they were') : ''].filter(Boolean).join(', '); }
+        else { const rep = xs.some(x => x.r.replace); upd = apply(item, sumP(xs), rep); if (rep && !sumP(xs).discounts && !blank(item.discounts)) upd.discounts = del; what = Object.keys(upd).length ? 'updated' : 'left as it was'; }
+        if (Object.keys(upd).length) await withTimeout(colOfType(t).doc(item.id).update(Object.assign(upd, { updatedAt: now, appVersion: APP_VERSION })));
+        done.push({ type: t, id: item.id, label: rcLabel(t, item), what });
+      } else { const name = String(r0.newName).trim(); let data;
+        if (t === 'keycaps') data = { name, kits: xs.map(newKit) };
+        else { data = Object.assign({ name }, apply({}, sumP(xs), true)); if (t === 'switches') { const m = /(\d+)\s*(?:pack|pcs|pieces|ct|count|switches)\b/i.exec(r0.name); if (m) data.totalCount = +m[1] * xs.reduce((a, x) => a + (x.r.qty || 1), 0); } }
+        const ref = colOfType(t).doc(); await withTimeout(ref.set(Object.assign(data, { createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app', addedFrom: 'receipt' })));
+        done.push({ type: t, id: ref.id, label: name, what: 'new ' + (SEC[t].singular || 'entry') });
+      } }
+    rcDone = { title: `${act.length} line${act.length === 1 ? '' : 's'} saved from ${rcpt.seller || 'the receipt'}${rcpt.orderNumber ? ' (' + rcpt.orderNumber + ')' : ''}`, items: done }; rcpt = null; toast('Receipt saved'); renderReceipt();
+  } catch (e) { btn.disabled = false; btn.textContent = 'Save approved lines'; err.textContent = `Could not save everything: ${explain(e)} ${done.length ? done.length + ' entr' + (done.length === 1 ? 'y was' : 'ies were') + ' saved before the problem (' + done.map(d => d.label).join(', ') + '); set those lines to Skip before trying again.' : 'Nothing was saved; try again.'}`; }
+}
+
 function renderImport() {
   const ready = !!db && !isFile;
   document.getElementById('view').innerHTML = `
-    <div class="pagehead"><div><h1>Import</h1><p>Bring items in from your Excel workbook. Excel stays the source of truth; the app never changes the workbook.</p></div></div>
-    <div class="card"><h3>1 · Choose an import file</h3>
+    <div class="pagehead"><div><h1>Import</h1><p>Read a receipt, or bring items in from your Excel workbook. The app never changes the workbook.</p></div></div>
+    ${receiptCardHtml()}
+    <div class="card" style="margin-top:16px"><h3>1 · Choose an import file</h3>
       <p class="sub">Pick an import file made from your workbook: ${Object.values(IMPORT_TYPES).map(T => `<b>${T.metaKey || T.key}_import_v18.json</b>`).join(', ')}, <b>colors_import_v18.json</b>, <b>old_keycap_photos.json</b> (kit photos from your Keycap Collection app), or the private <b>gmk_catalog_private.json</b>. Keep these files on your PC; never upload them to the GitHub repo, which is public.</p>
       <label class="btn primary" style="width:max-content">Choose file…<input type="file" id="impFile" accept=".json,application/json" hidden ${ready ? '' : 'disabled'}></label>
       ${ready ? '' : '<p class="sub" style="margin:10px 0 0">Importing needs Firebase (open the https site).</p>'}
       <div id="impMsg" class="sub" style="margin:10px 0 0"></div></div>
     <div id="impPreview"></div>
     <div id="reconcile"></div>`;
-  lastImportMsg = '';
+  lastImportMsg = ''; wireReceiptCard();
   document.getElementById('impFile').onchange = async e => {
     const f = e.target.files[0]; if (!f) return;
     const msg = document.getElementById('impMsg');
