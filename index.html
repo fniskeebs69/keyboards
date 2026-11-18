@@ -231,11 +231,29 @@
   .cover span { display: grid; justify-items: center; gap: 6px; } .cover svg { width: 36px; height: 36px; }
   .rc-head { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; } .rc-f { display: grid; gap: 4px; font-size: 12px; color: var(--text-2); min-width: 0; } .rc-f .input { width: 100%; box-sizing: border-box; min-width: 0; }
   .rc-row { border: var(--bw) var(--bs) var(--line); border-radius: var(--radius-s); padding: 10px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; background: var(--bg-2); } .rc-row + .rc-row { margin-top: 8px; } .rc-row.skip { opacity: .6; }
-  .rc-top { display: grid; grid-template-columns: minmax(0, 1fr) 120px auto; gap: 8px; align-items: start; } .rc-what .input { width: 100%; box-sizing: border-box; font-weight: 600; } .rc-opt { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+  .rc-top { display: grid; grid-template-columns: minmax(0, 1fr) 120px auto; gap: 8px; align-items: start; } .rc-src { font-weight: 600; font-size: 14px; overflow-wrap: anywhere; } .rc-opt { font-size: 12px; color: var(--text-3); margin-top: 3px; }
   .rc-amt .input { width: 100%; box-sizing: border-box; } .rc-del { padding: 6px 10px; }
   .rc-to { display: flex; flex-wrap: wrap; gap: 6px; } .rc-to .select, .rc-to .input { padding: 7px 9px; font-size: 13px; min-width: 0; max-width: 100%; } .rc-to .rc-item, .rc-to .rc-name { flex: 1 1 220px; width: 0; } .rc-to .rc-kit { flex: 0 1 200px; }
   .rc-calc { font-size: 12.5px; color: var(--text-2); line-height: 1.5; } .rc-rep { display: block; margin-top: 4px; color: var(--warn); } .rc-done { margin: 0 0 14px; padding-left: 18px; line-height: 1.9; }
   @media (max-width: 700px) { .rc-head { grid-template-columns: 1fr 1fr; } .rc-top { grid-template-columns: minmax(0, 1fr) 96px auto; } }
+  .use-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; } .use-tools .input { flex: 1 1 220px; min-width: 0; padding: 7px 10px; }
+  .use-list { max-height: 420px; overflow: auto; border: var(--bw) var(--bs) var(--line); border-radius: var(--radius-s); }
+  .use-list a { display: grid; grid-template-columns: 10px minmax(0, 1fr); column-gap: 10px; align-items: center; padding: 8px 12px; text-decoration: none; color: inherit; border-bottom: 1px solid var(--line); } .use-list a:last-child { border-bottom: 0; } .use-list a:hover { background: var(--surface-2); }
+  .use-list i { width: 9px; height: 9px; border-radius: 50%; background: var(--text-3); opacity: .5; grid-row: span 2; } .use-list i.on { background: var(--ok, #34d399); opacity: 1; }
+  .use-list b { font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .use-list span { grid-column: 2; font-size: 12.5px; color: var(--text-2); }
+  .form-grid > div:nth-child(2) { display: flex; flex-direction: column; gap: 14px; min-width: 0; } .form-grid > div:nth-child(2) > .side-card + .side-card { margin-top: 0; } .form-grid > div:nth-child(2) > [hidden] { display: none; }
+  .boxbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: flex-end; font-size: 12.5px; color: var(--text-2); } .boxbar span { flex: 1 1 100%; } .boxbar .lnk { background: none; border: 0; cursor: pointer; font: inherit; padding: 0; }
+  .boxmove { display: flex; gap: 6px; justify-content: flex-end; margin: -4px 0 8px; } .boxmove .btn { padding: 2px 10px; } .arranging > .card { outline: 1.5px dashed var(--line-2); outline-offset: 2px; }
+  #galSize { display: none; }
+  @media (min-width: 701px) { #galSize { display: inline-block; }
+    #view[data-gal="xs"] .gallery { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; } #view[data-gal="xs"] .kcard .meta { padding: 8px 10px 10px; } #view[data-gal="xs"] .kcard .meta b { font-size: 13px; } #view[data-gal="xs"] .kcard .meta span { font-size: 11.5px; }
+    #view[data-gal="s"] .gallery { grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 12px; } #view[data-gal="s"] .kcard .meta b { font-size: 14px; }
+    #view[data-gal="l"] .gallery { grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 18px; }
+    #view[data-gal="xl"] .gallery { grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 20px; } #view[data-gal="xl"] .kcard .meta b { font-size: 17px; }
+    #view[data-gal="wide"] .gallery { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; } #view[data-gal="wide"] .kcard .ph { aspect-ratio: 16 / 9; }
+    #view[data-gal="wall"] .gallery { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 6px; } #view[data-gal="wall"] .kcard { position: relative; border-radius: var(--radius-s); }
+    #view[data-gal="wall"] .kcard .meta { position: absolute; left: 0; right: 0; bottom: 0; padding: 20px 10px 8px; background: linear-gradient(transparent, rgba(0, 0, 0, .8)); pointer-events: none; } #view[data-gal="wall"] .kcard .meta > :not(b) { display: none; }
+    #view[data-gal="wall"] .kcard .meta b { color: #fff; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } }
   .drop { border: 1.5px dashed var(--line-2); border-radius: var(--radius-s); padding: 16px 12px; text-align: center; cursor: pointer; display: grid; gap: 4px; background: var(--bg-2); outline: none; }
   .drop b { font-size: 13px; } .drop span { font-size: 11.5px; color: var(--text-3); }
   .drop:hover, .drop:focus-visible, .drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--bg-2)); }
@@ -506,7 +524,7 @@
   .fitbox { width: 100%; aspect-ratio: 4/3; overflow: hidden; border-radius: var(--radius-s); background: var(--well); touch-action: none; user-select: none; } .fitbox img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
   .lbox { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,.94); display: flex; flex-direction: column; color: #fff; } .lbtop { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; font-size: 13px; gap: 10px; }
   .lbtools { display: flex; gap: 6px; } .lbtools button, .lbnav { background: rgba(255,255,255,.14); color: #fff; border: 0; border-radius: 8px; min-width: 36px; height: 34px; font-size: 15px; cursor: pointer; padding: 0 10px; } .lbtools button:hover, .lbnav:hover { background: rgba(255,255,255,.26); }
-  .lbstage { flex: 1; overflow: hidden; display: grid; place-items: center; touch-action: none; user-select: none; } .lbstage img { max-width: 100%; max-height: 100%; object-fit: contain; transform-origin: center; will-change: transform; pointer-events: none; }
+  .lbstage { flex: 1; min-height: 0; overflow: hidden; position: relative; touch-action: none; user-select: none; } .lbstage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transform-origin: center; will-change: transform; pointer-events: none; }
   .lbnav { position: absolute; top: 50%; transform: translateY(-50%); height: 54px; font-size: 26px; } .lbnav.l { left: 10px; } .lbnav.r { right: 10px; }
   /* theme picker */
   .thgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
@@ -556,7 +574,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.64.0';
+const APP_VERSION = 'v0.67.0';
 const FIRESTORE_COLLECTION = 'keyboard_collection'; // separate from keycap_tracker (D2)
 const ROOT_DOC = 'main';                            // layout: keyboard_collection/main/<type>/<itemId>
 const TEST_DOC_ID = '_connection_test';
@@ -963,11 +981,11 @@ function bulkEditDialog(t, ids) {
 }
 /* ---------- v0.63.0: picture framing, Summary carousel + zoom viewer, price per switch ---------- */
 /* coverFit { z: zoom 1–4, x, y: focus point 0–100, fit: 'contain' | undefined } frames the display picture on cards and the Summary */
-const coverSrcOf = (t, x) => t === 'keycaps' ? (x.coverThumb || setPhotoCoverOf(x) || '') : (x.coverThumb || x.stockThumb || x.refImage || '');
+const coverSrcOf = (t, x) => t === 'keycaps' ? (kcMainSrc(x).src || '') : (x.coverThumb || x.stockThumb || x.refImage || '');
 function fitStyle(f) { if (!f) return ''; if (f.fit === 'contain') return 'object-fit:contain;object-position:50% 50%;transform:none;'; const x = f.x == null ? 50 : f.x, y = f.y == null ? 50 : f.y; return `object-fit:cover;object-position:${x}% ${y}%;transform:scale(${f.z || 1});transform-origin:${x}% ${y}%;`; }
 function applyFits() {
   const lt = listTypeNow();
-  if (lt) document.querySelectorAll('#view a.kcard').forEach(el => { const x = itemsOfType(lt).find(y => y.id === idOfEl(el)), img = el.querySelector('.ph img'); if (!img) return; const st = x && x.coverFit ? fitStyle(x.coverFit) : ''; if ((img.dataset.fit || '') !== st) { img.dataset.fit = st; img.style.cssText = st; } });
+  if (lt) document.querySelectorAll('#view a.kcard').forEach(el => { const x = itemsOfType(lt).find(y => y.id === idOfEl(el)), img = el.querySelector('.ph img'); if (!img) return; const st = x && x.coverFit && !img.dataset.nofit ? fitStyle(x.coverFit) : ''; if ((img.dataset.fit || '') !== st) { img.dataset.fit = st; img.style.cssText = st; } });
 }
 new MutationObserver(() => { applyFits(); wireUnitPrice(); }).observe(document.getElementById('view'), { childList: true, subtree: true });
 function adjustPictureDialog(t, id) {
@@ -995,7 +1013,7 @@ function adjustPictureDialog(t, id) {
 let sumCarIdx = 0, sumCarFor = '';
 function sumCarSlides(t, x) {
   const out = [], seen = new Set(), add = (src, full, cap) => { if (!src || seen.has(src)) return; seen.add(src); out.push({ src, full: full || src, cap: cap || '' }); };
-  const cover = coverSrcOf(t, x); if (t === 'keycaps' ? true : !x.stockThumb) add(cover, ((currentPhotos.find(p => p.id === x.coverPhotoId) || {}).full) || cover, 'Display picture');
+  const cover = coverSrcOf(t, x); if (t === 'keycaps' ? true : !x.stockThumb) add(cover, (cover === x.coverThumb && (currentPhotos.find(p => p.id === x.coverPhotoId) || {}).full) || cover, 'Display picture');
   if (x.stockThumb) add(x.stockThumb, ((currentPhotos.find(p => p.id === x.stockPhotoId) || {}).full) || x.stockThumb, 'Stock picture');
   currentPhotos.filter(p => p.itemId === x.id).forEach(p => add(p.thumb, p.full, p.fileName || 'Your photo'));
   if (x.refImage) add(x.refImage, x.refImage, 'Picture from ' + (x.refSource || 'the product page'));
@@ -1407,6 +1425,7 @@ function dashboardHtml() {
     <a class="card tile" href="#/switches" style="--c:var(--sw)"><span class="ic">${I.switches}</span><div><div class="lbl">Loose switches</div><div class="big">${sws.reduce((s, w) => s + (looseCount(w) || 0), 0).toLocaleString()}</div><div class="hint">Not installed on a board${sws.some(w => w.totalCount == null) ? ` · ${sws.filter(w => w.totalCount == null).length} entries have no count` : ''}</div></div></a>
   </div>
   ${spendCardHtml()}
+  ${useCardHtml()}
   <div class="card" style="margin-top:16px"><h3>Add to your vault</h3><p class="sub">Save a new item. You can fill in the details later.</p>
     <div class="addrow">${SECTIONS.filter(s => s.singular).map(s => s.id === 'keyboards'
       ? `<a class="btn" style="--c:${s.color}" href="#/keyboards/new">${I[s.id]}Add keyboard</a>`
@@ -1555,13 +1574,15 @@ const KB_CONNECTORS = ['USB-C', 'Mini-USB', 'Micro-USB', 'USB-A', 'Aviator + USB
 const BUILD_FIELDS = [ // [field, label, placeholder, suggestions]
   ['mounting', 'Mounting', 'e.g. Gasket', ['Gasket', 'Top mount', 'Tray mount', 'Sandwich', 'Leaf spring', 'O-ring', 'Burger', 'Integrated plate', 'PCB mount', 'Bottom mount']],
   ['plateMaterial', 'Plate material', 'e.g. Aluminum', ['Aluminum', 'Brass', 'Carbon Fiber', 'FR4', 'PC (Polycarbonate)', 'POM', 'PP', 'Steel', 'Copper', 'No plate']],
+  ['caseMaterial', 'Case material', '', [], 'case'],
+  ['weightMaterial', 'Weight material', '', [], 'weight'],
   ['daughterboard', 'Daughterboard', 'e.g. Unified C3', ['Built-in', 'Unified C3', 'Unified C4', 'Other', 'None']],
   ['foam', 'Foam', 'e.g. PE + case foam', ['None', 'Case foam', 'Plate foam', 'PE foam', 'Poron', 'IXPE', 'Full foam kit', 'Tape mod']],
   ['stabilizers', 'Stabilizers', 'e.g. Durock V2', ['Durock V2', 'TX AP', 'Cherry', 'Gateron', 'Everglide Panda', 'C3 Equalz', 'Owlab', 'Factory screw-in', 'Factory plate-mount']],
   ['stabilizerLube', 'Stabilizer lube', 'e.g. Dielectric grease', ['Dielectric grease', 'Krytox 205g0', 'Krytox GPL 205g2', 'Krytox GPL 105', 'Factory lubed', 'None']],
   ['switchLube', 'Switch lube', 'e.g. Krytox 205g0', ['Krytox 205g0', 'Tribosys 3203', 'Tribosys 3204', 'Krytox GPL 105', 'Factory lubed', 'None']],
   ['firmware', 'Firmware', 'e.g. QMK / VIA', ['QMK', 'VIA', 'VIAL', 'QMK / VIA', 'ZMK', 'Proprietary']],
-  ['weightsAccents', 'Weights / accents', 'e.g. Brass weight', []],
+  ['weightsAccents', 'Accents', 'e.g. Brass badge, knob, side inlay', []],
   ['builtBy', 'Built by', 'e.g. Me', ['Me', 'Factory']]
 ];
 const RATINGS = [['ratingOverall', 'Overall'], ['ratingBuildQuality', 'Build quality'], ['ratingTypingFeel', 'Typing feel'], ['ratingSound', 'Sound'], ['ratingBuildExperience', 'Build experience'], ['ratingAesthetics', 'Aesthetics']];
@@ -1631,7 +1652,7 @@ function renderKeyboardForm(k = null) {
           <h3 style="margin-bottom:14px">Build details</h3>
           <div class="frm">
             ${buildSlotsHtml(k)}
-            ${BUILD_FIELDS.map(([n, label, ph, sug]) => fld(label, inputHtml(n, ph, sug.length ? 'dl_' + n : ''), { name: n })).join('')}
+            ${BUILD_FIELDS.map(([n, label, ph, sug, kind]) => kind ? fld(label, selectHtml(n, uniq((kind === 'case' ? CASE_MATS : WEIGHT_MATS.map(m => m[1]).concat('No weight')).concat(k && k[n] ? [k[n]] : [])), kind === 'case' ? 'Choose the case material…' : 'Choose the weight material…'), { name: n, hint: kind === 'weight' ? 'Also sets the Weight color on the Colorway card.' : '' }) : fld(label, inputHtml(n, ph, sug.length ? 'dl_' + n : ''), { name: n })).join('')}
             ${fld('Current build', '<textarea class="input" name="currentBuildText" id="f_currentBuildText" rows="2" placeholder="e.g. GMK Olivia base kit + Gateron Oil King V2"></textarea>', { name: 'currentBuildText', full: true, hint: 'What is installed right now. Free text for now; it becomes links to your switches and keycaps in Phase 5.' })}
           </div>
           ${BUILD_FIELDS.filter(f => f[3].length).map(([n, , , sug]) => `<datalist id="dl_${n}">${uniq(sug.concat(savedKeyboards.map(k => k[n]))).map(o => `<option value="${esc(o)}">`).join('')}</datalist>`).join('')}
@@ -1861,6 +1882,7 @@ async function saveKeyboard() {
   if (problems.length) { problems.forEach(([f, m], i) => showFieldError(f, m, i === 0)); return; }
   btn.disabled = true; btn.textContent = 'Saving…';
   const picks = readBuildSlots();
+  { const prev = editing ? (savedKeyboards.find(x => x.id === editing.id) || editing) : null, cw = weightColorway(prev ? prev.colorway || [] : [], data.weightMaterial || '', prev ? prev.weightMaterial || '' : ''); if (cw) { if (editing) picks._cw = cw; else data.colorway = cw; } }
   if (editing) return saveEdits(data, btn, errBox, picks);
   try {
     const now = firebase.firestore.FieldValue.serverTimestamp();
@@ -1885,6 +1907,7 @@ async function saveEdits(data, btn, errBox, picks = {}) {
     if (data[n] !== undefined) upd[n] = data[n];
     else if (k[n] !== undefined) upd[n] = del;          // field was cleared
   });
+  if (picks._cw) upd.colorway = picks._cw;
   upd.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
   upd.appVersion = APP_VERSION;
   const hash = location.hash;
@@ -2476,6 +2499,7 @@ function renderKeycaps() {
     <div class="pagehead"><div><h1>Keycaps</h1><p id="kcCount"></p></div>
       <div class="tools">
         <select class="select" id="kcSort" aria-label="Sort">${Object.entries(SORTS).concat([['completion', 'Most complete']]).map(([v, t]) => `<option value="${v}"${v === kcSort ? ' selected' : ''}>${t.replace('Brand', 'Maker')}</option>`).join('')}</select>${listFilterHtml('keycaps')}
+        <select class="select" id="kcMainPic" aria-label="Main picture" title="Which kit's picture every set shows in Gallery view">${Object.entries(KC_PIC_MODES).map(([v, m]) => `<option value="${v}"${v === kcMainPic ? ' selected' : ''}>${m.label}</option>`).join('')}</select>
         <button class="btn" id="kcStats">Stats</button>${shareListButton('keycaps')}
         <div class="seg" role="group" aria-label="View"><button id="kcGal" class="${kcView === 'gallery' ? 'on' : ''}">${I.grid}Gallery</button><button id="kcList" class="${kcView === 'list' ? 'on' : ''}">${I.list}List</button></div>
         <a class="btn primary" href="#/keycaps/new">${I.plus}Add keycap set</a>
@@ -2504,7 +2528,7 @@ function drawKeycapResults() {
   if (kcView === 'gallery') {
     box.innerHTML = `<div class="gallery">${list.map(s => `
       <a class="kcard" href="#/keycaps/${esc(s.id)}">
-        <div class="ph">${s.coverThumb ? `<img src="${s.coverThumb}" alt="" loading="lazy">` : catalogCoverOf(s) ? `<img src="${esc(catalogCoverOf(s))}" alt="" loading="lazy" referrerpolicy="no-referrer" title="${(s.kitPhotos || []).length ? 'Picture from your Keycap Collection app' : 'Picture from the GMK catalog (Matrix)'}" onerror="this.remove()">` : I.keycaps.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>'}
+        <div class="ph">${kcCardImg(s) || (I.keycaps.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>')}
           ${s.profile ? `<span class="badge chip">${esc(s.profile)}</span>` : ''}
           <button class="fav${s.isFavorite ? ' on' : ''}" data-fav="${esc(s.id)}" aria-label="${s.isFavorite ? 'Remove from' : 'Add to'} favorites">${s.isFavorite ? I.starFill : I.star}</button></div>
         <div class="meta"><b>${esc(s.name)}</b><span>${esc(sub(s))}</span>${completionHtml(s)}${paletteStripHtml(s)}</div></a>`).join('')}</div>`;
@@ -3603,14 +3627,14 @@ function wireValueCard(t, x) {
 /* while a form has unsaved typing, a value change only redraws the value card */
 function swapValueCardIfOnly(t, x) {
   const c = document.getElementById('valueCard'); if (!c || !editing || editing.id !== x.id) return false;
-  const strip = o => JSON.stringify(Object.assign({}, o, { values: null, colorway: null, refImage: null, refUrl: null, refSource: null, doneAt: null, inQueue: null, coverFit: null, stockThumb: null, stockPhotoId: null, kitStock: null, kitStockCover: null, kitLinks: null, summaryHidden: null, summaryExtra: null, description: null, descriptionOwn: null, name: null, updatedAt: null, createdIso: null, _date: null }));
+  const strip = o => JSON.stringify(Object.assign({}, o, { values: null, colorway: null, refImage: null, refUrl: null, refSource: null, doneAt: null, inQueue: null, coverFit: null, coverKit: null, stockThumb: null, stockPhotoId: null, kitStock: null, kitStockCover: null, kitLinks: null, summaryHidden: null, summaryExtra: null, description: null, descriptionOwn: null, name: null, updatedAt: null, createdIso: null, _date: null }));
   if (strip(editing) !== strip(x)) return false;
   c.outerHTML = valueCardHtml(t, x); wireValueCard(t, x);
   const cw = document.getElementById('cwCard'); if (cw && t === 'keyboards') { cw.outerHTML = colorwayCardHtml(x); wireColorwayCard(x); }
   const rc = document.getElementById('refCard'); if (rc && rc.querySelector('#refForm')?.hidden !== false) { rc.outerHTML = refCardHtml(t, x); wireRefCard(t, x); }
   if (document.getElementById('photoGrid') && currentPhotos.length) drawPhotoGrid(x);
   if (t === 'keycaps' && document.getElementById('kitGallery')) drawKitGallery(x);
-  editing = Object.assign({}, editing, { values: x.values, colorway: x.colorway, refImage: x.refImage, refUrl: x.refUrl, refSource: x.refSource, stockThumb: x.stockThumb, stockPhotoId: x.stockPhotoId, doneAt: x.doneAt, inQueue: x.inQueue, coverFit: x.coverFit, kitStock: x.kitStock, kitStockCover: x.kitStockCover, kitLinks: x.kitLinks, summaryHidden: x.summaryHidden, summaryExtra: x.summaryExtra, description: x.description, descriptionOwn: x.descriptionOwn, name: x.name });
+  editing = Object.assign({}, editing, { values: x.values, colorway: x.colorway, refImage: x.refImage, refUrl: x.refUrl, refSource: x.refSource, stockThumb: x.stockThumb, stockPhotoId: x.stockPhotoId, doneAt: x.doneAt, inQueue: x.inQueue, coverFit: x.coverFit, coverKit: x.coverKit, kitStock: x.kitStock, kitStockCover: x.kitStockCover, kitLinks: x.kitLinks, summaryHidden: x.summaryHidden, summaryExtra: x.summaryExtra, description: x.description, descriptionOwn: x.descriptionOwn, name: x.name });
   const sp = document.querySelector('#view [data-panel="summary"]'); if (sp && !sp.hidden && !sp.querySelector('.sumed')) drawSummary(document.getElementById('view'), x, t);
   return true;
 }
@@ -3907,6 +3931,13 @@ const WEIGHT_MATS = [
   ['ss-mirror', 'Stainless Steel · Mirror', '#E5E4E2'],
   ['copper', 'Copper', '#B87333'],
   ['aluminum', 'Aluminum', '#A5A5A4'],
+  ['titanium', 'Titanium', '#878681'],
+  ['tungsten', 'Tungsten', '#6B6E70'],
+  ['zinc', 'Zinc alloy', '#B0B5B9'],
+  ['steel', 'Steel (plain)', '#8A8D8F'],
+  ['pc', 'Polycarbonate (PC)', '#DDE6EC'],
+  ['glass', 'Glass', '#CFE3E8'],
+  ['carbon', 'Carbon fiber', '#2A2A2A'],
   ['pvd', 'PVD (multicolor)', '#7B68EE']];
 const PVD_GRAD = 'linear-gradient(135deg,#5B3FD1,#1E9FD6,#2BB673,#E8C547,#D6336C)';
 const matOf = id => WEIGHT_MATS.find(m => m[0] === id);
@@ -3926,7 +3957,7 @@ function colorwayCardHtml(k) {
 function wireColorwayCard(k) {
   const card = document.getElementById('cwCard'); if (!card) return;
   const latest = () => savedKeyboards.find(x => x.id === k.id) || k;
-  const write = async list => { try { await withTimeout(kbCol().doc(k.id).update({ colorway: list, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); return true; } catch (e) { toast('Could not save the color: ' + explain(e)); return false; } };
+  const write = async list => { try { await withTimeout(kbCol().doc(k.id).update({ colorway: list, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); syncWeightField(k, list); return true; } catch (e) { toast('Could not save the color: ' + explain(e)); return false; } };
   const photo = () => ({ photoId: latest().coverPhotoId, photoThumb: latest().coverThumb });
   card.onclick = async e => {
     const p = e.target.closest('[data-cwpick]'), d = e.target.closest('[data-cwdel]');
@@ -4030,6 +4061,8 @@ let partPrefill = null;   // e.g. { t: 'accessories', category: 'Plate' } for th
 function slotItem(kbId, t, f) { return kbId ? savedParts[t].find(x => x.installedOn === kbId && f(x)) : null; }
 function buildSlotsHtml(k) {
   return BUILD_SLOTS.map(([key, t, f, label, href]) => {
+    if (key === 'case' && !isCstm(k) && !slotItem(k && k.id, t, f)) return '';   // swappable cases exist only for the Drop CSTM boards
+    if (key === 'case') label = 'Decorative case';
     const cur = slotItem(k && k.id, t, f), items = savedParts[t].filter(f), name = x => [x.manufacturer && !(x.name || '').toLowerCase().startsWith(x.manufacturer.toLowerCase()) ? x.manufacturer : '', x.name].filter(Boolean).join(' ');
     const sugg = k ? items.filter(x => !x.installedOn && x.belongsToText && guessKeyboard(x.belongsToText)?.id === k.id) : [];
     const opt = x => { const other = x.installedOn && (!k || x.installedOn !== k.id) ? savedKeyboards.find(b => b.id === x.installedOn) : null;
@@ -4037,7 +4070,7 @@ function buildSlotsHtml(k) {
     const rest = items.filter(x => !sugg.includes(x)).sort((a, b) => !!a.installedOn - !!b.installedOn || name(a).localeCompare(name(b)));
     return fld(label, `<select class="select" id="f_${key}Pick" data-slot="${key}" data-init="${esc(cur ? cur.id : '')}"><option value="">${items.length ? `No ${label === 'PCB' ? 'PCB' : label.toLowerCase()} selected` : `No ${label === 'PCB' ? 'PCB' : label.toLowerCase()}s added yet`}</option>
         ${sugg.length ? `<optgroup label="Excel says these belong to this board">${sugg.map(opt).join('')}</optgroup><optgroup label="All ${label.toLowerCase()}s">` : ''}${rest.map(opt).join('')}${sugg.length ? '</optgroup>' : ''}</select>`,
-      { name: key + 'Pick', hintHtml: `<a class="lnk" href="${href}" data-addslot="${key}">+ Add a ${label === 'PCB' ? 'PCB' : label.toLowerCase()}</a> · ${label === 'PCB' ? 'From your PCBs page.' : `From Accessories (category ${label}).`}${key === 'case' ? ' For swappable cases, e.g. CSTM decorative cases.' : ''}` });
+      { name: key + 'Pick', hintHtml: `<a class="lnk" href="${href}" data-addslot="${key}">+ Add a ${label === 'PCB' ? 'PCB' : label.toLowerCase()}</a> · ${label === 'PCB' ? 'From your PCBs page.' : `From Accessories (category ${label}).`}${key === 'case' ? ' Drop CSTM boards only: their decorative cases swap.' : ''}` });
   }).join('');
 }
 function plateMaterialFrom(n) { const m = [[/carbon|\bcf\b/i, 'Carbon Fiber'], [/brass/i, 'Brass'], [/alu/i, 'Aluminum'], [/fr-?4/i, 'FR4'], [/\bpom\b/i, 'POM'], [/\bpp\b/i, 'PP'], [/\bpc\b|polycarbonate/i, 'PC (Polycarbonate)'], [/steel/i, 'Steel'], [/copper/i, 'Copper']].find(([r]) => r.test(n || '')); return m ? m[1] : ''; }
@@ -4184,7 +4217,7 @@ function openKitView(s, t) {
   const imgs = [t.img, ...(t.more || [])].filter(Boolean);
   const onWish = s && t.ck && wishHas(s.name, t.name);
   d.innerHTML = `<div class="card kv-card"><div class="sec-title"><h3>${esc(t.name)} <span class="chip ${t.owned ? 'kvown' : ''}">${t.owned ? '✓ Owned' : 'Not owned'}</span></h3><button class="btn" data-x>✕</button></div>
-    ${imgs.length ? `<div class="kvimg"><img id="kvMain" src="${esc(imgs[0])}" alt="" referrerpolicy="no-referrer"></div>${imgs.length > 1 ? `<div class="kvthumbs">${imgs.map((u, i) => `<img src="${esc(u)}" data-kvi="${i}" alt="" loading="lazy" referrerpolicy="no-referrer">`).join('')}</div>` : ''}` : ''}
+    ${imgs.length ? `<div class="kvimg"><img id="kvMain" src="${esc(imgs[0])}" alt="" referrerpolicy="no-referrer" title="Click to enlarge and zoom" style="cursor:zoom-in"></div>${imgs.length > 1 ? `<div class="kvthumbs">${imgs.map((u, i) => `<img src="${esc(u)}" data-kvi="${i}" alt="" loading="lazy" referrerpolicy="no-referrer">`).join('')}</div>` : ''}` : ''}
     <p class="sub" style="margin:10px 0 0">${[t.price ? 'Group-buy price ' + t.price : '', t.qty ? 'Made: ' + esc(t.qty) : '', t.on ? 'Installed on ' + esc(t.on) : '', t.extra ? 'This kit of yours has no match in the kit list' : '', t.stock ? 'Your stock picture for this kit' : t.yours ? 'Picture from your Keycap Collection app' : ''].filter(Boolean).join(' · ')}</p>
     ${(() => { const refId = document.getElementById('f_gmkRef')?.value || '', ref = refId && gmkSets ? gmkSets.find(x => x.id === refId) : null; if (!ref || !t.owned || !s || !s.id || !t.kit) return '';
       const live = savedKeycaps.find(x => x.id === s.id) || s, cur = (live.kitLinks || {})[kitKey(t.kit.name)] || '';
@@ -4192,6 +4225,7 @@ function openKitView(s, t) {
         <p class="sub" style="margin:4px 0 0">${t.extra && cur !== '-' ? 'No catalog kit has this name. Pick the right one, or confirm it is not in the catalog.' : 'Change this only if the automatic match is wrong.'} Saved straight away.</p></div>`; })()}
     <div class="btnrow" style="margin-top:12px">
       ${t.owned ? '<button class="btn" id="kvShow">Show in Kits tab</button><button class="btn" id="kvUnown" title="Marks this kit as not owned; click Save to keep it">I don’t own this kit</button>' : `<button class="btn primary" id="kvOwn" title="Adds this kit to the Kits tab; click Save to keep it">I own this kit</button>${s ? (onWish ? '<span class="chip">On wishlist</span>' : '<button class="btn" id="kvWish">+ Wishlist</button>') : ''}`}
+      ${t.img && s && s.id ? (kitKey((savedKeycaps.find(x => x.id === s.id) || s).coverKit || '') === kitKey(t.name) ? '<button class="btn" id="kvMainOff" title="Go back to the set\'s usual picture">★ Main picture · stop using</button>' : '<button class="btn" id="kvMainOn" title="Show this kit\'s picture for the set in the Keycaps gallery and on the Summary">Use as main picture</button>') : ''}
       <span style="margin-left:auto">${matrixLinkHtml(t.cat ? gmkSets.find(x => x.id === document.getElementById('f_gmkRef').value) : null)}</span></div></div>`;
   document.body.appendChild(d);
   const toKits = () => { d.remove(); document.querySelector('.tabs [data-tab="kits"]').click(); };
@@ -4201,7 +4235,10 @@ function openKitView(s, t) {
     catch (e) { toast('Not saved: ' + explain(e)); } };
   d.onclick = async e => {
     if (e.target === d || e.target.closest('[data-x]')) { d.remove(); return; }
-    const th = e.target.closest('[data-kvi]'); if (th) { document.getElementById('kvMain').src = imgs[+th.dataset.kvi]; return; }
+    const th = e.target.closest('[data-kvi]'); if (th) { document.getElementById('kvMain').src = imgs[+th.dataset.kvi]; d.dataset.cur = th.dataset.kvi; return; }
+    if (e.target.id === 'kvMain') { openLightbox(imgs.map(u => ({ src: u, full: u, cap: t.name })), +(d.dataset.cur || 0), i => { d.dataset.cur = i; const m = document.getElementById('kvMain'); if (m) m.src = imgs[i]; }); return; }
+    if (e.target.id === 'kvMainOn' || e.target.id === 'kvMainOff') { const on = e.target.id === 'kvMainOn';
+      try { await withTimeout(kcCol().doc(s.id).update({ coverKit: on ? t.name : firebase.firestore.FieldValue.delete(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); toast(on ? `${t.name} is now the main picture of this set` : 'Back to the usual picture'); d.remove(); } catch (er) { toast('Not saved: ' + explain(er)); } return; }
     if (e.target.id === 'kvShow') { toKits(); const row = [...document.querySelectorAll('#kitList .kit')].find(r => r.dataset.kit === t.kit.id); if (row) { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); row.classList.add('flash'); setTimeout(() => row.classList.remove('flash'), 1600); } }
     if (e.target.id === 'kvUnown' || e.target.id === 'kvOwn') {   // a kit already on the Kits tab is ticked or unticked instead of being added twice
       const want = e.target.id === 'kvOwn', row = [...document.querySelectorAll('#kitList .kit')].find(r => { const nm = r.querySelector('.k-name').value; return t.kit && r.dataset.kit === t.kit.id || (kitKey(nm) === kitKey(t.name) && r.querySelector('.k-owned').checked !== want); });
@@ -5025,7 +5062,7 @@ function rcSuggest(line) {   // the saved entry this line most likely belongs to
     if (!best || score > best.score) best = { score, type: t, id: x.id, item: x };
   }));
   const row = { name: line.name, option: line.option || '', qty: line.qty || 1, total: rcRound(line.total), mode: 'new', type: guess, itemId: '', kitId: '', replace: false,
-    newName: guess === 'keycaps' ? line.name.replace(/^Drop (\+ \S+ )?/, '').replace(/ (Custom )?Keycap Sets?.*$/i, '').trim() : line.name, kitName: line.option || 'Base' };
+    newName: guess === 'keycaps' ? line.name.replace(/^Drop (\+ \S+ )?/, '').replace(/ (Custom )?Keycap Sets?.*$/i, '').trim() : line.name + (line.option ? ' - ' + line.option : ''), kitName: line.option || 'Base' };
   if (best && best.score >= 0.6) { row.mode = 'existing'; row.type = best.type; row.itemId = best.id; if (best.type === 'keycaps') row.kitId = rcKitGuess(best.item, row); }
   return row;
 }
@@ -5083,10 +5120,10 @@ function rcRowHtml(r, i) {
       pick += `<select class="select rc-kit" aria-label="Kit"><option value="">Add as a new kit…</option>${kitsOf(s || {}).map(k => `<option value="${esc(k.id)}"${k.id === r.kitId ? ' selected' : ''}>Kit: ${esc(k.name || '(no name)')}</option>`).join('')}</select>`;
       if (!r.kitId) pick += `<input class="input rc-kitname" aria-label="New kit name" placeholder="Kit name" value="${esc(r.kitName)}">`; }
   } else if (r.mode === 'new') {
-    pick = `<input class="input rc-name" aria-label="Name for the new entry" placeholder="Name" value="${esc(r.newName)}">` + (r.type === 'keycaps' ? `<input class="input rc-kitname" aria-label="Kit name" placeholder="Kit name" value="${esc(r.kitName)}">` : '');
+    pick = `<input class="input rc-name" aria-label="Name for the new entry" placeholder="${r.type === 'keycaps' ? 'Set name' : 'Name of the new entry'}" value="${esc(r.newName)}">` + (r.type === 'keycaps' ? `<input class="input rc-kitname" aria-label="Kit name" placeholder="Kit name" value="${esc(r.kitName)}">` : '');
   }
   return `<div class="rc-row${r.mode === 'skip' ? ' skip' : ''}" data-i="${i}">
-    <div class="rc-top"><div class="rc-what"><input class="input rc-line" aria-label="Line from the receipt" value="${esc(r.name)}"><div class="rc-opt">${r.option ? esc(r.option) + ' · ' : ''}Qty ${esc(r.qty)}</div></div>
+    <div class="rc-top"><div class="rc-what"><div class="rc-src">${r.name ? esc(r.name) : 'Line added by hand'}</div><div class="rc-opt">${r.name ? 'On the receipt' + (r.option ? ' · ' + esc(r.option) : '') + ' · Qty ' + esc(r.qty) : 'Enter a price, then choose where it goes'}</div></div>
       <div class="money-in rc-amt"><span>$</span><input class="input rc-total" type="number" step="0.01" min="0" inputmode="decimal" aria-label="Line price" value="${r.total === '' ? '' : esc(r.total)}"></div>
       <button class="btn rc-del" title="Remove this line" aria-label="Remove this line">✕</button></div>
     <div class="rc-to"><select class="select rc-mode" aria-label="What to do with this line"><option value="existing"${r.mode === 'existing' ? ' selected' : ''}>Update an entry I have</option><option value="new"${r.mode === 'new' ? ' selected' : ''}>Add as a new entry</option><option value="skip"${r.mode === 'skip' ? ' selected' : ''}>Skip this line</option></select>
@@ -5102,6 +5139,9 @@ function rcDrawCalc() {
     if (o && !blank(o.price)) { const same = Math.abs(kbTotal(o) - L.total) < 0.011;
       h += same ? ` <span style="color:var(--ok-text)">✓ matches what is saved</span>` : `<label class="rc-rep"><input type="checkbox" class="rc-replace"${r.replace ? ' checked' : ''}> This entry already has a price (${money(o.price)}, paid ${money(kbTotal(o))}). Tick to replace its price, tax, shipping and discount with this receipt's. Unticked, they are left alone. Date, seller and receipt are only filled where empty.</label>`; }
     else if (r.mode === 'existing' && r.type === 'keycaps' && r.itemId && !r.kitId) h += ' · added as a new kit on this set';
+    if (r.mode === 'existing' && r.itemId && r.type !== 'keycaps') { const n = rcpt.rows.filter(y => y.mode === 'existing' && y.type === r.type && y.itemId === r.itemId).length; if (n > 1) h += `<div style="color:var(--warn)">⚠ ${n} lines point at this one entry, so their prices are added together on it. Choose a different entry, or "Add as a new entry", to keep them apart.</div>`; }
+    if (r.mode === 'new' && r.type === 'keycaps') { const n = rcpt.rows.filter(y => y.mode === 'new' && y.type === 'keycaps' && String(y.newName).trim().toLowerCase() === String(r.newName).trim().toLowerCase()).length; if (n > 1) h += ` · one new set with ${n} kits`; }
+    else if (r.mode === 'new') h += ' · saved as its own entry';
     box.innerHTML = h; });
   const act = rcpt.rows.map((r, i) => r.mode === 'skip' ? 0 : c.lines[i].total).reduce((a, b) => a + b, 0), calcTotal = rcRound(c.sum + (Number(rcpt.shipping) || 0) + (Number(rcpt.tax) || 0) - (Number(rcpt.discount) || 0));
   const f = document.getElementById('rcFoot'); if (!f) return; const n = rcpt.rows.filter(r => r.mode !== 'skip').length, warn = [];
@@ -5131,13 +5171,13 @@ function renderReceipt() {
   [['rcShip', 'shipping'], ['rcTax', 'tax'], ['rcDisc', 'discount']].forEach(([id, k]) => document.getElementById(id).oninput = e => { rcpt[k] = Number(e.target.value) || 0; rcDrawCalc(); });
   const rows = document.getElementById('rcRows'), redraw = i => { const el = rows.querySelector(`.rc-row[data-i="${i}"]`); if (el) el.outerHTML = rcRowHtml(rcpt.rows[i], i); rcDrawCalc(); };
   rows.addEventListener('input', e => { const el = e.target.closest('.rc-row'); if (!el) return; const r = rcpt.rows[+el.dataset.i], c = e.target.classList;
-    if (c.contains('rc-total')) { r.total = e.target.value === '' ? '' : Number(e.target.value); rcDrawCalc(); } else if (c.contains('rc-name')) r.newName = e.target.value; else if (c.contains('rc-kitname')) r.kitName = e.target.value; else if (c.contains('rc-line')) r.name = e.target.value; });
+    if (c.contains('rc-total')) { r.total = e.target.value === '' ? '' : Number(e.target.value); rcDrawCalc(); } else if (c.contains('rc-name')) { r.newName = e.target.value; rcDrawCalc(); } else if (c.contains('rc-kitname')) r.kitName = e.target.value; });
   rows.addEventListener('change', e => { const el = e.target.closest('.rc-row'); if (!el) return; const i = +el.dataset.i, r = rcpt.rows[i], c = e.target.classList;
     if (c.contains('rc-mode')) { r.mode = e.target.value; redraw(i); } else if (c.contains('rc-type')) { r.type = e.target.value; r.itemId = ''; r.kitId = ''; r.replace = false; redraw(i); }
     else if (c.contains('rc-item')) { r.itemId = e.target.value; r.replace = false; r.kitId = r.type === 'keycaps' && r.itemId ? rcKitGuess(savedKeycaps.find(x => x.id === r.itemId) || {}, r) : ''; redraw(i); }
     else if (c.contains('rc-kit')) { r.kitId = e.target.value; r.replace = false; redraw(i); } else if (c.contains('rc-replace')) r.replace = e.target.checked; });
   rows.addEventListener('click', e => { const b = e.target.closest('.rc-del'); if (!b) return; rcpt.rows.splice(+b.closest('.rc-row').dataset.i, 1); rows.innerHTML = rcpt.rows.map(rcRowHtml).join(''); rcDrawCalc(); });
-  document.getElementById('rcAdd').onclick = () => { rcpt.rows.push({ name: '', option: '', qty: 1, total: '', mode: 'new', type: 'accessories', itemId: '', kitId: '', replace: false, newName: '', kitName: 'Base' }); rows.insertAdjacentHTML('beforeend', rcRowHtml(rcpt.rows[rcpt.rows.length - 1], rcpt.rows.length - 1)); rcDrawCalc(); rows.lastElementChild.querySelector('.rc-line').focus(); };
+  document.getElementById('rcAdd').onclick = () => { rcpt.rows.push({ name: '', option: '', qty: 1, total: '', mode: 'new', type: 'accessories', itemId: '', kitId: '', replace: false, newName: '', kitName: 'Base' }); rows.insertAdjacentHTML('beforeend', rcRowHtml(rcpt.rows[rcpt.rows.length - 1], rcpt.rows.length - 1)); rcDrawCalc(); rows.lastElementChild.querySelector('.rc-total').focus(); };
   document.getElementById('rcClose').onclick = async () => { if (!(await askConfirm('Close this receipt without saving anything?', { ok: 'Close', cancel: 'Keep reviewing' }))) return; rcpt = null; location.hash = '#/import'; };
   document.getElementById('rcSave').onclick = rcSave;
   rcDrawCalc();
@@ -5157,7 +5197,7 @@ async function rcSave() {
   const T = {}; if (rcpt.date) T.datePurchased = rcpt.date; if (rcpt.seller) T.purchasedFrom = rcpt.seller; if (rcpt.orderNumber) T.receipt = /^(order|invoice)/i.test(rcpt.orderNumber) ? rcpt.orderNumber : 'Order ' + rcpt.orderNumber;
   const apply = (o, P, replace) => { const u = {}; if (blank(o.price) || replace) Object.assign(u, P, P.discounts ? {} : { discounts: undefined }); Object.keys(T).forEach(f => { if (blank(o[f])) u[f] = T[f]; }); Object.keys(u).forEach(k => u[k] === undefined && delete u[k]); return u; };
   const groups = new Map();   // one write per entry, even when several lines go to it
-  act.forEach(x => { const r = x.r, key = r.mode === 'existing' ? 'e|' + r.type + '|' + r.itemId : 'n|' + r.type + '|' + String(r.newName).trim().toLowerCase(); if (!groups.has(key)) groups.set(key, []); groups.get(key).push(x); });
+  act.forEach(x => { const r = x.r, key = r.mode === 'existing' ? 'e|' + r.type + '|' + r.itemId : r.type === 'keycaps' ? 'n|keycaps|' + String(r.newName).trim().toLowerCase() : 'n|' + r.type + '|line' + x.i; if (!groups.has(key)) groups.set(key, []); groups.get(key).push(x); });
   const nNew = [...groups.keys()].filter(k => k[0] === 'n').length, nUpd = groups.size - nNew;
   if (!(await askConfirm(`Save ${act.length} line${act.length === 1 ? '' : 's'} from this receipt? ${nNew} new entr${nNew === 1 ? 'y' : 'ies'} will be added and ${nUpd} existing entr${nUpd === 1 ? 'y' : 'ies'} updated.`, { ok: 'Save', cancel: 'Keep reviewing' }))) return;
   btn.disabled = true; btn.textContent = 'Saving…';
@@ -5174,7 +5214,7 @@ async function rcSave() {
         done.push({ type: t, id: item.id, label: rcLabel(t, item), what });
       } else { const name = String(r0.newName).trim(); let data;
         if (t === 'keycaps') data = { name, kits: xs.map(newKit) };
-        else { data = Object.assign({ name }, apply({}, sumP(xs), true)); if (t === 'switches') { const m = /(\d+)\s*(?:pack|pcs|pieces|ct|count|switches)\b/i.exec(r0.name); if (m) data.totalCount = +m[1] * xs.reduce((a, x) => a + (x.r.qty || 1), 0); } }
+        else { data = Object.assign({ name }, apply({}, sumP(xs), true)); if (t === 'switches') { const m = /(\d+)\s*(?:pack|pcs|pieces|ct|count|switches)\b/i.exec(r0.name); if (m) data.totalCount = +m[1] * xs.reduce((a, x) => a + (x.r.qty || 1), 0); } else if ((r0.qty || 1) > 1) data.notes = `Quantity ${r0.qty} on the receipt (${rcpt.seller || 'seller'}${rcpt.orderNumber ? ', ' + rcpt.orderNumber : ''}); the price is for all ${r0.qty}.`; }
         const ref = colOfType(t).doc(); await withTimeout(ref.set(Object.assign(data, { createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app', addedFrom: 'receipt' })));
         done.push({ type: t, id: ref.id, label: name, what: 'new ' + (SEC[t].singular || 'entry') });
       } }
@@ -5182,11 +5222,320 @@ async function rcSave() {
   } catch (e) { btn.disabled = false; btn.textContent = 'Save approved lines'; err.textContent = `Could not save everything: ${explain(e)} ${done.length ? done.length + ' entr' + (done.length === 1 ? 'y was' : 'ies were') + ' saved before the problem (' + done.map(d => d.label).join(', ') + '); set those lines to Skip before trying again.' : 'Nothing was saved; try again.'}`; }
 }
 
+/* ===================== B6b: Excel export (v0.65.0). The workbook is built in the browser; nothing is uploaded. ===================== */
+const XLX = (() => {
+  const T = new Uint32Array(256).map((_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+  const crc = b => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  function zip(files) {   // plain "stored" zip: no compression needed for a file this size
+    const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+    const u16 = n => [n & 255, n >>> 8 & 255], u32 = n => [n & 255, n >>> 8 & 255, n >>> 16 & 255, n >>> 24 & 255];
+    files.forEach(f => { const name = enc.encode(f.name), data = typeof f.data === 'string' ? enc.encode(f.data) : f.data, c = crc(data);
+      const head = [0x50, 0x4B, 3, 4, ...u16(20), ...u16(0x800), ...u16(0), ...u16(0), ...u16(0x21), ...u32(c), ...u32(data.length), ...u32(data.length), ...u16(name.length), ...u16(0)];
+      parts.push(new Uint8Array(head), name, data);
+      central.push(new Uint8Array([0x50, 0x4B, 1, 2, ...u16(20), ...u16(20), ...u16(0x800), ...u16(0), ...u16(0), ...u16(0x21), ...u32(c), ...u32(data.length), ...u32(data.length), ...u16(name.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(off)]), name);
+      off += head.length + name.length + data.length; });
+    const cs = central.reduce((a, b) => a + b.length, 0);
+    return new Blob([...parts, ...central, new Uint8Array([0x50, 0x4B, 5, 6, ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length), ...u32(cs), ...u32(off), ...u16(0)])], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
+  const x = s => String(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const col = n => { let s = ''; for (n++; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + (n - 1) % 26) + s; return s; };
+  const serial = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); return m ? Math.round(Date.UTC(+m[1], +m[2] - 1, +m[3]) / 864e5) + 25569 : null; };
+  function book() {
+    const fonts = ['<font><sz val="10"/><name val="Calibri"/></font>'], fills = ['<fill><patternFill patternType="none"/></fill>', '<fill><patternFill patternType="gray125"/></fill>'], borders = ['<border><left/><right/><top/><bottom/><diagonal/></border>'], fmts = [], xfs = ['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'], seen = new Map(), sheets = [];
+    const idx = (arr, v) => { let i = arr.indexOf(v); if (i < 0) { arr.push(v); i = arr.length - 1; } return i; };
+    function style(o) {   // o: { b, i, u, sz, color, fill, nf, h, v, wrap, border }
+      if (!o) return 0; const key = JSON.stringify(o); if (seen.has(key)) return seen.get(key);
+      const f = idx(fonts, `<font>${o.b ? '<b/>' : ''}${o.i ? '<i/>' : ''}${o.u ? '<u/>' : ''}<sz val="${o.sz || 10}"/>${o.color ? `<color rgb="FF${o.color}"/>` : ''}<name val="Calibri"/></font>`);
+      const fl = o.fill ? idx(fills, `<fill><patternFill patternType="solid"><fgColor rgb="FF${o.fill}"/><bgColor indexed="64"/></patternFill></fill>`) : 0;
+      const side = (n, st) => st ? `<${n} style="${st}"><color rgb="FFB8C4CE"/></${n}>` : `<${n}/>`;
+      const bd = o.border ? idx(borders, `<border>${side('left', 'thin')}${side('right', 'thin')}${side('top', 'thin')}${side('bottom', o.border)}<diagonal/></border>`) : 0;
+      const nf = o.nf ? 164 + idx(fmts, o.nf) : 0, al = o.h || o.wrap || o.v ? `<alignment${o.h ? ` horizontal="${o.h}"` : ''} vertical="${o.v || 'center'}"${o.wrap ? ' wrapText="1"' : ''}/>` : '';
+      xfs.push(`<xf numFmtId="${nf}" fontId="${f}" fillId="${fl}" borderId="${bd}" xfId="0"${nf ? ' applyNumberFormat="1"' : ''}${f ? ' applyFont="1"' : ''}${fl ? ' applyFill="1"' : ''}${bd ? ' applyBorder="1"' : ''}${al ? ' applyAlignment="1">' + al + '</xf>' : '/>'}`);
+      seen.set(key, xfs.length - 1); return xfs.length - 1;
+    }
+    function cell(r, c, d) {   // d: null | { v, f, s }  (f = formula without "=", v = value, or the formula's result)
+      if (d == null) return ''; const ref = col(c) + r, s = d.s ? ` s="${style(d.s)}"` : '', v = d.v;
+      if (d.f) return `<c r="${ref}"${s}${typeof v === 'string' ? ' t="str"' : ''}><f>${x(d.f)}</f>${v == null || v === '' ? '' : `<v>${x(v)}</v>`}</c>`;
+      if (v == null || v === '') return s ? `<c r="${ref}"${s}/>` : '';
+      if (typeof v === 'number') return isFinite(v) ? `<c r="${ref}"${s}><v>${v}</v></c>` : `<c r="${ref}"${s}/>`;
+      return `<c r="${ref}"${s} t="inlineStr"><is><t xml:space="preserve">${x(v)}</t></is></c>`;
+    }
+    function sheet(name, o) {   // o: { widths, freeze (rows), rows: [{ h, cells }], merges, filter }
+      const rows = o.rows.map((row, i) => `<row r="${i + 1}"${row.h ? ` ht="${row.h}" customHeight="1"` : ''}>${row.cells.map((d, c) => cell(i + 1, c, d)).join('')}</row>`).join('');
+      const xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"${sheets.length ? '' : ' tabSelected="1"'}>${o.freeze ? `<pane ySplit="${o.freeze}" topLeftCell="A${o.freeze + 1}" activePane="bottomLeft" state="frozen"/>` : ''}</sheetView></sheetViews><sheetFormatPr defaultRowHeight="15"/>${o.widths ? `<cols>${o.widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols>` : ''}<sheetData>${rows}</sheetData>${o.filter ? `<autoFilter ref="${o.filter}"/>` : ''}${o.merges && o.merges.length ? `<mergeCells count="${o.merges.length}">${o.merges.map(m => `<mergeCell ref="${m}"/>`).join('')}</mergeCells>` : ''}<pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/></worksheet>`;
+      sheets.push({ name: name.slice(0, 31), xml });
+    }
+    function blob() {
+      const H = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>', files = [
+        { name: '[Content_Types].xml', data: `${H}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((s, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>` },
+        { name: '_rels/.rels', data: `${H}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
+        { name: 'xl/workbook.xml', data: `${H}<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${sheets.map((s, i) => `<sheet name="${x(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets><calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>` },
+        { name: 'xl/_rels/workbook.xml.rels', data: `${H}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((s, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>` },
+        { name: 'xl/styles.xml', data: `${H}<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${fmts.length ? `<numFmts count="${fmts.length}">${fmts.map((f, i) => `<numFmt numFmtId="${164 + i}" formatCode="${x(f)}"/>`).join('')}</numFmts>` : ''}<fonts count="${fonts.length}">${fonts.join('')}</fonts><fills count="${fills.length}">${fills.join('')}</fills><borders count="${borders.length}">${borders.join('')}</borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="${xfs.length}">${xfs.join('')}</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>` }
+      ].concat(sheets.map((s, i) => ({ name: `xl/worksheets/sheet${i + 1}.xml`, data: s.xml })));
+      return zip(files);
+    }
+    return { sheet, blob };
+  }
+  return { book, col, serial };
+})();
+
+function buildWorkbook(version) {
+  const B = XLX.book(), C = XLX.col, NAVY = '0D1B2A', MONEY = '\\$#,##0.00', DATE = 'mmm\\ d", "yyyy', r2 = n => Math.round((Number(n) || 0) * 100) / 100;
+  const HEAD = { b: 1, color: 'FFFFFF', fill: NAVY, h: 'center', wrap: 1, border: 'thin' };
+  const base = (alt, o) => Object.assign({ color: '1A1A2E', fill: alt ? 'EBF5FB' : 'FFFFFF', h: 'left', wrap: 1, border: 'thin' }, o);
+  const kbName = id => { const k = savedKeyboards.find(y => y.id === id); return k ? kbLabel(k) : ''; };
+  const isUrl = s => /^https?:\/\//i.test(String(s || '').trim());
+  const byExcel = (a, b) => (a.excelRow ?? 1e9) - (b.excelRow ?? 1e9) || String(a.datePurchased || '9999').localeCompare(String(b.datePurchased || '9999')) || String(a.name || '').localeCompare(String(b.name || ''));
+  const valOf = x => { const v = currentValue(x); return v ? Number(v.value) : null; };
+  const info = {};
+  /* One purchase tab: lead columns, the six money columns with the workbook's formulas, then app-only columns. */
+  function dataTab(name, label, heads, widths, extraHeads, rows, opts = {}) {
+    const n = heads.length, P = n, moneyHeads = ['Price', 'Tax Rate', 'Price + Tax', 'Shipping', 'Discounts', 'Total'], out = [{ h: 27.75, cells: heads.concat(moneyHeads, extraHeads).map(v => ({ v, s: HEAD })) }];
+    let sum = 0; const rowOf = new Map();
+    rows.forEach((row, i) => { const r = i + 2, alt = i % 2 === 1, x = row.money || {}, L = c => C(P + c) + r, pt = (Number(x.price) || 0) * (1 + (Number(x.taxRate) || 0)), tot = pt + (Number(x.shipping) || 0) - (Number(x.discounts) || 0); sum += tot;
+      (row.ids || []).forEach(id => rowOf.set(id, r));
+      const cells = row.lead.map((v, c) => { const st = base(alt, c === 0 ? { b: 1, color: NAVY } : c === opts.green ? { color: '1A5C1E' } : {});
+        if (c === opts.date) return { v: XLX.serial(v), s: base(alt, { nf: DATE, h: 'center', wrap: 0 }) };
+        if (c === opts.link && isUrl(v)) return { f: `HYPERLINK("${String(v).trim().replace(/"/g, '""')}","Pictures")`, v: 'Pictures', s: base(alt, { color: '0563C1', u: 1 }) };
+        return { v: v == null ? '' : v, s: st }; });
+      const m = (v, o) => ({ v: v == null || v === '' ? '' : Number(v), s: base(alt, Object.assign({ nf: MONEY, h: 'right', wrap: 0 }, o)) });
+      cells.push(m(x.price), m(x.taxRate, { nf: '0.000%', h: 'center' }), { f: `${L(0)}*(1+${L(1)})`, v: r2(pt), s: m(0).s }, m(x.shipping), m(x.discounts), { f: `${L(2)}+${L(3)}-${L(4)}`, v: r2(tot), s: base(alt, { nf: MONEY, h: 'right', wrap: 0, b: 1 }) });
+      row.extra.forEach(e => cells.push(e && e.money ? m(e.v) : e && e.date ? { v: XLX.serial(e.v), s: base(alt, { nf: DATE, h: 'center', wrap: 0 }) } : { v: e == null ? '' : e, s: base(alt) }));
+      out.push({ cells }); });
+    const last = rows.length + 1, tr = rows.length + 2, TOT = { b: 1, sz: 11, color: 'F4D03F', fill: NAVY, border: 'medium' }, total = [];
+    for (let c = 0; c < n + 6; c++) total.push(c === 0 ? { v: label + '  TOTAL', s: TOT } : c === n + 5 ? { f: rows.length ? `SUM(${C(c)}2:${C(c)}${last})` : '0', v: r2(sum), s: Object.assign({ nf: MONEY, h: 'right' }, TOT) } : { v: '', s: TOT });
+    out.push({ h: 21, cells: total });
+    B.sheet(name, { widths: widths.concat([10, 9, 12, 10, 10, 12], extraHeads.map(h => /Notes/.test(h) ? 40 : 14)), freeze: 1, rows: out, filter: `A1:${C(n + 5 + extraHeads.length)}${Math.max(last, 1)}` });
+    info[name] = { name, n: rows.length, last, tr, sum: r2(sum), price: C(P), pt: C(P + 2), ship: C(P + 3), disc: C(P + 4), total: C(P + 5), rowOf,
+      pre: r2(rows.reduce((a, r) => a + (Number((r.money || {}).price) || 0), 0)), shipSum: r2(rows.reduce((a, r) => a + (Number((r.money || {}).shipping) || 0), 0)), discSum: r2(rows.reduce((a, r) => a + (Number((r.money || {}).discounts) || 0), 0)), ptSum: r2(rows.reduce((a, r) => a + (Number((r.money || {}).price) || 0) * (1 + (Number((r.money || {}).taxRate) || 0)), 0)) };
+  }
+  const installedText = (x) => x.installedOn ? kbName(x.installedOn) : (x.installedOnText || '');
+  /* Keyboards */
+  dataTab('Keyboards', '⌨️', ['Brand', 'Model', 'Color', 'Form Factor', 'Purchased From', 'Date', 'Modifications on Hand', 'Receipt', 'Pictures', 'Current Build'], [18, 22, 18, 22, 16, 12, 18, 24, 12, 30],
+    ['Size', 'Layout', 'Status', 'Location', 'Date Received', 'Market Value', 'Notes'],
+    savedKeyboards.slice().sort(byExcel).map(k => { const sw = switchesOn(k.id).map(o => `${[o.w.manufacturer, o.w.name].filter(Boolean).join(' ')} × ${o.a.count}`), kc = kitsOn(k.id).map(o => `${o.s.name} — ${o.k.name}`), build = kc.concat(sw).join(' + ');
+      return { ids: [k.id], money: k, lead: [k.brand, k.name, k.color, k.formFactorExcel || [k.size, k.connectivity].filter(Boolean).join(' · '), k.purchasedFrom, k.datePurchased, k.mods, k.receipt, k.pictureLink, build || k.currentBuildText],
+        extra: [k.size, k.layout, k.status, k.location, { date: 1, v: k.dateReceived }, { money: 1, v: valOf(k) }, k.notes] }; }), { date: 5, link: 8, green: 9 });
+  /* Accessories, Cables, PCBs, Artisans share one shape */
+  const partRow = (x, second) => ({ ids: [x.id], money: x, lead: [x.name, second(x), x.purchasedFrom, x.datePurchased, x.belongsToText, x.receipt, x.pictureLink, installedText(x)], extra: [x.manufacturer, x.location, { date: 1, v: x.dateReceived }, { money: 1, v: valOf(x) }, x.notes] });
+  const isCable = x => x.excelTab === 'Cables' || /^cables?$/i.test(x.category || ''), acc = savedParts.accessories.slice().sort(byExcel), PX = ['Maker', 'Location', 'Date Received', 'Market Value', 'Notes'];
+  dataTab('Accessories', '🔧', ['Name', 'Category', 'Purchased From', 'Date', 'Belongs to Keyboard', 'Receipt', 'Pictures', 'Installed On'], [40, 18, 16, 12, 32, 24, 12, 28], PX, acc.filter(x => !isCable(x)).map(x => partRow(x, y => y.category)), { date: 3, link: 6, green: 7 });
+  /* Keycaps: one row per kit, as in the workbook */
+  const kitRows = []; savedKeycaps.forEach(s => kitsOf(s).forEach(k => kitRows.push({ s, k })));
+  kitRows.sort((a, b) => byExcel(a.k, b.k) || String(a.s.name).localeCompare(String(b.s.name)));
+  dataTab('Keycaps', '⌨️', ['Platform', 'Designer', 'Kit', 'Colors', 'Purchased From', 'Date', 'Kits Purchased', 'Receipt', 'Pictures', 'Installed On'], [16, 16, 30, 38, 16, 12, 30, 24, 12, 22],
+    ['Set', 'Kit Type', 'Qty', 'Profile', 'Owned', 'Date Received', 'Notes'],
+    kitRows.map(({ s, k }) => ({ ids: [s.id + '|' + k.id], money: k, lead: [s.manufacturer, s.designer, `${s.name} — ${k.name}`, s.colorsText, k.purchasedFrom, k.datePurchased, k.kitsPurchasedExcel || k.name, k.receipt, k.pictureLink, installedText(k)],
+      extra: [s.name, k.kitType, k.quantity ?? 1, s.profile, k.notOwned ? 'No' : 'Yes', { date: 1, v: k.dateReceived }, k.kitNotes] })), { date: 5, link: 8, green: 9 });
+  /* Switches */
+  dataTab('Switches', '🔧', ['Brand', 'Model', 'Type', 'Purchased From', 'Date', 'Additional Specifications', 'Receipt', 'Pictures', 'Installed On'], [18, 24, 24, 16, 12, 34, 24, 12, 26],
+    ['Count', 'Loose', 'Location', 'Date Received', 'Market Value', 'Notes'],
+    savedSwitches.slice().sort(byExcel).map(w => { const type = [w.switchType, w.totalCount != null ? (w.countApprox ? '~' : '') + w.totalCount + 'x' : '', w.preLubed === true || /^(yes|factory|true)/i.test(String(w.preLubed || '')) ? 'Pre-Lubed' : ''].filter(Boolean).join(' / ');
+      const on = allocsOf(w).map(a => `${kbName(a.keyboardId)} (${a.count})`).filter(t => !t.startsWith(' (')).join(', ');
+      return { ids: [w.id], money: w, lead: [w.manufacturer, w.name, type, w.purchasedFrom, w.datePurchased, w.specsText, w.receipt, w.pictureLink, on || w.installedOnText],
+        extra: [w.totalCount, w.totalCount != null ? looseCount(w) : '', w.location, { date: 1, v: w.dateReceived }, { money: 1, v: valOf(w) }, w.notes] }; }), { date: 4, link: 7, green: 8 });
+  dataTab('Cables', '🔌', ['Name', 'Style / Type', 'Purchased from', 'Date', 'Keyboard Reference', 'Receipt', 'Pictures'], [42, 32, 14, 12, 30, 24, 12], PX.concat('Installed On'), acc.filter(isCable).map(x => { const r = partRow(x, y => y.style); r.lead.pop(); r.extra.push(installedText(x)); return r; }), { date: 3, link: 6 });
+  const extraTabs = [];
+  if (savedParts.pcbs.length) { dataTab('PCBs', '🧩', ['Name', 'Maker', 'Purchased From', 'Date', 'Belongs to Keyboard', 'Receipt', 'Pictures', 'Installed On'], [40, 18, 16, 12, 32, 24, 12, 28], PX, savedParts.pcbs.slice().sort(byExcel).map(x => partRow(x, y => y.manufacturer)), { date: 3, link: 6, green: 7 }); extraTabs.push('PCBs'); }
+  if (savedParts.artisans.length) { dataTab('Artisans', '🎨', ['Name', 'Maker', 'Purchased From', 'Date', 'Belongs to Keyboard', 'Receipt', 'Pictures', 'Installed On'], [40, 18, 16, 12, 32, 24, 12, 28], PX, savedParts.artisans.slice().sort(byExcel).map(x => partRow(x, y => y.manufacturer)), { date: 3, link: 6, green: 7 }); extraTabs.push('Artisans'); }
+
+  /* Colors */
+  const TITLE = { b: 1, sz: 14, color: 'FFFFFF', fill: NAVY }, SUBT = { i: 1, sz: 9, color: '4A5568', fill: 'EBF5FB' }, BAND = { b: 1, sz: 11, color: 'FFFFFF', fill: '0F314D' }, H2 = Object.assign({}, HEAD, { fill: '0F314D' });
+  const COLS = ['Alphas', 'Alpha Lettering', 'Modifier', 'Modifier Lettering', 'Accents'], ROLE = { 'alpha-base': 0, 'alpha-legend': 1, 'modifier-base': 2, 'modifier-legend': 3, 'accent-base': 4 };
+  const hexOk = h => /^#[0-9a-f]{6}$/i.test(h || ''), colorCells = (list, alt) => { const slot = [null, null, null, null, null], rest = [];
+    list.forEach(c => { if (!hexOk(c.hex)) { if (c.name || c.label) rest.push(c.name || c.label); return; } let i = COLS.findIndex(n => n.toLowerCase() === String(c.label || c.name || '').toLowerCase()); if (i < 0) i = (c.roles || []).map(r => ROLE[r]).find(v => v != null && !slot[v]) ?? -1; if (i >= 0 && !slot[i]) slot[i] = c.hex.toUpperCase(); else rest.push(`${c.label || c.name || 'Color'} ${c.hex.toUpperCase()}`); });
+    const cells = []; slot.forEach(h => { cells.push({ v: h || '—', s: base(alt, { h: 'center', wrap: 0 }) }, { v: '', s: h ? { fill: h.slice(1), border: 'thin' } : base(alt) }); }); return { cells, rest: rest.join('; ') }; };
+  const cRows = [{ h: 24, cells: [{ v: '🎨  Colors Reference — Keyboards & Keycaps', s: TITLE }] }, { cells: [{ v: `Hex colors for every keyboard colorway and keycap palette. Exported from the Keyboard Collection app on ${todayIso()}.`, s: SUBT }] }, { cells: [{ v: '⌨️   KEYBOARD COLORWAYS', s: BAND }] }];
+  const cHead = a => ({ h: 27.75, cells: ['Src Row', a, a === 'Brand' ? 'Model' : 'Kit', a === 'Brand' ? 'Color Name' : 'Color Description'].concat(COLS.flatMap(n => [n, '●']), 'Notes').map(v => ({ v, s: H2 })) });
+  cRows.push(cHead('Brand')); let ci = 0;
+  savedKeyboards.slice().sort(byExcel).forEach(k => { const alt = ci++ % 2 === 1, cc = colorCells(Array.isArray(k.colorway) ? k.colorway : [], alt); cRows.push({ cells: [{ v: info.Keyboards.rowOf.get(k.id), s: base(alt, { h: 'center' }) }, { v: k.brand || '', s: base(alt, { b: 1 }) }, { v: k.name || '', s: base(alt) }, { v: k.color || '', s: base(alt) }].concat(cc.cells, { v: cc.rest, s: base(alt) }) }); });
+  cRows.push({ cells: [] }); const m2 = cRows.length + 1; cRows.push({ cells: [{ v: '🎹  KEYCAP PALETTES', s: BAND }] }, cHead('Platform')); ci = 0;
+  savedKeycaps.slice().sort((a, b) => String(a.name).localeCompare(String(b.name))).forEach(s => { const alt = ci++ % 2 === 1, cc = colorCells(Array.isArray(s.palette) ? s.palette : [], alt), k0 = kitsOf(s)[0];
+    cRows.push({ cells: [{ v: k0 ? info.Keycaps.rowOf.get(s.id + '|' + k0.id) : '', s: base(alt, { h: 'center' }) }, { v: s.name || '', s: base(alt, { b: 1 }) }, { v: kitsOf(s).map(k => k.name).join(', '), s: base(alt) }, { v: s.colorsText || '', s: base(alt) }].concat(cc.cells, { v: cc.rest, s: base(alt) }) }); });
+  B.sheet('Colors', { widths: [7, 24, 30, 28, 12, 4, 12, 4, 12, 4, 12, 4, 12, 4, 40], rows: cRows, merges: ['A1:O1', 'A2:O2', 'A3:O3', `A${m2}:O${m2}`], freeze: 4 });
+
+  /* Value Tracking */
+  const vHead = ['Category', 'Item Name', 'Detail / Color / Type', 'Src', 'Date Purchased', 'Total Paid', 'Market Value\n(Current)', 'Last Checked', 'Δ Value ($)', 'Δ Value (%)', 'Trend', 'Last Month\nValue', '3-Month Ago\nValue', 'Notes / Market Source'];
+  const vRows = [{ h: 30, cells: vHead.map(v => ({ v, s: HEAD })) }], daysAgo = n => { const d = new Date(Date.now() - n * 864e5); return d.toISOString().slice(0, 10); };
+  let vPaid = 0, vVal = 0, vDelta = 0, vi = 0;
+  const vSection = (title, cat, items) => { if (!items.length) return; vRows.push({ cells: vHead.map((_, c) => ({ v: c ? '' : `── ${title} ──`, s: BAND })) });
+    items.forEach(it => { const r = vRows.length + 1, alt = vi++ % 2 === 1, hist = valuesOf(it.x), cur = hist.length ? hist[hist.length - 1] : null, asOf = d => { const h = hist.filter(v => (v.date || '') <= d); return h.length ? Number(h[h.length - 1].value) : null; };
+      const G = cur ? Number(cur.value) : null, L = cur ? asOf(daysAgo(30)) : null, M = cur ? asOf(daysAgo(91)) : null, F = r2(it.paid), mny = (v, o) => ({ v: v == null ? '' : v, s: base(alt, Object.assign({ nf: MONEY, h: 'right', wrap: 0 }, o)) });
+      vPaid += F; if (G != null) { vVal += G; vDelta += G - F; }
+      vRows.push({ cells: [{ v: cat, s: base(alt, { b: 1 }) }, { v: it.name, s: base(alt) }, { v: it.detail || '', s: base(alt) }, { v: it.src || '', s: base(alt, { h: 'center' }) }, { v: XLX.serial(it.date), s: base(alt, { nf: DATE, h: 'center', wrap: 0 }) },
+        it.paidF ? { f: it.paidF, v: F, s: mny(0).s } : mny(F), mny(G), { v: cur ? XLX.serial(cur.date) : '', s: base(alt, { nf: DATE, h: 'center', wrap: 0 }) },
+        { f: `IF(G${r}="","",G${r}-F${r})`, v: G == null ? '' : r2(G - F), s: mny(0, { nf: '\\$#,##0.00;[Red]"-$"#,##0.00' }).s }, { f: `IF(OR(G${r}="",F${r}=0),"",(G${r}-F${r})/F${r})`, v: G == null || !F ? '' : (G - F) / F, s: base(alt, { nf: '0.0%;[Red]\\-0.0%', h: 'right', wrap: 0 }) },
+        { f: `IF(OR(G${r}="",L${r}=""),"—",IF(G${r}>L${r},"↑",IF(G${r}<L${r},"↓","→")))`, v: G == null || L == null ? '—' : G > L ? '↑' : G < L ? '↓' : '→', s: base(alt, { h: 'center' }) }, mny(L), mny(M), { v: cur ? cur.source || '' : '', s: base(alt) }] }); }); };
+  const one = (tab, x) => { const r = info[tab].rowOf.get(x.id); return r ? `${tab}!${info[tab].total}${r}` : null; }, letter = { Keyboards: 'K', Keycaps: 'KC', Switches: 'S', Accessories: 'A', Cables: 'C', PCBs: 'P', Artisans: 'AR' }, srcOf = (tab, id) => { const r = info[tab] && info[tab].rowOf.get(id); return r ? letter[tab] + r : ''; };
+  vSection('KEYBOARD', 'Keyboard', savedKeyboards.slice().sort(byExcel).map(k => ({ x: k, name: [k.brand, k.name].filter(Boolean).join(' '), detail: k.color, src: srcOf('Keyboards', k.id), date: k.datePurchased, paid: kbTotal(k), paidF: one('Keyboards', k) })));
+  vSection('KEYCAPS', 'Keycaps', savedKeycaps.slice().sort((a, b) => String(a.name).localeCompare(String(b.name))).map(s => { const ks = kitsOf(s), refs = ks.map(k => info.Keycaps.rowOf.get(s.id + '|' + k.id)).filter(Boolean), d = ks.map(k => k.datePurchased).filter(Boolean).sort()[0];
+    return { x: s, name: s.name, detail: [`${ks.length} kit${ks.length === 1 ? '' : 's'}`, s.manufacturer, s.designer].filter(Boolean).join(' · '), src: refs.length ? 'KC' + refs[0] : '', date: d, paid: setTotal(s), paidF: refs.length && refs.length <= 40 ? refs.map(r => `Keycaps!${info.Keycaps.total}${r}`).join('+') : null }; }));
+  vSection('SWITCHES', 'Switches', savedSwitches.slice().sort(byExcel).map(w => ({ x: w, name: [w.manufacturer, w.name].filter(Boolean).join(' '), detail: [w.switchType, w.totalCount != null ? w.totalCount + 'x' : ''].filter(Boolean).join(' / '), src: srcOf('Switches', w.id), date: w.datePurchased, paid: kbTotal(w), paidF: one('Switches', w) })));
+  vSection('ACCESSORIES', 'Accessories', acc.map(x => { const tab = isCable(x) ? 'Cables' : 'Accessories'; return { x, name: x.name, detail: isCable(x) ? x.style || 'Cable' : x.category, src: srcOf(tab, x.id), date: x.datePurchased, paid: kbTotal(x), paidF: one(tab, x) }; }));
+  vSection('PCBS', 'PCBs', savedParts.pcbs.slice().sort(byExcel).map(x => ({ x, name: x.name, detail: x.manufacturer, src: srcOf('PCBs', x.id), date: x.datePurchased, paid: kbTotal(x), paidF: one('PCBs', x) })));
+  vSection('ARTISANS', 'Artisans', savedParts.artisans.slice().sort(byExcel).map(x => ({ x, name: x.name, detail: x.manufacturer, src: srcOf('Artisans', x.id), date: x.datePurchased, paid: kbTotal(x), paidF: one('Artisans', x) })));
+  const vl = vRows.length, VT = { b: 1, sz: 11, color: 'F4D03F', fill: NAVY, border: 'medium' }, vt = (f, v) => ({ f, v: r2(v), s: Object.assign({ nf: MONEY, h: 'right' }, VT) });
+  vRows.push({ h: 21, cells: vHead.map((_, c) => c === 0 ? { v: 'TOTALS', s: VT } : c === 5 ? vt(`SUMIF(A2:A${vl},"<>",F2:F${vl})`, vPaid) : c === 6 ? vt(`SUMIF(A2:A${vl},"<>",G2:G${vl})`, vVal) : c === 8 ? vt(`SUMIF(A2:A${vl},"<>",I2:I${vl})`, vDelta) : { v: '', s: VT }) });
+  B.sheet('Value Tracking', { widths: [14, 46, 32, 8, 14, 12, 14, 13, 12, 10, 8, 13, 13, 30], freeze: 1, rows: vRows });
+
+  /* Summary: the same five rows as the workbook (plus PCBs / Artisans when there are any), with ranges that cover every row */
+  const sRows = [{ h: 26, cells: [{ v: '⌨️   Keyboard Hobby Collection — Financial Summary', s: TITLE }] }, { cells: [{ v: `Exported from the Keyboard Collection app on ${todayIso()} · workbook v${version}`, s: SUBT }] }, { h: 22, cells: ['Category', 'Pre-Tax Total', 'Tax + Shipping', 'Discounts', 'Total Spent'].map(v => ({ v, s: H2 })) }];
+  const cats = ['Keyboards', 'Accessories', 'Keycaps', 'Switches', 'Cables'].concat(extraTabs), g = [0, 0, 0, 0];
+  cats.forEach((t, i) => { const I = info[t], alt = i % 2 === 0, st = base(alt, { nf: MONEY, h: 'right', sz: 11, wrap: 0 }), rng = c => `${t}!${c}2:${c}${Math.max(I.last, 2)}`, ts = r2(I.ptSum - I.pre + I.shipSum);
+    g[0] += I.pre; g[1] += ts; g[2] += I.discSum; g[3] += I.sum;
+    sRows.push({ cells: [{ v: t, s: base(alt, { b: 1, sz: 11 }) }, { f: `SUM(${rng(I.price)})`, v: I.pre, s: st }, { f: `SUM(${rng(I.pt)})-SUM(${rng(I.price)})+SUM(${rng(I.ship)})`, v: ts, s: st }, { f: `SUM(${rng(I.disc)})`, v: I.discSum, s: st }, { f: `${t}!${I.total}${I.tr}`, v: I.sum, s: st }] }); });
+  const gr = sRows.length + 1, GT = { b: 1, sz: 12, color: 'F4D03F', fill: NAVY, nf: MONEY, h: 'right', border: 'medium' };
+  sRows.push({ h: 24, cells: [{ v: '🎯  GRAND TOTAL', s: Object.assign({}, GT, { h: 'left' }) }].concat(['B', 'C', 'D', 'E'].map((c, i) => ({ f: `SUM(${c}4:${c}${gr - 1})`, v: r2(g[i]), s: GT }))) });
+  sRows.push({ cells: [] }, { cells: [{ v: '* $0.00 keycap sets (included with keyboards) are reflected in Keycaps totals but do not affect the grand total cost', s: SUBT }] });
+  B.sheet('Summary', { widths: [22, 17, 17, 15, 17], rows: sRows, merges: ['A1:E1', 'A2:E2', `A${gr + 2}:E${gr + 2}`] });
+
+  /* Wishlist */
+  const wHead = ['Category', 'Set / Board', 'Kit / Version', 'Platform', 'Est. Price', 'Priority', 'Notes', 'Link'], wRows = [{ h: 24, cells: [{ v: '🛒  Keyboard Hobby — Wishlist', s: TITLE }] }, { cells: [{ v: 'Items to complete existing sets or new boards on the radar', s: SUBT }] }, { h: 22, cells: wHead.map(v => ({ v, s: H2 })) }];
+  const wl = (list, catOf) => list.forEach((w, i) => { const alt = i % 2 === 1; wRows.push({ cells: [{ v: catOf(w), s: base(alt, { b: 1 }) }, { v: w.name || '', s: base(alt) }, { v: w.version || '', s: base(alt) }, { v: w.platform || '', s: base(alt) }, { v: w.estPrice == null || w.estPrice === '' ? '' : Number(w.estPrice), s: base(alt, { nf: MONEY, h: 'right', wrap: 0 }) }, { v: w.priority || '', s: base(alt, { h: 'center' }) }, { v: w.notes || '', s: base(alt) }, { v: w.link || '', s: base(alt) }] }); });
+  const wSort = (a, b) => (a.excelRow ?? 1e9) - (b.excelRow ?? 1e9) || String(a.name || '').localeCompare(String(b.name || '')), wOf = st => savedWish.filter(w => (w.status || 'wanted') === st).sort(wSort);
+  wl(savedWish.filter(w => ['wanted', 'todo'].includes(w.status || 'wanted')).sort(wSort), w => w.status === 'todo' ? '⚠️ TO-DO' : w.category || '');
+  const wBand = (a, b) => { wRows.push({ cells: [] }, { cells: wHead.map((_, c) => ({ v: c === 0 ? a : c === 1 ? b : '', s: BAND })) }); };
+  if (wOf('owned').length) { wBand('✅ OWNED — NEEDS RECEIPT/PRICE', 'Kits owned per tracker, not yet itemized with a price in Keycaps tab'); wl(wOf('owned'), () => '✅ Owned'); }
+  if (wOf('bought').length) { wBand('🛍️ BOUGHT', 'Wishlist items marked as bought in the app'); wl(wOf('bought'), w => w.category || ''); }
+  B.sheet('Wishlist', { widths: [14, 36, 28, 14, 12, 10, 40, 30], rows: wRows, merges: ['A1:H1', 'A2:H2'], freeze: 3 });
+
+  /* GMK completion overview (only for sets linked to the private catalog, when it is loaded on this device) */
+  const comp = savedKeycaps.map(s => ({ s, c: completionOf(s) })).filter(o => o.c).sort((a, b) => b.c.pct - a.c.pct || String(a.s.name).localeCompare(String(b.s.name)));
+  if (comp.length) { const gRows = [{ h: 24, cells: [{ v: '📊  GMK Tracker — Set Completion Overview', s: TITLE }] }, { cells: [{ v: `From the Keyboard Collection app — ${todayIso()} — ${comp.length} sets linked to the catalog (kit data: Matrix Zou, private use)`, s: SUBT }] }, { h: 22, cells: ['Set', 'Designer', 'Owned', 'Total', 'Missing Kits'].map(v => ({ v, s: H2 })) }];
+    comp.forEach(({ s, c }, i) => { const alt = i % 2 === 1; gRows.push({ cells: [{ v: s.name, s: base(alt, { b: 1 }) }, { v: s.designer || c.ref.designer || 'Unknown', s: base(alt) }, { v: c.have, s: base(alt, { h: 'center' }) }, { v: c.total, s: base(alt, { h: 'center' }) }, { v: c.missing.length ? c.missing.map(k => k.name).join(', ') : '✅ Complete!', s: base(alt) }] }); });
+    B.sheet('GMK Tracker Overview', { widths: [30, 22, 12, 12, 70], rows: gRows, merges: ['A1:E1', 'A2:E2'], freeze: 3 }); }
+  return { blob: B.blob(), info, grand: r2(g[3]), counts: { keyboards: info.Keyboards.n, keycapKits: info.Keycaps.n, switches: info.Switches.n, accessories: info.Accessories.n, cables: info.Cables.n, pcbs: savedParts.pcbs.length, artisans: savedParts.artisans.length, wishlist: savedWish.length, gmk: comp.length } };
+}
+let xlVersion = null;   // last exported workbook number, kept in the account (meta/settings.exportVersion)
+async function xlLoadVersion() { let v = Number(lsGet('kbc_export_version')) || 18; try { const d = await withTimeout(settingsRef().get(), 6000); if (d.exists && Number(d.data().exportVersion) > 0) v = Number(d.data().exportVersion); } catch (e) {} xlVersion = v; return v; }
+function excelCardHtml() {
+  return `<div class="card" id="xlsCard" style="margin-top:16px"><h3>Export to Excel</h3><p class="sub">Makes a workbook in the same layout as Keyboard_Hobby_List_v18: Keyboards, Accessories, Keycaps, Switches, Cables, Colors, Value Tracking, Summary and Wishlist, with the same formulas and totals. It is built on this device and saved to your Downloads; your existing workbook files are never touched. The file contains prices, so keep it on your PC.</p>
+    <div class="btnrow" style="align-items:center"><button class="btn primary" id="xlsGo" ${db && !isFile ? '' : 'disabled'}>Export…</button><label class="sub" style="margin:0;display:flex;align-items:center;gap:6px">Version number <input class="input" id="xlsVer" type="number" min="1" step="1" style="width:84px;padding:6px 8px" aria-label="Version number of the next export"></label></div>
+    <p class="sub" id="xlsMsg" style="margin:8px 0 0">Checking the last version…</p></div>`;
+}
+function wireExcelCard() {
+  const go = document.getElementById('xlsGo'), ver = document.getElementById('xlsVer'), msg = document.getElementById('xlsMsg'); if (!go) return;
+  const show = () => { ver.value = xlVersion + 1; go.textContent = `Export Keyboard_Hobby_List_v${xlVersion + 1}.xlsx`; msg.textContent = xlVersion > 18 ? `Last export: v${xlVersion}${lsGet('kbc_export_at') ? ' on ' + fmtDate(String(lsGet('kbc_export_at')).slice(0, 10)) : ''}. The number goes up by one with every export.` : 'No export made yet. Your workbook is v18, so the first export is v19.'; };
+  const ready = !go.disabled; go.disabled = true; xlLoadVersion().then(() => { if (document.getElementById('xlsGo') === go) { show(); go.disabled = !ready; } });
+  ver.oninput = () => { const n = parseInt(ver.value, 10); if (n > 0) go.textContent = `Export Keyboard_Hobby_List_v${n}.xlsx`; };
+  go.onclick = async () => {
+    const n = parseInt(ver.value, 10); if (!(n > 0)) { msg.textContent = 'Enter a version number.'; return; }
+    const loading = [!swLoaded && 'switches', !kcLoaded && 'keycaps', !wishLoaded && 'wishlist'].concat(Object.keys(partsLoaded).filter(t => !partsLoaded[t])).filter(Boolean);
+    if (loading.length) { msg.textContent = `Still loading ${loading.join(', ')}. Try again in a moment.`; return; }
+    go.disabled = true; msg.textContent = 'Building the workbook…';
+    try { await withTimeout(loadGmk(), 8000).catch(() => {});
+      const wb = buildWorkbook(n), a = document.createElement('a'); a.href = URL.createObjectURL(wb.blob); a.download = `Keyboard_Hobby_List_v${n}.xlsx`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      xlVersion = Math.max(n, xlVersion || 18); lsSet('kbc_export_version', xlVersion); lsSet('kbc_export_at', new Date().toISOString());
+      settingsRef().set({ exportVersion: xlVersion, exportAt: Date.now() }, { merge: true }).catch(() => {});
+      const c = wb.counts; show(); msg.textContent = `Saved Keyboard_Hobby_List_v${n}.xlsx: ${c.keyboards} keyboards, ${c.keycapKits} keycap kits, ${c.switches} switch entries, ${c.accessories} accessories, ${c.cables} cables${c.pcbs ? ', ' + c.pcbs + ' PCBs' : ''}${c.artisans ? ', ' + c.artisans + ' artisans' : ''}, ${c.wishlist} wishlist rows. Grand total ${money(wb.grand)}.${c.gmk ? '' : ' The GMK completion tab was left out because the catalog is not loaded on this device.'} The next export will be v${xlVersion + 1}.`;
+      toast(`Saved Keyboard_Hobby_List_v${n}.xlsx`);
+    } catch (e) { msg.innerHTML = `<span style="color:var(--bad-text)">Could not build the workbook: ${esc(e && e.message || String(e))}</span>`; }
+    go.disabled = false;
+  };
+}
+
+/* ===================== v0.66.0: B9 in-use lists, B10 gallery sizes, B7 arrange boxes ===================== */
+/* B9: what is in use and what is not (Dashboard) */
+const useState = { tab: 'keyboards', mode: 'all', q: '' };
+function useRows(tab) {
+  const kbN = id => { const k = savedKeyboards.find(y => y.id === id); return k ? kbLabel(k) : 'a board that was deleted'; };
+  if (tab === 'keyboards') return savedKeyboards.map(k => { const bits = [...kitsOn(k.id).map(o => `${o.s.name} — ${o.k.name}`), ...switchesOn(k.id).map(o => `${[o.w.manufacturer, o.w.name].filter(Boolean).join(' ')} × ${o.a.count}`), ...partsOn(k.id).map(o => o.x.name)];
+    return { href: '#/keyboards/' + k.id, name: kbLabel(k), used: bits.length > 0, detail: bits.length ? bits.join(' · ') : 'Nothing installed' }; });
+  if (tab === 'keycaps') return savedKeycaps.flatMap(s => kitsOf(s).filter(k => !k.notOwned).map(k => ({ href: '#/keycaps/' + s.id, name: `${s.name} — ${k.name || 'Kit'}`, used: !!k.installedOn, detail: k.installedOn ? 'On ' + kbN(k.installedOn) : 'Not on a board' })));
+  return savedSwitches.map(w => { const al = allocsOf(w).filter(a => Number(a.count) > 0), loose = looseCount(w);
+    return { href: '#/switches/' + w.id, name: [w.manufacturer, w.name].filter(Boolean).join(' ') || '(no name)', used: al.length > 0, detail: al.length ? al.map(a => `${a.count} on ${kbN(a.keyboardId)}`).join(' · ') + (loose != null ? ` · ${loose} loose` : '') : (w.totalCount != null ? `${w.totalCount} loose, none installed` : 'None installed (no count entered)') }; });
+}
+function useListHtml() {
+  const q = useState.q.trim().toLowerCase(), all = useRows(useState.tab), rows = all.filter(r => (useState.mode === 'all' || (useState.mode === 'used') === r.used) && (!q || (r.name + ' ' + r.detail).toLowerCase().includes(q))).sort((a, b) => a.name.localeCompare(b.name));
+  return `<div class="sub" id="useCount" style="margin:8px 0 6px">${rows.length} shown · ${all.filter(r => r.used).length} in use · ${all.filter(r => !r.used).length} not in use</div><div class="use-list">${rows.length ? rows.map(r => `<a href="${esc(r.href)}"><i class="${r.used ? 'on' : ''}" title="${r.used ? 'In use' : 'Not in use'}"></i><b>${esc(r.name)}</b><span>${esc(r.detail)}</span></a>`).join('') : '<p class="sub" style="margin:8px 0">Nothing matches.</p>'}</div>`;
+}
+function useCardHtml() {
+  const tabs = [['keyboards', 'Keyboards'], ['keycaps', 'Keycap kits'], ['switches', 'Switches']], modes = [['all', 'All'], ['used', 'In use'], ['free', 'Not in use']];
+  return `<div class="card" id="useCard" style="margin-top:16px"><div class="sec-title"><h3>In use and not in use</h3><span class="sub" style="margin:0">From what is installed on each keyboard</span></div>
+    <div class="use-tools"><div class="seg" role="group" aria-label="Category">${tabs.map(([v, t]) => `<button type="button" data-use-tab="${v}" class="${v === useState.tab ? 'on' : ''}">${t}</button>`).join('')}</div>
+      <div class="seg" role="group" aria-label="Show">${modes.map(([v, t]) => `<button type="button" data-use-mode="${v}" class="${v === useState.mode ? 'on' : ''}">${t}</button>`).join('')}</div>
+      <input class="input" id="useQ" type="search" placeholder="Search name or where it is installed" aria-label="Search in use list" value="${esc(useState.q)}"></div>
+    <div id="useBody">${useListHtml()}</div></div>`;
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-use-tab],[data-use-mode]'); if (!b) return; if (b.dataset.useTab) useState.tab = b.dataset.useTab; else useState.mode = b.dataset.useMode; const c = document.getElementById('useCard'); if (c) c.outerHTML = useCardHtml(); });
+document.addEventListener('input', e => { if (e.target.id !== 'useQ') return; useState.q = e.target.value; const b = document.getElementById('useBody'); if (b) b.innerHTML = useListHtml(); });
+
+/* B10: gallery card sizes on desktop, remembered per category on this device */
+const GAL_SIZES = [['xs', 'Tiny cards'], ['s', 'Small cards'], ['m', 'Medium cards'], ['l', 'Large cards'], ['xl', 'Extra large cards'], ['wide', 'Wide pictures'], ['wall', 'Pictures only']];
+function ensureGalSize() {
+  const view = document.getElementById('view'), lt = listTypeNow(), tools = document.querySelector('#view .pagehead .tools');
+  if (!lt || !tools) { if (view.dataset.gal) delete view.dataset.gal; return; }
+  const cur = (lsGet('kbc_gal') || {})[lt] || 'm'; if (view.dataset.gal !== cur) view.dataset.gal = cur;
+  if (document.getElementById('galSize')) return;
+  tools.insertAdjacentHTML('afterbegin', `<select class="select" id="galSize" aria-label="Gallery card size" title="Size of the cards in Gallery view">${GAL_SIZES.map(([v, t]) => `<option value="${v}"${v === cur ? ' selected' : ''}>${t}</option>`).join('')}</select>`);
+  document.getElementById('galSize').onchange = e => { const p = lsGet('kbc_gal') || {}; p[lt] = e.target.value; lsSet('kbc_gal', p); view.dataset.gal = e.target.value; };
+}
+new MutationObserver(() => ensureGalSize()).observe(document.getElementById('view'), { childList: true, subtree: true });
+
+/* B7: arrange the boxes in the side column of an item page; one order per category, on every item in it */
+let boxOrder = lsGet('kbc_box_order') || {}, boxOrderAt = Number(lsGet('kbc_box_order_at')) || 0, boxArrange = false;
+function boxKey(el) { if (el.classList.contains('savebar')) return '~save'; if (el.id === 'boxBar') return '~bar'; const h = el.querySelector('h3'); return String(h ? h.textContent : el.id || '').replace(/[\d(·:].*$/, '').trim().toLowerCase(); }
+function boxSide() { const m = location.hash.match(/^#\/(\w+)\/([^/]+)$/); if (!m || !LIST_TYPES.includes(m[1]) || m[2] === 'new') return null; const side = document.querySelector('#view .form-grid > div:nth-child(2)'); return side ? { side, type: m[1] } : null; }
+function applyBoxOrder() {
+  const s = boxSide(); if (!s) { boxArrange = false; return; } const order = Array.isArray(boxOrder[s.type]) ? boxOrder[s.type] : [];
+  if (!document.getElementById('boxBar')) s.side.insertAdjacentHTML('afterbegin', `<div id="boxBar" class="boxbar">${boxArrange ? `<span>Move the boxes with ▲ ▼. The order is used on every ${esc(SEC[s.type].singular || 'item')} page.</span><button class="btn" type="button" data-box="reset">Default order</button><button class="btn primary" type="button" data-box="done">Done</button>` : '<button class="lnk" type="button" data-box="start">⇅ Arrange these boxes</button>'}</div>`);
+  [...s.side.children].forEach((el, i) => { const k = boxKey(el), at = order.indexOf(k), o = String(k === '~bar' ? -1 : k === '~save' ? 9999 : at >= 0 ? at : 500 + i); if (el.style.order !== o) el.style.order = o;
+    const movable = k && k[0] !== '~', mv = el.querySelector(':scope > .boxmove');
+    if (boxArrange && movable && !mv) el.insertAdjacentHTML('afterbegin', '<div class="boxmove"><button class="btn" type="button" data-box="up" aria-label="Move this box up">▲</button><button class="btn" type="button" data-box="down" aria-label="Move this box down">▼</button></div>');
+    else if (!boxArrange && mv) mv.remove(); });
+  s.side.classList.toggle('arranging', boxArrange);
+}
+function saveBoxOrder() { boxOrderAt = Date.now(); lsSet('kbc_box_order', boxOrder); lsSet('kbc_box_order_at', boxOrderAt); if (db && !isFile) settingsRef().set({ boxOrder, boxOrderAt }, { merge: true }).catch(() => {}); }
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-box]'); if (!b) return; const s = boxSide(); if (!s) return; e.preventDefault(); const act = b.dataset.box, bar = document.getElementById('boxBar');
+  if (act === 'start' || act === 'done') { boxArrange = act === 'start'; if (bar) bar.remove(); applyBoxOrder(); return; }
+  if (act === 'reset') { delete boxOrder[s.type]; saveBoxOrder(); applyBoxOrder(); toast('Boxes are back in the default order'); return; }
+  const seq = [...s.side.children].filter(el => { const k = boxKey(el); return k && k[0] !== '~' && !el.hidden && el.offsetParent !== null; }).sort((x, y) => Number(x.style.order) - Number(y.style.order)), i = seq.indexOf(b.closest('.boxmove').parentElement), j = act === 'up' ? i - 1 : i + 1;
+  if (i < 0 || j < 0 || j >= seq.length) return; [seq[i], seq[j]] = [seq[j], seq[i]];
+  const keys = seq.map(boxKey), rest = (boxOrder[s.type] || []).filter(k => !keys.includes(k)); boxOrder[s.type] = keys.concat(rest); saveBoxOrder(); applyBoxOrder(); });
+new MutationObserver(() => applyBoxOrder()).observe(document.getElementById('view'), { childList: true, subtree: true });
+
+/* v0.67.0 (16): which kit's picture stands for a keycap set. kcMainPic is a view setting for the whole Keycaps gallery; coverKit is saved per set. */
+const KC_PIC_MODES = { default: { label: 'Main picture: each set\'s own' }, base: { label: 'Main picture: Base kits', re: /\bbase\b|\bcore\b|\balphas?\b/i }, novelties: { label: 'Main picture: Novelties', re: /novelt/i }, spacebars: { label: 'Main picture: Spacebars', re: /space|\bbars?\b/i }, numpad: { label: 'Main picture: Numpads', re: /num/i } };
+let kcMainPic = KC_PIC_MODES[lsGet('kbc_kc_mainpic')] ? lsGet('kbc_kc_mainpic') : 'default';
+function kitPicsOf(s) {   // every kit picture known for a set: your kit stock pictures, your old-app kit photos, then the catalog's
+  const out = [], seen = new Set(), add = (name, url) => { const k = kitKey(name || ''); if (!url || seen.has(k)) return; seen.add(k); out.push({ name, url }); };
+  (s.kitStock || []).forEach(e => { const th = kitStockThumb(e) || (s.kitStockCover && s.kitStockCover.photoId === e.photoId ? s.kitStockCover.thumb : ''); add(e.name, th); });
+  (s.kitPhotos || []).forEach(p => add(p.name, p.url));
+  const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef); if (ref) (ref.kits || []).forEach(ck => add(ck.name, ck.img));
+  return out;
+}
+function kcMainSrc(s, mode = 'default') {
+  const pics = kitPicsOf(s);
+  if (mode !== 'default' && KC_PIC_MODES[mode]) { const hit = pics.filter(p => KC_PIC_MODES[mode].re.test(p.name || '')), best = mode === 'base' ? (hit.find(p => /^base(\s+kit)?$/i.test(String(p.name).trim())) || hit.find(p => /\bbase\b/i.test(p.name)) || hit[0]) : hit[0]; if (best) return { src: best.url, kit: true, title: best.name }; }
+  if (s.coverKit) { const p = pics.find(x => kitKey(x.name) === kitKey(s.coverKit)); if (p) return { src: p.url, title: p.name + ' (chosen as the main picture)' }; }
+  if (s.coverThumb) return { src: s.coverThumb, title: 'Your photo' };
+  return { src: setPhotoCoverOf(s) || '', title: (s.kitPhotos || []).length ? 'Picture from your Keycap Collection app' : 'Picture from the GMK catalog (Matrix)' };
+}
+function kcCardImg(s) { const r = kcMainSrc(s, kcMainPic); return r.src ? `<img src="${r.src.startsWith('data:') ? r.src : esc(r.src)}" alt="" loading="lazy" referrerpolicy="no-referrer"${r.kit ? ' data-nofit="1"' : ''} title="${esc(r.title || '')}" onerror="this.remove()">` : ''; }
+document.addEventListener('change', e => { if (e.target.id !== 'kcMainPic') return; kcMainPic = e.target.value; lsSet('kbc_kc_mainpic', kcMainPic); drawKeycapResults(); if (kcMainPic !== 'default' && !gmkSets) loadGmk().then(() => { if (document.getElementById('kcResults')) drawKeycapResults(); }).catch(() => {}); });
+/* v0.67.0 (18): case material, weight material (kept in step with the Weight color on the Colorway card), accents */
+const CASE_MATS = ['Aluminum', 'Polycarbonate (PC)', 'ABS plastic', 'Acrylic', 'Brass', 'Copper', 'Stainless steel', 'Titanium', 'Magnesium alloy', 'Zinc alloy', 'Carbon fiber', 'POM', 'Wood', 'Resin', 'Other'];
+const isCstm = k => !!k && /cstm/i.test([k.brand, k.name].join(' '));
+function weightColorway(list, label, before) {   // the Colorway list with its Weight color set to this material, or null when nothing changes
+  if ((label || '') === (before || '')) return null; const m = WEIGHT_MATS.find(x => x[1] === label); if (!m) return null;
+  const i = list.findIndex(isWeightRow); if (i >= 0 && list[i].material === m[0]) return null;
+  const row = { hex: m[2], material: m[0], source: 'material' };
+  return i >= 0 ? list.map((c, n) => n === i ? Object.assign({}, c, row) : c) : list.concat([Object.assign({ id: 'w' + Math.random().toString(36).slice(2, 10), label: 'Weight' }, row)]);
+}
+function syncWeightField(k, list) {   // Colorway card -> Build tab: the first Weight color's material becomes the Weight material field
+  const w = list.find(isWeightRow), m = w && matOf(w.material), label = m ? m[1] : ''; const cur = savedKeyboards.find(x => x.id === k.id) || k;
+  if (!m || (cur.weightMaterial || '') === label) return; const f = document.getElementById('f_weightMaterial');
+  if (f) { if (![...f.options].some(o => o.value === label)) f.insertAdjacentHTML('beforeend', `<option value="${esc(label)}">${esc(label)}</option>`); f.value = label; }
+  if (editing && editing.id === k.id) editing.weightMaterial = label;
+  kbCol().doc(k.id).update({ weightMaterial: label }).catch(() => {});
+}
 function renderImport() {
   const ready = !!db && !isFile;
   document.getElementById('view').innerHTML = `
-    <div class="pagehead"><div><h1>Import</h1><p>Read a receipt, or bring items in from your Excel workbook. The app never changes the workbook.</p></div></div>
+    <div class="pagehead"><div><h1>Import and export</h1><p>Read a receipt, export everything to Excel, or bring items in from a workbook. The app is the source of truth; the Excel file is a copy made from it.</p></div></div>
     ${receiptCardHtml()}
+    ${excelCardHtml()}
     <div class="card" style="margin-top:16px"><h3>1 · Choose an import file</h3>
       <p class="sub">Pick an import file made from your workbook: ${Object.values(IMPORT_TYPES).map(T => `<b>${T.metaKey || T.key}_import_v18.json</b>`).join(', ')}, <b>colors_import_v18.json</b>, <b>old_keycap_photos.json</b> (kit photos from your Keycap Collection app), or the private <b>gmk_catalog_private.json</b>. Keep these files on your PC; never upload them to the GitHub repo, which is public.</p>
       <label class="btn primary" style="width:max-content">Choose file…<input type="file" id="impFile" accept=".json,application/json" hidden ${ready ? '' : 'disabled'}></label>
@@ -5194,7 +5543,7 @@ function renderImport() {
       <div id="impMsg" class="sub" style="margin:10px 0 0"></div></div>
     <div id="impPreview"></div>
     <div id="reconcile"></div>`;
-  lastImportMsg = ''; wireReceiptCard();
+  lastImportMsg = ''; wireReceiptCard(); wireExcelCard();
   document.getElementById('impFile').onchange = async e => {
     const f = e.target.files[0]; if (!f) return;
     const msg = document.getElementById('impMsg');
@@ -5653,7 +6002,7 @@ const settingsRef = () => db.collection(FIRESTORE_COLLECTION).doc(ROOT_DOC).coll
 function saveThemeSoon() { if (!db || isFile) return; clearTimeout(themeSaveTimer); themeSaveTimer = setTimeout(() => { themeRemoteAt = Date.now(); settingsRef().set({ theme: themeCfg, themeAt: themeRemoteAt }, { merge: true }).catch(() => {}); }, 900); }
 function startThemeSync() {   // another device changed the theme → follow it
   if (!db || isFile || themeUnsub) return;
-  try { themeUnsub = settingsRef().onSnapshot(snap => { const d = snap.exists ? snap.data() : null; if (!d || !d.theme || !d.themeAt || d.themeAt <= themeRemoteAt) return; themeRemoteAt = d.themeAt;
+  try { themeUnsub = settingsRef().onSnapshot(snap => { const d = snap.exists ? snap.data() : null; if (d && d.boxOrder && Number(d.boxOrderAt) > boxOrderAt) { boxOrder = d.boxOrder; boxOrderAt = Number(d.boxOrderAt); lsSet('kbc_box_order', boxOrder); lsSet('kbc_box_order_at', boxOrderAt); applyBoxOrder(); } if (!d || !d.theme || !d.themeAt || d.themeAt <= themeRemoteAt) return; themeRemoteAt = d.themeAt;
     if (JSON.stringify(Object.assign({}, THEME_DEFAULT, d.theme)) !== JSON.stringify(themeCfg)) { applyTheme(d.theme, true); if (location.hash === '#/settings') drawThemeCard(); } }, () => {}); } catch (e) {}
 }
 /* Theme from a keycap set's palette: darkest (or lightest) color becomes the background, the most colorful ones the accents */
