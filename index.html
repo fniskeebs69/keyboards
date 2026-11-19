@@ -283,7 +283,7 @@
   .sp-grid { display: grid; grid-template-columns: 130px 170px 1fr 130px; gap: 8px; align-items: end; margin-top: 6px; } .sp-inst { grid-column: 1 / -1; } .sp-grid > * { min-width: 0; } .sp-grid .select, .sp-grid .input { width: 100%; min-width: 0; box-sizing: border-box; }
   @media (max-width: 700px) { .sp-grid { grid-template-columns: 1fr 1fr; } .sp-name { grid-column: 1 / -1; } }
   .sumkits .kno b { color: var(--text-3); font-weight: 500; }
-  .pickpic { position: fixed; inset: 0; z-index: 400; background: #0b0d10; color: var(--text); display: grid; grid-template-rows: auto 1fr auto auto; }
+  .pickpic { position: fixed; inset: 0; z-index: 400; background: #0b0d10; color: var(--text); display: flex; flex-direction: column; } .pickpic .pp-stage { flex: 1; }
   body.pp-open { overflow: hidden; }
   .pp-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; padding-top: max(10px, env(safe-area-inset-top)); border-bottom: 1px solid #222; }
   .pp-stage { position: relative; min-height: 0; overflow: hidden; touch-action: none; display: flex; align-items: center; justify-content: center; cursor: crosshair; }
@@ -295,8 +295,13 @@
   .pp-th { flex: none; width: 84px; background: none; border: 2px solid transparent; border-radius: 8px; padding: 2px; color: #bbb; font: inherit; font-size: 10.5px; cursor: pointer; text-align: center; }
   .pp-th.on { border-color: var(--kc); } .pp-th img { width: 76px; height: 57px; object-fit: cover; border-radius: 5px; display: block; background: #222; } .pp-th span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
   .pp-bar { display: flex; gap: 10px; align-items: center; padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); border-top: 1px solid #222; flex-wrap: wrap; }
+  .pp-area { position: absolute; border: 2px dashed #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.6); pointer-events: none; }
+  .pp-texrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 6px 14px; border-top: 1px solid #222; } .pp-texrow .check { margin: 0; } .pp-sizes { display: flex; gap: 6px; } .pp-sizes .btn { padding: 4px 10px; font-size: 12.5px; } .pp-sizes .btn.on { border-color: var(--kc); color: var(--kc); } .pp-textip { margin: 0; font-size: 11.5px; flex-basis: 100%; }
+  .pp-tile { width: 40px; height: 40px; border-radius: 8px; border: 1px solid #444; flex: none; background-size: cover; background-position: center; }
   .pp-sw { width: 40px; height: 40px; border-radius: 8px; border: 1px solid #444; flex: none; } .pp-txt { flex: 1; min-width: 160px; display: flex; flex-direction: column; } .pp-tip { margin: 0; font-size: 11.5px; }
-  .pswatch { position: relative; } .c-frompic { position: absolute; right: 8px; bottom: 8px; font: inherit; font-size: 12px; padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.35); background: rgba(0,0,0,.55); color: #fff; cursor: pointer; }
+  .pswatch { position: relative; background-size: cover !important; background-position: center !important; } .swbtn { background-size: cover !important; background-position: center !important; }
+  .c-notex { position: absolute; left: 8px; bottom: 8px; font: inherit; font-size: 12px; padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.35); background: rgba(0,0,0,.55); color: #fff; cursor: pointer; }
+  .c-frompic { position: absolute; right: 8px; bottom: 8px; font: inherit; font-size: 12px; padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.35); background: rgba(0,0,0,.55); color: #fff; cursor: pointer; }
   .avail + .avail { margin-top: 12px; } .avail .pchip { cursor: default; } .avail-h { font-size: 12px; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; } .incl { margin: 0; padding-left: 18px; line-height: 1.7; font-size: 13.5px; }
   @media (max-width: 700px) { .rd-row { grid-template-columns: 1fr; } .rd-img { width: 100%; height: 160px; } .rd-grid .rd-wide { grid-column: 1 / -1; } .rd-prod { grid-template-columns: 80px minmax(0, 1fr); } .rd-prod img { width: 80px; height: 60px; } }
   .drop { border: 1.5px dashed var(--line-2); border-radius: var(--radius-s); padding: 16px 12px; text-align: center; cursor: pointer; display: grid; gap: 4px; background: var(--bg-2); outline: none; }
@@ -375,7 +380,8 @@
   .prole .check { font-size: 12px; }
   .pfoot { display: flex; justify-content: space-between; align-items: center; }
   .pfoot .btn { padding: 4px 10px; font-size: 12px; }
-  .pstrip { display: flex; gap: 3px; margin-top: 6px; } .pstrip i { width: 16px; height: 10px; border-radius: var(--radius-xs); border: 1px solid var(--swatch-line); }
+  .pstrip { display: flex !important; flex-wrap: wrap; gap: 5px; margin-top: 8px; } .pstrip i { display: inline-block; flex: none; width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--swatch-line); background-size: cover !important; background-position: center !important; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+  .list .pstrip i, table .pstrip i { width: 16px; height: 16px; border-radius: 4px; }
   .sec-title .pstrip { margin: 0; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .acbox { position: absolute; z-index: 60; background: var(--surface, #181b22); border: var(--bw) var(--bs) var(--line); border-radius: var(--radius-s); box-shadow: 0 12px 30px rgba(0,0,0,.45); padding: 4px; max-height: 320px; overflow: auto; }
@@ -433,7 +439,7 @@
   .sumsec .sec-title { margin-bottom: 0; } .sumsec .lnk { background: none; border: 0; cursor: pointer; font: inherit; font-size: 13px; }
   .sumdl { display: grid; grid-template-columns: minmax(120px, 190px) 1fr; gap: 6px 14px; margin: 0; font-size: 14px; } .sumdl dt { color: var(--text-3); } .sumdl dd { margin: 0; overflow-wrap: anywhere; }
   .sumkits { display: grid; gap: 6px; } .sumkits div { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; } .sumkits span { color: var(--text-3); text-align: right; }
-  .sumsw { display: flex; flex-wrap: wrap; gap: 8px; } .sumsw span { display: flex; align-items: center; gap: 6px; font-size: 13px; } .sumsw i { width: 18px; height: 18px; border-radius: var(--radius-xs); border: 1px solid var(--swatch-line); }
+  .sumsw { display: flex; flex-wrap: wrap; gap: 8px; } .sumsw span { display: flex; align-items: center; gap: 6px; font-size: 13px; } .sumsw i { width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--swatch-line); background-size: cover !important; background-position: center !important; }
   @media (max-width: 700px) { .sumdl { grid-template-columns: 1fr; gap: 0 0; } .sumdl dd { margin-bottom: 8px; } .sumhead img { width: 90px; } }
   .savebar.hasTop #btnSave, .savebar.hasTop #btnCancel { display: none; }
   @media (min-width: 701px) { .savebar.hasTop:has(.savedhint:empty) { display: none; } }
@@ -620,7 +626,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.75.0';
+const APP_VERSION = 'v0.76.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -1175,21 +1181,28 @@ async function pickerSources(type, id) {
   }
   return out;
 }
-function openPicturePicker(type, id, onPick, onClose) {
+function openPicturePicker(type, id, onPick, onClose, opts = {}) {
   const d = document.createElement('div'); d.className = 'pickpic'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.setAttribute('aria-label', 'Pick a color from a picture');
   d.innerHTML = `<div class="pp-top"><b>Pick a color from a picture</b><button class="btn" type="button" data-pp="close" aria-label="Close">✕</button></div>
-    <div class="pp-stage"><img class="pp-img" alt=""><span class="pp-mark" hidden></span><canvas class="pp-loupe" width="132" height="132" hidden></canvas><p class="sub pp-msg">Loading pictures…</p></div>
-    <div class="pp-strip"></div>
-    <div class="pp-bar"><span class="pp-sw" title="Picked color"></span><span class="pp-txt"><b class="mono pp-hex">Tap the picture</b><span class="sub pp-tip">Tap or drag on the color you want. A small area is averaged, so pick a flat, evenly lit spot.</span></span>
+    <div class="pp-stage"><img class="pp-img" alt=""><span class="pp-mark" hidden></span><span class="pp-area" hidden></span><canvas class="pp-loupe" width="132" height="132" hidden></canvas><p class="sub pp-msg">Loading pictures…</p></div>
+    <div class="pp-strip"></div>${opts.texture ? `<div class="pp-texrow"><label class="check"><input type="checkbox" class="pp-tex"> Also save a texture sample</label><span class="pp-sizes" hidden>${[['s', 'Small'], ['m', 'Medium'], ['l', 'Large']].map(([v, l]) => `<button type="button" class="btn${v === 'm' ? ' on' : ''}" data-ppsize="${v}">${l}</button>`).join('')}</span><span class="sub pp-textip">For patterned finishes (brushed, anodized, PVD, marbled): the square on the picture is saved as a small tile and shown instead of the flat color.</span></div>` : ''}
+    <div class="pp-bar"><span class="pp-sw" title="Picked color"></span><span class="pp-tile" hidden title="Texture sample"></span><span class="pp-txt"><b class="mono pp-hex">Tap the picture</b><span class="sub pp-tip">Tap or drag on the color you want. A small area is averaged, so pick a flat, evenly lit spot.</span></span>
       <button class="btn" type="button" data-pp="close">Cancel</button><button class="btn primary" type="button" data-pp="use" disabled>Use this color</button></div>`;
   document.body.appendChild(d); document.body.classList.add('pp-open');
   const img = d.querySelector('.pp-img'), stage = d.querySelector('.pp-stage'), mark = d.querySelector('.pp-mark'), loupe = d.querySelector('.pp-loupe'), lctx = loupe.getContext('2d'), msg = d.querySelector('.pp-msg');
   const cv = document.createElement('canvas'), cx = cv.getContext('2d', { willReadFrequently: true });
-  let srcs = [], cur = -1, readable = false, hex = '', down = false;
+  let srcs = [], cur = -1, readable = false, hex = '', down = false, tex = '', texOn = false, size = 'm', last = null;
+  const area = d.querySelector('.pp-area'), tile = d.querySelector('.pp-tile'), FRAC = { s: 0.06, m: 0.12, l: 0.24 };
+  const makeTex = (px, py) => { const side = Math.max(24, Math.round(Math.min(cv.width, cv.height) * FRAC[size])), x0 = Math.min(Math.max(0, px - side / 2), cv.width - side), y0 = Math.min(Math.max(0, py - side / 2), cv.height - side);
+    const t = document.createElement('canvas'); t.width = t.height = 160; const tc = t.getContext('2d'); tc.imageSmoothingQuality = 'high'; tc.drawImage(cv, x0, y0, side, side, 0, 0, 160, 160);
+    let u = t.toDataURL('image/webp', 0.82); if (!/^data:image\/webp/.test(u)) u = t.toDataURL('image/jpeg', 0.85); return u; };
+  const drawArea = () => { if (!texOn || !last || img.hidden) { area.hidden = true; tile.hidden = true; tex = ''; return; } const b = box(), sr = stage.getBoundingClientRect(), side = Math.max(24, Math.min(cv.width, cv.height) * FRAC[size]) * b.w / cv.width;
+    area.hidden = false; area.style.width = area.style.height = side + 'px'; area.style.left = (last.cx - sr.left - side / 2) + 'px'; area.style.top = (last.cy - sr.top - side / 2) + 'px';
+    if (readable) { tex = makeTex(last.px, last.py); tile.hidden = false; tile.style.backgroundImage = `url('${tex}')`; } };
   const close = () => { d.remove(); document.body.classList.remove('pp-open'); document.removeEventListener('keydown', onKey, true); if (onClose) onClose(); };
   const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } }; document.addEventListener('keydown', onKey, true);
   const show = i => {
-    cur = i; readable = false; hex = ''; mark.hidden = true; loupe.hidden = true; d.querySelector('[data-pp="use"]').disabled = true; d.querySelector('.pp-hex').textContent = 'Tap the picture'; d.querySelector('.pp-sw').style.background = 'transparent';
+    cur = i; readable = false; hex = ''; last = null; tex = ''; area.hidden = true; tile.hidden = true; mark.hidden = true; loupe.hidden = true; d.querySelector('[data-pp="use"]').disabled = true; d.querySelector('.pp-hex').textContent = 'Tap the picture'; d.querySelector('.pp-sw').style.background = 'transparent';
     d.querySelectorAll('.pp-th').forEach((b, j) => b.classList.toggle('on', j === i)); msg.textContent = 'Loading the picture…'; msg.hidden = false; img.hidden = true;
     const s = srcs[i].src, load = cors => { const im = new Image(); if (cors && !/^data:/.test(s)) im.crossOrigin = 'anonymous';
       im.onload = () => { const sc = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight)); cv.width = Math.round(im.naturalWidth * sc); cv.height = Math.round(im.naturalHeight * sc); cx.drawImage(im, 0, 0, cv.width, cv.height);
@@ -1208,7 +1221,7 @@ function openPicturePicker(type, id, onPick, onClose) {
     const px = Math.round(fx * (cv.width - 1)), py = Math.round(fy * (cv.height - 1)), rad = Math.max(2, Math.round(cv.width / 500));
     const x0 = Math.max(0, px - rad), y0 = Math.max(0, py - rad), dd = cx.getImageData(x0, y0, Math.min(cv.width - x0, rad * 2 + 1), Math.min(cv.height - y0, rad * 2 + 1)).data; let s = [0, 0, 0], n = 0;
     for (let i = 0; i < dd.length; i += 4) { s[0] += dd[i]; s[1] += dd[i + 1]; s[2] += dd[i + 2]; n++; }
-    hex = rgbToHex(s[0] / n, s[1] / n, s[2] / n);
+    hex = rgbToHex(s[0] / n, s[1] / n, s[2] / n); last = { px, py, cx: e.clientX, cy: e.clientY }; if (!down || e.type === 'pointerup') drawArea(); else area.hidden = true;
     d.querySelector('.pp-sw').style.background = hex; d.querySelector('.pp-hex').textContent = hex; d.querySelector('[data-pp="use"]').disabled = false;
     const z = 15; lctx.imageSmoothingEnabled = false; lctx.clearRect(0, 0, 132, 132); lctx.drawImage(cv, px - (z >> 1), py - (z >> 1), z, z, 0, 0, 132, 132);
     lctx.strokeStyle = '#fff'; lctx.lineWidth = 2; lctx.strokeRect(66 - 132 / z * (rad + .5), 66 - 132 / z * (rad + .5), 132 / z * (rad * 2 + 1), 132 / z * (rad * 2 + 1));
@@ -1216,9 +1229,11 @@ function openPicturePicker(type, id, onPick, onClose) {
   };
   stage.addEventListener('pointerdown', e => { if (e.target.closest('.pp-msg')) return; down = true; try { stage.setPointerCapture(e.pointerId); } catch (er) {} sample(e); e.preventDefault(); });
   stage.addEventListener('pointermove', e => { if (down) sample(e); });
-  stage.addEventListener('pointerup', () => { down = false; setTimeout(() => { loupe.hidden = true; }, 600); });
+  stage.addEventListener('pointerup', () => { down = false; drawArea(); setTimeout(() => { loupe.hidden = true; }, 600); });
+  const texBox = d.querySelector('.pp-tex'); if (texBox) texBox.onchange = () => { texOn = texBox.checked; d.querySelector('.pp-sizes').hidden = !texOn; d.querySelector('[data-pp="use"]').textContent = texOn ? 'Use color + texture' : 'Use this color'; drawArea(); };
   d.addEventListener('click', e => { const a = e.target.closest('[data-pp]'); if (a && a.dataset.pp === 'close') close();
-    else if (a && a.dataset.pp === 'use' && hex) { const h = hex; close(); onPick(h); }
+    else if (a && a.dataset.pp === 'use' && hex) { const h = hex, t = texOn ? tex : ''; close(); onPick(h, t); }
+    const sz = e.target.closest('[data-ppsize]'); if (sz) { size = sz.dataset.ppsize; d.querySelectorAll('[data-ppsize]').forEach(b => b.classList.toggle('on', b === sz)); drawArea(); }
     const th = e.target.closest('.pp-th'); if (th) show(+th.dataset.i); });
   pickerSources(type, id).then(list => { srcs = list; const strip = d.querySelector('.pp-strip');
     if (!list.length) { msg.textContent = 'This item has no pictures yet. Add a photo (or read its product page) and try again.'; return; }
@@ -3116,8 +3131,8 @@ function renderKeycapForm(s = null) {
     if (pc) {
       if (e.target.classList.contains('c-gmk') && !pc.querySelector('.c-hex').value.trim()) { const h = gmkHex({ sys: 'GMK', code: e.target.value.trim() }); if (h) { pc.querySelector('.c-hex').value = h; } }   // GMK standard code → hex
       if (e.target.classList.contains('c-ral') && !pc.querySelector('.c-hex').value.trim()) { const h = ralDesignHex(e.target.value.trim()); if (h) pc.querySelector('.c-hex').value = h; }   // RAL Design code → hex
-      const h = normHex(pc.querySelector('.c-hex').value), sw = pc.querySelector('.pswatch');
-      sw.style.background = h || 'transparent'; sw.innerHTML = (h ? '' : '<span>' + (pc.querySelector('.c-hex').value.trim() ? 'Not a valid hex' : 'Enter a hex') + '</span>') + '<button type="button" class="c-frompic" title="Tap the color on one of this item\'s pictures">Pick from a picture</button>';
+      const h = normHex(pc.querySelector('.c-hex').value), sw = pc.querySelector('.pswatch'), tx = pc.dataset.tex;
+      sw.style.background = swBg({ texture: tx, hex: h }) || h || 'transparent'; sw.innerHTML = (h || tx ? '' : '<span>' + (pc.querySelector('.c-hex').value.trim() ? 'Not a valid hex' : 'Enter a hex') + '</span>') + (tx ? '<button type="button" class="c-notex" title="Show the flat color instead">Remove texture</button>' : '') + '<button type="button" class="c-frompic" title="Tap the color on one of this item\'s pictures">Pick from a picture</button>';
       pc.querySelector('.c-pick').style.background = h || 'transparent';
       markDirty();
     }
@@ -3134,7 +3149,8 @@ function renderKeycapForm(s = null) {
   };
   document.getElementById('colorList').addEventListener('click', async e => {
     const fp = e.target.closest('.c-frompic'); if (fp) { const ctx2 = pickerContext(); if (!ctx2) { toast('Save the set first, then pick colors from its pictures'); return; }
-      const hexIn = fp.closest('.pcard').querySelector('.c-hex'); openPicturePicker(ctx2.type, ctx2.id, hx => { hexIn.value = hx; hexIn.dispatchEvent(new Event('input', { bubbles: true })); }); return; }
+      const pcd = fp.closest('.pcard'), hexIn = pcd.querySelector('.c-hex'); openPicturePicker(ctx2.type, ctx2.id, (hx, tex) => { if (tex) pcd.dataset.tex = tex; else delete pcd.dataset.tex; hexIn.value = hx; hexIn.dispatchEvent(new Event('input', { bubbles: true })); }, null, { texture: true }); return; }
+    const nt = e.target.closest('.c-notex'); if (nt) { const pcd = nt.closest('.pcard'); delete pcd.dataset.tex; pcd.querySelector('.c-hex').dispatchEvent(new Event('input', { bubbles: true })); return; }
     const pk = e.target.closest('.c-pick');
     if (pk) { const card = pk.closest('.pcard'), hexIn = card.querySelector('.c-hex'), cur = editing && savedKeycaps.find(x => x.id === editing.id);
       openColorWheel(pk, hexIn.value, hx => { hexIn.value = hx; hexIn.dispatchEvent(new Event('input', { bubbles: true })); },
@@ -3227,7 +3243,7 @@ async function saveKeycapSet() {
     if (c.hex && !h) bad.push('.c-hex');
     bad.forEach(x => el.querySelector(x).classList.add('bad')); if (bad.length) colorBad = colorBad || el;
     const out = { id: c.id, roles: c.roles, source: ['catalog', 'excel'].includes(el.dataset.source) ? el.dataset.source : 'manual' };
-    if (c.name) out.name = c.name; if (h) out.hex = h; ['pantone', 'ral', 'gmk'].forEach(f => { if (c[f]) out[f] = c[f]; });
+    if (c.name) out.name = c.name; if (h) out.hex = h; ['pantone', 'ral', 'gmk', 'texture'].forEach(f => { if (c[f]) out[f] = c[f]; });
     return out;
   });
   document.getElementById('errColors').textContent = colorBad ? '· check colors' : '';
@@ -3478,8 +3494,8 @@ function paletteOf(s) { return Array.isArray(s?.palette) ? s.palette : []; }
 function normHex(v) { v = String(v || '').trim().replace(/^#/, ''); if (/^[0-9a-f]{3}$/i.test(v)) v = v.split('').map(c => c + c).join(''); return /^[0-9a-f]{6}$/i.test(v) ? '#' + v.toUpperCase() : null; }
 function colorCardHtml(c) {
   const hex = normHex(c.hex), val = v => v != null ? esc(String(v)) : '';
-  return `<div class="pcard" data-color="${esc(c.id)}" data-source="${['catalog', 'excel'].includes(c.source) ? c.source : 'manual'}">
-    <div class="pswatch" style="background:${hex || 'transparent'}">${hex ? '' : '<span>Enter a hex</span>'}<button type="button" class="c-frompic" title="Tap the color on one of this item's pictures">Pick from a picture</button></div>
+  return `<div class="pcard" data-color="${esc(c.id)}" data-source="${['catalog', 'excel'].includes(c.source) ? c.source : 'manual'}"${c.texture ? ` data-tex="${esc(c.texture)}"` : ''}>
+    <div class="pswatch" style="background:${swBg(c) || hex || 'transparent'}">${hex || c.texture ? '' : '<span>Enter a hex</span>'}${c.texture ? '<button type="button" class="c-notex" title="Show the flat color instead">Remove texture</button>' : ''}<button type="button" class="c-frompic" title="Tap the color on one of this item's pictures">Pick from a picture</button></div>
     <div class="pbody">
       <div class="pfields">
         <label class="wide">Color name<input class="input c-name" placeholder="e.g. Botanical Light Green" value="${val(c.name)}"></label>
@@ -3495,9 +3511,9 @@ function colorCardHtml(c) {
 }
 function readColorCard(el) {
   const q = c => el.querySelector(c).value.trim();
-  return { id: el.dataset.color, name: q('.c-name'), hex: q('.c-hex'), pantone: q('.c-pantone'), ral: q('.c-ral'), gmk: q('.c-gmk'), roles: [...el.querySelectorAll('.c-role:checked')].map(x => x.value) };
+  return { id: el.dataset.color, name: q('.c-name'), hex: q('.c-hex'), pantone: q('.c-pantone'), ral: q('.c-ral'), gmk: q('.c-gmk'), texture: el.dataset.tex || '', roles: [...el.querySelectorAll('.c-role:checked')].map(x => x.value) };
 }
-function paletteStripHtml(s) { const p = paletteOf(s).filter(c => normHex(c.hex)); return p.length ? `<span class="pstrip">${p.map(c => `<i style="background:${normHex(c.hex)}" title="${esc(c.name || c.hex)}"></i>`).join('')}</span>` : ''; }
+function paletteStripHtml(s) { const p = paletteOf(s).filter(c => normHex(c.hex)); return p.length ? `<span class="pstrip">${p.map(c => `<i style="background:${swBg(c) || normHex(c.hex)}" title="${esc(c.name || c.hex)}${c.texture ? ' (texture sample)' : ''}"></i>`).join('')}</span>` : ''; }
 
 /* ===================== Step 5.4: Keycap kits installed on keyboards =====================
    Each kit keeps installedOn: <keyboardId> (a kit is on one board at a time). Unallocated kit = no installedOn. */
@@ -4378,14 +4394,15 @@ const WEIGHT_MATS = [
   ['pvd', 'PVD (multicolor)', '#7B68EE']];
 const PVD_GRAD = 'linear-gradient(135deg,#5B3FD1,#1E9FD6,#2BB673,#E8C547,#D6336C)';
 const matOf = id => WEIGHT_MATS.find(m => m[0] === id);
-const cwBg = c => (c.material === 'pvd' && c.source === 'material') ? PVD_GRAD : (normHex(c.hex) || 'transparent');
+const swBg = c => c && c.texture && /^data:image\//.test(c.texture) ? `url('${c.texture}') center / cover, ${normHex(c.hex) || 'transparent'}` : null;   // a saved texture sample shows instead of the flat color
+const cwBg = c => swBg(c) || ((c.material === 'pvd' && c.source === 'material') ? PVD_GRAD : (normHex(c.hex) || 'transparent'));
 const isWeightRow = c => !!c.material || /weight/i.test(c.label || '');
 const matSelectHtml = (cur, attr) => `<select class="input cwmat" ${attr} aria-label="Weight material"><option value="">Material…</option>${WEIGHT_MATS.map(m => `<option value="${m[0]}"${m[0] === cur ? ' selected' : ''}>${esc(m[1])}</option>`).join('')}</select>`;
 function colorwayCardHtml(k) {
   const cw = k.colorway || [];
   return `<div class="card side-card" id="cwCard"><h3>Colorway</h3><p class="sub" style="margin:0 0 8px">${esc(k.color || 'Colors of this keyboard')}. Click a swatch to adjust it.</p>
     <div class="cwlist">${cw.map(c => `<div class="cwrow"><button class="swbtn" data-cwpick="${esc(c.id)}" style="background:${cwBg(c)}" aria-label="Adjust ${esc(c.label || 'color')}"></button>
-      <span><b>${esc(c.label || 'Color')}</b><span class="mono sub" style="margin:0"> ${esc(c.material === 'pvd' && c.source === 'material' ? 'multicolor' : (c.hex || ''))}</span>${c.source === 'excel' ? ' <span class="chip">Excel</span>' : ''}${c.material && matOf(c.material) ? ` <span class="chip">${esc(matOf(c.material)[1])}</span>` : ''}</span><button class="btn" data-cwfrom="${esc(c.id)}" title="Pick this color from a picture">Pick from picture</button><button class="btn" data-cwdel="${esc(c.id)}" aria-label="Remove">✕</button>
+      <span><b>${esc(c.label || 'Color')}</b><span class="mono sub" style="margin:0"> ${esc(c.material === 'pvd' && c.source === 'material' ? 'multicolor' : (c.hex || ''))}</span>${c.source === 'excel' ? ' <span class="chip">Excel</span>' : ''}${c.material && matOf(c.material) ? ` <span class="chip">${esc(matOf(c.material)[1])}</span>` : ''}</span>${c.texture ? `<button class="btn" data-cwnotex="${esc(c.id)}" title="Show the flat color instead">Remove texture</button>` : ''}<button class="btn" data-cwfrom="${esc(c.id)}" title="Pick this color (and a texture sample) from a picture">Pick from picture</button><button class="btn" data-cwdel="${esc(c.id)}" aria-label="Remove">✕</button>
       ${isWeightRow(c) ? `<div class="cwmatrow">${matSelectHtml(c.material || '', `data-cwmat="${esc(c.id)}"`)}</div>` : ''}</div>`).join('') || '<p class="sub" style="margin:0">No colors yet.</p>'}</div>
     <div class="aadd" style="grid-template-columns:1fr auto;margin-top:8px"><input class="input" id="cwLabel" placeholder="e.g. Case, Weight, Badge" list="dlCw"><button class="btn primary" id="cwAdd">Add color</button></div>
     <div id="cwAddMat" hidden style="margin-top:6px">${matSelectHtml('', 'id="cwMatNew"')}<p class="sub" style="margin:4px 0 0">Pick a material to add the weight with its stock color, or leave it and pick a color.</p></div>
@@ -4397,7 +4414,8 @@ function wireColorwayCard(k) {
   const write = async list => { try { await withTimeout(kbCol().doc(k.id).update({ colorway: list, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); syncWeightField(k, list); return true; } catch (e) { toast('Could not save the color: ' + explain(e)); return false; } };
   const photo = () => ({ photoId: latest().coverPhotoId, photoThumb: latest().coverThumb });
   card.onclick = async e => {
-    const fr = e.target.closest('[data-cwfrom]'); if (fr) { const id = fr.dataset.cwfrom; openPicturePicker('keyboards', k.id, hx => write((latest().colorway || []).map(x => x.id === id ? Object.assign({}, x, { hex: hx, source: 'manual' }) : x)).then(ok => ok && toast('Color saved'))); return; }
+    const fr = e.target.closest('[data-cwfrom]'); if (fr) { const id = fr.dataset.cwfrom; openPicturePicker('keyboards', k.id, (hx, tex) => write((latest().colorway || []).map(x => { if (x.id !== id) return x; const y = Object.assign({}, x, { hex: hx, source: 'manual' }); if (tex) y.texture = tex; else delete y.texture; return y; })).then(ok => ok && toast(tex ? 'Color and texture saved' : 'Color saved')), null, { texture: true }); return; }
+    const nt = e.target.closest('[data-cwnotex]'); if (nt) { const id = nt.dataset.cwnotex; write((latest().colorway || []).map(x => { if (x.id !== id) return x; const y = Object.assign({}, x); delete y.texture; return y; })).then(ok => ok && toast('Texture removed')); return; }
     const p = e.target.closest('[data-cwpick]'), d = e.target.closest('[data-cwdel]');
     if (p) { const c = (latest().colorway || []).find(x => x.id === p.dataset.cwpick);
       openColorWheel(p, normHex(c.hex) || '#808080', hx => write((latest().colorway || []).map(x => x.id === c.id ? Object.assign({}, x, { hex: hx, source: 'manual' }) : x)).then(ok => ok && toast('Color saved')), Object.assign({ title: c.label || 'Color' }, photo())); return; }
@@ -4804,7 +4822,7 @@ function drawSummary(view, x, type) {
     let rows = summaryRows(panel), extra = '';
     if (t === 'kits') { const kits = [...panel.querySelectorAll('#kitList .kit')].map(readKitRow).filter(k => k.name);
       if (kits.length) extra = `<div class="sumkits">${kits.map(k => `<div${k.notOwned ? ' class="kno"' : ''}><b>${esc(k.name)}</b><span>${esc([k.notOwned ? 'Not owned yet' : '', k.kitType, k.datePurchased ? fmtDate(k.datePurchased) : '', k.purchasedFrom, Number(k.price) ? money(kbTotal(k)) : ''].filter(Boolean).join(' · '))}</span></div>`).join('')}</div>`; }
-    if (t === 'colors') { const pal = paletteOf(live); if (pal.length) extra = `<div class="sumsw">${pal.map(c => `<span title="${esc([c.name, c.gmk, c.ral, c.pantone, c.hex].filter(Boolean).join(' · '))}"><i style="background:${esc(c.hex || '#000')}"></i>${esc(c.name || c.hex || '')}</span>`).join('')}</div>`; rows = []; }
+    if (t === 'colors') { const pal = paletteOf(live); if (pal.length) extra = `<div class="sumsw">${pal.map(c => `<span title="${esc([c.name, c.gmk, c.ral, c.pantone, c.hex].filter(Boolean).join(' · '))}"><i style="background:${swBg(c) || esc(c.hex || '#000')}"></i>${esc(c.name || c.hex || '')}</span>`).join('')}</div>`; rows = []; }
     if (t === 'review') { rows = [...panel.querySelectorAll('.rate')].map(r => [r.querySelector('label')?.textContent.trim(), r.querySelector('.val')?.textContent.trim()]).filter(([, v]) => v && v !== 'Not rated'); const rt = fieldValue(panel.querySelector('textarea')); if (rt) rows.push(['Review', rt]); }
     rows = rows.map(r => { const key = t + '|' + r[0], hid = hidden.includes(key); if (hid) nHidden++; return { k: r[0], v: r[1], kind: r[2] || '', cid: r[3] || '', key, hid }; }).filter(r => !r.hid || sumShowHidden);
     if (rows.length || extra) secs.push(`<div class="sumsec"><div class="sec-title"><h4>${esc(title)}</h4><button class="lnk" data-goto="${t}">Edit</button></div>
