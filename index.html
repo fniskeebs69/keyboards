@@ -283,6 +283,20 @@
   .sp-grid { display: grid; grid-template-columns: 130px 170px 1fr 130px; gap: 8px; align-items: end; margin-top: 6px; } .sp-inst { grid-column: 1 / -1; } .sp-grid > * { min-width: 0; } .sp-grid .select, .sp-grid .input { width: 100%; min-width: 0; box-sizing: border-box; }
   @media (max-width: 700px) { .sp-grid { grid-template-columns: 1fr 1fr; } .sp-name { grid-column: 1 / -1; } }
   .sumkits .kno b { color: var(--text-3); font-weight: 500; }
+  .pickpic { position: fixed; inset: 0; z-index: 400; background: #0b0d10; color: var(--text); display: grid; grid-template-rows: auto 1fr auto auto; }
+  body.pp-open { overflow: hidden; }
+  .pp-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; padding-top: max(10px, env(safe-area-inset-top)); border-bottom: 1px solid #222; }
+  .pp-stage { position: relative; min-height: 0; overflow: hidden; touch-action: none; display: flex; align-items: center; justify-content: center; cursor: crosshair; }
+  .pp-img { max-width: 100%; max-height: 100%; width: 100%; height: 100%; object-fit: contain; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+  .pp-mark { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 2px rgba(0,0,0,.6); pointer-events: none; }
+  .pp-loupe { position: absolute; width: 132px; height: 132px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 6px 18px rgba(0,0,0,.6); pointer-events: none; background: #000; }
+  .pp-msg { position: absolute; left: 16px; right: 16px; bottom: 16px; background: rgba(0,0,0,.75); padding: 10px 12px; border-radius: 10px; color: #ddd; }
+  .pp-strip { display: flex; gap: 8px; overflow-x: auto; padding: 8px 12px; border-top: 1px solid #222; }
+  .pp-th { flex: none; width: 84px; background: none; border: 2px solid transparent; border-radius: 8px; padding: 2px; color: #bbb; font: inherit; font-size: 10.5px; cursor: pointer; text-align: center; }
+  .pp-th.on { border-color: var(--kc); } .pp-th img { width: 76px; height: 57px; object-fit: cover; border-radius: 5px; display: block; background: #222; } .pp-th span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .pp-bar { display: flex; gap: 10px; align-items: center; padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); border-top: 1px solid #222; flex-wrap: wrap; }
+  .pp-sw { width: 40px; height: 40px; border-radius: 8px; border: 1px solid #444; flex: none; } .pp-txt { flex: 1; min-width: 160px; display: flex; flex-direction: column; } .pp-tip { margin: 0; font-size: 11.5px; }
+  .pswatch { position: relative; } .c-frompic { position: absolute; right: 8px; bottom: 8px; font: inherit; font-size: 12px; padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.35); background: rgba(0,0,0,.55); color: #fff; cursor: pointer; }
   .avail + .avail { margin-top: 12px; } .avail .pchip { cursor: default; } .avail-h { font-size: 12px; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; } .incl { margin: 0; padding-left: 18px; line-height: 1.7; font-size: 13.5px; }
   @media (max-width: 700px) { .rd-row { grid-template-columns: 1fr; } .rd-img { width: 100%; height: 160px; } .rd-grid .rd-wide { grid-column: 1 / -1; } .rd-prod { grid-template-columns: 80px minmax(0, 1fr); } .rd-prod img { width: 80px; height: 60px; } }
   .drop { border: 1.5px dashed var(--line-2); border-radius: var(--radius-s); padding: 16px 12px; text-align: center; cursor: pointer; display: grid; gap: 4px; background: var(--bg-2); outline: none; }
@@ -330,7 +344,8 @@
   .aadd .select { grid-column: 1 / -1; }
   .aadd .select, .aadd .input { padding: 7px 8px; font-size: 12.5px; min-width: 0; }
   .kit { border: var(--bw) var(--bs) var(--line); border-radius: var(--radius-s); padding: 10px; background: var(--bg-2); margin-bottom: 10px; }
-  .kit-top { display: grid; grid-template-columns: 1fr 170px 70px auto; gap: 8px; }
+  .kit-top { display: grid; grid-template-columns: 1fr 170px 70px auto; gap: 8px; } .kit-top > * { min-width: 0; }
+  @media (max-width: 700px) { .kit-top { grid-template-columns: 1fr 64px auto; } .kit-top .k-name { grid-column: 1 / -1; } .kit-grid { grid-template-columns: 1fr 1fr !important; } .kit-grid > * { min-width: 0; } .kit-grid .input, .kit-grid .select { width: 100%; min-width: 0; box-sizing: border-box; } }
   .kit .bad { border-color: var(--bad) !important; }
   .kit-more summary { cursor: pointer; font-size: 12.5px; color: var(--text-2); margin-top: 8px; }
   .kit-more .k-total { color: var(--text); font-weight: 650; font-variant-numeric: tabular-nums; }
@@ -605,7 +620,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.74.0';
+const APP_VERSION = 'v0.75.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -1139,6 +1154,78 @@ async function splitUndo(r) {
   for (const m of r.made) await withTimeout(partCol(m.t).doc(m.id).delete());
   await withTimeout(kbCol().doc(r.kbId).update({ price: r.before.price === null ? DEL : r.before.price, notes: r.before.notes === null ? DEL : r.before.notes }));
 }
+
+/* ===================== v0.75.0: pick a color from a picture (full screen) =====================
+   Opens over everything (phone and desktop): the item's pictures in a strip (your photos, stock picture, shop pictures,
+   keycap kit pictures), the chosen one fills the screen; tap or drag on it — a magnifier shows the spot and the
+   averaged color (5×5 area at full size, so noise and legends don't throw it off). "Use this color" hands the hex back.
+   Pictures from sites that don't allow reading their colors (no CORS) are shown with a note; your own photos always work. */
+async function pickerSources(type, id) {
+  const x = (type && id && itemsOfType(type).find(y => y.id === id)) || {}, out = [];
+  const add = (src, label, thumb) => { if (src && !out.some(o => o.src === src)) out.push({ src, label, thumb: thumb || src }); };
+  if (id) { try { const ph = await withTimeout(photoCol().where('itemId', '==', id).get(), 20000); ph.docs.forEach(d => { const v = d.data(); add(v.full || v.thumb, 'Your photo', v.thumb); }); } catch (e) {} }
+  if (x.stockThumb) add(x.stockThumb, 'Stock picture');
+  if (x.coverThumb) add(x.coverThumb, 'Display picture');
+  if (x.refImage) add(x.refImage, 'Shop picture' + (x.refSource ? ' · ' + x.refSource : ''));
+  (x.refImages || []).forEach(s => add(s, 'Shop picture'));
+  if (type === 'keycaps') {
+    kitsOf(x).forEach(k => { if (k.refImage) add(k.refImage, k.name); });
+    (x.kitPhotos || []).forEach(k => add(k.url, k.name));
+    try { kitGalleryTiles(x).tiles.forEach(t => { if (t.img) add(t.img, t.name); }); } catch (e) {}
+  }
+  return out;
+}
+function openPicturePicker(type, id, onPick, onClose) {
+  const d = document.createElement('div'); d.className = 'pickpic'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.setAttribute('aria-label', 'Pick a color from a picture');
+  d.innerHTML = `<div class="pp-top"><b>Pick a color from a picture</b><button class="btn" type="button" data-pp="close" aria-label="Close">✕</button></div>
+    <div class="pp-stage"><img class="pp-img" alt=""><span class="pp-mark" hidden></span><canvas class="pp-loupe" width="132" height="132" hidden></canvas><p class="sub pp-msg">Loading pictures…</p></div>
+    <div class="pp-strip"></div>
+    <div class="pp-bar"><span class="pp-sw" title="Picked color"></span><span class="pp-txt"><b class="mono pp-hex">Tap the picture</b><span class="sub pp-tip">Tap or drag on the color you want. A small area is averaged, so pick a flat, evenly lit spot.</span></span>
+      <button class="btn" type="button" data-pp="close">Cancel</button><button class="btn primary" type="button" data-pp="use" disabled>Use this color</button></div>`;
+  document.body.appendChild(d); document.body.classList.add('pp-open');
+  const img = d.querySelector('.pp-img'), stage = d.querySelector('.pp-stage'), mark = d.querySelector('.pp-mark'), loupe = d.querySelector('.pp-loupe'), lctx = loupe.getContext('2d'), msg = d.querySelector('.pp-msg');
+  const cv = document.createElement('canvas'), cx = cv.getContext('2d', { willReadFrequently: true });
+  let srcs = [], cur = -1, readable = false, hex = '', down = false;
+  const close = () => { d.remove(); document.body.classList.remove('pp-open'); document.removeEventListener('keydown', onKey, true); if (onClose) onClose(); };
+  const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } }; document.addEventListener('keydown', onKey, true);
+  const show = i => {
+    cur = i; readable = false; hex = ''; mark.hidden = true; loupe.hidden = true; d.querySelector('[data-pp="use"]').disabled = true; d.querySelector('.pp-hex').textContent = 'Tap the picture'; d.querySelector('.pp-sw').style.background = 'transparent';
+    d.querySelectorAll('.pp-th').forEach((b, j) => b.classList.toggle('on', j === i)); msg.textContent = 'Loading the picture…'; msg.hidden = false; img.hidden = true;
+    const s = srcs[i].src, load = cors => { const im = new Image(); if (cors && !/^data:/.test(s)) im.crossOrigin = 'anonymous';
+      im.onload = () => { const sc = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight)); cv.width = Math.round(im.naturalWidth * sc); cv.height = Math.round(im.naturalHeight * sc); cx.drawImage(im, 0, 0, cv.width, cv.height);
+        try { cx.getImageData(0, 0, 1, 1); readable = true; } catch (e) { readable = false; }
+        img.src = im.src; if (cors && !/^data:/.test(s)) img.crossOrigin = 'anonymous'; img.hidden = false;
+        msg.hidden = readable; if (!readable) msg.textContent = "This picture's website doesn't let apps read its colors. Pick another picture: your own photos always work (or tick “Keep a copy” when reading a product page)."; };
+      im.onerror = () => { if (cors) load(false); else { msg.textContent = 'This picture could not be loaded.'; msg.hidden = false; } };
+      im.src = s; };
+    load(true);
+  };
+  const box = () => { const r = img.getBoundingClientRect(), ar = cv.width / cv.height; let w = r.width, h = r.width / ar; if (h > r.height) { h = r.height; w = h * ar; } return { x: r.left + (r.width - w) / 2, y: r.top + (r.height - h) / 2, w, h }; };
+  const sample = e => {
+    if (img.hidden) return; const b = box(), fx = (e.clientX - b.x) / b.w, fy = (e.clientY - b.y) / b.h; if (fx < 0 || fy < 0 || fx > 1 || fy > 1) return;
+    const sr = stage.getBoundingClientRect(); mark.hidden = false; mark.style.left = (e.clientX - sr.left) + 'px'; mark.style.top = (e.clientY - sr.top) + 'px';
+    if (!readable) return;
+    const px = Math.round(fx * (cv.width - 1)), py = Math.round(fy * (cv.height - 1)), rad = Math.max(2, Math.round(cv.width / 500));
+    const x0 = Math.max(0, px - rad), y0 = Math.max(0, py - rad), dd = cx.getImageData(x0, y0, Math.min(cv.width - x0, rad * 2 + 1), Math.min(cv.height - y0, rad * 2 + 1)).data; let s = [0, 0, 0], n = 0;
+    for (let i = 0; i < dd.length; i += 4) { s[0] += dd[i]; s[1] += dd[i + 1]; s[2] += dd[i + 2]; n++; }
+    hex = rgbToHex(s[0] / n, s[1] / n, s[2] / n);
+    d.querySelector('.pp-sw').style.background = hex; d.querySelector('.pp-hex').textContent = hex; d.querySelector('[data-pp="use"]').disabled = false;
+    const z = 15; lctx.imageSmoothingEnabled = false; lctx.clearRect(0, 0, 132, 132); lctx.drawImage(cv, px - (z >> 1), py - (z >> 1), z, z, 0, 0, 132, 132);
+    lctx.strokeStyle = '#fff'; lctx.lineWidth = 2; lctx.strokeRect(66 - 132 / z * (rad + .5), 66 - 132 / z * (rad + .5), 132 / z * (rad * 2 + 1), 132 / z * (rad * 2 + 1));
+    loupe.hidden = false; const lx = Math.min(sr.width - 140, Math.max(4, e.clientX - sr.left - 66)), ly = e.clientY - sr.top - 160; loupe.style.left = lx + 'px'; loupe.style.top = (ly < 4 ? e.clientY - sr.top + 30 : ly) + 'px';
+  };
+  stage.addEventListener('pointerdown', e => { if (e.target.closest('.pp-msg')) return; down = true; try { stage.setPointerCapture(e.pointerId); } catch (er) {} sample(e); e.preventDefault(); });
+  stage.addEventListener('pointermove', e => { if (down) sample(e); });
+  stage.addEventListener('pointerup', () => { down = false; setTimeout(() => { loupe.hidden = true; }, 600); });
+  d.addEventListener('click', e => { const a = e.target.closest('[data-pp]'); if (a && a.dataset.pp === 'close') close();
+    else if (a && a.dataset.pp === 'use' && hex) { const h = hex; close(); onPick(h); }
+    const th = e.target.closest('.pp-th'); if (th) show(+th.dataset.i); });
+  pickerSources(type, id).then(list => { srcs = list; const strip = d.querySelector('.pp-strip');
+    if (!list.length) { msg.textContent = 'This item has no pictures yet. Add a photo (or read its product page) and try again.'; return; }
+    strip.innerHTML = list.map((s, i) => `<button type="button" class="pp-th" data-i="${i}" title="${esc(s.label)}"><img src="${esc(s.thumb)}" alt="" referrerpolicy="no-referrer" loading="lazy"><span>${esc(s.label)}</span></button>`).join('');
+    show(0); });
+}
+function pickerContext() { const m = /^#\/(keyboards|switches|keycaps|pcbs|artisans|accessories)\/([^/?]+)/.exec(location.hash); return m && m[2] !== 'new' ? { type: m[1], id: m[2] } : null; }
 
 /* ---------- Duplicate ---------- */
 const DUP_DROP = ['id', 'coverPhotoId', 'coverThumb', 'stockPhotoId', 'stockThumb', 'kitStock', 'kitStockCover', 'values', 'allocations', 'importKey', 'importAliases', 'importNotes', 'excelRow', 'excelRows', 'excelTotal', 'excelTab', 'importedTotal', 'formFactorExcel', 'installedOn', 'installedOnText', 'belongsToText', 'isFavorite', 'isSample', 'createdAt', 'updatedAt'];
@@ -2882,7 +2969,7 @@ function drawKeycapResults() {
   document.getElementById('kcCount').textContent = (kcQuery.trim() || kcChip || list.length !== all.length ? `${list.length} of ${all.length} sets` : `${all.length} set${all.length === 1 ? '' : 's'}`) + ` · ${kits} kit${kits === 1 ? '' : 's'}` + (db && !isFile && !kcLoaded ? ' · loading…' : '');
   if (!all.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.keycaps}</div><h2>No keycap sets yet</h2><p>Add a set with its kits, or import your Excel Keycaps tab on the Import page.</p><p style="margin-top:14px"><a class="btn primary" href="#/keycaps/new">${I.plus}Add keycap set</a></p></div>`; return; }
   if (!list.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.search}</div><h2>No matches</h2><p>${kcQuery.trim() ? `Nothing matches "${esc(kcQuery)}".` : 'No sets with this filter.'}</p></div>`; return; }
-  const sub = s => [s.manufacturer, `${kitsOf(s).length} kit${kitsOf(s).length === 1 ? '' : 's'}${kitsOf(s).some(k => k.notOwned) ? ` (${kitsOf(s).filter(k => k.notOwned).length} not owned)` : ''}`].filter(Boolean).join(' · ');
+  const sub = s => [s.manufacturer, `${kitsOf(s).length} kit${kitsOf(s).length === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
   if (kcView === 'gallery') {
     box.innerHTML = `<div class="gallery">${list.map(s => `
       <a class="kcard" href="#/keycaps/${esc(s.id)}">
@@ -3030,7 +3117,7 @@ function renderKeycapForm(s = null) {
       if (e.target.classList.contains('c-gmk') && !pc.querySelector('.c-hex').value.trim()) { const h = gmkHex({ sys: 'GMK', code: e.target.value.trim() }); if (h) { pc.querySelector('.c-hex').value = h; } }   // GMK standard code → hex
       if (e.target.classList.contains('c-ral') && !pc.querySelector('.c-hex').value.trim()) { const h = ralDesignHex(e.target.value.trim()); if (h) pc.querySelector('.c-hex').value = h; }   // RAL Design code → hex
       const h = normHex(pc.querySelector('.c-hex').value), sw = pc.querySelector('.pswatch');
-      sw.style.background = h || 'transparent'; sw.innerHTML = h ? '' : '<span>' + (pc.querySelector('.c-hex').value.trim() ? 'Not a valid hex' : 'Enter a hex') + '</span>';
+      sw.style.background = h || 'transparent'; sw.innerHTML = (h ? '' : '<span>' + (pc.querySelector('.c-hex').value.trim() ? 'Not a valid hex' : 'Enter a hex') + '</span>') + '<button type="button" class="c-frompic" title="Tap the color on one of this item\'s pictures">Pick from a picture</button>';
       pc.querySelector('.c-pick').style.background = h || 'transparent';
       markDirty();
     }
@@ -3046,6 +3133,8 @@ function renderKeycapForm(s = null) {
     list.lastElementChild.querySelector('.c-name').focus(); colorCount(); markDirty();
   };
   document.getElementById('colorList').addEventListener('click', async e => {
+    const fp = e.target.closest('.c-frompic'); if (fp) { const ctx2 = pickerContext(); if (!ctx2) { toast('Save the set first, then pick colors from its pictures'); return; }
+      const hexIn = fp.closest('.pcard').querySelector('.c-hex'); openPicturePicker(ctx2.type, ctx2.id, hx => { hexIn.value = hx; hexIn.dispatchEvent(new Event('input', { bubbles: true })); }); return; }
     const pk = e.target.closest('.c-pick');
     if (pk) { const card = pk.closest('.pcard'), hexIn = card.querySelector('.c-hex'), cur = editing && savedKeycaps.find(x => x.id === editing.id);
       openColorWheel(pk, hexIn.value, hx => { hexIn.value = hx; hexIn.dispatchEvent(new Event('input', { bubbles: true })); },
@@ -3390,7 +3479,7 @@ function normHex(v) { v = String(v || '').trim().replace(/^#/, ''); if (/^[0-9a-
 function colorCardHtml(c) {
   const hex = normHex(c.hex), val = v => v != null ? esc(String(v)) : '';
   return `<div class="pcard" data-color="${esc(c.id)}" data-source="${['catalog', 'excel'].includes(c.source) ? c.source : 'manual'}">
-    <div class="pswatch" style="background:${hex || 'transparent'}">${hex ? '' : '<span>Enter a hex</span>'}</div>
+    <div class="pswatch" style="background:${hex || 'transparent'}">${hex ? '' : '<span>Enter a hex</span>'}<button type="button" class="c-frompic" title="Tap the color on one of this item's pictures">Pick from a picture</button></div>
     <div class="pbody">
       <div class="pfields">
         <label class="wide">Color name<input class="input c-name" placeholder="e.g. Botanical Light Green" value="${val(c.name)}"></label>
@@ -4163,9 +4252,8 @@ function openColorWheel(anchor, startHex, onApply, opts = {}) {
         <label>Hex<input class="input mono whex" maxlength="7"></label>
         <div class="wrgb"><label>R<input class="input wr" type="number" min="0" max="255"></label><label>G<input class="input wg" type="number" min="0" max="255"></label><label>B<input class="input wb" type="number" min="0" max="255"></label></div>
         ${'EyeDropper' in window ? '<button class="btn" data-w="drop">Eyedropper (pick from screen)</button>' : ''}
-        ${opts.photoId || opts.photoThumb ? '<button class="btn" data-w="photo">Pick from this item\'s photo</button>' : ''}
+        ${pickerContext() ? '<button class="btn" data-w="pics">Pick from a picture…</button>' : ''}
       </div></div>
-    <div class="wphoto" hidden><p class="sub" style="margin:0 0 6px">Click the photo where the color is. It averages a small area to ignore noise.</p><canvas class="wpc"></canvas></div>
     <p class="sub" style="margin:8px 0 0;font-size:11.5px">Screen colors are approximate. Keycap photos depend on lighting, so sample a flat, evenly lit spot.</p>
     <div class="btnrow" style="margin-top:10px"><button class="btn primary" data-w="apply">Use this color</button><button class="btn" data-w="close">Cancel</button></div>`;
   document.body.appendChild(el); wheelEl = el;
@@ -4206,18 +4294,9 @@ function openColorWheel(anchor, startHex, onApply, opts = {}) {
     if (w === 'close') closeWheel();
     else if (w === 'apply') { onApply(cur()); closeWheel(); }
     else if (w === 'drop') { try { const res = await new EyeDropper().open(); setHex(res.sRGBHex); } catch {} }
-    else if (w === 'photo') {
-      const box = el.querySelector('.wphoto'), pc = el.querySelector('.wpc'), pctx = pc.getContext('2d', { willReadFrequently: true }); box.hidden = false;
-      let src = opts.photoThumb;
-      try { if (opts.photoId) { const d = await photoCol().doc(opts.photoId).get(); if (d.exists && d.data().full) src = d.data().full; } } catch {}
-      const im = new Image(); im.onload = () => { const sc = Math.min(1, 440 / im.width); pc.width = im.width * sc; pc.height = im.height * sc; pctx.drawImage(im, 0, 0, pc.width, pc.height); }; im.src = src;
-      pc.onclick = ev => { const b = pc.getBoundingClientRect(), x = Math.round((ev.clientX - b.left) * pc.width / b.width), y = Math.round((ev.clientY - b.top) * pc.height / b.height);
-        const d = pctx.getImageData(Math.max(0, x - 2), Math.max(0, y - 2), 5, 5).data; let s = [0, 0, 0], n = 0;
-        for (let i = 0; i < d.length; i += 4) { s[0] += d[i]; s[1] += d[i + 1]; s[2] += d[i + 2]; n++; }
-        setHex(rgbToHex(s[0] / n, s[1] / n, s[2] / n)); };
-    }
+    else if (w === 'pics') { const ctx2 = pickerContext(); el.style.visibility = 'hidden'; openPicturePicker(ctx2.type, ctx2.id, hx => setHex(hx), () => { if (wheelEl === el) el.style.visibility = ''; }); }
   };
-  setTimeout(() => document.addEventListener('pointerdown', function out(ev) { if (!wheelEl) return document.removeEventListener('pointerdown', out); if (!wheelEl.contains(ev.target) && ev.target !== anchor) { closeWheel(); document.removeEventListener('pointerdown', out); } }), 0);
+  setTimeout(() => document.addEventListener('pointerdown', function out(ev) { if (!wheelEl) return document.removeEventListener('pointerdown', out); if (!wheelEl.contains(ev.target) && ev.target !== anchor && !ev.target.closest('.pickpic')) { closeWheel(); document.removeEventListener('pointerdown', out); } }), 0);
   sync();
 }
 
@@ -4306,7 +4385,7 @@ function colorwayCardHtml(k) {
   const cw = k.colorway || [];
   return `<div class="card side-card" id="cwCard"><h3>Colorway</h3><p class="sub" style="margin:0 0 8px">${esc(k.color || 'Colors of this keyboard')}. Click a swatch to adjust it.</p>
     <div class="cwlist">${cw.map(c => `<div class="cwrow"><button class="swbtn" data-cwpick="${esc(c.id)}" style="background:${cwBg(c)}" aria-label="Adjust ${esc(c.label || 'color')}"></button>
-      <span><b>${esc(c.label || 'Color')}</b><span class="mono sub" style="margin:0"> ${esc(c.material === 'pvd' && c.source === 'material' ? 'multicolor' : (c.hex || ''))}</span>${c.source === 'excel' ? ' <span class="chip">Excel</span>' : ''}${c.material && matOf(c.material) ? ` <span class="chip">${esc(matOf(c.material)[1])}</span>` : ''}</span><button class="btn" data-cwdel="${esc(c.id)}" aria-label="Remove">✕</button>
+      <span><b>${esc(c.label || 'Color')}</b><span class="mono sub" style="margin:0"> ${esc(c.material === 'pvd' && c.source === 'material' ? 'multicolor' : (c.hex || ''))}</span>${c.source === 'excel' ? ' <span class="chip">Excel</span>' : ''}${c.material && matOf(c.material) ? ` <span class="chip">${esc(matOf(c.material)[1])}</span>` : ''}</span><button class="btn" data-cwfrom="${esc(c.id)}" title="Pick this color from a picture">Pick from picture</button><button class="btn" data-cwdel="${esc(c.id)}" aria-label="Remove">✕</button>
       ${isWeightRow(c) ? `<div class="cwmatrow">${matSelectHtml(c.material || '', `data-cwmat="${esc(c.id)}"`)}</div>` : ''}</div>`).join('') || '<p class="sub" style="margin:0">No colors yet.</p>'}</div>
     <div class="aadd" style="grid-template-columns:1fr auto;margin-top:8px"><input class="input" id="cwLabel" placeholder="e.g. Case, Weight, Badge" list="dlCw"><button class="btn primary" id="cwAdd">Add color</button></div>
     <div id="cwAddMat" hidden style="margin-top:6px">${matSelectHtml('', 'id="cwMatNew"')}<p class="sub" style="margin:4px 0 0">Pick a material to add the weight with its stock color, or leave it and pick a color.</p></div>
@@ -4318,6 +4397,7 @@ function wireColorwayCard(k) {
   const write = async list => { try { await withTimeout(kbCol().doc(k.id).update({ colorway: list, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); syncWeightField(k, list); return true; } catch (e) { toast('Could not save the color: ' + explain(e)); return false; } };
   const photo = () => ({ photoId: latest().coverPhotoId, photoThumb: latest().coverThumb });
   card.onclick = async e => {
+    const fr = e.target.closest('[data-cwfrom]'); if (fr) { const id = fr.dataset.cwfrom; openPicturePicker('keyboards', k.id, hx => write((latest().colorway || []).map(x => x.id === id ? Object.assign({}, x, { hex: hx, source: 'manual' }) : x)).then(ok => ok && toast('Color saved'))); return; }
     const p = e.target.closest('[data-cwpick]'), d = e.target.closest('[data-cwdel]');
     if (p) { const c = (latest().colorway || []).find(x => x.id === p.dataset.cwpick);
       openColorWheel(p, normHex(c.hex) || '#808080', hx => write((latest().colorway || []).map(x => x.id === c.id ? Object.assign({}, x, { hex: hx, source: 'manual' }) : x)).then(ok => ok && toast('Color saved')), Object.assign({ title: c.label || 'Color' }, photo())); return; }
@@ -4975,13 +5055,15 @@ function pairKits(owned, cat, links) {
   return pairs;
 }
 function completionOf(s) {
-  const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef); if (!ref || !(ref.kits || []).length) return null;
+  const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef);
+  if (!ref || !(ref.kits || []).length) { const all = kitsOf(s); if (!all.some(k => k.notOwned)) return null;   // not in the catalog: your own kit list counts once a kit is marked not owned
+    const have = all.filter(k => !k.notOwned).length; return { ref: null, own: true, have, total: all.length, pct: Math.round(have / all.length * 100), missing: all.filter(k => k.notOwned), extra: [], check: [] }; }
   const mine = ownedKits(s), links = s.kitLinks || {}, pairs = pairKits(mine, ref.kits, links), have = ref.kits.filter(ck => pairs.has(ck)), paired = new Set(pairs.values());
   const extra = mine.filter(k => !paired.has(k)), check = extra.filter(k => links[kitKey(k.name)] !== '-');   // extra = yours but not in the catalog's list; check = not yet confirmed by you
   const n = have.length + extra.length, total = ref.kits.length + extra.length;   // a kit you own always counts, even when the catalog does not list it
   return { ref, have: n, total, pct: Math.round(n / total * 100), missing: ref.kits.filter(ck => !have.includes(ck)), extra, check };
 }
-function completionHtml(s) { const c = completionOf(s); return c ? `<span class="cbar" title="${c.have} of ${c.total} kits${c.extra.length ? ` (the catalog lists ${c.ref.kits.length}; ${c.extra.length} of yours ${c.extra.length === 1 ? 'is' : 'are'} not in its list)` : ''}"><span class="cfill" style="width:${c.pct}%"></span></span><span class="cnum">${c.have}/${c.total} kits · ${c.pct}%${c.check.length ? ' <span title="A kit name does not match the catalog. Open the Kit gallery to check it." style="color:var(--warn)">⚠</span>' : ''}</span>` : ''; }
+function completionHtml(s) { const c = completionOf(s); return c ? `<span class="cbar" title="${c.have} of ${c.total} kits${c.own ? ' on your kit list (kits marked not owned count as missing)' : ''}${c.extra.length ? ` (the catalog lists ${c.ref.kits.length}; ${c.extra.length} of yours ${c.extra.length === 1 ? 'is' : 'are'} not in its list)` : ''}"><span class="cfill" style="width:${c.pct}%"></span></span><span class="cnum">${c.have}/${c.total} kits · ${c.pct}%${c.check.length ? ' <span title="A kit name does not match the catalog. Open the Kit gallery to check it." style="color:var(--warn)">⚠</span>' : ''}</span>` : ''; }
 function kcChipsHtml() {
   const profiles = [...new Set(savedKeycaps.map(s => s.profile).filter(Boolean))].sort();
   const chip = (v, t) => `<button class="pchip${kcChip === v ? ' on' : ''}" data-kchip="${esc(v)}">${t}</button>`;
@@ -5001,7 +5083,7 @@ async function addKitToWishlist(s, ck) {
   try { await withTimeout(wishCol().add(d)); toast(`Added ${ck.name} to your wishlist`); } catch (e) { toast('Could not add: ' + explain(e)); }
 }
 function openKeycapStats() {
-  const sets = savedKeycaps, kits = sets.reduce((n, s) => n + kitsOf(s).length, 0), linked = sets.filter(s => completionOf(s));
+  const sets = savedKeycaps, kits = sets.reduce((n, s) => n + kitsOf(s).length, 0), linked = sets.filter(s => { const c = completionOf(s); return c && c.ref; });
   const comp = linked.map(s => ({ s, c: completionOf(s) })), have = comp.reduce((n, x) => n + x.c.have, 0), total = comp.reduce((n, x) => n + x.c.total, 0);
   const count = f => { const m = {}; sets.forEach(s => { const k = f(s) || 'Not set'; m[k] = (m[k] || 0) + 1; }); return Object.entries(m).sort((a, b) => b[1] - a[1]); };
   const spend = {}; sets.forEach(s => { const k = s.manufacturer || 'Not set'; spend[k] = (spend[k] || 0) + setTotal(s); });
@@ -5741,7 +5823,7 @@ function buildWorkbook(version) {
   B.sheet('Wishlist', { widths: [14, 36, 28, 14, 12, 10, 40, 30], rows: wRows, merges: ['A1:H1', 'A2:H2'], freeze: 3 });
 
   /* GMK completion overview (only for sets linked to the private catalog, when it is loaded on this device) */
-  const comp = savedKeycaps.map(s => ({ s, c: completionOf(s) })).filter(o => o.c).sort((a, b) => b.c.pct - a.c.pct || String(a.s.name).localeCompare(String(b.s.name)));
+  const comp = savedKeycaps.map(s => ({ s, c: completionOf(s) })).filter(o => o.c && o.c.ref).sort((a, b) => b.c.pct - a.c.pct || String(a.s.name).localeCompare(String(b.s.name)));
   if (comp.length) { const gRows = [{ h: 24, cells: [{ v: '📊  GMK Tracker — Set Completion Overview', s: TITLE }] }, { cells: [{ v: `From the Keyboard Collection app — ${todayIso()} — ${comp.length} sets linked to the catalog (kit data: Matrix Zou, private use)`, s: SUBT }] }, { h: 22, cells: ['Set', 'Designer', 'Owned', 'Total', 'Missing Kits'].map(v => ({ v, s: H2 })) }];
     comp.forEach(({ s, c }, i) => { const alt = i % 2 === 1; gRows.push({ cells: [{ v: s.name, s: base(alt, { b: 1 }) }, { v: s.designer || c.ref.designer || 'Unknown', s: base(alt) }, { v: c.have, s: base(alt, { h: 'center' }) }, { v: c.total, s: base(alt, { h: 'center' }) }, { v: c.missing.length ? c.missing.map(k => k.name).join(', ') : '✅ Complete!', s: base(alt) }] }); });
     B.sheet('GMK Tracker Overview', { widths: [30, 22, 12, 12, 70], rows: gRows, merges: ['A1:E1', 'A2:E2'], freeze: 3 }); }
