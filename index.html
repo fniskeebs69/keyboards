@@ -264,6 +264,21 @@
   .rd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; } .rd-grid .rd-wide { grid-column: span 2; } .rd-grid .input, .rd-grid .select { width: 100%; box-sizing: border-box; padding: 7px 9px; font-size: 13px; } .rd-grid .money-in .input { padding-left: 24px; }
   .rd-opts { display: grid; gap: 4px; font-size: 13px; } .rd-note { margin: 0; font-size: 12.5px; }
   .shoptext summary { cursor: pointer; font-size: 13px; color: var(--text-2); }
+  .mgcard { width: min(640px, 100%) !important; max-height: 88vh; overflow: auto; }
+  .mgpair { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: stretch; }
+  .mgside { border: var(--bw) var(--bs) var(--line); border-radius: 10px; padding: 9px 11px; background: var(--bg-2); min-width: 0; overflow-wrap: anywhere; }
+  .mgside.keep { border-color: var(--kb); } .mgrole { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); margin-bottom: 3px; }
+  .mgpair #mgSwap { align-self: center; padding: 6px 10px; }
+  .mglist { display: grid; gap: 6px; max-height: 300px; overflow: auto; margin-top: 8px; }
+  .mgrow { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; border: var(--bw) var(--bs) var(--line); background: var(--bg-2); color: var(--text); border-radius: 9px; padding: 8px 11px; cursor: pointer; font: inherit; }
+  .mgrow.on { border-color: var(--kb); background: color-mix(in srgb, var(--kb) 14%, var(--bg-2)); } .mglikely { font-size: 11px; padding: 1px 7px; cursor: default; }
+  .mgsec { margin-top: 16px; } .mgsec h4 { margin: 0 0 8px; font-size: 13px; }
+  .mgq { border-top: var(--bw) var(--bs) var(--line); padding: 9px 0; } .mgf { font-size: 12.5px; color: var(--text-2); margin-bottom: 6px; }
+  .mgopts { display: grid; gap: 6px; } .mgopt { display: flex; gap: 8px; align-items: flex-start; border: var(--bw) var(--bs) var(--line); border-radius: 8px; padding: 7px 9px; cursor: pointer; }
+  .mgopt.on { border-color: var(--kb); background: color-mix(in srgb, var(--kb) 12%, transparent); } .mgopt input { margin-top: 3px; }
+  .mgtag { flex: none; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-3); width: 72px; padding-top: 2px; } .mgval { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 9em; overflow: auto; }
+  .mgfills { display: grid; gap: 4px; font-size: 13px; } .mgfills > div { display: grid; grid-template-columns: 160px 1fr; gap: 10px; } .mgfills > div > span:last-child { overflow-wrap: anywhere; max-height: 4.5em; overflow: hidden; }
+  @media (max-width: 700px) { .mgfills > div { grid-template-columns: 1fr; gap: 0; } .mgtag { width: 62px; } }
   .avail + .avail { margin-top: 12px; } .avail .pchip { cursor: default; } .avail-h { font-size: 12px; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; } .incl { margin: 0; padding-left: 18px; line-height: 1.7; font-size: 13.5px; }
   @media (max-width: 700px) { .rd-row { grid-template-columns: 1fr; } .rd-img { width: 100%; height: 160px; } .rd-grid .rd-wide { grid-column: 1 / -1; } .rd-prod { grid-template-columns: 80px minmax(0, 1fr); } .rd-prod img { width: 80px; height: 60px; } }
   .drop { border: 1.5px dashed var(--line-2); border-radius: var(--radius-s); padding: 16px 12px; text-align: center; cursor: pointer; display: grid; gap: 4px; background: var(--bg-2); outline: none; }
@@ -586,7 +601,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.69.0';
+const APP_VERSION = 'v0.70.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -809,6 +824,229 @@ async function undoDelete(list) {
 function undoToast(msg, list) {
   toast(msg, { action: 'Undo', ms: 10000, onAction: async () => { toast('Restoring…'); try { await undoDelete(list); toast(list.length === 1 ? 'Restored' : `Restored ${list.length} items`); if (list.length === 1) location.hash = `#/${list[0].type}/${list[0].id}`; } catch (e) { toast('Undo failed: ' + explain(e)); } } });
 }
+/* ===================== v0.70.0: merge two entries (every category) =====================
+   Sacrifice → Keeper. Every detail the keeper is missing comes over from the sacrifice; where both hold a
+   different value you choose (keeper, sacrifice, both texts, or the two added up for switch counts/prices).
+   Photos, recordings, market values, colors, Summary rows, keycap kits and every link to other items
+   (installed switches, kits, parts, build timeline) move to the keeper. The sacrifice is then deleted.
+   Undo for 10 seconds puts both records and every moved link back. */
+const MG_ONE = { keyboards: 'keyboard', switches: 'switch entry', keycaps: 'keycap set', pcbs: 'PCB', artisans: 'artisan', accessories: 'accessory' };
+const MG_SKIP = new Set(['id', 'createdAt', 'updatedAt', 'appVersion', 'source', 'addedFrom', 'isSample', 'doneAt', 'inQueue', 'values', 'isFavorite', 'colorway', 'palette', 'summaryExtra', 'summaryHidden', 'refImages', 'kits', 'allocations',
+  'importKey', 'importAliases', 'excelRow', 'excelRows', 'excelTotal', 'excelTab', 'importNotes', 'importedTotal', 'formFactorExcel', 'kitsPurchasedExcel', 'coverPhotoId', 'coverThumb', 'coverFit', 'stockPhotoId', 'stockThumb',
+  'kitStock', 'kitStockCover', 'kitPhotos', 'kitLinks', 'coverKit', 'descriptionOwn', 'shopTextSource', 'shopTextUrl', 'shopTextAt', 'retailPriceAt', 'retailSource', 'refImage', 'refSource', 'countApprox']);
+const MG_FOLLOW = { description: ['descriptionOwn'], shopText: ['shopTextSource', 'shopTextUrl', 'shopTextAt'], retailPrice: ['retailPriceAt', 'retailSource'], refUrl: ['refImage', 'refSource'], totalCount: ['countApprox'] };
+const MG_ID = ['importKey', 'excelRow', 'excelTotal', 'excelTab', 'importNotes', 'importedTotal', 'formFactorExcel', 'kitsPurchasedExcel', 'source'];   // where the entry came from in the workbook: travels with importKey
+const MG_TEXT = new Set(['notes', 'mods', 'reviewText', 'review', 'currentBuildText', 'included', 'specsText', 'installedOnText', 'belongsToText', 'colorsText', 'shopText', 'description']);
+const MG_ADD = { switches: new Set(['totalCount', 'price', 'shipping', 'discounts']) };
+const MG_MONEY = new Set(['price', 'shipping', 'discounts', 'retailPrice', 'estPrice']);
+const MG_LABELS = { name: 'Name', brand: 'Brand', manufacturer: 'Maker', price: 'Price paid', taxRate: 'Tax', shipping: 'Shipping', discounts: 'Discounts', datePurchased: 'Date purchased', dateReceived: 'Date received',
+  purchasedFrom: 'Purchased from', receipt: 'Receipt', pictureLink: 'Pictures link', orderNumber: 'Order number', acquisition: 'Acquisition', notes: 'Notes', mods: 'Mods', reviewText: 'Review', ratings: 'Ratings',
+  refUrl: 'Product page', shopText: "Shop's description", retailPrice: 'Retail price', alsoAvailable: 'Also available in', included: 'Included with the kit', description: 'Description', descriptors: 'Descriptors',
+  installedOn: 'Installed on', installedOnText: 'Installed on (Excel)', belongsToText: 'Belongs to (Excel)', gmkRef: 'GMK catalog link', totalCount: 'Count', specsText: 'Specs (text)', currentBuildText: 'Current build',
+  category: 'Category', style: 'Style / series', location: 'Location', color: 'Color', size: 'Size', layout: 'Layout', weightsAccents: 'Accents', keyboardType: 'Keyboard type', descriptionOwn: 'Description' };
+const mgEmpty = v => blank(v) || v === false || (Array.isArray(v) && !v.length) || (v && typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length);
+const mgSame = (a, b) => (typeof a === 'object' || typeof b === 'object') ? JSON.stringify(a) === JSON.stringify(b) : String(a).trim() === String(b).trim();
+function mgLabel(f) {
+  const el = document.querySelector(`#view .fld [name="${CSS.escape(f)}"]`), l = el && el.closest('.fld') && el.closest('.fld').querySelector('label');
+  if (l && l.textContent.trim()) return l.textContent.replace(/\s*\*$/, '').trim();
+  return MG_LABELS[f] || f.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase());
+}
+function mgShow(f, v, type) {
+  if (mgEmpty(v)) return '—';
+  if (typeof v === 'boolean') return v ? 'Yes' : 'No';
+  if (MG_MONEY.has(f)) return money(v);
+  if (f === 'taxRate') return pct(v);
+  if (f === 'installedOn') { const kb = savedKeyboards.find(k => k.id === v); return kb ? rcLabel('keyboards', kb) : '(a keyboard that no longer exists)'; }
+  if (f === 'gmkRef') return typeof v === 'object' ? (v.title || v.id || 'linked') : String(v);
+  if (f === 'alsoAvailable') return [...(v.groups || []).map(g => `${g.name} (${g.values.length})`), ...((v.layouts || []).length ? ['Layouts: ' + v.layouts.join(', ')] : [])].join(', ') + (v.source ? ' · ' + v.source : '');
+  if (f === 'ratings' && typeof v === 'object') return Object.entries(v).map(([k, x]) => `${k} ${x}`).join(', ');
+  if (/^date/.test(f) && /^\d{4}-\d\d-\d\d$/.test(v)) return fmtDate(v);
+  if (Array.isArray(v)) return v.map(x => x && typeof x === 'object' ? (x.name || x.label || x.title || '…') : x).join(', ');
+  if (typeof v === 'object') return Object.keys(v).length + ' values';
+  return String(v);
+}
+function mgPlan(type, keep, sac) {
+  const asks = [], fills = [];
+  [...new Set([...Object.keys(keep), ...Object.keys(sac)])].filter(f => !MG_SKIP.has(f) && f !== 'createdIso' && !f.startsWith('_')).sort().forEach(f => {
+    const k = keep[f], s = sac[f]; if (mgEmpty(s)) return;
+    if (mgEmpty(k)) fills.push(f);
+    else if (!mgSame(k, s)) asks.push({ f, k, s, canBoth: MG_TEXT.has(f) && typeof k === 'string' && typeof s === 'string', canAdd: !!(MG_ADD[type] && MG_ADD[type].has(f)) });
+  });
+  const order = ['name', 'brand', 'manufacturer']; asks.sort((a, b) => ((order.indexOf(a.f) + 1 || 99) - (order.indexOf(b.f) + 1 || 99)) || mgLabel(a.f).localeCompare(mgLabel(b.f)));
+  return { asks, fills };
+}
+function mgUnion(a, b, key) { const out = (a || []).slice(), seen = new Set(out.map(key)); (b || []).forEach(x => { const k = key(x); if (!seen.has(k)) { seen.add(k); out.push(x); } }); return out; }
+function mgBuild(type, keep, sac, choice) {   // the keeper's new fields; FieldValue.delete() where a follower must go
+  const DEL = firebase.firestore.FieldValue.delete(), upd = {}, { asks, fills } = mgPlan(type, keep, sac), r2 = n => Math.round(n * 100) / 100;
+  const follow = f => (MG_FOLLOW[f] || []).forEach(x => { upd[x] = blank(sac[x]) ? DEL : sac[x]; });
+  fills.forEach(f => { upd[f] = sac[f]; follow(f); });
+  asks.forEach(({ f, k, s }) => { const c = choice[f] || 'k';
+    if (c === 's') { upd[f] = s; follow(f); }
+    else if (c === 'both') upd[f] = String(k).trim() + '\n\n' + String(s).trim();
+    else if (c === 'add') upd[f] = r2((Number(k) || 0) + (Number(s) || 0)); });
+  Object.entries(MG_FOLLOW).forEach(([lead, fl]) => { if (mgEmpty(keep[lead]) && mgEmpty(sac[lead])) fl.forEach(x => { if (blank(keep[x]) && !blank(sac[x])) upd[x] = sac[x]; }); });
+  if ((sac.values || []).length) upd.values = mgUnion(keep.values, sac.values, v => v.id || JSON.stringify(v));
+  if (sac.isFavorite && !keep.isFavorite) upd.isFavorite = true;
+  if (sac.inQueue && !keep.inQueue) upd.inQueue = true;
+  if ((sac.colorway || []).length) upd.colorway = mgUnion(keep.colorway, sac.colorway, c => (c.label || '') + '|' + (c.hex || '').toLowerCase());
+  if ((sac.palette || []).length) upd.palette = mgUnion(keep.palette, sac.palette, c => (c.name || '') + '|' + (c.hex || '').toLowerCase());
+  if ((sac.summaryExtra || []).length) upd.summaryExtra = mgUnion(keep.summaryExtra, sac.summaryExtra, x => (x.label || '') + '|' + (x.value || ''));
+  if ((sac.summaryHidden || []).length) upd.summaryHidden = [...new Set([...(keep.summaryHidden || []), ...sac.summaryHidden])];
+  if ((sac.refImages || []).length) upd.refImages = [...new Set([...(keep.refImages || []), ...sac.refImages])];
+  // where the entry came from in the workbook
+  if (!keep.importKey && sac.importKey) MG_ID.forEach(f => { if (!blank(sac[f])) upd[f] = sac[f]; });
+  const al = new Set([...(keep.importAliases || []), ...(sac.importAliases || [])]); if (keep.importKey && sac.importKey && sac.importKey !== keep.importKey) al.add(sac.importKey);
+  const keyNow = upd.importKey || keep.importKey; al.delete(keyNow); if (al.size) upd.importAliases = [...al];
+  if (Array.isArray(sac.excelRows)) upd.excelRows = [...new Set([...(keep.excelRows || []), ...sac.excelRows])].sort((a, b) => a - b);
+  if (type === 'keycaps' && keep.importKey && sac.importKey && (keep.excelTotal != null || sac.excelTotal != null)) upd.excelTotal = r2((Number(keep.excelTotal) || 0) + (Number(sac.excelTotal) || 0));
+  // pictures: the keeper's own choices win
+  if (!keep.coverPhotoId && !keep.coverThumb && sac.coverThumb) { upd.coverThumb = sac.coverThumb; if (sac.coverPhotoId) upd.coverPhotoId = sac.coverPhotoId; if (sac.coverFit) upd.coverFit = sac.coverFit; }
+  if (!keep.stockPhotoId && sac.stockPhotoId) { upd.stockPhotoId = sac.stockPhotoId; if (sac.stockThumb) upd.stockThumb = sac.stockThumb; }
+  if (!keep.coverKit && sac.coverKit) upd.coverKit = sac.coverKit;
+  if ((sac.kitStock || []).length) upd.kitStock = mgUnion(keep.kitStock, sac.kitStock, x => x.key || x.name);
+  if (!keep.kitStockCover && sac.kitStockCover) upd.kitStockCover = sac.kitStockCover;
+  if ((sac.kitPhotos || []).length) upd.kitPhotos = mgUnion(keep.kitPhotos, sac.kitPhotos, x => (x.name || '') + '|' + (x.url || ''));
+  if (sac.kitLinks && Object.keys(sac.kitLinks).length) upd.kitLinks = Object.assign({}, sac.kitLinks, keep.kitLinks || {});
+  // keycap kits: all of them, ids kept unique
+  const kitIdMap = {};
+  if (type === 'keycaps' && kitsOf(sac).length) { const ids = new Set(kitsOf(keep).map(x => x.id)); upd.kits = kitsOf(keep).concat(kitsOf(sac).map(x => { if (!ids.has(x.id)) return x; const n = newKitId(); kitIdMap[x.id] = n; return Object.assign({}, x, { id: n }); })); }
+  // switch counts installed on keyboards: added together per keyboard
+  if (type === 'switches' && allocsOf(sac).length) { const m = new Map(); allocsOf(keep).concat(allocsOf(sac)).forEach(a => { const p = m.get(a.keyboardId); m.set(a.keyboardId, p ? Object.assign({}, p, { count: (Number(p.count) || 0) + (Number(a.count) || 0) }) : Object.assign({}, a)); }); upd.allocations = [...m.values()]; }
+  return { upd, kitIdMap };
+}
+async function mgCounts(type, sac) {   // what moves along with the sacrifice, for the review screen
+  const n = { photos: 0, sounds: 0, tl: 0 };
+  try { n.photos = (await withTimeout(photoCol().where('itemId', '==', sac.id).get())).size; } catch (e) {}
+  try { if (type === 'switches') n.sounds = (await withTimeout(soundCol().where('itemId', '==', sac.id).get())).size;
+    if (type === 'keyboards') { n.sounds = (await withTimeout(soundCol().where('keyboardId', '==', sac.id).get())).size; n.tl = (await withTimeout(tlCol().where('keyboardId', '==', sac.id).get())).size; }
+    if (type === 'keycaps') n.sounds = (await withTimeout(soundCol().where('keycapSetId', '==', sac.id).get())).size; } catch (e) {}
+  return n;
+}
+function mgAutoList(type, keep, sac, n) {
+  const L = [], pl = (x, w) => `${x} ${w}${x === 1 ? '' : 's'}`;
+  if (n.photos) L.push(`${pl(n.photos, 'photo')} move${n.photos === 1 ? 's' : ''} to the keeper`);
+  if (n.sounds) L.push(`${pl(n.sounds, 'sound recording')} move${n.sounds === 1 ? 's' : ''} to the keeper`);
+  if ((sac.values || []).length) L.push(`${pl(sac.values.length, 'market value')} added to the keeper's value history`);
+  if ((sac.colorway || []).length || (sac.palette || []).length) L.push('Colors are combined (no duplicates)');
+  if ((sac.summaryExtra || []).length) L.push(`${pl(sac.summaryExtra.length, 'Summary row')} of your own added`);
+  if ((sac.refImages || []).length) L.push('Shop pictures are combined');
+  if (type === 'keycaps' && kitsOf(sac).length) L.push(`${pl(kitsOf(sac).length, 'kit')} added (the keeper will have ${kitsOf(keep).length + kitsOf(sac).length})`);
+  if (type === 'switches' && allocsOf(sac).length) L.push(`Installed on ${pl(allocsOf(sac).length, 'keyboard')}: counts move to the keeper (added together where both are on the same board)`);
+  if (type === 'keyboards') { const a = switchesOn(sac.id).length, b = kitsOn(sac.id).length, c = partsOn(sac.id).length;
+    if (a || b || c) L.push(`Installed on the sacrifice and moved to the keeper: ${[a && pl(a, 'switch entry').replace('entrys', 'entries'), b && pl(b, 'keycap kit'), c && pl(c, 'part')].filter(Boolean).join(', ')}`);
+    if (n.tl) L.push(`${n.tl} build timeline ${n.tl === 1 ? 'entry moves' : 'entries move'} to the keeper`); }
+  if (sac.isFavorite && !keep.isFavorite) L.push('The favorite star carries over');
+  if (!keep.importKey && sac.importKey) L.push('The workbook link (Excel row) moves to the keeper, so a later import updates the keeper');
+  else if (keep.importKey && sac.importKey && keep.importKey !== sac.importKey) L.push(type === 'keycaps' ? "Both came from your workbook: the sacrifice's Excel set name is remembered, so a later import adds its rows to the keeper" : "Both came from your workbook: the keeper keeps its Excel row. Importing the workbook again would bring the sacrifice's row back as a new entry (the app is the source of truth now, so you shouldn't need to)");
+  return L;
+}
+async function mgRun(type, keepId, sacId, choice) {
+  const DEL = firebase.firestore.FieldValue.delete(), col = colOfType(type);
+  const [ks, ss] = await Promise.all([withTimeout(col.doc(keepId).get()), withTimeout(col.doc(sacId).get())]);
+  if (!ks.exists || !ss.exists) throw new Error('One of the two entries no longer exists.');
+  const keep = Object.assign({ id: keepId }, ks.data()), sac = Object.assign({ id: sacId }, ss.data());
+  const { upd, kitIdMap } = mgBuild(type, keep, sac, choice); upd.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+  const undo = { type, keepId, sacId, keepData: ks.data(), sacData: ss.data(), touched: [], added: [] };
+  const ops = [];   // [ref, update]
+  const touch = (ref, fields, now) => { const before = {}; Object.keys(now).forEach(f => { before[f] = fields[f] === undefined ? null : fields[f]; }); undo.touched.push({ ref, before }); ops.push([ref, now]); };
+  (await withTimeout(photoCol().where('itemId', '==', sacId).get(), 60000)).docs.forEach(p => touch(p.ref, p.data(), { itemId: keepId }));
+  const finalName = upd.name || keep.name;
+  if (type === 'switches') (await withTimeout(soundCol().where('itemId', '==', sacId).get(), 60000)).docs.forEach(p => touch(p.ref, p.data(), { itemId: keepId }));
+  if (type === 'keycaps') (await withTimeout(soundCol().where('keycapSetId', '==', sacId).get(), 60000)).docs.forEach(p => { const d = p.data(), now = { keycapSetId: keepId }; if (kitIdMap[d.kitId]) now.kitId = kitIdMap[d.kitId]; touch(p.ref, d, now); });
+  if (type === 'keyboards') {
+    savedSwitches.forEach(w => { const al = allocsOf(w); if (!al.some(a => a.keyboardId === sacId)) return; const m = new Map();
+      al.forEach(a => { const id = a.keyboardId === sacId ? keepId : a.keyboardId, p = m.get(id); m.set(id, p ? Object.assign({}, p, { count: (Number(p.count) || 0) + (Number(a.count) || 0) }) : Object.assign({}, a, { keyboardId: id })); });
+      touch(swCol().doc(w.id), { allocations: al }, { allocations: [...m.values()] }); });
+    savedKeycaps.forEach(s => { if (!kitsOf(s).some(k => k.installedOn === sacId)) return; touch(kcCol().doc(s.id), { kits: s.kits }, { kits: kitsOf(s).map(k => k.installedOn === sacId ? Object.assign({}, k, { installedOn: keepId }) : k) }); });
+    partsOn(sacId).forEach(({ t, x }) => touch(partCol(t).doc(x.id), x, { installedOn: keepId }));
+    (await withTimeout(tlCol().where('keyboardId', '==', sacId).get(), 60000)).docs.forEach(p => touch(p.ref, p.data(), { keyboardId: keepId }));
+    (await withTimeout(soundCol().where('keyboardId', '==', sacId).get(), 60000)).docs.forEach(p => touch(p.ref, p.data(), { keyboardId: keepId, keyboardName: finalName }));
+  }
+  tlQuietUntil = Date.now() + 8000;
+  const list = [[col.doc(keepId), 'update', upd], ...ops.map(([r, u]) => [r, 'update', u]), [col.doc(sacId), 'delete']];
+  for (let i = 0; i < list.length; i += 400) { const b = db.batch(); list.slice(i, i + 400).forEach(([r, how, u]) => how === 'delete' ? b.delete(r) : b.update(r, u)); await withTimeout(b.commit(), 60000); }
+  if (type === 'keyboards') { const ref = tlCol().doc(); undo.added.push(ref); try { await withTimeout(ref.set({ keyboardId: keepId, at: Date.now(), text: `Merged “${rcLabel('keyboards', sac)}” into this keyboard`, kind: 'note' })); } catch (e) {} }
+  tlQuietUntil = Date.now() + 8000;
+  return { undo, keep, sac, upd };
+}
+async function mgUndo(u) {
+  const DEL = firebase.firestore.FieldValue.delete(), col = colOfType(u.type); tlQuietUntil = Date.now() + 8000;
+  await withTimeout(col.doc(u.keepId).set(u.keepData)); await withTimeout(col.doc(u.sacId).set(u.sacData));
+  for (const t of u.touched) { const now = {}; Object.entries(t.before).forEach(([f, v]) => { now[f] = v === null ? DEL : v; }); try { await withTimeout(t.ref.update(now)); } catch (e) {} }
+  for (const r of u.added) { try { await withTimeout(r.delete()); } catch (e) {} }
+  tlQuietUntil = Date.now() + 8000;
+}
+function mgScore(a, b, type) {
+  if (a.refUrl && b.refUrl && a.refUrl.split('?')[0] === b.refUrl.split('?')[0]) return 100;
+  const w = x => new Set(rcLabel(type, x).toLowerCase().split(/[^a-z0-9]+/).filter(t => t.length > 1)), A = w(a), B = w(b); if (!A.size || !B.size) return 0;
+  let n = 0; A.forEach(t => { if (B.has(t)) n++; }); return Math.round(100 * n / Math.min(A.size, B.size)) - 1;
+}
+function mgMeta(type, x) {
+  const bits = [];
+  if (x.price != null && x.price !== '') bits.push(money(x.price) + ' paid'); else if (type === 'keycaps' && kitsOf(x).length) bits.push(kitsOf(x).length + ' kit' + (kitsOf(x).length === 1 ? '' : 's')); else bits.push('no price');
+  bits.push(x.addedFrom === 'product page' ? 'from a product page' : x.addedFrom === 'receipt' ? 'from a receipt' : x.importKey ? 'from Excel' + (x.excelRow ? ' row ' + x.excelRow : '') : 'added in the app');
+  if (type === 'keyboards' && x.color) bits.push(x.color);
+  return bits.join(' · ');
+}
+function mergeDialog(type, firstId, secondId) {   // firstId = sacrifice, secondId = keeper (optional)
+  if (formDirty) { toast('Save or discard your changes first'); return; }
+  const items = () => itemsOfType(type).filter(x => !x.isSample), get = id => items().find(x => x.id === id);
+  if (!get(firstId)) { toast('Samples cannot be merged'); return; }
+  let sacId = firstId, keepId = secondId && get(secondId) ? secondId : '', fixedId = firstId, step = 1, q = '';
+  const one = MG_ONE[type], d = document.createElement('div'); d.className = 'gdlg askdlg'; d.id = 'mgDlg'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
+  d.innerHTML = `<div class="card askcard mgcard"><div id="mgBody"></div></div>`; document.body.appendChild(d);
+  const body = d.querySelector('#mgBody'), close = () => { d.remove(); document.removeEventListener('keydown', onKey, true); };
+  const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } }; document.addEventListener('keydown', onKey, true);
+  const sideHtml = (role, id) => { const x = get(id); return `<div class="mgside${role === 'Keeper' ? ' keep' : ''}"><div class="mgrole">${role}</div>${x ? `<b>${esc(rcLabel(type, x) || x.name)}</b><div class="sub" style="margin:2px 0 0;font-size:12px">${esc(mgMeta(type, x))}</div>` : `<span class="sub" style="margin:0">Pick it below</span>`}</div>`; };
+  const pairHtml = () => `<div class="mgpair">${sideHtml('Sacrifice', sacId)}<button class="btn" id="mgSwap" type="button" title="Swap sacrifice and keeper"${sacId && keepId ? '' : ' disabled'}>⇄</button>${sideHtml('Keeper', keepId)}</div>`;
+  const draw1 = () => {
+    const fixed = get(fixedId), others = items().filter(x => x.id !== fixedId).map(x => ({ x, s: mgScore(fixed, x, type) }));
+    const ql = q.trim().toLowerCase(), shown = others.filter(({ x }) => !ql || (rcLabel(type, x) + ' ' + (x.name || '')).toLowerCase().includes(ql)).sort((a, b) => b.s - a.s || rcLabel(type, a.x).localeCompare(rcLabel(type, b.x))).slice(0, 60);
+    const otherId = sacId === fixedId ? keepId : sacId;
+    body.innerHTML = `<p class="askmsg"><b>Merge two ${one === 'accessory' ? 'accessories' : one === 'switch entry' ? 'switch entries' : one + 's'}</b></p>
+      <p class="sub" style="margin:6px 0 10px">The <b>sacrifice</b> moves everything it has into the <b>keeper</b>: details the keeper is missing, photos, recordings, values and links. Where both have a different value, you choose on the next screen. The sacrifice is then deleted (Undo for 10 seconds).</p>
+      ${pairHtml()}
+      <div class="fld" style="margin-top:12px"><label for="mgSearch">${fixedId === sacId ? 'Keeper' : 'Sacrifice'}: pick the other ${esc(one)}</label><input class="input" id="mgSearch" placeholder="Search by name" value="${esc(q)}" autocomplete="off"></div>
+      <div class="mglist" id="mgList">${shown.length ? shown.map(({ x, s }) => `<button type="button" class="mgrow${x.id === otherId ? ' on' : ''}" data-mgid="${esc(x.id)}"><span><b>${esc(rcLabel(type, x) || x.name)}</b>${s >= 60 ? ' <span class="pchip on mglikely">Likely match</span>' : ''}</span><span class="sub" style="margin:0;font-size:12px">${esc(mgMeta(type, x))}</span></button>`).join('') : '<p class="sub" style="margin:8px 0">No match.</p>'}</div>
+      <div class="btnrow" style="justify-content:flex-end;margin-top:12px"><button class="btn" id="mgNo" type="button">Cancel</button><button class="btn primary" id="mgNext" type="button"${sacId && keepId ? '' : ' disabled'}>Next: compare</button></div>`;
+    const s = body.querySelector('#mgSearch'); s.oninput = () => { q = s.value; const pos = s.selectionStart; draw1(); const s2 = body.querySelector('#mgSearch'); s2.focus(); s2.setSelectionRange(pos, pos); };
+  };
+  let plan = null, auto = [];
+  const draw2 = async () => {
+    const keep = get(keepId), sac = get(sacId); plan = mgPlan(type, keep, sac);
+    body.innerHTML = `<p class="askmsg"><b>Merge into the keeper</b></p>${pairHtml()}<p class="sub" style="margin:10px 0 0">Checking what moves…</p>`;
+    auto = mgAutoList(type, keep, sac, await mgCounts(type, sac)); if (!document.getElementById('mgDlg') || step !== 2) return;
+    const opt = (f, v, lab, val, on) => `<label class="mgopt${on ? ' on' : ''}"><input type="radio" name="mg_${esc(f)}" value="${val}"${on ? ' checked' : ''}><span class="mgtag">${lab}</span><span class="mgval">${esc(v)}</span></label>`;
+    body.innerHTML = `<p class="askmsg"><b>Merge into the keeper</b></p>${pairHtml()}
+      <div class="mgsec"><div class="sec-title"><h4>Both have a value: choose which to keep (${plan.asks.length})</h4>${plan.asks.length > 1 ? `<span><button class="lnk" type="button" data-mgall="k">All from keeper</button> · <button class="lnk" type="button" data-mgall="s">All from sacrifice</button></span>` : ''}</div>
+        ${plan.asks.length ? plan.asks.map(a => `<div class="mgq"><div class="mgf">${esc(mgLabel(a.f))}</div><div class="mgopts" data-mgf="${esc(a.f)}">${opt(a.f, mgShow(a.f, a.k, type), 'Keeper', 'k', true)}${opt(a.f, mgShow(a.f, a.s, type), 'Sacrifice', 's', false)}${a.canBoth ? opt(a.f, 'Keep both texts, keeper first', 'Both', 'both', false) : ''}${a.canAdd ? opt(a.f, (MG_MONEY.has(a.f) ? money((Number(a.k) || 0) + (Number(a.s) || 0)) : (Number(a.k) || 0) + (Number(a.s) || 0)) + ' (added together)', 'Add', 'add', false) : ''}</div></div>`).join('') : '<p class="sub" style="margin:4px 0 0">None: the two never disagree.</p>'}</div>
+      <div class="mgsec"><h4>Filled in from the sacrifice, because the keeper is empty there (${plan.fills.length})</h4>
+        ${plan.fills.length ? `<div class="mgfills">${plan.fills.map(f => `<div><span class="sub" style="margin:0">${esc(mgLabel(f))}</span><span>${esc(mgShow(f, sac[f], type))}</span></div>`).join('')}</div>` : '<p class="sub" style="margin:4px 0 0">Nothing to fill.</p>'}</div>
+      ${auto.length ? `<div class="mgsec"><h4>Combined automatically</h4><ul class="incl">${auto.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>` : ''}
+      <p class="sub" style="margin:12px 0 0">Then “${esc(rcLabel(type, sac) || sac.name)}” is deleted. You can undo the whole merge for 10 seconds.</p>
+      <div class="btnrow" style="justify-content:flex-end;margin-top:12px"><button class="btn" id="mgBack" type="button">Back</button><button class="btn primary" id="mgGo" type="button">Merge</button></div><p class="sub" id="mgMsg" style="margin:6px 0 0"></p>`;
+  };
+  const draw = () => step === 1 ? draw1() : draw2();
+  d.addEventListener('change', e => { const r = e.target.closest('.mgopts input'); if (r) r.closest('.mgopts').querySelectorAll('.mgopt').forEach(l => l.classList.toggle('on', l.querySelector('input').checked)); });
+  d.onclick = async e => {
+    const t = e.target; if (t === d || t.closest('#mgNo')) { close(); return; }
+    const row = t.closest('[data-mgid]'); if (row) { if (sacId === fixedId) keepId = row.dataset.mgid; else sacId = row.dataset.mgid; draw1(); return; }
+    if (t.closest('#mgSwap')) { [sacId, keepId] = [keepId, sacId]; draw(); return; }
+    if (t.closest('#mgNext')) { step = 2; draw2(); return; }
+    if (t.closest('#mgBack')) { step = 1; if (!fixedId || (fixedId !== sacId && fixedId !== keepId)) fixedId = sacId; draw1(); return; }
+    const all = t.closest('[data-mgall]'); if (all) { body.querySelectorAll(`.mgopts input[value="${all.dataset.mgall}"]`).forEach(i => { i.checked = true; i.dispatchEvent(new Event('change', { bubbles: true })); }); return; }
+    if (t.closest('#mgGo')) {
+      const choice = {}; body.querySelectorAll('.mgopts').forEach(g => { const c = g.querySelector('input:checked'); choice[g.dataset.mgf] = c ? c.value : 'k'; });
+      const go = body.querySelector('#mgGo'); go.disabled = true; body.querySelector('#mgMsg').textContent = 'Merging…';
+      try { const sacName = rcLabel(type, get(sacId)) || get(sacId).name, keepName = rcLabel(type, get(keepId)) || get(keepId).name, r = await mgRun(type, keepId, sacId, choice); close();
+        location.hash = `#/${type}/${keepId}`;
+        toast(`Merged “${sacName}” into “${keepName}”`, { action: 'Undo', ms: 10000, onAction: async () => { toast('Undoing the merge…'); try { await mgUndo(r.undo); toast('Merge undone: both entries are back'); } catch (err) { toast('Undo failed: ' + explain(err)); } } });
+      } catch (err) { body.querySelector('#mgMsg').textContent = 'Merge failed: ' + explain(err); go.disabled = false; }
+    }
+  };
+  if (keepId) { step = 2; draw2(); } else draw1();
+}
+
 /* ---------- Duplicate ---------- */
 const DUP_DROP = ['id', 'coverPhotoId', 'coverThumb', 'stockPhotoId', 'stockThumb', 'kitStock', 'kitStockCover', 'values', 'allocations', 'importKey', 'importAliases', 'importNotes', 'excelRow', 'excelRows', 'excelTotal', 'excelTab', 'importedTotal', 'formFactorExcel', 'installedOn', 'installedOnText', 'belongsToText', 'isFavorite', 'isSample', 'createdAt', 'updatedAt'];
 const DUP_GROUPS = [   // [key, label, fields, on by default]
@@ -866,7 +1104,7 @@ function drawSelBar() {
   let bar = document.getElementById('selBar'); if (!selMode) { if (bar) bar.remove(); return; }
   if (!bar) { bar = document.createElement('div'); bar.id = 'selBar'; bar.className = 'selbar'; document.body.appendChild(bar); bar.onclick = selAction; }
   const n = selIds.size, dis = n ? '' : ' disabled';
-  bar.innerHTML = `<b>${n} selected</b><button class="btn" data-sel="all">Select all shown</button><button class="btn" data-sel="fav"${dis}>★ Favorite</button><button class="btn" data-sel="unfav"${dis}>Unfavorite</button>${LOC_TYPES.includes(selType) ? `<button class="btn" data-sel="loc"${dis}>Set location…</button>` : ''}<button class="btn" data-sel="edit"${dis}>Edit fields…</button><button class="btn" data-sel="queue"${dis}>Add to work queue</button><button class="btn" data-sel="done"${dis} data-donev="1">Mark done</button><button class="btn" data-sel="qr"${dis}>QR labels</button><button class="btn danger" data-sel="del"${dis}>Delete</button><button class="btn" data-sel="done">Close</button>`;
+  bar.innerHTML = `<b>${n} selected</b><button class="btn" data-sel="all">Select all shown</button><button class="btn" data-sel="fav"${dis}>★ Favorite</button><button class="btn" data-sel="unfav"${dis}>Unfavorite</button>${LOC_TYPES.includes(selType) ? `<button class="btn" data-sel="loc"${dis}>Set location…</button>` : ''}<button class="btn" data-sel="edit"${dis}>Edit fields…</button><button class="btn" data-sel="merge"${n === 2 ? '' : ' disabled'} title="Tick the sacrifice first, then the keeper">Merge 2…</button><button class="btn" data-sel="queue"${dis}>Add to work queue</button><button class="btn" data-sel="done"${dis} data-donev="1">Mark done</button><button class="btn" data-sel="qr"${dis}>QR labels</button><button class="btn danger" data-sel="del"${dis}>Delete</button><button class="btn" data-sel="done">Close</button>`;
 }
 async function selAction(e) {
   const b = e.target.closest('[data-sel]'); if (!b) return; const act = b.dataset.sel, t = selType, ids = [...selIds].filter(id => itemsOfType(t).some(x => x.id === id));
@@ -874,6 +1112,7 @@ async function selAction(e) {
   if (act === 'all') { document.querySelectorAll('#view a.kcard, #view tr.row[data-href]').forEach(el => { const id = idOfEl(el); if (id && itemsOfType(t).some(x => x.id === id)) selIds.add(id); }); markSel(); drawSelBar(); return; }
   if (!ids.length) { toast('Samples cannot be changed'); return; }
   if (act === 'edit') { bulkEditDialog(t, ids); return; }
+  if (act === 'merge') { if (ids.length !== 2) { toast('Tick exactly two: the sacrifice first, then the keeper'); return; } setSelMode(false); mergeDialog(t, ids[0], ids[1]); return; }
   if (act === 'queue') { try { for (const id of ids) await withTimeout(colOfType(t).doc(id).update({ inQueue: true, doneAt: firebase.firestore.FieldValue.delete() })); toast(`${ids.length} added to your work queue`); listFilter[t] = 'queue'; setSelMode(false); redrawList(t); } catch (err) { toast('Stopped: ' + explain(err)); } return; }
   if (act === 'done') { try { for (const id of ids) await withTimeout(colOfType(t).doc(id).update({ doneAt: Date.now(), inQueue: firebase.firestore.FieldValue.delete() })); toast(`${ids.length} marked done`); setSelMode(false); } catch (err) { toast('Stopped: ' + explain(err)); } return; }
   if (act === 'qr') { showQrLabels(ids.map(id => ({ t, x: itemsOfType(t).find(y => y.id === id) }))); return; }
@@ -905,7 +1144,8 @@ function ensureListTools() {   // adds Select (list pages) and Duplicate (item p
   if (lt && !document.getElementById('btnSelect') && db && !isFile) { tools.insertAdjacentHTML('afterbegin', '<button class="btn" id="btnSelect" type="button" title="Pick several items to favorite, move or delete">Select</button>'); document.getElementById('btnSelect').onclick = () => setSelMode(!selMode); }
   if (selMode && lt === selType) { document.getElementById('view').classList.add('selmode'); markSel(); const b = document.getElementById('btnSelect'); if (b && b.textContent !== 'Done') { b.textContent = 'Done'; b.classList.add('primary'); } }
   const del = tools.querySelector('#btnDelete'), m = location.hash.match(/^#\/(\w+)\/([^/]+)$/);
-  if (del && m && LIST_TYPES.includes(m[1]) && m[2] !== 'new' && !document.getElementById('btnDup')) { del.insertAdjacentHTML('beforebegin', '<button class="btn" id="btnDup" type="button" title="Make a copy of this item and choose what to copy">Duplicate…</button>'); document.getElementById('btnDup').onclick = () => duplicateDialog(m[1], m[2]);
+  if (del && m && LIST_TYPES.includes(m[1]) && m[2] !== 'new' && !document.getElementById('btnDup')) { del.insertAdjacentHTML('beforebegin', '<button class="btn" id="btnMerge" type="button" title="Merge this entry into another one (or another one into this)">Merge…</button>'); document.getElementById('btnMerge').onclick = () => mergeDialog(m[1], m[2]);
+    del.insertAdjacentHTML('beforebegin', '<button class="btn" id="btnDup" type="button" title="Make a copy of this item and choose what to copy">Duplicate…</button>'); document.getElementById('btnDup').onclick = () => duplicateDialog(m[1], m[2]);
     del.insertAdjacentHTML('beforebegin', '<button class="btn" id="btnQr" type="button" title="A printable label with a code that opens this item on your phone">QR label</button>'); document.getElementById('btnQr').onclick = () => { const x = itemsOfType(m[1]).find(y => y.id === m[2]); if (x) showQrLabels([{ t: m[1], x }]); }; }
 }
 new MutationObserver(() => ensureListTools()).observe(document.getElementById('view'), { childList: true, subtree: true });
@@ -1190,7 +1430,7 @@ function renderSounds() {
    what is on each keyboard before and after an update, only on the device where you just did something (so two devices
    do not both log it); the id is built from the keyboard, the minute and the text, so a double write is the same record. */
 function tlCol() { return db.collection(FIRESTORE_COLLECTION).doc(ROOT_DOC).collection('timeline'); }
-let tlBase = null, tlMute = '', lastUserAt = 0, tlReadyAt = 0;
+let tlBase = null, tlMute = '', lastUserAt = 0, tlReadyAt = 0, tlQuietUntil = 0;
 ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { lastUserAt = Date.now(); }, true));
 function tlState() { const st = {};
   savedSwitches.forEach(w => allocsOf(w).forEach(a => { (st[a.keyboardId] = st[a.keyboardId] || {})['sw|' + w.id] = { n: Number(a.count) || 0, name: [w.manufacturer, w.name].filter(Boolean).join(' ') }; }));
@@ -1200,7 +1440,7 @@ function tlState() { const st = {};
 function timelineDiff() {
   if (!db || isFile || !kbLoaded || !swLoaded || !kcLoaded) return;
   if (!tlReadyAt) { tlReadyAt = Date.now() + 1500; return; } if (Date.now() < tlReadyAt) return;
-  const now = tlState(); if (!tlBase) { tlBase = now; return; }
+  const now = tlState(); if (!tlBase || Date.now() < tlQuietUntil) { tlBase = now; return; }   // merges and undos are not logged as installs/removals
   const prev = tlBase; tlBase = now; const evs = [];
   new Set([...Object.keys(prev), ...Object.keys(now)]).forEach(kb => { if (kb === tlMute || !savedKeyboards.some(k => k.id === kb)) return; const a = prev[kb] || {}, b = now[kb] || {};
     new Set([...Object.keys(a), ...Object.keys(b)]).forEach(key => { const x = a[key], y = b[key], sw = key.startsWith('sw|'), what = sw ? 'switches' : key.startsWith('kc|') ? 'keycaps' : ((y || x).kind || 'part').toLowerCase();
@@ -4127,43 +4367,13 @@ function mergeCardHtml(s) {
   const others = savedKeycaps.filter(x => x.id !== s.id).sort((a, b) => a.name.localeCompare(b.name));
   return `<div class="card side-card" id="kcMergeCard"><h3>Merge sets</h3><p class="sub">Same set split over two records? Move the other one into this set.</p>
     <select class="select" id="mergePick" aria-label="Set to merge in"><option value="">Choose a set to merge in…</option>${others.map(x => `<option value="${esc(x.id)}">${esc(x.name)} · ${kitsOf(x).length} kit${kitsOf(x).length === 1 ? '' : 's'}</option>`).join('')}</select>
-    <button class="btn" id="mergeGo" style="margin-top:8px;width:100%;justify-content:center" disabled>Merge into this set</button>
+    <button class="btn" id="mergeGo" style="margin-top:8px;width:100%;justify-content:center" disabled>Merge into this set…</button>
     ${(s.importAliases || []).length ? `<p class="sub" style="margin:8px 0 0">Also imports Excel set${s.importAliases.length === 1 ? '' : 's'}: ${s.importAliases.map(esc).join(', ')}</p>` : ''}</div>`;
 }
 function wireMergeCard(s) {
   const pick = document.getElementById('mergePick'), go = document.getElementById('mergeGo'); if (!pick) return;
   pick.onchange = () => { go.disabled = !pick.value; };
-  go.onclick = async () => {
-    const d = savedKeycaps.find(x => x.id === pick.value); if (!d) return;
-    if (formDirty) { toast('Save or discard your changes first.'); return; }
-    if (!await askConfirm(`Move ${kitsOf(d).length} kit${kitsOf(d).length === 1 ? '' : 's'} and the photos, colors and values of "${d.name}" into "${s.name}", then delete "${d.name}"?`)) return;
-    go.disabled = true; go.textContent = 'Merging…';
-    try { const n = await mergeKeycapSets(savedKeycaps.find(x => x.id === s.id) || s, d); toast(`Merged "${d.name}" into "${s.name}"${n ? ` (${n} photo${n === 1 ? '' : 's'} moved)` : ''}`); }
-    catch (e) { toast('Merge failed: ' + explain(e)); go.disabled = false; go.textContent = 'Merge into this set'; }
-  };
-}
-async function mergeKeycapSets(k, d) {
-  const now = firebase.firestore.FieldValue.serverTimestamp(), upd = { updatedAt: now };
-  const ids = new Set(kitsOf(k).map(x => x.id));
-  upd.kits = kitsOf(k).concat(kitsOf(d).map(x => ids.has(x.id) ? Object.assign({}, x, { id: newKitId() }) : x));
-  const al = new Set([...(k.importAliases || []), ...(d.importAliases || [])]); if (d.importKey && d.importKey !== k.importKey) al.add(d.importKey); al.delete(k.importKey);
-  if (al.size) upd.importAliases = [...al];
-  if (Array.isArray(d.excelRows)) upd.excelRows = [...new Set([...(k.excelRows || []), ...d.excelRows])].sort((a, b) => a - b);
-  if (k.excelTotal != null || d.excelTotal != null) upd.excelTotal = Math.round(((Number(k.excelTotal) || 0) + (Number(d.excelTotal) || 0)) * 100) / 100;
-  const pal = paletteOf(k).slice(); paletteOf(d).forEach(c => { if (!pal.some(p => (p.hex || '') === (c.hex || '') && (p.name || '') === (c.name || ''))) pal.push(c); }); if (pal.length) upd.palette = pal;
-  if ((d.values || []).length) upd.values = (k.values || []).concat(d.values);
-  if (d.isFavorite && !k.isFavorite) upd.isFavorite = true;
-  if (!k.gmkRef && d.gmkRef) upd.gmkRef = d.gmkRef;
-  ['manufacturer', 'designer', 'profile', 'location', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText'].forEach(f => { if (blank(k[f]) && !blank(d[f])) upd[f] = d[f]; });
-  if (!blank(d.notes)) upd.notes = blank(k.notes) ? d.notes : k.notes + '\n\n' + d.notes;
-  if (!k.coverThumb && d.coverThumb) { upd.coverThumb = d.coverThumb; if (d.coverPhotoId) upd.coverPhotoId = d.coverPhotoId; }
-  const photos = await withTimeout(photoCol().where('itemId', '==', d.id).get());
-  const b = db.batch();
-  b.update(kcCol().doc(k.id), upd);
-  photos.docs.forEach(p => b.update(p.ref, { itemId: k.id }));
-  b.delete(kcCol().doc(d.id));
-  await withTimeout(b.commit(), 30000);
-  return photos.size;
+  go.onclick = () => { if (pick.value) mergeDialog('keycaps', pick.value, s.id); };
 }
 
 /* ===================== Step 9.5: kit gallery + Matrix pages =====================
