@@ -279,6 +279,10 @@
   .mgtag { flex: none; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-3); width: 72px; padding-top: 2px; } .mgval { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 9em; overflow: auto; }
   .mgfills { display: grid; gap: 4px; font-size: 13px; } .mgfills > div { display: grid; grid-template-columns: 160px 1fr; gap: 10px; } .mgfills > div > span:last-child { overflow-wrap: anywhere; max-height: 4.5em; overflow: hidden; }
   @media (max-width: 700px) { .mgfills > div { grid-template-columns: 1fr; gap: 0; } .mgtag { width: 62px; } }
+  .sp-line { border-top: var(--bw) var(--bs) var(--line); padding: 10px 0; } .sp-line.off .sp-grid { opacity: .45; } .sp-from { display: block; margin: 2px 0 0; font-size: 12px; }
+  .sp-grid { display: grid; grid-template-columns: 130px 170px 1fr 130px; gap: 8px; align-items: end; margin-top: 6px; } .sp-inst { grid-column: 1 / -1; } .sp-grid > * { min-width: 0; } .sp-grid .select, .sp-grid .input { width: 100%; min-width: 0; box-sizing: border-box; }
+  @media (max-width: 700px) { .sp-grid { grid-template-columns: 1fr 1fr; } .sp-name { grid-column: 1 / -1; } }
+  .sumkits .kno b { color: var(--text-3); font-weight: 500; }
   .avail + .avail { margin-top: 12px; } .avail .pchip { cursor: default; } .avail-h { font-size: 12px; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; } .incl { margin: 0; padding-left: 18px; line-height: 1.7; font-size: 13.5px; }
   @media (max-width: 700px) { .rd-row { grid-template-columns: 1fr; } .rd-img { width: 100%; height: 160px; } .rd-grid .rd-wide { grid-column: 1 / -1; } .rd-prod { grid-template-columns: 80px minmax(0, 1fr); } .rd-prod img { width: 80px; height: 60px; } }
   .drop { border: 1.5px dashed var(--line-2); border-radius: var(--radius-s); padding: 16px 12px; text-align: center; cursor: pointer; display: grid; gap: 4px; background: var(--bg-2); outline: none; }
@@ -601,7 +605,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.71.0';
+const APP_VERSION = 'v0.74.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -1047,6 +1051,95 @@ function mergeDialog(type, firstId, secondId) {   // firstId = sacrifice, second
   if (keepId) { step = 2; draw2(); } else draw1();
 }
 
+/* ===================== v0.73.0: split a keyboard purchase into parts =====================
+   A board bought as one line (PCB, daughterboard, plates… included) becomes separate PCB / accessory entries so the
+   inventory is right. Lines start from the keyboard's "Included with the kit" list. A price typed on a part is moved
+   out of the keyboard's price, so the total paid never changes; parts with no price are saved at $0 ("came with").
+   Purchase date, seller, receipt, order number and tax rate are copied; shipping and discounts stay on the keyboard.
+   Undo for 10 seconds deletes the new parts and puts the keyboard's price and notes back. */
+const SPLIT_GUESS = [   // [match, type, category, make an entry by default, installed on the board by default]
+  [/\bpcb\b/i, 'pcbs', '', true, true], [/daughter ?board|\bdb\b/i, 'accessories', 'Keyboard Parts', true, true], [/\bplates?\b/i, 'accessories', 'Plate', true, true],
+  [/stabili[sz]er|\bstabs?\b/i, 'accessories', 'Stabilizers', true, true], [/\bfoams?\b|\bpe sheet|poron|ixpe/i, 'accessories', 'Keyboard Parts', true, true],
+  [/cable/i, 'accessories', 'Cable', true, false], [/top\s*\/\s*bottom case|\bcase\b.*\bcase\b/i, 'accessories', 'Case', false, true], [/\bcase\b/i, 'accessories', 'Case', true, true],
+  [/weight/i, 'accessories', 'Keyboard Parts', false, true], [/switch/i, 'accessories', 'Switch Parts', false, false], [/keycap/i, 'accessories', 'Other', false, false]];
+function splitGuess(text) { const g = SPLIT_GUESS.find(([re]) => re.test(text)); return g ? { type: g[1], category: g[2], on: g[3], installed: g[4] } : { type: 'accessories', category: 'Keyboard Parts', on: false, installed: false }; }
+function splitLinesFrom(k) {
+  const base = [k.brand, k.name].filter(Boolean).join(' ');
+  return String(k.included || '').split('\n').map(x => x.trim()).filter(Boolean).map(line => {
+    const m = /^(\d{1,3})\s*[x×]?\s+(.+)$/i.exec(line), qty = m ? Number(m[1]) : 1, what = (m ? m[2] : line).replace(/^(set of|pair of)\s+/i, '').trim(), g = splitGuess(what);
+    return { on: g.on, type: g.type, category: g.category, name: `${base} ${what}`.replace(/\s+/g, ' ').trim(), qty, price: '', installed: g.installed, from: line };
+  });
+}
+function splitDialog(kbId) {
+  if (formDirty) { toast('Save or discard your changes first'); return; }
+  const k = savedKeyboards.find(x => x.id === kbId); if (!k) return;
+  let lines = splitLinesFrom(k); if (!lines.length) lines = [{ on: true, type: 'pcbs', category: '', name: [k.brand, k.name, 'PCB'].filter(Boolean).join(' '), qty: 1, price: '', installed: true }, { on: true, type: 'accessories', category: 'Plate', name: [k.brand, k.name, 'plate'].filter(Boolean).join(' '), qty: 1, price: '', installed: true }];
+  const price = Number(k.price) || 0, cats = PART_TYPES.accessories.fields.find(f => f[0] === 'category')[4];
+  const d = document.createElement('div'); d.className = 'gdlg askdlg'; d.id = 'splitDlg'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
+  d.innerHTML = `<div class="card askcard mgcard"><div id="spBody"></div></div>`; document.body.appendChild(d);
+  const body = d.querySelector('#spBody'), close = () => { d.remove(); document.removeEventListener('keydown', onKey, true); }, onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
+  document.addEventListener('keydown', onKey, true);
+  const sum = () => Math.round(lines.filter(l => l.on).reduce((n, l) => n + (Number(l.price) || 0), 0) * 100) / 100;
+  const lineHtml = (l, i) => `<div class="sp-line${l.on ? '' : ' off'}" data-sp="${i}">
+      <label class="check sp-on"><input type="checkbox" data-spf="on"${l.on ? ' checked' : ''}> Make an entry</label>${l.from ? `<span class="sub sp-from">From the kit list: ${esc(l.from)}</span>` : ''}
+      <div class="sp-grid"><label class="rc-f"><span>Page</span><select class="select" data-spf="type"><option value="pcbs"${l.type === 'pcbs' ? ' selected' : ''}>PCBs</option><option value="accessories"${l.type === 'accessories' ? ' selected' : ''}>Accessories</option></select></label>
+        ${l.type === 'accessories' ? `<label class="rc-f"><span>Category</span><select class="select" data-spf="category">${cats.map(c => `<option${c === l.category ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></label>` : '<span></span>'}
+        <label class="rc-f sp-name"><span>Name</span><input class="input" data-spf="name" value="${esc(l.name)}"></label>
+        <label class="rc-f"><span>Part of the price</span><span class="money-in"><span>$</span><input class="input" type="number" min="0" step="0.01" data-spf="price" value="${esc(l.price)}" placeholder="0.00"></span></label>
+        <label class="check sp-inst"><input type="checkbox" data-spf="installed"${l.installed ? ' checked' : ''}> Installed on this keyboard</label></div></div>`;
+  const totals = () => { const s = sum(), left = Math.round((price - s) * 100) / 100;
+    return `<p class="sub" id="spSum" style="margin:12px 0 0">${k.price == null || k.price === '' ? 'This keyboard has no price yet, so parts are saved without moving any money.' : `Keyboard price ${money(price)} → <b>${money(Math.max(left, 0))}</b> after the split; parts ${money(s)}. The total you paid stays ${money(price)}.`}${left < 0 ? ' <b style="color:var(--bad-text)">The parts cost more than the keyboard.</b>' : ''}</p>`; };
+  const draw = () => { body.innerHTML = `<p class="askmsg"><b>Split “${esc(rcLabel('keyboards', k))}” into parts</b></p>
+      <p class="sub" style="margin:6px 0 10px">Each ticked line becomes its own PCB or accessory entry, so your inventory shows it. Purchase date, seller, receipt and tax rate are copied. A price you type here is taken out of the keyboard's price, so your total doesn't change; leave it empty for a part that came with the board ($0). Shipping and discounts stay on the keyboard.</p>
+      ${k.included ? '' : '<p class="sub" style="margin:0 0 8px">This keyboard has no “Included with the kit” list, so two common parts are suggested. Read its product page to fill the list, or add your own lines.</p>'}
+      <div id="spLines">${lines.map(lineHtml).join('')}</div>
+      <button class="btn" type="button" id="spAdd" style="margin-top:8px">+ Add a part</button>${totals()}
+      <div class="btnrow" style="justify-content:flex-end;margin-top:12px"><button class="btn" id="spNo" type="button">Cancel</button><button class="btn primary" id="spGo" type="button">Create ${lines.filter(l => l.on).length} entr${lines.filter(l => l.on).length === 1 ? 'y' : 'ies'}</button></div><p class="sub" id="spMsg" style="margin:6px 0 0"></p>`; };
+  const upd = e => { const el = e.target.closest('[data-sp]'), f = e.target.dataset.spf; if (!el || !f) return; const l = lines[+el.dataset.sp];
+    if (f === 'on' || f === 'installed') l[f] = e.target.checked; else l[f] = e.target.value;
+    if (f === 'type' || f === 'on') { draw(); return; }
+    const s = body.querySelector('#spSum'); if (s) s.outerHTML = totals(); const go = body.querySelector('#spGo'); if (go) go.textContent = `Create ${lines.filter(x => x.on).length} entr${lines.filter(x => x.on).length === 1 ? 'y' : 'ies'}`; };
+  d.addEventListener('input', upd); d.addEventListener('change', e => { if (e.target.type === 'checkbox' || e.target.tagName === 'SELECT') upd(e); });
+  d.onclick = async e => {
+    if (e.target === d || e.target.closest('#spNo')) { close(); return; }
+    if (e.target.closest('#spAdd')) { lines.push({ on: true, type: 'accessories', category: 'Keyboard Parts', name: [k.brand, k.name].filter(Boolean).join(' ') + ' ', qty: 1, price: '', installed: true }); draw(); const ins = body.querySelectorAll('[data-spf="name"]'); ins[ins.length - 1].focus(); return; }
+    if (!e.target.closest('#spGo')) return;
+    const todo = lines.filter(l => l.on), msg = body.querySelector('#spMsg');
+    if (!todo.length) { msg.textContent = 'Tick at least one line.'; return; }
+    if (todo.some(l => !String(l.name).trim())) { msg.textContent = 'Every ticked line needs a name.'; return; }
+    if (todo.some(l => Number(l.price) < 0)) { msg.textContent = 'Prices cannot be negative.'; return; }
+    if (k.price != null && k.price !== '' && sum() > price + 0.004) { msg.textContent = 'The parts cost more than the keyboard. Lower the part prices.'; return; }
+    const go = body.querySelector('#spGo'); go.disabled = true; msg.textContent = 'Creating…';
+    try { const r = await splitRun(k, todo); close(); toast(`${r.made.length} part${r.made.length === 1 ? '' : 's'} created from ${rcLabel('keyboards', k)}`, { action: 'Undo', ms: 10000, onAction: async () => { toast('Undoing the split…'); try { await splitUndo(r); toast('Split undone'); } catch (err) { toast('Undo failed: ' + explain(err)); } } }); }
+    catch (err) { msg.textContent = 'Split failed: ' + explain(err); go.disabled = false; }
+  };
+  draw();
+}
+async function splitRun(k, todo) {
+  const now = firebase.firestore.FieldValue.serverTimestamp(), snap = await withTimeout(kbCol().doc(k.id).get()), kd = snap.data(), label = rcLabel('keyboards', k), when = todayIso();
+  const keep = ['datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'orderNumber', 'taxRate', 'acquisition'], made = [];
+  const hadPrice = !(kd.price == null || kd.price === ''), r2 = n => Math.round(n * 100) / 100;
+  for (const l of todo) {
+    const d = { name: String(l.name).trim(), manufacturer: kd.brand || '', price: r2(Number(l.price) || 0), notes: `Came with ${label}${hadPrice ? (Number(l.price) ? `; ${money(l.price)} of its price moved here` : '; no separate price') : ''} (split ${fmtDate(when)}).`,
+      source: 'app', addedFrom: 'split', splitFrom: k.id, createdAt: now, updatedAt: now, appVersion: APP_VERSION };
+    if (l.type === 'accessories') d.category = l.category || 'Keyboard Parts';
+    if (l.qty > 1) d.notes += ` Quantity on the kit list: ${l.qty}.`;
+    keep.forEach(f => { if (!blank(kd[f]) && !(Array.isArray(kd[f]) && !kd[f].length)) d[f] = kd[f]; });
+    if (l.installed) d.installedOn = k.id;
+    const ref = partCol(l.type).doc(); await withTimeout(ref.set(d)); made.push({ t: l.type, id: ref.id, name: d.name });
+  }
+  const moved = r2(todo.reduce((n, l) => n + (Number(l.price) || 0), 0)), upd = { updatedAt: now };
+  if (hadPrice && moved) upd.price = r2(Number(kd.price) - moved);
+  upd.notes = (blank(kd.notes) ? '' : kd.notes + '\n') + `Split into parts ${fmtDate(when)}: ${made.map(m => m.name).join(', ')}${moved ? ` (${money(moved)} of the price moved to them)` : ''}.`;
+  await withTimeout(kbCol().doc(k.id).update(upd));
+  return { kbId: k.id, made, before: { price: kd.price === undefined ? null : kd.price, notes: kd.notes === undefined ? null : kd.notes } };
+}
+async function splitUndo(r) {
+  const DEL = firebase.firestore.FieldValue.delete();
+  for (const m of r.made) await withTimeout(partCol(m.t).doc(m.id).delete());
+  await withTimeout(kbCol().doc(r.kbId).update({ price: r.before.price === null ? DEL : r.before.price, notes: r.before.notes === null ? DEL : r.before.notes }));
+}
+
 /* ---------- Duplicate ---------- */
 const DUP_DROP = ['id', 'coverPhotoId', 'coverThumb', 'stockPhotoId', 'stockThumb', 'kitStock', 'kitStockCover', 'values', 'allocations', 'importKey', 'importAliases', 'importNotes', 'excelRow', 'excelRows', 'excelTotal', 'excelTab', 'importedTotal', 'formFactorExcel', 'installedOn', 'installedOnText', 'belongsToText', 'isFavorite', 'isSample', 'createdAt', 'updatedAt'];
 const DUP_GROUPS = [   // [key, label, fields, on by default]
@@ -1144,7 +1237,8 @@ function ensureListTools() {   // adds Select (list pages) and Duplicate (item p
   if (lt && !document.getElementById('btnSelect') && db && !isFile) { tools.insertAdjacentHTML('afterbegin', '<button class="btn" id="btnSelect" type="button" title="Pick several items to favorite, move or delete">Select</button>'); document.getElementById('btnSelect').onclick = () => setSelMode(!selMode); }
   if (selMode && lt === selType) { document.getElementById('view').classList.add('selmode'); markSel(); const b = document.getElementById('btnSelect'); if (b && b.textContent !== 'Done') { b.textContent = 'Done'; b.classList.add('primary'); } }
   const del = tools.querySelector('#btnDelete'), m = location.hash.match(/^#\/(\w+)\/([^/]+)$/);
-  if (del && m && LIST_TYPES.includes(m[1]) && m[2] !== 'new' && !document.getElementById('btnDup')) { del.insertAdjacentHTML('beforebegin', '<button class="btn" id="btnMerge" type="button" title="Merge this entry into another one (or another one into this)">Merge…</button>'); document.getElementById('btnMerge').onclick = () => mergeDialog(m[1], m[2]);
+  if (del && m && LIST_TYPES.includes(m[1]) && m[2] !== 'new' && !document.getElementById('btnDup')) { if (m[1] === 'keyboards') { del.insertAdjacentHTML('beforebegin', '<button class="btn" id="btnSplit" type="button" title="Make separate PCB, plate, daughterboard… entries from this keyboard\'s purchase">Split into parts…</button>'); document.getElementById('btnSplit').onclick = () => splitDialog(m[2]); }
+    del.insertAdjacentHTML('beforebegin', '<button class="btn" id="btnMerge" type="button" title="Merge this entry into another one (or another one into this)">Merge…</button>'); document.getElementById('btnMerge').onclick = () => mergeDialog(m[1], m[2]);
     del.insertAdjacentHTML('beforebegin', '<button class="btn" id="btnDup" type="button" title="Make a copy of this item and choose what to copy">Duplicate…</button>'); document.getElementById('btnDup').onclick = () => duplicateDialog(m[1], m[2]);
     del.insertAdjacentHTML('beforebegin', '<button class="btn" id="btnQr" type="button" title="A printable label with a code that opens this item on your phone">QR label</button>'); document.getElementById('btnQr').onclick = () => { const x = itemsOfType(m[1]).find(y => y.id === m[2]); if (x) showQrLabels([{ t: m[1], x }]); }; }
 }
@@ -1473,7 +1567,7 @@ function pickBuild() {
   if (!savedKeyboards.length) { toast('Add or import your keyboards first'); return; }
   const roll = () => { const L = pickState.lock;
     if (!L.kb || !pickState.kb) pickState.kb = rnd(savedKeyboards);
-    if (!L.kc || !pickState.kc) { const c = savedKeycaps.flatMap(s2 => { const free = kitsOf(s2).filter(k => !k.installedOn); const k = free.find(x => /base|full|alpha/i.test((x.kitType || '') + ' ' + x.name)) || free[0]; return k ? [{ s: s2, k }] : []; }); pickState.kc = c.length ? rnd(c) : null; }
+    if (!L.kc || !pickState.kc) { const c = savedKeycaps.flatMap(s2 => { const free = kitsOf(s2).filter(k => !k.installedOn && !k.notOwned); const k = free.find(x => /base|full|alpha/i.test((x.kitType || '') + ' ' + x.name)) || free[0]; return k ? [{ s: s2, k }] : []; }); pickState.kc = c.length ? rnd(c) : null; }
     if (!L.sw || !pickState.sw || L.kb === false) { const need = keysNeeded(pickState.kb), ok = savedSwitches.filter(w => (looseCount(w) || 0) >= need), some = savedSwitches.filter(w => (looseCount(w) || 0) > 0); pickState.sw = ok.length ? rnd(ok) : some.length ? rnd(some) : null; } };
   let d = document.getElementById('pickDlg'); if (!d) { d = document.createElement('div'); d.className = 'gdlg'; d.id = 'pickDlg'; document.body.appendChild(d);
     d.onclick = e => { if (e.target === d || e.target.closest('[data-x]')) { d.remove(); return; } if (e.target.id === 'pickAgain') { roll(); draw(); } const a = e.target.closest('a[href]'); if (a) d.remove(); };
@@ -2788,7 +2882,7 @@ function drawKeycapResults() {
   document.getElementById('kcCount').textContent = (kcQuery.trim() || kcChip || list.length !== all.length ? `${list.length} of ${all.length} sets` : `${all.length} set${all.length === 1 ? '' : 's'}`) + ` · ${kits} kit${kits === 1 ? '' : 's'}` + (db && !isFile && !kcLoaded ? ' · loading…' : '');
   if (!all.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.keycaps}</div><h2>No keycap sets yet</h2><p>Add a set with its kits, or import your Excel Keycaps tab on the Import page.</p><p style="margin-top:14px"><a class="btn primary" href="#/keycaps/new">${I.plus}Add keycap set</a></p></div>`; return; }
   if (!list.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.search}</div><h2>No matches</h2><p>${kcQuery.trim() ? `Nothing matches "${esc(kcQuery)}".` : 'No sets with this filter.'}</p></div>`; return; }
-  const sub = s => [s.manufacturer, `${kitsOf(s).length} kit${kitsOf(s).length === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
+  const sub = s => [s.manufacturer, `${kitsOf(s).length} kit${kitsOf(s).length === 1 ? '' : 's'}${kitsOf(s).some(k => k.notOwned) ? ` (${kitsOf(s).filter(k => k.notOwned).length} not owned)` : ''}`].filter(Boolean).join(' · ');
   if (kcView === 'gallery') {
     box.innerHTML = `<div class="gallery">${list.map(s => `
       <a class="kcard" href="#/keycaps/${esc(s.id)}">
@@ -3320,7 +3414,7 @@ function paletteStripHtml(s) { const p = paletteOf(s).filter(c => normHex(c.hex)
    Each kit keeps installedOn: <keyboardId> (a kit is on one board at a time). Unallocated kit = no installedOn. */
 function kitLabel(s, k) { return `${s.name} — ${k.name}`; }
 function kitsOn(kbId) { return savedKeycaps.flatMap(s => kitsOf(s).filter(k => k.installedOn === kbId).map(k => ({ s, k }))); }
-function unallocatedKits() { return savedKeycaps.flatMap(s => kitsOf(s).filter(k => !k.installedOn || !savedKeyboards.some(b => b.id === k.installedOn)).map(k => ({ s, k }))); }
+function unallocatedKits() { return savedKeycaps.flatMap(s => kitsOf(s).filter(k => !k.notOwned && (!k.installedOn || !savedKeyboards.some(b => b.id === k.installedOn))).map(k => ({ s, k }))); }   // kits you don't own can't go on a board
 function guessKeyboard(text) {
   if (!text) return null; const t = text.toLowerCase().trim();
   return savedKeyboards.find(b => (b.brand + ' ' + b.name).toLowerCase() === t) || savedKeyboards.find(b => kbLabel(b).toLowerCase().includes(t)) || null;
@@ -3797,7 +3891,7 @@ function drawWishlist() {
   if (!list.length) { box.innerHTML = `<div class="card empty"><h2>Nothing here</h2></div>`; return; }
   const st = w => ({ wanted: '<span class="chip acc">Wanted</span>', todo: '<span class="chip" style="color:var(--warn)">To-do</span>', owned: '<span class="chip" style="color:var(--ok-text)">Owned, needs price</span>', bought: `<span class="chip">Bought${w.boughtOn ? ' ' + esc(fmtDate(w.boughtOn)) : ''}</span>` }[w.status] || '');
   box.innerHTML = `<table class="list"><thead><tr><th>Item</th><th>Category</th><th>Platform</th><th>Priority</th><th style="text-align:right">Est. price</th><th>Status</th><th></th></tr></thead><tbody>${list.map(w => { const own = ownedSetFor(w);
-    return `<tr><td><b>${esc(w.name)}</b>${w.version ? ` — ${esc(w.version)}` : ''}${own ? ` <a class="chip" href="#/keycaps/${esc(own.id)}" title="You own kits of this set">You own ${kitsOf(own).length} kit${kitsOf(own).length === 1 ? '' : 's'}</a>` : ''}
+    return `<tr><td><b>${esc(w.name)}</b>${w.version ? ` — ${esc(w.version)}` : ''}${own && ownedKits(own).length ? ` <a class="chip" href="#/keycaps/${esc(own.id)}" title="You own kits of this set">You own ${ownedKits(own).length} kit${ownedKits(own).length === 1 ? '' : 's'}</a>` : ''}
       ${w.notes ? `<div class="sub" style="margin:2px 0 0">${esc(w.notes)}</div>` : ''}</td><td>${esc(w.category || '')}</td><td>${esc(w.platform || '')}</td><td>${esc(w.priority || '')}</td>
       <td style="text-align:right;font-variant-numeric:tabular-nums">${w.estPrice != null ? money(w.estPrice) : ''}</td><td>${st(w)}</td>
       <td style="white-space:nowrap">${w.link && /^https?:/.test(w.link) ? `<a class="btn" href="${esc(w.link)}" target="_blank" rel="noopener">Open</a> ` : ''}${w.status !== 'bought' ? `<button class="btn" data-wb="${esc(w.id)}">Bought</button> ` : ''}<button class="btn" data-we="${esc(w.id)}">Edit</button></td></tr>`; }).join('')}</tbody></table>`;
@@ -4388,9 +4482,9 @@ function setPhotoCoverOf(s) {   // picture for a keycap card with no photo of yo
   if (s.kitStockCover && s.kitStockCover.thumb) return s.kitStockCover.thumb;
   if ((s.kitStock || []).length) { const b = s.kitStock.find(e => /base/i.test(e.name)) || s.kitStock[0]; if (b.thumb) return b.thumb; }   // records from v0.52–v0.53
   const ph = s.kitPhotos || [];
-  if (ph.length) { const pr = pairKits(kitsOf(s), ph), own = ph.find(p => pr.has(p)); return (own || ph[0]).url || ''; }
+  if (ph.length) { const pr = pairKits(ownedKits(s), ph), own = ph.find(p => pr.has(p)); return (own || ph[0]).url || ''; }
   const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef); if (!ref) return '';
-  const ks = (ref.kits || []).filter(k => k.img), pairs = pairKits(kitsOf(s), ref.kits || []), own = ks.find(ck => pairs.has(ck));
+  const ks = (ref.kits || []).filter(k => k.img), pairs = pairKits(ownedKits(s), ref.kits || []), own = ks.find(ck => pairs.has(ck));
   return (own || ks[0] || {}).img || '';
 }
 function catalogCoverOf(s) { return setPhotoCoverOf(s); }
@@ -4401,7 +4495,7 @@ function formKits() { return [...document.querySelectorAll('#kitList .kit')].map
 function kitGalleryTiles(s) {
   const refId = document.getElementById('f_gmkRef')?.value || '', ref = refId && gmkSets ? gmkSets.find(x => x.id === refId) : null;
   const live = s ? savedKeycaps.find(x => x.id === s.id) || s : null, photos = (live && live.kitPhotos) || [];
-  const mine = formKits().filter(k => !k.notOwned), saved = live ? kitsOf(live) : [], tiles = [];
+  const all = formKits(), mine = all.filter(k => !k.notOwned), notMine = all.filter(k => k.notOwned), saved = live ? kitsOf(live) : [], tiles = [];
   const where = k => { const sk = saved.find(x => x.id === k.id); const kb = sk && sk.installedOn && savedKeyboards.find(b => b.id === sk.installedOn); return kb ? kb.name : ''; };
   let kind = '', base = [];
   if (ref) { kind = 'catalog'; base = (ref.kits || []).map(ck => ({ name: ck.name, img: ck.img, more: ck.moreImgs || [], price: gmkKitPrice(ck), qty: ck.quantity, ck, cat: true })); }
@@ -4412,6 +4506,9 @@ function kitGalleryTiles(s) {
   base.forEach(b => { const own = pairs.get(b); tiles.push(Object.assign({}, b, { inList: true, owned: !!own, kit: own, on: own ? where(own) : '' })); });
   const extras = mine.filter(k => !tiles.some(t => t.kit === k)), ep = kind === 'catalog' ? pairKits(spare, extras.map(k => ({ name: k.name, k }))) : new Map();
   extras.forEach(k => { const hit = [...ep.entries()].find(([e]) => e.k === k); tiles.push({ name: k.name, owned: true, kit: k, on: where(k), extra: !!base.length, img: hit ? hit[1].url : '', yours: !!hit }); });
+  const nm = pairKits(notMine, base.filter(b => !pairs.has(b)), (live && live.kitLinks) || {});   // kits you marked as not owned stay in the gallery, greyed out
+  notMine.forEach(k => { const b = [...nm.entries()].find(([, kk]) => kk === k); if (b) { const t = tiles.find(x => x.inList && x.name === b[0].name && !x.owned); if (t) t.kit = k; return; } tiles.push({ name: k.name, owned: false, kit: k, mineNot: true, extra: !!base.length, img: '' }); });
+  tiles.forEach(t => { const sk = t.kit && saved.find(x => x.id === t.kit.id); if (!t.img && sk && sk.refImage) t.img = sk.refImage; });   // the shop's picture of that kit, saved by the product page reader
   const ks = (live && live.kitStock) || [];
   if (ks.length) tiles.forEach(t => { const e0 = ks.find(x => x.key === kitKey(t.name)), e = e0 && { thumb: kitStockThumb(e0) }; if (e && e.thumb) { t.more = [t.img, ...(t.more || [])].filter(Boolean); t.img = e.thumb; t.yours = true; t.stock = true; } });
   return { ref, tiles, refId, kind };
@@ -4434,7 +4531,7 @@ function drawKitGallery(s) {
     ${shown.length ? `<div class="kgrid">${shown.map(t => { const i = tiles.indexOf(t); return `<button type="button" class="kg ${t.owned ? 'own' : 'miss'}" data-kg="${i}" title="${t.owned ? 'You own this kit' : 'Not owned · click for details'}">
       <span class="kgimg">${t.img ? `<img src="${esc(t.img)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<span class="kgnone">${I.keycaps}<span>${t.inList ? 'No picture' : 'Your kit'}</span></span>`}
         <span class="kgbadge">${t.owned ? '✓ Owned' : 'Not owned'}</span></span>
-      <span class="kgname">${esc(t.name)}</span><span class="kgsub">${esc([t.price && t.price.replace(/<[^>]+>/g, ''), t.on ? 'On ' + t.on : '', t.extra ? (kind === 'catalog' ? 'Not in the catalog' : 'Not in your old list') : ''].filter(Boolean).join(' · ')) || '&nbsp;'}</span></button>`; }).join('')}</div>`
+      <span class="kgname">${esc(t.name)}</span><span class="kgsub">${esc([t.price && t.price.replace(/<[^>]+>/g, ''), t.on ? 'On ' + t.on : '', t.mineNot ? 'You marked it not owned' : t.extra ? (kind === 'catalog' ? 'Not in the catalog' : 'Not in your old list') : ''].filter(Boolean).join(' · ')) || '&nbsp;'}</span></button>`; }).join('')}</div>`
     : `<p class="sub">${tiles.length ? 'No kits with this filter.' : 'No kits yet. Add the kits you own on the Kits tab.'}</p>`}
     ${ref ? `<p class="sub" style="margin:12px 0 0;font-size:11px">${tiles.some(t => t.yours) ? 'Pictures: your Keycap Collection photos, then ' : 'Pictures and kit list: '}${esc(GMK_CREDIT)}</p>` : ''}`;
   if (!box.dataset.wired) {
@@ -4626,7 +4723,7 @@ function drawSummary(view, x, type) {
     const bc = b.cloneNode(true); bc.querySelectorAll('.err').forEach(e => e.remove()); const title = bc.textContent.replace(/\s+/g, ' ').trim() || t;
     let rows = summaryRows(panel), extra = '';
     if (t === 'kits') { const kits = [...panel.querySelectorAll('#kitList .kit')].map(readKitRow).filter(k => k.name);
-      if (kits.length) extra = `<div class="sumkits">${kits.map(k => `<div><b>${esc(k.name)}</b><span>${esc([k.kitType, k.datePurchased ? fmtDate(k.datePurchased) : '', k.purchasedFrom, Number(k.price) ? money(kbTotal(k)) : ''].filter(Boolean).join(' · '))}</span></div>`).join('')}</div>`; }
+      if (kits.length) extra = `<div class="sumkits">${kits.map(k => `<div${k.notOwned ? ' class="kno"' : ''}><b>${esc(k.name)}</b><span>${esc([k.notOwned ? 'Not owned yet' : '', k.kitType, k.datePurchased ? fmtDate(k.datePurchased) : '', k.purchasedFrom, Number(k.price) ? money(kbTotal(k)) : ''].filter(Boolean).join(' · '))}</span></div>`).join('')}</div>`; }
     if (t === 'colors') { const pal = paletteOf(live); if (pal.length) extra = `<div class="sumsw">${pal.map(c => `<span title="${esc([c.name, c.gmk, c.ral, c.pantone, c.hex].filter(Boolean).join(' · '))}"><i style="background:${esc(c.hex || '#000')}"></i>${esc(c.name || c.hex || '')}</span>`).join('')}</div>`; rows = []; }
     if (t === 'review') { rows = [...panel.querySelectorAll('.rate')].map(r => [r.querySelector('label')?.textContent.trim(), r.querySelector('.val')?.textContent.trim()]).filter(([, v]) => v && v !== 'Not rated'); const rt = fieldValue(panel.querySelector('textarea')); if (rt) rows.push(['Review', rt]); }
     rows = rows.map(r => { const key = t + '|' + r[0], hid = hidden.includes(key); if (hid) nHidden++; return { k: r[0], v: r[1], kind: r[2] || '', cid: r[3] || '', key, hid }; }).filter(r => !r.hid || sumShowHidden);
@@ -4949,11 +5046,11 @@ function gmkCardHtml(s, live = false) {   // live = read the link and name from 
   if (!gmkSets.length) return `<div class="card side-card" id="gmkCard"><h3>GMK reference</h3><p class="sub" style="margin:0">Load gmk_catalog_private.json on the Import page to see catalog details here.</p></div>`;
   const ref = refId && gmkSets.find(x => x.id === refId), name = live ? (document.getElementById('f_name')?.value || '') : (s?.name || '');
   if (ref) {
-    const owned = (s ? kitsOf(s) : []).map(k => gmkNorm(k.name));
+    const owned = (s ? ownedKits(s) : []).map(k => gmkNorm(k.name));
     return `<div class="card side-card" id="gmkCard"><h3>GMK reference</h3>
       <p style="margin:6px 0 2px"><b>GMK ${esc(ref.title)}</b> ${gmkStripHtml(ref)}</p>
       <p class="sub" style="margin:0">${esc([ref.designer, [ref.gbStart, ref.gbEnd].filter(Boolean).join(' → ')].filter(Boolean).join(' · '))}</p>
-      ${(ref.kits || []).length ? (() => { const mine = s ? kitsOf(s) : [], pr = pairKits(mine, ref.kits); const hv = ref.kits.filter(k => pr.has(k)); return `<p class="sub" style="margin:8px 0 4px">${hv.length} of ${ref.kits.length} kits · ${Math.round(hv.length / ref.kits.length * 100)}%</p><span class="cbar wide"><span class="cfill" style="width:${hv.length / ref.kits.length * 100}%"></span></span>
+      ${(ref.kits || []).length ? (() => { const mine = s ? ownedKits(s) : [], pr = pairKits(mine, ref.kits); const hv = ref.kits.filter(k => pr.has(k)); return `<p class="sub" style="margin:8px 0 4px">${hv.length} of ${ref.kits.length} kits · ${Math.round(hv.length / ref.kits.length * 100)}%</p><span class="cbar wide"><span class="cfill" style="width:${hv.length / ref.kits.length * 100}%"></span></span>
         <div class="kitlist">${ref.kits.map(k => { const have = hv.includes(k); return `<div class="kitrow${have ? ' have' : ''}"><span>${have ? '✓' : '○'} ${esc(k.name)}${gmkKitPrice(k) ? ` <span class="sub" style="margin:0">${gmkKitPrice(k)}</span>` : ''}</span>${!have && s ? (wishHas(s.name, k.name) ? '<span class="chip">On wishlist</span>' : `<button class="btn" data-wishkit="${esc(k.name)}">+ Wishlist</button>`) : ''}</div>`; }).join('')}</div>`; })() : ''}
       <div class="btnrow" style="margin-top:10px"><button class="btn primary" id="gmkFill">Fill from catalog</button><button class="btn" id="gmkView">Details</button><button class="btn" id="gmkUnlink">Unlink</button></div>
       <p style="margin:8px 0 0">${matrixLinkHtml(ref, 'Matrix page for this set ↗')}</p>
@@ -5821,9 +5918,13 @@ function rdHtmlToText(html) {
 }
 function rdSpecs(html) {   // { pairs: { 'top housing': 'PA12', ... }, bare: ['Linear', 'Lubed', ...] }
   const doc = new DOMParser().parseFromString('<div id="r">' + String(html || '') + '</div>', 'text/html'), pairs = {}, bare = [];
-  doc.querySelectorAll('li, p, tr').forEach(el => {
+  doc.querySelectorAll('p').forEach(el => { if (!/<br\s*\/?>/i.test(el.innerHTML)) return;   // one paragraph holding several lines, e.g. "- Cherry profile<br>- Designed by …"
+    el.innerHTML.split(/<br\s*\/?>/i).map(h => new DOMParser().parseFromString(h, 'text/html').body.textContent.replace(/[\u00a0\s]+/g, ' ').trim()).filter(Boolean).forEach(line => {
+      const bul = /^[-•·*–]\s+/.test(line); line = line.replace(/^[-•·*–]\s+/, ''); if (line.length > 160) return; const m = /^([^:]{2,32}):\s*(.+)$/.exec(line);
+      if (m) { const k = m[1].trim().toLowerCase(); if (!(k in pairs)) pairs[k] = m[2].trim(); } else if (bul) bare.push(line); }); el.dataset.split = '1'; });
+  doc.querySelectorAll('li, p:not([data-split]), tr').forEach(el => {
     let own = ''; el.childNodes.forEach(c => { if (!(c.nodeType === 1 && /^(ul|ol)$/i.test(c.tagName))) own += c.textContent; });
-    own = own.replace(/[ \s]+/g, ' ').trim(); if (!own || own.length > 220) return;
+    own = own.replace(/[ \s]+/g, ' ').trim().replace(/^[•·*–-]\s*/, ''); if (!own || own.length > 220) return;
     const m = /^([^:]{2,32}):\s*(.+)$/.exec(own);
     if (m) { const k = m[1].trim().toLowerCase(); if (!(k in pairs)) pairs[k] = m[2].trim(); }
     else if (el.tagName === 'LI' && own.length < 80) bare.push(own);
@@ -5858,13 +5959,13 @@ async function rdRead(url) {
   const isShopify = /cdn\.shopify\.com|Shopify\.shop|shopify-section/i.test(page.text);
   if (isShopify && handle) {
     const base = new URL(final).origin + '/products/' + handle;
-    try { const j = JSON.parse((await rdFetch(base + '.json', 'application/json')).text).product;
+    try { const j = JSON.parse((await rdFetch(base + '.json?currency=USD', 'application/json')).text).product;
       Object.assign(out, { kind: 'shopify', title: j.title, vendor: j.vendor || '', productType: j.product_type || '', tags: String(j.tags || '').split(',').map(s => s.trim()).filter(Boolean), html: j.body_html || '',
         options: (j.options || []).map(o => ({ name: o.name, values: o.values || [] })),
         images: (j.images || []).map(i => ({ id: i.id, src: i.src })),
         variants: (j.variants || []).map(v => ({ id: String(v.id), title: v.title, price: Number(v.price), opts: [v.option1, v.option2, v.option3].filter(x => x != null), imageId: v.image_id })) });
     } catch (e) {
-      try { const j = JSON.parse((await rdFetch(base + '.js', 'application/json')).text);
+      try { const j = JSON.parse((await rdFetch(base + '.js?currency=USD', 'application/json')).text);
         Object.assign(out, { kind: 'shopify', title: j.title, vendor: j.vendor || '', productType: j.type || '', tags: j.tags || [], html: j.description || '',
           options: (j.options || []).map((o, i) => ({ name: typeof o === 'string' ? o : o.name, values: typeof o === 'string' ? [...new Set((j.variants || []).map(v => v.options[i]))] : o.values })),
           images: (j.images || []).map((s, i) => ({ id: 'i' + i, src: String(s).replace(/^\/\//, 'https://') })),
@@ -5872,22 +5973,40 @@ async function rdRead(url) {
       } catch (e2) {}
     }
   }
-  if (out.kind === 'shopify') {   // some shops (NovelKeys) keep the specs in a list on the page, not in the product description
-    const norm = t => t.toLowerCase().replace(/[^a-z0-9]+/g, ''), have = norm(rdHtmlToText(out.html)), extra = [], pg = new DOMParser().parseFromString(page.text, 'text/html');
-    pg.querySelectorAll('header, footer, nav, script, style, form, [class*="recommend"], [class*="related"]').forEach(n => n.remove());
-    pg.querySelectorAll('ul, ol').forEach(l => { const lis = [...l.querySelectorAll(':scope > li')].map(li => li.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean); if (lis.length < 2 || lis.length > 30) return;
-      const kv = lis.filter(t => /^[A-Za-z][\w /&()+.'-]{1,30}:\s*\S/.test(t)); if (kv.length >= 2 && kv.length >= lis.length * 0.6) kv.forEach(t => { if (!have.includes(norm(t)) && !extra.some(x => norm(x) === norm(t))) extra.push(t); }); });
-    if (extra.length) out.html += `<p><strong>Specifications</strong></p><ul>${extra.map(t => '<li>' + esc(t) + '</li>').join('')}</ul>`;
+  if (out.kind === 'shopify') {   // Shopify answers in the visitor's currency; ?currency=USD switches it when the shop sells in US dollars
+    const curOf = t => (/Shopify\.currency\s*=\s*\{"active":"([A-Z]{3})"/.exec(t) || /product:price:currency"\s+content="([A-Z]{3})"/.exec(t) || [])[1] || '';
+    let cur = curOf(page.text);
+    if (cur && cur !== 'USD') { try { cur = curOf((await rdFetch(final + (final.includes('?') ? '&' : '?') + 'currency=USD')).text) || cur; } catch (e) {} }
+    out.currency = cur || 'USD';
   }
   if (!out.title) {   // standard product data (JSON-LD), then the page's social-media tags
     let prod = null;
     doc.querySelectorAll('script[type="application/ld+json"]').forEach(s => { if (prod) return; try { const walk = o => { if (!o || prod) return; if (Array.isArray(o)) return o.forEach(walk); if (/Product/i.test(String(o['@type']))) { prod = o; return; } if (o['@graph']) walk(o['@graph']); }; walk(JSON.parse(s.textContent)); } catch (e) {} });
     const imgs = prod ? [].concat(prod.image || []).map(i => typeof i === 'string' ? i : i && (i.url || i.contentUrl)).filter(Boolean) : [];
     const offers = prod ? [].concat(prod.offers || []).flatMap(o => o && o['@type'] === 'AggregateOffer' ? [].concat(o.offers || [{ price: o.lowPrice, name: '' }]) : [o]).filter(Boolean) : [];
+    out.currency = String((offers[0] && offers[0].priceCurrency) || meta('product:price:currency') || meta('og:price:currency') || 'USD').toUpperCase();
     Object.assign(out, { kind: prod ? 'jsonld' : 'meta', title: (prod && prod.name) || meta('og:title') || doc.title || '', vendor: prod && (typeof prod.brand === 'string' ? prod.brand : prod.brand && prod.brand.name) || '',
       html: (prod && prod.description) ? '<p>' + esc(prod.description).replace(/\n+/g, '</p><p>') + '</p>' : (meta('og:description') ? '<p>' + esc(meta('og:description')) + '</p>' : ''),
       images: (imgs.length ? imgs : [meta('og:image')].filter(Boolean)).map((s, i) => ({ id: 'i' + i, src: new URL(s, final).toString() })),
       variants: (offers.length ? offers : [{ price: meta('product:price:amount') || meta('og:price:amount') }]).map((o, i) => ({ id: 'v' + i, title: o.name || (offers.length > 1 ? 'Option ' + (i + 1) : 'Default Title'), price: Number(o.price) || null, opts: [] })) });
+  }
+  {   // many shops (NovelKeys, Milktooth) show specs in a list on the page that is not in the product data: take "Label: value" lists and rows from the page itself
+    const norm = t => t.toLowerCase().replace(/[^a-z0-9]+/g, ''), have = norm(rdHtmlToText(out.html)), extra = [], pg = new DOMParser().parseFromString(page.text, 'text/html');
+    pg.querySelectorAll('header, footer, nav, script, style, noscript, form, [class*="recommend"], [class*="related"]').forEach(n => n.remove());
+    const kvRe = /^[A-Za-z][\w /&()+.'-]{1,30}:\s*\S/, add = t => { t = t.replace(/^[•·*–-]\s*/, ''); if (t && !have.includes(norm(t)) && !extra.some(x => norm(x) === norm(t))) extra.push(t); };
+    const offTopic = el => { const dt = el.closest('details'); let head = dt ? (dt.querySelector('summary') || {}).textContent || '' : '';   // the heading of the fold-out or section the list sits in
+      if (!head) { const box = el.closest('section, [class*="accordion"], [class*="tab"]'); head = box ? (box.querySelector('summary, h2, h3, h4, [class*="title"], [class*="toggle"]') || box.previousElementSibling || {}).textContent || '' : ''; }
+      return /vendor|region|shipping|delivery|return|faq|warranty|payment|disclaimer/i.test(head); };
+    const group = items => { items = items.map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean); if (items.length < 2 || items.length > 30) return;
+      const kv = items.filter(t => kvRe.test(t)); if (kv.length >= 2 && kv.length >= items.length * 0.6) items.forEach(t => { if (kvRe.test(t) || t.length <= 40) add(t); }); };
+    pg.querySelectorAll('ul, ol').forEach(l => { if (!offTopic(l)) group([...l.querySelectorAll(':scope > li')].map(li => li.textContent)); });
+    const parents = new Set(); pg.querySelectorAll('p').forEach(p => parents.add(p.parentElement)); parents.forEach(el => { if (el) group([...el.children].filter(c => c.tagName === 'P').map(c => c.textContent)); });
+    pg.querySelectorAll('span, dt, th, div, h3, h4, h5').forEach(el => { if (el.children.length) return; const lab = el.textContent.trim(); if (!/^(descriptors|sound profile|sound)$/i.test(lab)) return;
+      const nx = el.nextElementSibling, val = nx && nx.textContent.replace(/\s+/g, ' ').trim(); if (val && val.length < 120 && !/[:$]/.test(val)) add('Sound profile: ' + val); });
+    const pack = /(\d{1,4})\s+switch(?:es)?\s+(?:per|in each|in every)\s+(?:order|pack|bag)/i.exec(pg.body ? pg.body.textContent : ''); if (pack) add(`Pack size: ${pack[1]} switches per order`);
+    if (extra.length) out.html += `<p><strong>Specifications</strong></p><ul>${extra.map(t => '<li>' + esc(t) + '</li>').join('')}</ul>`;
+    if (out.kind !== 'shopify') { const og = [...doc.querySelectorAll('meta[property="og:image:secure_url"], meta[property="og:image"]')].map(m => m.content).filter(Boolean);   // all the page's pictures, not only the first
+      og.forEach(s => { try { const src = new URL(s.replace(/^http:/, 'https:'), final).toString(); if (!out.images.some(i => i.src === src || i.src.split('?')[0] === src.split('?')[0])) out.images.push({ id: 'i' + out.images.length, src }); } catch (e) {} }); }
   }
   const corp = x => String(x || '').replace(/,?\s+(llc|inc\.?|ltd\.?|co\.|corp\.?)$/i, '').trim(); out.vendor = corp(out.vendor); out.source = corp(out.source);
   if (!out.title) throw new Error('No product information was found on that page. It may not be a product page, or the shop hides it from readers.');
@@ -5901,7 +6020,8 @@ const rdHas = (arr, re) => arr.some(t => re.test(t));
 function rdGuessType(p, v) {
   const tags = p.tags, vt = v && v.title !== 'Default Title' ? v.title : '', all = p.title + ' ' + vt;
   if (rdHas(tags, /artisan/i) || /artisan/i.test(p.title)) return 'artisans';
-  if (/^switch(es)?$/i.test(p.productType) || (rdHas(tags, /\bswitch\b/i) && !/tester|opener|puller|film|spring/i.test(all))) return 'switches';
+  if (/desk ?mat|mouse ?pad|wrist ?rest/i.test(vt)) return 'accessories';
+  if (/^switch(es)?$/i.test(p.productType) || ((rdHas(tags, /\bswitch\b/i) || /\b(linear|tactile|clicky|silent|magnetic|hall effect)?\s*switch(es)?$/i.test(p.title)) && !/tester|opener|puller|film|spring|lube|station|sampler|keyboard/i.test(all))) return 'switches';
   if (/keycap/i.test(p.productType) || /keycaps?\b/i.test(p.title)) return 'keycaps';
   if (/keyboard|barebone/i.test(p.title) && !/accessor|parts|plates?|cable|deskmat|desk mat|case only|carrying|pcb/i.test(p.title)) return 'keyboards';   // a keyboard's options may mention its PCB
   if (/\bpcb\b/i.test(vt) && !/foam/i.test(vt)) return 'pcbs';
@@ -5920,7 +6040,7 @@ const rdStrip = (title, vendor, re) => { let t = String(title || ''); if (vendor
 const rdUnit = (s, u) => { const m = /(\d+(?:\.\d+)?)(?:\s*[±+-]\s*(\d+(?:\.\d+)?))?\s*(mm|g|gf)?/i.exec(String(s || '')); return m ? `${m[1]}${m[2] ? '±' + m[2] : ''} ${u}` : ''; };
 const rdVariantLabel = v => v && v.title && v.title !== 'Default Title' ? v.title : '';
 function rdPackCount(p, v) {
-  const t = p.text + ' ' + (v ? v.title : ''), m = /(\d{1,4})\s+(?:included in each pack|switches? (?:per|in each) pack)/i.exec(t) || /(\d{1,4})\s*(?:-|\s)?\s*(?:set|pack|pcs|pieces|count|ct)\b/i.exec(v ? v.title : '') || /(?:pack of|set of)\s*(\d{1,4})/i.exec(t);
+  const t = p.text + ' ' + (v ? v.title : ''), m = /(\d{1,4})\s+(?:included in each pack|switches? (?:per|in each) pack)/i.exec(t) || /(\d{1,4})\s*(?:-|\s)?\s*(?:set|pack|pcs|pieces|count|ct)\b/i.exec(v ? v.title : '') || /(?:pack of|set of)\s*(\d{1,4})/i.exec(t) || /pack size:\s*(\d{1,4})/i.exec(t);
   return m ? Number(m[1]) : null;
 }
 function rdFields(p, v, type) {   // fields for a new entry of this type, from the product and the chosen option
@@ -5954,7 +6074,7 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
     if (/\bmx\b/i.test(bare.join(' ')) || /mx/i.test(p.tags.join(' '))) f.mechanism = 'MX';
     const pins = /([35])[- ]?pin/i.exec(bare.join(' ') + ' ' + p.text); if (pins) f.pins = pins[1] + '-pin';
     if (bare.some(b => /^(factory )?(lubed|pre-?lubed|lubed from factory)$/i.test(b.trim()))) f.preLubed = true;
-    const snd = pick('sound profile', 'sound'); if (snd) f.descriptors = snd.split(/[,/]/).map(s => s.trim().toLowerCase()).filter(Boolean).join(', ');
+    const snd = pick('sound profile', 'sound', 'descriptors'); if (snd) f.descriptors = snd.split(/[,/]/).map(s => s.trim().toLowerCase()).filter(Boolean).join(', ');
     if (designer) f.notes = 'Designed by ' + designer + (madeBy ? ', made by ' + madeBy : '') + '.';
   } else if (type === 'keycaps') {
     f.name = rdStrip(p.title, '', /\s+(extension|add-?on)s?(\s+kits?)?$|\s+keycaps?(\s+set)?$|\s+kits?$/i);
@@ -5963,8 +6083,8 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
     if (designer) f.designer = designer;
     const prof = KC_PROFILES.find(x => new RegExp('\\b' + x + '\\b', 'i').test(bare.join(' ') + ' ' + pick('profile') + ' ' + p.tags.filter(t => /profile/i.test(t)).join(' '))); if (prof) f.profile = prof; else if (f.manufacturer === 'GMK') f.profile = 'Cherry';
     const mat = KC_MATERIALS.find(x => new RegExp('\\b' + x + '\\b').test(bare.join(' ') + ' ' + pick('material') + ' ' + p.tags.join(' '))); if (mat) f.material = mat;
-    const leg = bare.join(' ') + ' ' + pick('legends', 'legend') + ' ' + p.tags.join(' ') + ' ' + p.productType; f.legends = /doubleshot|double-shot/i.test(leg) ? 'Doubleshot' : /dye-?sub/i.test(leg) ? 'Dye-sub' : /uv print/i.test(leg) ? 'UV printed' : /laser/i.test(leg) ? 'Lasered' : ''; if (!f.legends) delete f.legends;
-    if (/mx compatible|mx stem/i.test(bare.join(' '))) f.stemMount = 'MX';
+    const leg = bare.join(' ') + ' ' + pick('legends', 'legend', 'manufacturing method', 'printing', 'legend method') + ' ' + p.tags.join(' ') + ' ' + p.productType; f.legends = /doubleshot|double-shot/i.test(leg) ? 'Doubleshot' : /dye-?sub/i.test(leg) ? 'Dye-sub' : /uv print/i.test(leg) ? 'UV printed' : /laser/i.test(leg) ? 'Lasered' : ''; if (!f.legends) delete f.legends;
+    if (/mx compatible|mx stem|compatible with mx|mx[- ]style/i.test(bare.join(' ')) || /\bmx\b/i.test(pick('switch stem', 'stem', 'compatib'))) f.stemMount = 'MX';
     const col = pick('colors', 'colours', 'color codes'); if (col) f.colorsText = col;
   } else if (type === 'pcbs') {
     f.manufacturer = p.vendor; const base = rdStrip(p.title, p.vendor, /\s+(pcbs?|parts|accessories)$/i); f.name = vl ? (/pcb/i.test(vl) ? `${base} ${vl.replace(/^pcb\s*-\s*/i, '')} PCB` : `${base} PCB (${vl})`) : rdStrip(p.title, p.vendor, /$/);
@@ -6000,10 +6120,11 @@ function rdSuggest(type, name, url, strict) {   // the saved entry this most lik
 function rdNewRow(p, v, type) {
   type = type || rdGuessType(p, v); const f = rdFields(p, v, type), img = rdImageOf(p, v), packs = 1, pack = type === 'switches' ? rdPackCount(p, v) : null;
   const name = type === 'keycaps' ? f.name : (f.name || p.title), setName = f.name;
-  const row = { vid: v ? v.id : '', vtitle: rdVariantLabel(v), type, name, setName, kitName: rdVariantLabel(v) || 'Base', price: v && v.price != null ? v.price : null, qty: packs, pack, img, copy: false, mode: 'new', itemId: '', replace: false };
+  const foreign = p.currency && p.currency !== 'USD', row = { vid: v ? v.id : '', vtitle: rdVariantLabel(v), type, name, setName, kitName: rdVariantLabel(v) || 'Base', shopPrice: v && v.price != null ? v.price : null, price: foreign ? null : v && v.price != null ? v.price : null, qty: packs, pack, img, copy: false, mode: 'new', itemId: '', replace: false };
   const ex = rdSuggest(type, type === 'keycaps' ? setName : rdMatchLabel(type, Object.assign({}, f, { name })), type === 'keycaps' ? '' : rdPageUrl(p, v ? v.id : ''), type !== 'keycaps' && p.variants.length > 1); if (ex) { row.mode = 'existing'; row.itemId = ex; }
   return row;
 }
+function rdMoney(p, n) { if (n == null || n === '') return ''; if (!p.currency || p.currency === 'USD') return money(n); const sym = { EUR: '€', GBP: '£', CAD: 'CA$', AUD: 'A$', JPY: '¥', KRW: '₩', CNY: 'CN¥' }[p.currency]; const t = Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); return sym ? sym + t : t + ' ' + p.currency; }
 function rdVariantFromPickers() { const p = rdState.p, sel = [...document.querySelectorAll('[data-rdopt]')].map(s => s.value); return p.variants.find(v => sel.every((x, i) => v.opts[i] === x)) || null; }
 function rdRowHtml(r, i) {
   const p = rdState.p, types = LIST_TYPES.map(t => `<option value="${t}"${t === r.type ? ' selected' : ''}>${esc(SEC[t].title)}</option>`).join('');
@@ -6012,7 +6133,7 @@ function rdRowHtml(r, i) {
   return `<div class="rd-row" data-i="${i}">
     <button type="button" class="rd-img" data-rdimg title="${p.images.length > 1 ? 'Click for the next picture' : ''}">${r.img ? `<img src="${esc(r.img)}" alt="" referrerpolicy="no-referrer">` : '<span class="sub">No picture</span>'}</button>
     <div class="rd-main">
-      <div class="rd-head"><b>${esc(r.vtitle || p.title)}</b>${r.price != null ? `<span class="chip">${money(r.price)} at ${esc(p.source)}</span>` : ''}<button class="btn rd-del" data-rddel title="Remove this line" aria-label="Remove this line">✕</button></div>
+      <div class="rd-head"><b>${esc(r.vtitle || p.title)}</b>${r.shopPrice != null ? `<span class="chip">${rdMoney(p, r.shopPrice * (r.type === 'switches' ? (r.qty || 1) : 1))} at ${esc(p.source)}</span>` : ''}<button class="btn rd-del" data-rddel title="Remove this line" aria-label="Remove this line">✕</button></div>
       <div class="rd-grid">
         <label class="rc-f"><span>Save as</span><select class="select" data-rdmode><option value="new"${r.mode === 'new' ? ' selected' : ''}>New entry</option><option value="existing"${r.mode === 'existing' ? ' selected' : ''}>Add to an entry I have</option><option value="wish"${r.mode === 'wish' ? ' selected' : ''}>Wishlist (not bought)</option></select></label>
         <label class="rc-f"><span>Category</span><select class="select" data-rdtype>${types}</select></label>
@@ -6020,9 +6141,9 @@ function rdRowHtml(r, i) {
           : `<label class="rc-f rd-wide"><span>${r.type === 'keycaps' ? 'Set name' : 'Name'}</span><input class="input" data-rdname value="${esc(r.type === 'keycaps' ? r.setName : r.name)}"></label>`}
         ${r.type === 'keycaps' ? `<label class="rc-f"><span>Kit</span><input class="input" data-rdkit value="${esc(r.kitName)}"></label>` : ''}
         ${r.type === 'switches' ? `<label class="rc-f"><span>Packs</span><input class="input" type="number" min="1" step="1" data-rdqty value="${esc(r.qty)}"></label><label class="rc-f"><span>Switches per pack</span><input class="input" type="number" min="1" step="1" data-rdpack value="${r.pack == null ? '' : esc(r.pack)}" placeholder="?"></label>` : ''}
-        <label class="rc-f"><span>${esc(priceLbl)}</span><div class="money-in"><span>$</span><input class="input" type="number" min="0" step="0.01" data-rdprice value="${r.price == null ? '' : esc(rcRound((r.price || 0) * (r.type === 'switches' ? (r.qty || 1) : 1)))}"></div></label>
+        <label class="rc-f"><span>${esc(priceLbl)}</span><div class="money-in"><span>$</span><input class="input" type="number" min="0" step="0.01" data-rdprice value="${r.price == null ? '' : esc(rcRound((r.price || 0) * (r.type === 'switches' ? (r.qty || 1) : 1)))}"${p.currency && p.currency !== 'USD' ? ' placeholder="US dollars"' : ''}></div>${p.currency && p.currency !== 'USD' && r.shopPrice != null ? `<span class="sub rd-cur">The shop sells in ${esc(p.currency)} (${esc(rdMoney(p, r.shopPrice))}). The app keeps US dollars, so type the US price or leave it empty.</span>` : ''}</label>
       </div>
-      <div class="rd-opts">${r.img && r.mode !== 'wish' ? `<label class="check"><input type="checkbox" data-rdcopy${r.copy ? ' checked' : ''}> Keep a copy of this picture (uses Firebase storage; otherwise it is saved as a link)</label>` : ''}
+      <div class="rd-opts">${r.type === 'keycaps' && r.mode !== 'wish' ? `<label class="check" title="Untick to add the kit to the set as not owned yet: it shows greyed out in the Kit gallery"><input type="checkbox" data-rdown${r.notOwned ? '' : ' checked'}> I own this kit</label>` : ''}${r.img && r.mode !== 'wish' ? `<label class="check"><input type="checkbox" data-rdcopy${r.copy ? ' checked' : ''}> Keep a copy of this picture (uses Firebase storage; otherwise it is saved as a link)</label>` : ''}
         ${r.mode === 'existing' ? `<label class="check"><input type="checkbox" data-rdrep${r.replace ? ' checked' : ''}> Replace its product page, pictures, shop text and retail price (unticked: only empty fields are filled)</label>` : ''}</div>
       <div class="rd-note sub"></div></div></div>`;
 }
@@ -6057,25 +6178,30 @@ function rdDrawBody() {
       ${(() => { const av = rdAvailable(p, null); return (p.includes || []).length || av.groups.length || av.layouts.length ? `<p class="sub" style="margin:10px 0 0">${(p.includes || []).length ? `<b>${p.includes.length}</b> “Included with the kit” item${p.includes.length === 1 ? '' : 's'} found. ` : ''}${av.groups.length ? `Also available in: ${av.groups.map(g => `${esc(g.name)} (${g.values.length})`).join(', ')}. ` : ''}${av.layouts.length ? 'Layouts: ' + esc(av.layouts.join(', ')) + '.' : ''} These are saved with each entry.</p>` : ''; })()}
       ${p.text ? `<details style="margin-top:10px"><summary class="sub" style="cursor:pointer;margin:0">Shop's description (saved word for word as “From the shop”, credited to ${esc(p.source)})</summary><div class="rd-shoptext">${esc(p.text).replace(/\n/g, '<br>')}</div></details>` : ''}</div>
     ${many ? `<div class="card" style="margin-top:16px"><h3>Which option?</h3><p class="sub">${p.variants.length} options on this page. Pick the one you have (or want), then add it. Add several to save them as separate entries${p.variants.some(() => true) && rdGuessType(p, p.variants[0]) === 'keycaps' ? ' (keycap kits go into one set)' : ''}.</p>
-      ${small && p.options.length <= 1 ? `<div class="rd-vlist">${p.variants.map(v => `<label class="check"><input type="checkbox" data-rdv="${esc(v.id)}"${rdState.rows.some(r => r.vid === v.id) ? ' checked' : ''}> ${esc(rdVariantLabel(v))}${v.price != null ? ' · ' + money(v.price) : ''}</label>`).join('')}</div>`
-        : `<div class="rd-pick">${p.options.map((o, i) => `<label class="rc-f"><span>${esc(o.name)}</span><select class="select" data-rdopt="${i}">${o.values.map(x => `<option>${esc(x)}</option>`).join('')}</select></label>`).join('')}<button class="btn" id="rdAddV">+ Add this option</button></div><p class="sub" id="rdPickMsg" style="margin:6px 0 0"></p>`}</div>` : ''}
+      ${small && p.options.length <= 1 ? `<div class="btnrow" style="margin:0 0 8px"><button class="btn" id="rdAll" type="button">${p.variants.every(v => rdState.rows.some(r => r.vid === v.id)) ? 'Clear all' : 'Select all'}</button></div><div class="rd-vlist">${p.variants.map(v => `<label class="check"><input type="checkbox" data-rdv="${esc(v.id)}"${rdState.rows.some(r => r.vid === v.id) ? ' checked' : ''}> ${esc(rdVariantLabel(v))}${v.price != null ? ' · ' + rdMoney(p, v.price) : ''}</label>`).join('')}</div>`
+        : `<div class="rd-pick">${p.options.map((o, i) => `<label class="rc-f"><span>${esc(o.name)}</span><select class="select" data-rdopt="${i}">${o.values.map(x => `<option>${esc(x)}</option>`).join('')}</select></label>`).join('')}<button class="btn" id="rdAddV">+ Add this option</button>${p.variants.length <= 40 ? `<button class="btn" id="rdEvery" type="button" title="Adds every option on this page as its own line">+ Add all ${p.variants.length}</button>` : ''}</div><p class="sub" id="rdPickMsg" style="margin:6px 0 0"></p>`}</div>` : ''}
     <div class="card" style="margin-top:16px"><h3>What will be saved</h3><div id="rdRows">${rdState.rows.length ? rdState.rows.map(rdRowHtml).join('') : '<p class="sub">Pick an option above.</p>'}</div></div>
     <div class="card" style="margin-top:16px"><div id="rdErr" class="sub" style="color:var(--bad-text);margin:0 0 10px"></div><div class="btnrow"><button class="btn primary" id="rdSave" ${rdState.rows.length && db && !isFile ? '' : 'disabled'}>Save</button><button class="btn" id="rdClear">Start over</button></div></div>`;
   rdNotes();
   const rows = document.getElementById('rdRows'), redraw = () => { rows.innerHTML = rdState.rows.length ? rdState.rows.map(rdRowHtml).join('') : '<p class="sub">Pick an option above.</p>'; document.getElementById('rdSave').disabled = !rdState.rows.length; rdNotes(); };
-  body.querySelectorAll('[data-rdv]').forEach(c => c.onchange = () => { const v = p.variants.find(x => x.id === c.dataset.rdv); if (c.checked) { if (!rdState.rows.some(r => r.vid === v.id)) rdState.rows.push(rdNewRow(p, v)); } else rdState.rows = rdState.rows.filter(r => r.vid !== v.id); redraw(); });
-  const addV = document.getElementById('rdAddV'); if (addV) { const pm = document.getElementById('rdPickMsg'), show = () => { const v = rdVariantFromPickers(); pm.textContent = v ? `${money(v.price)} at ${p.source}` : 'That combination is not sold.'; addV.disabled = !v; };
-    body.querySelectorAll('[data-rdopt]').forEach(s => s.onchange = show); show(); addV.onclick = () => { const v = rdVariantFromPickers(); if (v) { rdState.rows.push(rdNewRow(p, v)); redraw(); } }; }
+  const kcJoin = n => { const o = rdState.rows.find(r => r.type === 'keycaps' && r !== n); if (o && n.type === 'keycaps') { n.setName = o.setName; n.mode = o.mode; n.itemId = o.itemId; } return n; };   // all kits from one keycap page go into one set
+  const addRow = v => { if (v && !rdState.rows.some(r => r.vid === v.id)) rdState.rows.push(kcJoin(rdNewRow(p, v))); };
+  body.querySelectorAll('[data-rdv]').forEach(c => c.onchange = () => { const v = p.variants.find(x => x.id === c.dataset.rdv); if (c.checked) addRow(v); else rdState.rows = rdState.rows.filter(r => r.vid !== v.id); redraw(); });
+  const allBtn = document.getElementById('rdAll'); if (allBtn) allBtn.onclick = () => { const on = !p.variants.every(v => rdState.rows.some(r => r.vid === v.id));
+    if (on) p.variants.forEach(addRow); else rdState.rows = []; body.querySelectorAll('[data-rdv]').forEach(c => { c.checked = on; }); allBtn.textContent = on ? 'Clear all' : 'Select all'; redraw(); };
+  const everyBtn = document.getElementById('rdEvery'); if (everyBtn) everyBtn.onclick = () => { p.variants.forEach(addRow); redraw(); };
+  const addV = document.getElementById('rdAddV'); if (addV) { const pm = document.getElementById('rdPickMsg'), show = () => { const v = rdVariantFromPickers(); pm.textContent = v ? `${rdMoney(p, v.price)} at ${p.source}` : 'That combination is not sold.'; addV.disabled = !v; };
+    body.querySelectorAll('[data-rdopt]').forEach(s => s.onchange = show); show(); addV.onclick = () => { const v = rdVariantFromPickers(); if (v) { if (rdState.rows.some(r => r.vid === v.id)) { pm.textContent = 'That option is already in the list below.'; return; } addRow(v); redraw(); } }; }
   rows.addEventListener('input', e => { const el = e.target.closest('.rd-row'); if (!el) return; const r = rdState.rows[+el.dataset.i], d = e.target.dataset;
-    if ('rdname' in d) { if (r.type === 'keycaps') r.setName = e.target.value; else r.name = e.target.value; } else if ('rdkit' in d) r.kitName = e.target.value;
+    if ('rdname' in d) { if (r.type === 'keycaps') { rdState.rows.forEach((x, j) => { if (x.type === 'keycaps') { x.setName = e.target.value; if (j !== +el.dataset.i) { const o = rows.querySelector(`.rd-row[data-i="${j}"] [data-rdname]`); if (o) o.value = e.target.value; } } }); } else r.name = e.target.value; } else if ('rdkit' in d) r.kitName = e.target.value;
     else if ('rdprice' in d) { const n = e.target.value === '' ? null : Number(e.target.value); r.price = n == null ? null : (r.type === 'switches' ? n / (r.qty || 1) : n); }
     else if ('rdqty' in d) { r.qty = Math.max(1, parseInt(e.target.value, 10) || 1); const pr = el.querySelector('[data-rdprice]'); if (pr && r.price != null) pr.value = rcRound(r.price * r.qty); }
     else if ('rdpack' in d) r.pack = parseInt(e.target.value, 10) || null;
     rdNotes(); });
   rows.addEventListener('change', e => { const el = e.target.closest('.rd-row'); if (!el) return; const i = +el.dataset.i, r = rdState.rows[i], d = e.target.dataset;
-    if ('rdmode' in d) { r.mode = e.target.value; if (r.mode === 'existing' && !r.itemId) { const v = p.variants.find(x => x.id === r.vid) || null; r.itemId = rdSuggest(r.type, r.type === 'keycaps' ? r.setName : rdMatchLabel(r.type, Object.assign({}, rdFields(p, v, r.type), { name: r.name })), r.type === 'keycaps' ? '' : rdPageUrl(p, r.vid), r.type !== 'keycaps' && p.variants.length > 1); } redraw(); }
+    if ('rdmode' in d) { r.mode = e.target.value; if (r.mode === 'existing' && !r.itemId) { const v = p.variants.find(x => x.id === r.vid) || null; r.itemId = rdSuggest(r.type, r.type === 'keycaps' ? r.setName : rdMatchLabel(r.type, Object.assign({}, rdFields(p, v, r.type), { name: r.name })), r.type === 'keycaps' ? '' : rdPageUrl(p, r.vid), r.type !== 'keycaps' && p.variants.length > 1); } if (r.type === 'keycaps') rdState.rows.forEach(x => { if (x.type === 'keycaps') { x.mode = r.mode; x.itemId = r.itemId; } }); redraw(); }
     else if ('rdtype' in d) { const v = p.variants.find(x => x.id === r.vid) || null, n = rdNewRow(p, v, e.target.value); n.price = r.price; n.qty = r.qty; n.copy = r.copy; if (r.mode === 'wish') n.mode = 'wish'; rdState.rows[i] = n; redraw(); }
-    else if ('rditem' in d) { r.itemId = e.target.value; rdNotes(); } else if ('rdcopy' in d) r.copy = e.target.checked; else if ('rdrep' in d) { r.replace = e.target.checked; rdNotes(); } });
+    else if ('rditem' in d) { r.itemId = e.target.value; if (r.type === 'keycaps') { rdState.rows.forEach(x => { if (x.type === 'keycaps') x.itemId = r.itemId; }); redraw(); } else rdNotes(); } else if ('rdcopy' in d) r.copy = e.target.checked; else if ('rdown' in d) r.notOwned = !e.target.checked; else if ('rdrep' in d) { r.replace = e.target.checked; rdNotes(); } });
   rows.addEventListener('click', e => { const el = e.target.closest('.rd-row'); if (!el) return; const i = +el.dataset.i, r = rdState.rows[i];
     if (e.target.closest('[data-rddel]')) { rdState.rows.splice(i, 1); body.querySelectorAll(`[data-rdv="${r.vid}"]`).forEach(c => c.checked = false); redraw(); return; }
     if (e.target.closest('[data-rdimg]') && p.images.length > 1) { const k = p.images.findIndex(x => x.src === r.img); r.img = p.images[(k + 1) % p.images.length].src; el.querySelector('.rd-img').innerHTML = `<img src="${esc(r.img)}" alt="" referrerpolicy="no-referrer">`; } });
@@ -6110,16 +6236,16 @@ async function rdSave() {
   const retailBits = r => r.price == null ? {} : { retailPrice: rcRound(r.price * (r.type === 'switches' ? (r.qty || 1) : 1)), retailPriceAt: today, retailSource: p.source };
   const clean = o => { Object.keys(o).forEach(k => (o[k] === '' || o[k] == null || (Array.isArray(o[k]) && !o[k].length)) && delete o[k]); return o; };
   try {
-    const kcNew = new Map();   // new keycap sets: one record per set name
+    const kcNew = new Map(), kcKits = new Map();   // new keycap sets: one record per set name; kits already written to an existing set in this save
     for (const r of rdState.rows) {
       const v = p.variants.find(x => x.id === r.vid) || null, base = rdFields(p, v, r.type);
       if (r.mode === 'wish') { const cat = { keyboards: 'Keyboards', switches: 'Switches', keycaps: 'Keycaps', pcbs: 'PCBs', artisans: 'Artisans', accessories: 'Accessories' }[r.type];
         const d = clean({ category: cat, name: r.type === 'keycaps' ? r.setName : r.name, version: r.type === 'keycaps' ? r.kitName : r.vtitle, platform: p.vendor, estPrice: r.price == null ? null : rcRound(r.price * (r.type === 'switches' ? r.qty || 1 : 1)), link: pageUrl(r.vid), status: 'wanted', notes: 'From ' + p.source, createdAt: now, updatedAt: now, source: 'app', addedFrom: 'product page' });
         await withTimeout(wishCol().add(d)); done.push({ label: d.name + (d.version ? ' — ' + d.version : ''), what: 'wishlist', href: '#/wishlist' }); continue; }
       if (r.type === 'keycaps') {
-        const kt = rdKitType(r.kitName), kit = clean({ id: newKitId(), name: String(r.kitName).trim(), kitType: kt === 'Other' && /\b(extension|add-?on)s?\b/i.test(p.title) ? 'Extensions' : kt, quantity: 1, ...retailBits(r) });
-        if (r.mode === 'existing') { const s = savedKeycaps.find(x => x.id === r.itemId), kits = kitsOf(s).map(k => Object.assign({}, k)), hit = kits.find(k => kitKey(k.name) === kitKey(kit.name));
-          if (hit) { if (hit.retailPrice == null || r.replace) Object.assign(hit, retailBits(r)); } else kits.push(kit);
+        const kt = rdKitType(r.kitName), kit = clean({ id: newKitId(), name: String(r.kitName).trim(), kitType: kt === 'Other' && /\b(extension|add-?on)s?\b/i.test(p.title) ? 'Extensions' : kt, quantity: 1, refImage: r.img || '', notOwned: r.notOwned || undefined, ...retailBits(r) });
+        if (r.mode === 'existing') { const s = savedKeycaps.find(x => x.id === r.itemId), kits = (kcKits.get(s.id) || kitsOf(s)).map(k => Object.assign({}, k)), hit = kits.find(k => kitKey(k.name) === kitKey(kit.name));
+          if (hit) { if (hit.retailPrice == null || r.replace) Object.assign(hit, retailBits(r)); if (!hit.refImage && kit.refImage) hit.refImage = kit.refImage; } else kits.push(kit); kcKits.set(s.id, kits);
           const upd = { kits }; Object.entries(Object.assign({}, base, shopBits(r))).forEach(([k, val]) => { if (k === 'name') return; if (blank(s[k]) || (r.replace && /^(ref|shopText|alsoAvailable|included)/.test(k))) upd[k] = val; });
           await withTimeout(kcCol().doc(s.id).update(clean(Object.assign(upd, { updatedAt: now, appVersion: APP_VERSION }))));
           if (r.copy && r.img) await rdKeepCopy('keycaps', s.id, r.img, 'From ' + p.source).catch(e => copyFails.push(r.kitName));
