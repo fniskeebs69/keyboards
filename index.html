@@ -601,7 +601,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.70.0';
+const APP_VERSION = 'v0.71.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -5848,7 +5848,7 @@ function rdAvailable(p, v) {   // every option the shop sells it in, with the on
 }
 /* ---- reading the page ---- */
 async function rdRead(url) {
-  url = String(url || '').trim(); const m = /https?:\/\/[^\s"'<>]+/i.exec(url); if (!m) throw new Error('That does not look like a web address.'); url = m[0].replace(/[).,]+$/, '');
+  url = String(url || '').trim(); const m = /https?:\/\/[^\s"'<>]+/i.exec(url); if (!m) throw new Error('That does not look like a web address.'); url = m[0].replace(/[).,]+$/, '').replace(/^http:\/\//i, 'https://');
   const page = await rdFetch(url), final = page.finalUrl, doc = new DOMParser().parseFromString(page.text, 'text/html');
   const meta = p => (doc.querySelector(`meta[property="${p}"], meta[name="${p}"]`) || {}).content || '';
   const source = rdShopName(final, meta('og:site_name'));
@@ -5872,6 +5872,13 @@ async function rdRead(url) {
       } catch (e2) {}
     }
   }
+  if (out.kind === 'shopify') {   // some shops (NovelKeys) keep the specs in a list on the page, not in the product description
+    const norm = t => t.toLowerCase().replace(/[^a-z0-9]+/g, ''), have = norm(rdHtmlToText(out.html)), extra = [], pg = new DOMParser().parseFromString(page.text, 'text/html');
+    pg.querySelectorAll('header, footer, nav, script, style, form, [class*="recommend"], [class*="related"]').forEach(n => n.remove());
+    pg.querySelectorAll('ul, ol').forEach(l => { const lis = [...l.querySelectorAll(':scope > li')].map(li => li.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean); if (lis.length < 2 || lis.length > 30) return;
+      const kv = lis.filter(t => /^[A-Za-z][\w /&()+.'-]{1,30}:\s*\S/.test(t)); if (kv.length >= 2 && kv.length >= lis.length * 0.6) kv.forEach(t => { if (!have.includes(norm(t)) && !extra.some(x => norm(x) === norm(t))) extra.push(t); }); });
+    if (extra.length) out.html += `<p><strong>Specifications</strong></p><ul>${extra.map(t => '<li>' + esc(t) + '</li>').join('')}</ul>`;
+  }
   if (!out.title) {   // standard product data (JSON-LD), then the page's social-media tags
     let prod = null;
     doc.querySelectorAll('script[type="application/ld+json"]').forEach(s => { if (prod) return; try { const walk = o => { if (!o || prod) return; if (Array.isArray(o)) return o.forEach(walk); if (/Product/i.test(String(o['@type']))) { prod = o; return; } if (o['@graph']) walk(o['@graph']); }; walk(JSON.parse(s.textContent)); } catch (e) {} });
@@ -5882,6 +5889,7 @@ async function rdRead(url) {
       images: (imgs.length ? imgs : [meta('og:image')].filter(Boolean)).map((s, i) => ({ id: 'i' + i, src: new URL(s, final).toString() })),
       variants: (offers.length ? offers : [{ price: meta('product:price:amount') || meta('og:price:amount') }]).map((o, i) => ({ id: 'v' + i, title: o.name || (offers.length > 1 ? 'Option ' + (i + 1) : 'Default Title'), price: Number(o.price) || null, opts: [] })) });
   }
+  const corp = x => String(x || '').replace(/,?\s+(llc|inc\.?|ltd\.?|co\.|corp\.?)$/i, '').trim(); out.vendor = corp(out.vendor); out.source = corp(out.source);
   if (!out.title) throw new Error('No product information was found on that page. It may not be a product page, or the shop hides it from readers.');
   out.title = out.title.replace(/\s+[–|-]\s+[^–|-]{2,40}$/, m2 => (source && m2.toLowerCase().includes(source.toLowerCase())) ? '' : m2).trim();
   out.text = rdHtmlToText(out.html); out.spec = rdSpecs(out.html); out.includes = rdIncludes(out.html);
@@ -5949,11 +5957,13 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
     const snd = pick('sound profile', 'sound'); if (snd) f.descriptors = snd.split(/[,/]/).map(s => s.trim().toLowerCase()).filter(Boolean).join(', ');
     if (designer) f.notes = 'Designed by ' + designer + (madeBy ? ', made by ' + madeBy : '') + '.';
   } else if (type === 'keycaps') {
-    f.name = rdStrip(p.title, '', /\s+keycaps?(\s+set)?$/i); f.manufacturer = p.vendor;
+    f.name = rdStrip(p.title, '', /\s+(extension|add-?on)s?(\s+kits?)?$|\s+keycaps?(\s+set)?$|\s+kits?$/i);
+    const mk = pick('manufacturer', 'maker', 'made by'), pre = PRELOADED_KC_MAKERS.find(x => new RegExp('^' + x.replace(/[()]/g, '\\$&') + '\\b', 'i').test(p.title));
+    f.manufacturer = mk || (/^(gmk|cyl)\b/i.test(p.title) ? 'GMK' : pre) || p.vendor;
     if (designer) f.designer = designer;
-    const prof = KC_PROFILES.find(x => new RegExp('\\b' + x + '\\b', 'i').test(bare.join(' ') + ' ' + pick('profile') + ' ' + p.tags.filter(t => /profile/i.test(t)).join(' '))); if (prof) f.profile = prof;
-    const mat = KC_MATERIALS.find(x => new RegExp('\\b' + x + '\\b').test(bare.join(' ') + ' ' + pick('material'))); if (mat) f.material = mat;
-    const leg = bare.join(' ') + ' ' + pick('legends', 'legend'); f.legends = /doubleshot|double-shot/i.test(leg) ? 'Doubleshot' : /dye-?sub/i.test(leg) ? 'Dye-sub' : /uv print/i.test(leg) ? 'UV printed' : /laser/i.test(leg) ? 'Lasered' : ''; if (!f.legends) delete f.legends;
+    const prof = KC_PROFILES.find(x => new RegExp('\\b' + x + '\\b', 'i').test(bare.join(' ') + ' ' + pick('profile') + ' ' + p.tags.filter(t => /profile/i.test(t)).join(' '))); if (prof) f.profile = prof; else if (f.manufacturer === 'GMK') f.profile = 'Cherry';
+    const mat = KC_MATERIALS.find(x => new RegExp('\\b' + x + '\\b').test(bare.join(' ') + ' ' + pick('material') + ' ' + p.tags.join(' '))); if (mat) f.material = mat;
+    const leg = bare.join(' ') + ' ' + pick('legends', 'legend') + ' ' + p.tags.join(' ') + ' ' + p.productType; f.legends = /doubleshot|double-shot/i.test(leg) ? 'Doubleshot' : /dye-?sub/i.test(leg) ? 'Dye-sub' : /uv print/i.test(leg) ? 'UV printed' : /laser/i.test(leg) ? 'Lasered' : ''; if (!f.legends) delete f.legends;
     if (/mx compatible|mx stem/i.test(bare.join(' '))) f.stemMount = 'MX';
     const col = pick('colors', 'colours', 'color codes'); if (col) f.colorsText = col;
   } else if (type === 'pcbs') {
@@ -6107,7 +6117,7 @@ async function rdSave() {
         const d = clean({ category: cat, name: r.type === 'keycaps' ? r.setName : r.name, version: r.type === 'keycaps' ? r.kitName : r.vtitle, platform: p.vendor, estPrice: r.price == null ? null : rcRound(r.price * (r.type === 'switches' ? r.qty || 1 : 1)), link: pageUrl(r.vid), status: 'wanted', notes: 'From ' + p.source, createdAt: now, updatedAt: now, source: 'app', addedFrom: 'product page' });
         await withTimeout(wishCol().add(d)); done.push({ label: d.name + (d.version ? ' — ' + d.version : ''), what: 'wishlist', href: '#/wishlist' }); continue; }
       if (r.type === 'keycaps') {
-        const kit = clean({ id: newKitId(), name: String(r.kitName).trim(), kitType: rdKitType(r.kitName), quantity: 1, ...retailBits(r) });
+        const kt = rdKitType(r.kitName), kit = clean({ id: newKitId(), name: String(r.kitName).trim(), kitType: kt === 'Other' && /\b(extension|add-?on)s?\b/i.test(p.title) ? 'Extensions' : kt, quantity: 1, ...retailBits(r) });
         if (r.mode === 'existing') { const s = savedKeycaps.find(x => x.id === r.itemId), kits = kitsOf(s).map(k => Object.assign({}, k)), hit = kits.find(k => kitKey(k.name) === kitKey(kit.name));
           if (hit) { if (hit.retailPrice == null || r.replace) Object.assign(hit, retailBits(r)); } else kits.push(kit);
           const upd = { kits }; Object.entries(Object.assign({}, base, shopBits(r))).forEach(([k, val]) => { if (k === 'name') return; if (blank(s[k]) || (r.replace && /^(ref|shopText|alsoAvailable|included)/.test(k))) upd[k] = val; });
