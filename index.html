@@ -626,7 +626,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.76.0';
+const APP_VERSION = 'v0.77.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -3131,6 +3131,7 @@ function renderKeycapForm(s = null) {
     if (pc) {
       if (e.target.classList.contains('c-gmk') && !pc.querySelector('.c-hex').value.trim()) { const h = gmkHex({ sys: 'GMK', code: e.target.value.trim() }); if (h) { pc.querySelector('.c-hex').value = h; } }   // GMK standard code → hex
       if (e.target.classList.contains('c-ral') && !pc.querySelector('.c-hex').value.trim()) { const h = ralDesignHex(e.target.value.trim()); if (h) pc.querySelector('.c-hex').value = h; }   // RAL Design code → hex
+      autoColorFields(pc, e.target.classList.contains('c-name') ? 'name' : e.target.classList.contains('c-gmk') ? 'gmk' : '');
       const h = normHex(pc.querySelector('.c-hex').value), sw = pc.querySelector('.pswatch'), tx = pc.dataset.tex;
       sw.style.background = swBg({ texture: tx, hex: h }) || h || 'transparent'; sw.innerHTML = (h || tx ? '' : '<span>' + (pc.querySelector('.c-hex').value.trim() ? 'Not a valid hex' : 'Enter a hex') + '</span>') + (tx ? '<button type="button" class="c-notex" title="Show the flat color instead">Remove texture</button>' : '') + '<button type="button" class="c-frompic" title="Tap the color on one of this item\'s pictures">Pick from a picture</button>';
       pc.querySelector('.c-pick').style.background = h || 'transparent';
@@ -3243,7 +3244,7 @@ async function saveKeycapSet() {
     if (c.hex && !h) bad.push('.c-hex');
     bad.forEach(x => el.querySelector(x).classList.add('bad')); if (bad.length) colorBad = colorBad || el;
     const out = { id: c.id, roles: c.roles, source: ['catalog', 'excel'].includes(el.dataset.source) ? el.dataset.source : 'manual' };
-    if (c.name) out.name = c.name; if (h) out.hex = h; ['pantone', 'ral', 'gmk', 'texture'].forEach(f => { if (c[f]) out[f] = c[f]; });
+    if (c.name) out.name = c.name; if (c.name && c.nameAuto) out.nameAuto = true; if (h) out.hex = h; ['pantone', 'ral', 'gmk', 'texture'].forEach(f => { if (c[f]) out[f] = c[f]; });
     return out;
   });
   document.getElementById('errColors').textContent = colorBad ? '· check colors' : '';
@@ -3494,15 +3495,15 @@ function paletteOf(s) { return Array.isArray(s?.palette) ? s.palette : []; }
 function normHex(v) { v = String(v || '').trim().replace(/^#/, ''); if (/^[0-9a-f]{3}$/i.test(v)) v = v.split('').map(c => c + c).join(''); return /^[0-9a-f]{6}$/i.test(v) ? '#' + v.toUpperCase() : null; }
 function colorCardHtml(c) {
   const hex = normHex(c.hex), val = v => v != null ? esc(String(v)) : '';
-  return `<div class="pcard" data-color="${esc(c.id)}" data-source="${['catalog', 'excel'].includes(c.source) ? c.source : 'manual'}"${c.texture ? ` data-tex="${esc(c.texture)}"` : ''}>
+  return `<div class="pcard" data-color="${esc(c.id)}"${c.nameAuto || (!c.name && normHex(c.hex)) ? ' data-nameauto="1"' : ''} data-source="${['catalog', 'excel'].includes(c.source) ? c.source : 'manual'}"${c.texture ? ` data-tex="${esc(c.texture)}"` : ''}>
     <div class="pswatch" style="background:${swBg(c) || hex || 'transparent'}">${hex || c.texture ? '' : '<span>Enter a hex</span>'}${c.texture ? '<button type="button" class="c-notex" title="Show the flat color instead">Remove texture</button>' : ''}<button type="button" class="c-frompic" title="Tap the color on one of this item's pictures">Pick from a picture</button></div>
     <div class="pbody">
       <div class="pfields">
-        <label class="wide">Color name<input class="input c-name" placeholder="e.g. Botanical Light Green" value="${val(c.name)}"></label>
+        <label class="wide">Color name<input class="input c-name" placeholder="Filled in from the color, or type your own" value="${val(c.name || (c.nameAuto !== false && normHex(c.hex) ? colorNameOf(c.hex) : ''))}"></label>
         <label>Hex (approximate)<span class="hexrow"><button type="button" class="c-pick swbtn" style="background:${hex || 'transparent'}" aria-label="Open the color wheel" title="Color wheel"></button><input class="input c-hex mono" placeholder="#92ACA0" value="${val(c.hex)}"></span></label>
         <label>Pantone<input class="input c-pantone" placeholder="e.g. 5575 C" value="${val(c.pantone)}"></label>
         <label>RAL<input class="input c-ral" placeholder="e.g. 7044" value="${val(c.ral)}"></label>
-        <label>GMK code<input class="input c-gmk" placeholder="e.g. WS1" value="${val(c.gmk)}"></label>
+        <label>GMK code<input class="input c-gmk" placeholder="e.g. WS1" value="${val(c.gmk)}"><span class="sub c-gmkhint" style="margin:2px 0 0;font-size:11.5px"></span></label>
       </div>
       <div class="proles"><span class="ph2">Used for</span><span></span>${PAL_GROUPS.map(([, gl]) => `<b>${gl}</b>`).join('')}
         ${PAL_USES.map(([u, ul]) => `<span>${ul}</span>${PAL_GROUPS.map(([g, gl]) => `<label class="pchk"><input type="checkbox" class="c-role" value="${g}-${u}" aria-label="${gl} ${ul.toLowerCase()}"${(c.roles || []).includes(g + '-' + u) ? ' checked' : ''}></label>`).join('')}`).join('')}</div>
@@ -3511,7 +3512,7 @@ function colorCardHtml(c) {
 }
 function readColorCard(el) {
   const q = c => el.querySelector(c).value.trim();
-  return { id: el.dataset.color, name: q('.c-name'), hex: q('.c-hex'), pantone: q('.c-pantone'), ral: q('.c-ral'), gmk: q('.c-gmk'), texture: el.dataset.tex || '', roles: [...el.querySelectorAll('.c-role:checked')].map(x => x.value) };
+  return { id: el.dataset.color, nameAuto: !!el.dataset.nameauto, name: q('.c-name'), hex: q('.c-hex'), pantone: q('.c-pantone'), ral: q('.c-ral'), gmk: q('.c-gmk'), texture: el.dataset.tex || '', roles: [...el.querySelectorAll('.c-role:checked')].map(x => x.value) };
 }
 function paletteStripHtml(s) { const p = paletteOf(s).filter(c => normHex(c.hex)); return p.length ? `<span class="pstrip">${p.map(c => `<i style="background:${swBg(c) || normHex(c.hex)}" title="${esc(c.name || c.hex)}${c.texture ? ' (texture sample)' : ''}"></i>`).join('')}</span>` : ''; }
 
@@ -4141,6 +4142,35 @@ function loadGmk(force = false) {   // read once per visit, then reuse
     gmkMeta = m.exists ? m.data() : null; gmkLoading = null; return gmkSets;
   }).catch(e => { gmkLoading = null; throw e; });
   return gmkLoading;
+}
+/* ---------- v0.77.0: color names and nearest GMK code ---------- */
+const COLOR_NAMES = [['Black', '#111111'], ['Charcoal', '#333538'], ['Dark Gray', '#55585c'], ['Gray', '#808387'], ['Light Gray', '#b5b8bb'], ['Silver', '#cfd2d4'], ['White', '#f7f7f5'], ['Off-White', '#efece4'], ['Cream', '#f1e7cf'], ['Beige', '#ddd0b4'],
+  ['Khaki', '#c3b28b'], ['Light Greige', '#e3ddd3'], ['Greige', '#d3ccc1'], ['Warm Gray', '#b9b2a8'], ['Stone', '#a8a28f'], ['Gray Green', '#76896f'], ['Tan', '#c6a67a'], ['Sand', '#d8c29b'], ['Taupe', '#8b7d6b'], ['Brown', '#6b4428'], ['Dark Brown', '#3e2718'], ['Chocolate', '#5a3420'], ['Coffee', '#6f4e37'], ['Caramel', '#b5733a'], ['Copper', '#b87333'], ['Bronze', '#8c6239'], ['Brass', '#b5a642'], ['Gold', '#d4af37'],
+  ['Maroon', '#5e1720'], ['Burgundy', '#7a1f33'], ['Wine', '#6d2133'], ['Dark Red', '#8b1a1a'], ['Red', '#d0261d'], ['Crimson', '#b3122b'], ['Cherry Red', '#c2152f'], ['Brick', '#a2452e'], ['Rust', '#a8471f'], ['Coral', '#f07b65'], ['Salmon', '#f4a08a'], ['Peach', '#f7c3a3'], ['Dusty Rose', '#c48b8b'],
+  ['Pink', '#f2a5c0'], ['Light Pink', '#f8cfd9'], ['Hot Pink', '#e8457f'], ['Magenta', '#c2287a'], ['Raspberry', '#b3245c'], ['Mauve', '#a77b98'], ['Lilac', '#c5a8d8'], ['Lavender', '#b7a6e0'], ['Light Purple', '#a68bd0'], ['Purple', '#6a3d9a'], ['Violet', '#7d4fc0'], ['Plum', '#5b2e55'], ['Dark Purple', '#3a1f4d'],
+  ['Navy', '#1b2a4a'], ['Dark Blue', '#173a73'], ['Royal Blue', '#2a4fb5'], ['Blue', '#1f6fc2'], ['Cobalt', '#0047ab'], ['Sky Blue', '#7cbfe6'], ['Light Blue', '#a8cbe8'], ['Baby Blue', '#c7def2'], ['Powder Blue', '#b0c4d6'], ['Steel Blue', '#4f6f8f'], ['Slate Blue', '#5a6e8c'], ['Denim', '#3d5a80'], ['Prussian Blue', '#1d3b57'],
+  ['Teal', '#00757a'], ['Petrol Blue', '#005f78'], ['Dark Teal', '#0b4f55'], ['Turquoise', '#2bb5b0'], ['Cyan', '#1bb3d1'], ['Aqua', '#7fd8d4'], ['Mint', '#a8e0c5'], ['Seafoam', '#8fcfb0'], ['Sage', '#9cae8c'], ['Olive', '#6b6b2c'], ['Army Green', '#4b5320'], ['Moss', '#64703b'], ['Forest Green', '#1f5a32'],
+  ['Dark Green', '#183f2a'], ['British Racing Green', '#1f3d2b'], ['Green', '#2e8b47'], ['Kelly Green', '#3c9b3c'], ['Lime', '#8cc63f'], ['Light Green', '#a9d18e'], ['Pistachio', '#b9d29a'], ['Chartreuse', '#b8d433'],
+  ['Yellow', '#f1cf1c'], ['Lemon', '#f5e663'], ['Pale Yellow', '#f4ea9e'], ['Mustard', '#d4a514'], ['Amber', '#f0a30a'], ['Orange', '#ee6b0f'], ['Burnt Orange', '#c4561c'], ['Tangerine', '#f58a2b'], ['Apricot', '#f6b27a']];
+function hexLab(h) { h = normHex(h); if (!h) return null; const lin = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  const r = lin(parseInt(h.slice(1, 3), 16)), g = lin(parseInt(h.slice(3, 5), 16)), b = lin(parseInt(h.slice(5, 7), 16));
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b), m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b), s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s, 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s]; }   // OKLab
+const labDist = (a, b) => Math.hypot(a[0] - b[0], (a[1] - b[1]) * 1.6, (a[2] - b[2]) * 1.6) * 100;   // hue and colorfulness count a bit more than lightness, so a dark teal stays a teal
+let colorNameLab = null;
+function colorNameOf(hex) { const L = hexLab(hex); if (!L) return ''; colorNameLab = colorNameLab || COLOR_NAMES.map(([n, h]) => [n, hexLab(h)]); let best = null, bd = 1e9; colorNameLab.forEach(([n, l]) => { const d = labDist(L, l); if (d < bd) { bd = d; best = n; } }); return best; }
+function gmkNearest(hex) {   // closest GMK standard color (from the private catalog's standard color list); null when that list isn't loaded
+  const L = hexLab(hex), std = gmkMeta && gmkMeta.standardColors; if (!L || !std) return null; let best = null;
+  Object.entries(std).forEach(([code, h]) => { const l = hexLab(h); if (!l) return; const d = labDist(L, l); if (!best || d < best.d) best = { code, hex: normHex(h), d }; }); return best; }
+const gmkMatchWord = d => d < 3 ? 'same color' : d < 6 ? 'very close' : d < 12 ? 'close' : 'rough match, check it';
+function isGmkSetForm() { const v = n => ((document.querySelector(`#view [name="${n}"]`) || {}).value || ''); return /\b(gmk|cyl)\b/i.test(v('manufacturer') + ' ' + v('name')); }
+function autoColorFields(pc, changed) {   // fills the color name and (GMK sets) the closest GMK code; only fields that are empty or were filled this way before
+  const h = normHex(pc.querySelector('.c-hex').value), nm = pc.querySelector('.c-name'), gk = pc.querySelector('.c-gmk'), hint = pc.querySelector('.c-gmkhint');
+  if (changed === 'name') delete pc.dataset.nameauto; if (changed === 'gmk') { delete pc.dataset.gmkauto; if (hint) hint.textContent = ''; }
+  if (h && (!nm.value.trim() || pc.dataset.nameauto)) { const n = colorNameOf(h); if (n && nm.value !== n) nm.value = n; pc.dataset.nameauto = '1'; }
+  if (h && changed !== 'gmk' && isGmkSetForm() && (!gk.value.trim() || pc.dataset.gmkauto)) { const g = gmkNearest(h);
+    if (g) { gk.value = g.code; pc.dataset.gmkauto = '1'; if (hint) hint.textContent = `Closest GMK standard color: ${g.code} ${g.hex} (${gmkMatchWord(g.d)}). Type over it if the set uses another code.`; } }
+  else if (hint && !pc.dataset.gmkauto) hint.textContent = '';
 }
 function gmkHex(c) {   // c = { sys: GMK | RAL | Pantone | Hex, code, hex? }; RAL and Pantone have no hex in this data
   if (!c) return null; if (c.hex) return c.hex;
@@ -6048,8 +6078,22 @@ function rdAvailable(p, v) {   // every option the shop sells it in, with the on
   return { source: p.source, url: rdPageUrl(p, ''), at: todayIso(), groups, layouts };
 }
 /* ---- reading the page ---- */
+async function rdFromMatrix(url) {   // Matrix's GMK pages carry no shop data: the set is built from your private GMK catalog (same source, kept in your Firebase only)
+  let sets = []; try { sets = await loadGmk(); } catch (e) {}
+  const norm = u => String(u || '').toLowerCase().replace(/^https?:\/\//, '').replace(/[?#].*$/, '').replace(/\/+$/, '');
+  const s = (sets || []).find(x => norm(x.matrixUrl) === norm(url));
+  if (!s) throw new Error((sets || []).length ? "That Matrix page isn't in your GMK catalog. Check the address is a GMK set page (matrixzj.github.io/docs/gmk-keycaps/<set>/), or load a newer catalog file on the Import page." : 'Matrix pages are read from your private GMK catalog, and it isn\'t loaded on this device. Load the catalog file on the Import page first (or open the Catalog page once).');
+  const kits = (s.kits || []).filter(k => k.name), title = /^gmk\b/i.test(s.title) ? s.title : 'GMK ' + s.title;
+  const lines = [s.designer && 'Designer: ' + s.designer, 'Manufacturer: GMK', 'Profile: Cherry', 'Material: ABS', 'Legends: Doubleshot', 'Stem: MX', s.gbStart && `Group buy: ${s.gbStart}${s.gbEnd ? ' to ' + s.gbEnd : ''}`, s.shipping && 'Shipping: ' + s.shipping].filter(Boolean);
+  const html = `<ul>${lines.map(t => '<li>' + esc(t) + '</li>').join('')}</ul>`;
+  const out = { url: s.matrixUrl || url, source: 'Matrix (Keycaps Info)', host: 'matrixzj.github.io', kind: 'matrix', title, vendor: 'GMK', productType: 'Keycaps', tags: ['GMK', 'Keycaps'], currency: 'USD', gmkRef: s.id,
+    options: [{ name: 'Kit', values: kits.map(k => k.name) }], variants: kits.map((k, i) => ({ id: 'mx' + i, title: k.name, price: k.priceUsd != null ? k.priceUsd : null, opts: [k.name], imageSrc: k.img || '' })),
+    images: kits.filter(k => k.img).map((k, i) => ({ id: 'mi' + i, src: k.img })), html, variantId: '' };
+  out.gmkSet = s; out.text = rdHtmlToText(html); out.spec = rdSpecs(html); out.includes = []; return out;
+}
 async function rdRead(url) {
   url = String(url || '').trim(); const m = /https?:\/\/[^\s"'<>]+/i.exec(url); if (!m) throw new Error('That does not look like a web address.'); url = m[0].replace(/[).,]+$/, '').replace(/^http:\/\//i, 'https://');
+  if (/^https:\/\/matrixzj\.github\.io\/docs\/gmk-keycaps\//i.test(url)) return rdFromMatrix(url);
   const page = await rdFetch(url), final = page.finalUrl, doc = new DOMParser().parseFromString(page.text, 'text/html');
   const meta = p => (doc.querySelector(`meta[property="${p}"], meta[name="${p}"]`) || {}).content || '';
   const source = rdShopName(final, meta('og:site_name'));
@@ -6180,6 +6224,7 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
     f.name = rdStrip(p.title, '', /\s+(extension|add-?on)s?(\s+kits?)?$|\s+keycaps?(\s+set)?$|\s+kits?$/i);
     const mk = pick('manufacturer', 'maker', 'made by'), pre = PRELOADED_KC_MAKERS.find(x => new RegExp('^' + x.replace(/[()]/g, '\\$&') + '\\b', 'i').test(p.title));
     f.manufacturer = mk || (/^(gmk|cyl)\b/i.test(p.title) ? 'GMK' : pre) || p.vendor;
+    if (p.gmkRef) { f.gmkRef = p.gmkRef; if (p.gmkSet && typeof gmkPaletteFrom === 'function') { const pal = gmkPaletteFrom(p.gmkSet); if (pal.length) f.palette = pal; } }   // read from a Matrix page: linked to the catalog set, colors from its color table
     if (designer) f.designer = designer;
     const prof = KC_PROFILES.find(x => new RegExp('\\b' + x + '\\b', 'i').test(bare.join(' ') + ' ' + pick('profile') + ' ' + p.tags.filter(t => /profile/i.test(t)).join(' '))); if (prof) f.profile = prof; else if (f.manufacturer === 'GMK') f.profile = 'Cherry';
     const mat = KC_MATERIALS.find(x => new RegExp('\\b' + x + '\\b').test(bare.join(' ') + ' ' + pick('material') + ' ' + p.tags.join(' '))); if (mat) f.material = mat;
