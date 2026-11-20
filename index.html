@@ -626,7 +626,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.77.0';
+const APP_VERSION = 'v0.78.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -858,8 +858,8 @@ function undoToast(msg, list) {
 const MG_ONE = { keyboards: 'keyboard', switches: 'switch entry', keycaps: 'keycap set', pcbs: 'PCB', artisans: 'artisan', accessories: 'accessory' };
 const MG_SKIP = new Set(['id', 'createdAt', 'updatedAt', 'appVersion', 'source', 'addedFrom', 'isSample', 'doneAt', 'inQueue', 'values', 'isFavorite', 'colorway', 'palette', 'summaryExtra', 'summaryHidden', 'refImages', 'kits', 'allocations',
   'importKey', 'importAliases', 'excelRow', 'excelRows', 'excelTotal', 'excelTab', 'importNotes', 'importedTotal', 'formFactorExcel', 'kitsPurchasedExcel', 'coverPhotoId', 'coverThumb', 'coverFit', 'stockPhotoId', 'stockThumb',
-  'kitStock', 'kitStockCover', 'kitPhotos', 'kitLinks', 'coverKit', 'descriptionOwn', 'shopTextSource', 'shopTextUrl', 'shopTextAt', 'retailPriceAt', 'retailSource', 'refImage', 'refSource', 'countApprox']);
-const MG_FOLLOW = { description: ['descriptionOwn'], shopText: ['shopTextSource', 'shopTextUrl', 'shopTextAt'], retailPrice: ['retailPriceAt', 'retailSource'], refUrl: ['refImage', 'refSource'], totalCount: ['countApprox'] };
+  'kitStock', 'kitStockCover', 'kitPhotos', 'kitLinks', 'coverKit', 'descriptionOwn', 'shopTextSource', 'shopTextUrl', 'shopTextAt', 'retailPriceAt', 'retailSource', 'retailCount', 'refImage', 'refSource', 'countApprox']);
+const MG_FOLLOW = { description: ['descriptionOwn'], shopText: ['shopTextSource', 'shopTextUrl', 'shopTextAt'], retailPrice: ['retailPriceAt', 'retailSource', 'retailCount'], refUrl: ['refImage', 'refSource'], totalCount: ['countApprox'] };
 const MG_ID = ['importKey', 'excelRow', 'excelTotal', 'excelTab', 'importNotes', 'importedTotal', 'formFactorExcel', 'kitsPurchasedExcel', 'source'];   // where the entry came from in the workbook: travels with importKey
 const MG_TEXT = new Set(['notes', 'mods', 'reviewText', 'review', 'currentBuildText', 'included', 'specsText', 'installedOnText', 'belongsToText', 'colorsText', 'shopText', 'description']);
 const MG_ADD = { switches: new Set(['totalCount', 'price', 'shipping', 'discounts']) };
@@ -1248,7 +1248,7 @@ const DUP_GROUPS = [   // [key, label, fields, on by default]
   ['purchase', 'Purchase details (price, tax, shipping, dates, seller, receipt)', ['price', 'taxRate', 'shipping', 'discounts', 'datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'pictureLink', 'acquisition', 'orderNumber'], true],
   ['notes', 'Notes and review', ['notes', 'reviewText', 'ratings', 'review', 'mods', 'currentBuildText'], true],
   ['colors', 'Colors (palette or colorway)', ['palette', 'colorway', 'colorsText', 'keycapColor', 'legendColor'], true],
-  ['product', 'Product page, shop text, retail price, description and descriptors', ['refUrl', 'refImage', 'refImages', 'refSource', 'description', 'descriptionOwn', 'descriptors', 'shopText', 'shopTextSource', 'shopTextUrl', 'shopTextAt', 'retailPrice', 'retailPriceAt', 'retailSource', 'alsoAvailable', 'included'], true],
+  ['product', 'Product page, shop text, retail price, description and descriptors', ['refUrl', 'refImage', 'refImages', 'refSource', 'description', 'descriptionOwn', 'descriptors', 'shopText', 'shopTextSource', 'shopTextUrl', 'shopTextAt', 'retailPrice', 'retailPriceAt', 'retailSource', 'retailCount', 'alsoAvailable', 'included'], true],
   ['summary', 'Your Summary rows and hidden rows', ['summaryExtra', 'summaryHidden'], true],
   ['values', 'Market value history', ['values'], false],
   ['fav', 'Favorite star', ['isFavorite'], false],
@@ -4091,7 +4091,7 @@ function wireValueCard(t, x) {
 /* while a form has unsaved typing, a value change only redraws the value card */
 function swapValueCardIfOnly(t, x) {
   const c = document.getElementById('valueCard'); if (!c || !editing || editing.id !== x.id) return false;
-  const strip = o => JSON.stringify(Object.assign({}, o, { values: null, colorway: null, refImage: null, refUrl: null, refSource: null, doneAt: null, inQueue: null, coverFit: null, coverKit: null, alsoAvailable: null, refImages: null, shopText: null, shopTextSource: null, shopTextUrl: null, shopTextAt: null, retailPrice: null, retailPriceAt: null, retailSource: null, stockThumb: null, stockPhotoId: null, kitStock: null, kitStockCover: null, kitLinks: null, summaryHidden: null, summaryExtra: null, description: null, descriptionOwn: null, name: null, updatedAt: null, createdIso: null, _date: null }));
+  const strip = o => JSON.stringify(Object.assign({}, o, { values: null, colorway: null, refImage: null, refUrl: null, refSource: null, doneAt: null, inQueue: null, coverFit: null, coverKit: null, alsoAvailable: null, refImages: null, shopText: null, shopTextSource: null, shopTextUrl: null, shopTextAt: null, retailPrice: null, retailPriceAt: null, retailSource: null, retailCount: null, stockThumb: null, stockPhotoId: null, kitStock: null, kitStockCover: null, kitLinks: null, summaryHidden: null, summaryExtra: null, description: null, descriptionOwn: null, name: null, updatedAt: null, createdIso: null, _date: null }));
   if (strip(editing) !== strip(x)) return false;
   c.outerHTML = valueCardHtml(t, x); wireValueCard(t, x);
   const cw = document.getElementById('cwCard'); if (cw && t === 'keyboards') { cw.outerHTML = colorwayCardHtml(x); wireColorwayCard(x); }
@@ -4799,6 +4799,9 @@ async function summaryAction(view, x, type, e) {
     const k = row.dataset.sk, h = (latest().summaryHidden || []).slice(), i = h.indexOf(k); if (i >= 0) h.splice(i, 1); else h.push(k);
     if (await write({ summaryHidden: h.length ? h : firebase.firestore.FieldValue.delete() })) redraw({ summaryHidden: h }); return; }
   if (e.target.id === 'sumToggleHidden') { sumShowHidden = !sumShowHidden; redraw({}); return; }
+  if (e.target.id === 'retCountEdit') { const bx = document.getElementById('retCountBox'); bx.hidden = !bx.hidden; if (!bx.hidden) document.getElementById('retCountIn').focus(); return; }
+  if (e.target.id === 'retCountSave') { const n = Math.round(Number(document.getElementById('retCountIn').value)); if (!(n > 0)) { toast('Type how many switches the shop price is for'); return; }
+    if (await write({ retailCount: n })) { redraw({ retailCount: n }); toast('Saved'); } return; }
   const xd = e.target.closest('[data-sumxdel]');
   if (xd) { const list = (latest().summaryExtra || []).filter(r => r.id !== xd.dataset.sumxdel);
     if (await write({ summaryExtra: list.length ? list : firebase.firestore.FieldValue.delete() })) { redraw({ summaryExtra: list }); toast('Row removed'); } return; }
@@ -4830,6 +4833,7 @@ function summaryRows(panel) {
     const id = (c.id || '').replace(/^f_/, '');
     if (c.type === 'date') v = fmtDate(v) || v;
     else if (['price', 'shipping', 'discounts'].includes(id) && isFinite(+v)) v = money(+v);
+    else if (id === 'priceEach' && v !== '' && isFinite(+v)) v = money3(+v);
     else if (id === 'taxRatePct' && isFinite(+v)) v = (+v) + '%';
     rows.push([lab, v, id === 'descriptors' ? 'chips' : '', c.id || '']);
   });
@@ -4874,9 +4878,9 @@ function drawSummary(view, x, type) {
   if (live.alsoAvailable && ((live.alsoAvailable.groups || []).length || (live.alsoAvailable.layouts || []).length)) secs.push(`<div class="sumsec" id="sumAvail"><div class="sec-title"><h4>Also available in</h4>${type === 'keyboards' ? '<button class="lnk" data-goto="available">Open</button>' : ''}</div>${availHtml(live, type)}</div>`);
   if (type !== 'keyboards' && live.included) secs.push(`<div class="sumsec" id="sumIncluded"><h4>Included with the kit</h4><ul class="incl">${String(live.included).split('\n').filter(Boolean).map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>`);
   if (live.retailPrice != null || live.shopText) {
-    const per = type === 'switches' && Number(live.totalCount) > 0 && live.retailPrice != null ? ` · ${money(live.retailPrice / Number(live.totalCount))} per switch` : '';
+    const sr = type === 'switches' && live.retailPrice != null ? switchRetail(live) : null, per = sr ? (sr.count ? ` for ${sr.count} switches · ${money3(sr.each)} per switch` : ' <span class="sub">(how many switches is that? use “change” below)</span>') : '';
     const kitRetail = type === 'keycaps' ? kitsOf(live).filter(k => k.retailPrice != null) : [];
-    secs.push(`<div class="sumsec" id="sumShop"><h4>From the shop</h4>${live.retailPrice != null ? `<dl class="sumdl"><dt>Retail price</dt><dd><span class="sumv">${money(live.retailPrice)}${per} <span class="sub">(${esc(live.retailSource || 'shop')}${live.retailPriceAt ? ', ' + esc(fmtDate(live.retailPriceAt)) : ''})</span></span></dd></dl>` : ''}
+    secs.push(`<div class="sumsec" id="sumShop"><h4>From the shop</h4>${live.retailPrice != null ? `<dl class="sumdl"><dt>Retail price</dt><dd><span class="sumv">${money(live.retailPrice)}${per} <span class="sub">(${esc(live.retailSource || 'shop')}${live.retailPriceAt ? ', ' + esc(fmtDate(live.retailPriceAt)) : ''})</span>${sr ? ` <button class="lnk" type="button" id="retCountEdit" title="How many switches the shop's price is for">change</button><span id="retCountBox" hidden> <input class="input" id="retCountIn" type="number" min="1" step="1" style="width:90px;display:inline-block" value="${sr.count || ''}" placeholder="e.g. 10"> switches <button class="btn" type="button" id="retCountSave">Save</button></span>` : ''}</span>${sr && sr.cmp ? `<span class="sub" id="retCmp" style="display:block;margin-top:2px">${sr.cmp}</span>` : ''}</dd></dl>` : ''}
       ${kitRetail.length ? `<dl class="sumdl">${kitRetail.map(k => `<dt>${esc(k.name)}</dt><dd><span class="sumv">${money(k.retailPrice)} <span class="sub">retail${k.retailSource ? ', ' + esc(k.retailSource) : ''}</span></span></dd>`).join('')}</dl>` : ''}
       ${live.shopText ? `<details class="shoptext"><summary>Shop's description</summary><div class="rd-shoptext">${esc(live.shopText).replace(/\n/g, '<br>')}</div></details><p class="sub" style="margin:6px 0 0;font-size:11.5px">Text and pictures from ${live.shopTextUrl ? `<a class="lnk" href="${esc(live.shopTextUrl)}" target="_blank" rel="noopener">${esc(live.shopTextSource || 'the shop')}</a>` : esc(live.shopTextSource || 'the shop')}${live.shopTextAt ? ', read ' + esc(fmtDate(live.shopTextAt)) : ''}. The price you paid comes from your receipt.</p>` : ''}</div>`);
   }
@@ -6378,7 +6382,7 @@ async function rdSave() {
   const shopBits = r => { const v = p.variants.find(x => x.id === r.vid) || null, av = rdAvailable(p, v);
     return { refUrl: pageUrl(r.vid), refSource: p.source, refImage: r.img || (p.images[0] || {}).src || '', refImages: p.images.map(x => x.src).slice(0, 16), shopText: p.text || '', shopTextSource: p.source, shopTextUrl: pageUrl(''), shopTextAt: today,
       included: (p.includes || []).join('\n'), alsoAvailable: av.groups.length || av.layouts.length ? av : null }; };
-  const retailBits = r => r.price == null ? {} : { retailPrice: rcRound(r.price * (r.type === 'switches' ? (r.qty || 1) : 1)), retailPriceAt: today, retailSource: p.source };
+  const retailBits = r => r.price == null ? {} : Object.assign({ retailPrice: rcRound(r.price * (r.type === 'switches' ? (r.qty || 1) : 1)), retailPriceAt: today, retailSource: p.source }, r.type === 'switches' && r.pack ? { retailCount: r.pack * (r.qty || 1) } : {});   // switches: how many switches that price buys
   const clean = o => { Object.keys(o).forEach(k => (o[k] === '' || o[k] == null || (Array.isArray(o[k]) && !o[k].length)) && delete o[k]); return o; };
   try {
     const kcNew = new Map(), kcKits = new Map();   // new keycap sets: one record per set name; kits already written to an existing set in this save
@@ -6417,6 +6421,17 @@ async function rdSave() {
   } catch (e) { btn.disabled = false; btn.textContent = 'Save'; err.textContent = `Could not save everything: ${explain(e)}${done.length ? ' Already saved: ' + done.map(d => d.label).join(', ') + '. Remove those lines before trying again.' : ' Nothing was saved.'}`; }
 }
 /* ---- Import page card and Settings card ---- */
+const money3 = n => { const v = Number(n) || 0; return '$' + (Math.abs(v) < 1 && Math.round(v * 1000) % 10 ? v.toFixed(3) : v.toFixed(2)); };   // $0.243 for per-switch prices, $0.35 otherwise
+function switchRetail(x) {   // the shop's price is for a pack (or several): how many switches it covers, and how that compares with what you paid
+  let count = Number(x.retailCount) || 0, from = 'saved';
+  if (!count) { const t = String(x.shopText || ''), m = /pack size:\s*(\d{1,4})/i.exec(t) || /(\d{1,4})\s+switch(?:es)?\s+(?:per|in each|in every|in a)\s+(?:order|pack|bag)/i.exec(t) || /(?:pack|bag|set) of\s*(\d{1,4})/i.exec(t) || /(\d{1,4})\s*(?:pcs|pieces|switches)\s*(?:\/|per)\s*(?:pack|bag)/i.exec(t) || /\b(\d{1,4})[- ]?(?:pack|pcs)\b/i.exec(t); if (m) { count = Number(m[1]); from = 'text'; } }
+  const out = { price: Number(x.retailPrice), count, from, each: count ? Number(x.retailPrice) / count : null, cmp: '' };
+  const n = Number(x.totalCount) || 0, paid = x.price === '' || x.price == null ? null : Number(x.price);
+  if (out.each != null && n > 0) { const atRetail = Math.round(out.each * n * 100) / 100; out.cmp = `Your ${n} at retail: ${money(atRetail)}`;
+    if (paid != null) { const diff = Math.round((atRetail - paid) * 100) / 100, pc = atRetail ? Math.round(Math.abs(diff) / atRetail * 100) : 0;
+      out.cmp += ` · you paid ${money(paid)} (${money3(paid / n)} each, before tax)` + (Math.abs(diff) < 0.01 ? ', the same as retail' : diff > 0 ? `, ${money(diff)} (${pc}%) less than retail` : `, ${money(-diff)} (${pc}%) more than retail`); } }
+  return out;
+}
 function availHtml(x, type) {
   const a = x && x.alsoAvailable; if (!a || (!(a.groups || []).length && !(a.layouts || []).length)) return `<p class="sub" style="margin:0">Nothing yet. This fills in by itself when you read the ${type === 'keyboards' ? 'keyboard' : 'item'}'s product page (Import → Read a product page; choose “Add to an entry I have” for one you already saved).</p>`;
   return `${(a.groups || []).map(g => `<div class="avail"><div class="avail-h">${esc(g.name)}</div><div class="pchips">${g.values.map(v => `<span class="pchip${v === g.chosen ? ' on' : ''}"${v === g.chosen ? ' title="Yours"' : ''}>${v === g.chosen ? '✓ ' : ''}${esc(v)}</span>`).join('')}</div></div>`).join('')}
