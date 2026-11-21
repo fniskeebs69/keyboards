@@ -456,6 +456,9 @@
   .instwrap > .card { border: 0; padding: 0; background: none; box-shadow: none; margin: 14px 0 0; border-radius: 0; } .instwrap > .card + .card { border-top: var(--bw) var(--bs) var(--line); padding-top: 12px; } .instwrap > .card > h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); font-weight: 600; margin-bottom: 8px; }
   .shopopts { margin-top: 10px; } .shopopts > summary { cursor: pointer; font-size: 13px; color: var(--text-2); } .shopopts[open] > summary { margin-bottom: 8px; } .refret { margin: 8px 0 0; font-size: 13px; }
   .impold > summary { cursor: pointer; list-style: none; } .impold > summary::-webkit-details-marker { display: none; } .impold > summary::before { content: '▸ '; color: var(--text-3); } .impold[open] > summary::before { content: '▾ '; }
+  .scancard [hidden] { display: none !important; } .scanrow { display: flex; gap: 8px; } .scanrow .input { flex: 1; min-width: 0; } .scancard video, .scancard img { width: 100%; max-height: 52vh; object-fit: contain; background: #000; border-radius: 8px; margin-top: 10px; }
+  .gmkmid > .card { margin-top: 16px; } .costtbl { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; } .costtbl th { text-align: left; font-size: 11.5px; color: var(--text-3); font-weight: 600; padding: 4px 6px; border-bottom: var(--bw) var(--bs) var(--line); } .costtbl td { padding: 5px 6px; border-bottom: var(--bw) var(--bs) var(--line); vertical-align: top; } .costtbl .num { text-align: right; white-space: nowrap; } .costtbl tfoot td { border-bottom: 0; } .costtbl td .sub { font-size: 11px; }
+  .tiphint:empty { display: none; } .tiphint { font-size: 12px; }
   .sumhid { opacity: .45; } .sumrow .sumed { flex: 1; } .sumadd { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 8px; margin-top: 8px; }
   @media (hover: none) { .sumacts { opacity: 1; } } @media (max-width: 700px) { .sumadd { grid-template-columns: 1fr; } }
   .sndlist { display: grid; gap: 10px; margin-top: 10px; } .snditem { border: var(--bw) var(--bs) var(--line); border-radius: var(--radius-s); padding: 8px; display: grid; gap: 6px; }
@@ -636,7 +639,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.85.0';
+const APP_VERSION = 'v0.86.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -1419,7 +1422,7 @@ new MutationObserver(() => decorateCards()).observe(document.getElementById('vie
 document.addEventListener('click', e => { const b = e.target.closest('.donebtn'); if (!b || selMode) return; e.preventDefault(); e.stopPropagation(); toggleDone(listTypeNow(), b.dataset.done); }, true);
 /* bulk edit of general fields (not prices, dates, receipts, names or notes) */
 const BULK_FIELDS = {
-  keyboards: [['brand', 'Brand'], ['size', 'Size'], ['layout', 'Layout'], ['keyboardType', 'Keyboard type'], ['status', 'Status'], ['color', 'Color'], ['connectivity', 'Connectivity'], ['connector', 'Connector'], ['designer', 'Designer'], ['location', 'Location'], ['purchasedFrom', 'Purchased from']],
+  keyboards: [['brand', 'Brand'], ['size', 'Size'], ['layout', 'Layout'], ['layoutStandard', 'Standard (ANSI / ISO)'], ['bottomRow', 'Bottom row'], ['spacebar', 'Spacebar'], ['keyboardType', 'Keyboard type'], ['status', 'Status'], ['color', 'Color'], ['connectivity', 'Connectivity'], ['connector', 'Connector'], ['designer', 'Designer'], ['location', 'Location'], ['purchasedFrom', 'Purchased from']],
   switches: [['manufacturer', 'Maker'], ['switchType', 'Type'], ['pins', 'Pins'], ['mechanism', 'Mechanism'], ['topMaterial', 'Top housing'], ['bottomMaterial', 'Bottom housing'], ['stemMaterial', 'Stem'], ['location', 'Location'], ['purchasedFrom', 'Purchased from']],
   keycaps: [['manufacturer', 'Maker / platform'], ['profile', 'Profile'], ['designer', 'Designer'], ['material', 'Material'], ['legends', 'Legends'], ['stemMount', 'Stem mount'], ['location', 'Location']],
   pcbs: [['manufacturer', 'Maker'], ['category', 'Category'], ['location', 'Location'], ['purchasedFrom', 'Purchased from']],
@@ -1661,6 +1664,13 @@ function ckFixes() {   // the Nov 21 fixes still to do, worked out from the data
           if (del) { await swCol().doc(bundle.id).delete(); out.push('bundle entry removed'); }
           else { await swCol().doc(bundle.id).update({ price: left, notes: [bundle.notes, `Split into separate entries on ${new Date().toISOString().slice(0, 10)} (${out.length} lines); $${moved.toFixed(2)} moved to them.`].filter(Boolean).join('\n'), updatedAt: now }); out.push(`bundle kept with $${left.toFixed(2)}`); } }
         return out.join('; '); } }); }
+  // v0.86.0: OEM is now Pre-built; one old Layout value goes to Standard or Bottom row
+  const now0 = () => firebase.firestore.FieldValue.serverTimestamp(), oem = savedKeyboards.filter(k => k.keyboardType === 'oem');
+  if (oem.length) F.push({ id: 'oem', group: 'Keyboard type and layout', title: `${oem.length} keyboard${oem.length === 1 ? '' : 's'}: OEM → Pre-built`, detail: oem.map(k => [k.brand, k.name].filter(Boolean).join(' ')).join(', '), recs: oem.map(k => ['keyboards', k.id]), run: async () => { for (const k of oem) await kbCol().doc(k.id).update({ keyboardType: 'prebuilt', updatedAt: now0() }); return oem.length + ' changed'; } });
+  const lay = savedKeyboards.map(k => [k, kbLayoutSplit(k)]).filter(([k, o]) => o.layout !== (k.layout || '') || o.layoutStandard !== (k.layoutStandard || '') || o.bottomRow !== (k.bottomRow || ''));
+  if (lay.length) F.push({ id: 'layout', group: 'Keyboard type and layout', title: `${lay.length} keyboard${lay.length === 1 ? '' : 's'}: move the old Layout value to its own field`, detail: lay.map(([k, o]) => `${[k.brand, k.name].filter(Boolean).join(' ')}: ${k.layout} → ${o.layoutStandard && o.layoutStandard !== (k.layoutStandard || '') ? 'Standard ' + o.layoutStandard : 'Bottom row ' + o.bottomRow}`).join(' · '),
+    why: 'Layout now holds the arrangement (standard, Alice, ortholinear, split); ANSI / ISO / JIS go to Standard and WK / WKL / Tsangan / HHKB to Bottom row. Spacebar is left for you (or a product page) to set.', recs: lay.map(([k]) => ['keyboards', k.id]),
+    run: async () => { for (const [k, o] of lay) await kbCol().doc(k.id).update({ layout: o.layout || firebase.firestore.FieldValue.delete(), layoutStandard: o.layoutStandard || firebase.firestore.FieldValue.delete(), bottomRow: o.bottomRow || firebase.firestore.FieldValue.delete(), updatedAt: now0() }); return lay.length + ' moved'; } });
   // the two receipt plates saved under one name before v0.67 (Faraz will read that receipt again)
   (savedParts.accessories || []).filter(x => /^nuxroskb kraze plates$/i.test((x.name || '').trim()) && x.addedFrom === 'receipt').forEach(x => F.push({ id: 'del-' + x.id, group: 'Remove before reading the Kraze receipt again', title: `Delete ${x.name} ($${Number(x.price || 0).toFixed(2)})`, href: '#/accessories/' + x.id, detail: 'Saved under one name by the receipt bug fixed in v0.67; read that receipt again afterwards so each plate gets its own entry.', recs: [['accessories', x.id]], run: () => colOfType('accessories').doc(x.id).delete() }));
   // automatic option notes (the option is shown under Also available in)
@@ -2099,7 +2109,7 @@ async function toggleFav(id) {
 }
 function matches(k, q) {
   if (!q) return true;
-  const hay = [k.brand, k.name, k.color, k.size, k.connectivity, k.mods, k.notes, k.reviewText, k.currentBuildText, k.purchasedFrom, k.manufacturer, k.designer, k.location, k.status, k.layout]
+  const hay = [k.brand, k.name, k.color, k.size, k.connectivity, k.mods, k.notes, k.reviewText, k.currentBuildText, k.purchasedFrom, k.manufacturer, k.designer, k.location, k.status, k.layout, k.layoutStandard, k.bottomRow, k.spacebar]
     .concat(BUILD_FIELDS.map(f => k[f[0]])).join(' ').toLowerCase();
   return q.toLowerCase().split(/\s+/).every(w => hay.includes(w));
 }
@@ -2196,9 +2206,26 @@ function renderKeyboardDetail(id) {
 }
 
 /* ===================== Step 2.2: Add keyboard form (Overview tab) ===================== */
-const KB_TYPES = { custom: 'Custom keyboard', prebuilt: 'Pre-Built keyboard', oem: 'OEM keyboard', vintage: 'Vintage keyboard' };
+const KB_TYPES = { custom: 'Custom keyboard', prebuilt: 'Pre-built keyboard', vintage: 'Vintage keyboard' };   // v0.86.0: OEM is the same thing as pre-built
 const KB_SIZES = ['Macropad', 'Numpad', '40%', '60%', '65%', '75%', 'TKL (80%)', '96%', '98%', '1800', 'Full Size (100%)', 'Other'];
-const KB_LAYOUTS = ['ANSI', 'ISO', 'WK', 'WKL', 'Tsangan', 'Alice', 'Ortholinear', 'Split / Ergonomic', 'HHKB', 'Other'];
+const KB_LAYOUTS = ['Standard (staggered)', 'Alice', 'Ortholinear', 'Split / Ergonomic', 'Other'];   // v0.86.0: overall arrangement only
+const KB_LAYOUT_TIPS = { 'Standard (staggered)': 'Ordinary rows, each shifted a little from the one above. Almost every keyboard.', Alice: 'Two angled halves in one case with a split spacebar (Alice / Arisu style).', Ortholinear: 'Keys in a straight grid, no stagger (Planck, Preonic).', 'Split / Ergonomic': 'Two separate halves, or a tented / curved ergonomic board.', Other: 'Anything else.' };
+const KB_STANDARDS = [['ANSI', 'ANSI', 'One-row wide Enter with backslash above it, long 2.25u left Shift. The usual US layout; nearly every keycap set covers it.'], ['ISO', 'ISO', 'Tall upside-down L Enter, short left Shift with an extra key beside Z, AltGr on the right. Common in Europe; keycaps need an ISO kit.'], ['JIS', 'JIS', 'Japanese layout: ISO-style tall Enter, extra keys and a short spacebar. Needs JIS keycaps.']];
+const KB_BOTTOM = [['WK', 'WK — with Windows keys', 'Ctrl, Win and Alt on both sides of the spacebar. Usually 1.25u keys around a 6.25u spacebar; some shops also call a Tsangan row with a Win key “WK”, so set Spacebar too.'], ['WKL', 'WKL — no Windows keys', 'Ctrl and Alt only, 1.5u, with a blocked gap where the Windows key would be; around a 7u spacebar.'], ['Tsangan', 'Tsangan', '1.5u / 1u / 1.5u on each side of a 7u spacebar: symmetric, keeps a small 1u Windows key.'], ['HHKB', 'HHKB', 'Happy Hacking style: Ctrl sits where Caps Lock is, bottom row has 1.5u / 1u keys around the spacebar with blocked corners.'], ['Split spacebar', 'Split spacebar', 'The spacebar is two or three shorter keys (Alice boards, many 40%s).'], ['Other', 'Other', 'Anything else.']];
+const KB_SPACEBARS = [['6.25u', '6.25u — standard', 'About 118 mm; goes with 1.25u bottom-row keys. Every keycap set has one.'], ['7u', '7u', 'About 133 mm; goes with 1.5u keys (WKL, Tsangan, most HHKB-style boards). Most sets include one; check before buying.'], ['6u', '6u', 'Some compact and gaming boards; fewer keycap sets cover it.'], ['6.5u', '6.5u', 'Some pre-built boards (e.g. older Corsair); few sets cover it.'], ['Split', 'Split', 'Two or three short keys instead of one spacebar.'], ['Other', 'Other', 'Anything else.']];
+const KB_LAYOUT_FIELDS = { layout: KB_LAYOUTS.map(v => [v, v, KB_LAYOUT_TIPS[v]]), layoutStandard: KB_STANDARDS, bottomRow: KB_BOTTOM, spacebar: KB_SPACEBARS };
+function tipSelectHtml(name, list, ph) {   // options carry their explanation (hover on desktop) and the chosen one is explained under the box
+  return `<select class="select" name="${name}" id="f_${name}" data-tips="${name}"><option value="">${esc(ph)}</option>${list.map(([v, l, t]) => `<option value="${esc(v)}" title="${esc(t || '')}">${esc(l)}</option>`).join('')}</select><div class="hint tiphint" data-tipfor="${name}"></div>`;
+}
+function tipRefresh(root = document) { root.querySelectorAll('select[data-tips]').forEach(sel => { const h = root.querySelector(`[data-tipfor="${sel.dataset.tips}"]`), o = sel.options[sel.selectedIndex]; if (h) h.textContent = o && o.value ? o.title : ''; sel.title = o && o.value ? o.title : 'Hover an option to see what it means'; }); }
+document.addEventListener('change', e => { if (e.target.matches && e.target.matches('select[data-tips]')) tipRefresh(e.target.closest('form, #view') || document); });
+function kbLayoutSplit(k) {   // a single old Layout value goes to the field it belongs to
+  const o = { layout: k.layout || '', layoutStandard: k.layoutStandard || '', bottomRow: k.bottomRow || '', spacebar: k.spacebar || '' }, L = o.layout.trim();
+  if (/^(ansi|iso|jis)$/i.test(L)) { o.layoutStandard = o.layoutStandard || L.toUpperCase(); o.layout = ''; }
+  else if (/^(wkl?|hhkb|tsangan)$/i.test(L)) { o.bottomRow = o.bottomRow || KB_BOTTOM.find(b => b[0].toLowerCase() === L.toLowerCase())[0]; o.layout = ''; }
+  return o;
+}
+const kbLayoutText = k => { const o = kbLayoutSplit(k); return [o.layoutStandard, o.bottomRow, o.spacebar && o.spacebar + ' spacebar', o.layout].filter(Boolean).join(' · '); };
 const KB_CONN = ['Wired', 'Wireless (3-Mode)', 'Bluetooth + Wired', '2.4 GHz + Wired'];
 const KB_STATUS = ['Built', 'In progress', 'Barebones', 'Sold'];
 const KB_CONNECTORS = ['USB-C', 'Mini-USB', 'Micro-USB', 'USB-A', 'Aviator + USB-C'];
@@ -2270,9 +2297,12 @@ function renderKeyboardForm(k = null) {
             ${BUILD_FIELDS.filter(f => KB_FIXED.includes(f[0])).map(f => kbBuildFld(f, k)).join('')}
             <details class="more" id="moreDetails"><summary>More details</summary><div class="frm">
               ${fld('Model number', inputHtml('modelNumber', 'e.g. Q6M-M1'), { name: 'modelNumber' })}
-              ${fld('Serial number', inputHtml('serialNumber', 'e.g. SN-00123'), { name: 'serialNumber' })}
+              ${fld('Serial number', `<div class="scanrow">${inputHtml('serialNumber', 'e.g. SN-00123')}<button class="btn" type="button" id="serialScan" title="Scan the barcode or QR code on the label with the camera">📷 Scan</button></div>`, { name: 'serialNumber' })}
               ${fld('Designer', inputHtml('designer', 'e.g. ai03', 'dlDesigners'), { name: 'designer' })}
-              ${fld('Layout', selectHtml('layout', KB_LAYOUTS, 'Select layout'), { name: 'layout' })}
+              ${fld('Layout', tipSelectHtml('layout', KB_LAYOUT_FIELDS.layout, 'Select layout'), { name: 'layout' })}
+              ${fld('Standard', tipSelectHtml('layoutStandard', KB_STANDARDS, 'ANSI, ISO or JIS…'), { name: 'layoutStandard' })}
+              ${fld('Bottom row', tipSelectHtml('bottomRow', KB_BOTTOM, 'WK, WKL, Tsangan, HHKB…'), { name: 'bottomRow' })}
+              ${fld('Spacebar', tipSelectHtml('spacebar', KB_SPACEBARS, '6.25u, 7u…'), { name: 'spacebar' })}
               ${fld('Color', inputHtml('color', 'e.g. Space Grey', 'dlColors'), { name: 'color' })}
               ${fld('Connector', inputHtml('connector', 'e.g. USB-C', 'dlConnectors'), { name: 'connector' })}
               ${fld('Status', selectHtml('status', KB_STATUS, 'Select status'), { name: 'status' })}
@@ -2409,18 +2439,19 @@ function setEditState(dirty) {
 }
 function fillKeyboardForm(k) {
   const st = { fields: {}, acq: k.acquisition || [], fav: !!k.isFavorite };
-  ['keyboardType', 'brand', 'name', 'manufacturer', 'size', 'location', 'modelNumber', 'serialNumber', 'designer', 'layout', 'color', 'connectivity', 'connector', 'status',
+  ['keyboardType', 'brand', 'name', 'manufacturer', 'size', 'location', 'modelNumber', 'serialNumber', 'designer', 'layout', 'layoutStandard', 'bottomRow', 'spacebar', 'color', 'connectivity', 'connector', 'status',
    'typingAngle', 'frontHeight', 'weight', 'currentBuildText', 'datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'pictureLink', 'mods', 'notes', 'reviewText', 'included']
     .concat(BUILD_FIELDS.map(f => f[0]), RATINGS.map(r => r[0])).forEach(n => { if (k[n] != null && k[n] !== '') st.fields['f_' + n] = String(k[n]); });
-  if (k.id) st.fields.f_keyboardType = k.keyboardType || '';   // workbook boards have no type yet
+  if (k.id) st.fields.f_keyboardType = k.keyboardType === 'oem' ? 'prebuilt' : k.keyboardType || '';   // workbook boards have no type yet; OEM shows as Pre-built
+  Object.assign(st.fields, Object.fromEntries(Object.entries(kbLayoutSplit(k)).map(([n, v]) => ['f_' + n, v])));   // older single Layout values go to their own field
   ['price', 'shipping', 'discounts'].forEach(n => { if (k[n] != null) st.fields['f_' + n] = String(k[n]); });
   if (k.taxRate != null) st.fields.f_taxRatePct = String(Math.round(k.taxRate * 1e8) / 1e6);
   // a saved value that is not in a dropdown's list is added so it is never lost
-  [['size', KB_SIZES], ['layout', KB_LAYOUTS], ['connectivity', KB_CONN], ['status', KB_STATUS]].forEach(([n]) => {
+  [['size', KB_SIZES], ['layout', KB_LAYOUTS], ['layoutStandard'], ['bottomRow'], ['spacebar'], ['connectivity', KB_CONN], ['status', KB_STATUS]].forEach(([n]) => {
     const sel = document.getElementById('f_' + n), v = st.fields['f_' + n];
     if (v && ![...sel.options].some(o => o.value === v)) sel.add(new Option(v + ' (saved value)', v));
   });
-  applyState(st);
+  applyState(st); tipRefresh();
 }
 /* ---------- Step 2.5: automatic drafts (new keyboard only, kept on this device) ---------- */
 const DRAFT_KEY = 'kbc_draft_new_keyboard';
@@ -2439,7 +2470,7 @@ function applyState(st) {
   document.querySelectorAll('input[name="acq"]').forEach(c => { c.checked = (st.acq || []).includes(c.value); });
   document.getElementById('f_isFavorite').checked = !!st.fav;
   drawStars();
-  if (Object.keys(st.fields || {}).some(k => ['f_modelNumber', 'f_serialNumber', 'f_designer', 'f_layout', 'f_color', 'f_connectivity', 'f_connector', 'f_status', 'f_typingAngle', 'f_frontHeight', 'f_weight'].includes(k)))
+  if (Object.keys(st.fields || {}).some(k => ['f_modelNumber', 'f_serialNumber', 'f_designer', 'f_layout', 'f_layoutStandard', 'f_bottomRow', 'f_spacebar', 'f_color', 'f_connectivity', 'f_connector', 'f_status', 'f_typingAngle', 'f_frontHeight', 'f_weight'].includes(k)))
     document.getElementById('moreDetails').open = true;
   updateCalc();
 }
@@ -2489,7 +2520,7 @@ function showFieldError(name, msg, focus = true) {
 function readKeyboardForm() {
   const v = n => (document.getElementById('f_' + n)?.value || '').trim();
   const data = {}; if (v('keyboardType')) data.keyboardType = v('keyboardType');
-  ['brand', 'name', 'manufacturer', 'size', 'location', 'modelNumber', 'serialNumber', 'designer', 'layout', 'color', 'connectivity', 'connector', 'status', 'typingAngle', 'frontHeight', 'weight', 'currentBuildText', 'included']
+  ['brand', 'name', 'manufacturer', 'size', 'location', 'modelNumber', 'serialNumber', 'designer', 'layout', 'layoutStandard', 'bottomRow', 'spacebar', 'color', 'connectivity', 'connector', 'status', 'typingAngle', 'frontHeight', 'weight', 'currentBuildText', 'included']
     .concat(BUILD_FIELDS.map(f => f[0]))
     .forEach(n => { const x = v(n); if (x) data[n] = x; });
   data.isFavorite = document.getElementById('f_isFavorite').checked;
@@ -2542,7 +2573,7 @@ async function saveKeyboard() {
   }
 }
 
-const EDITABLE = ['keyboardType', 'brand', 'name', 'manufacturer', 'size', 'location', 'modelNumber', 'serialNumber', 'designer', 'layout', 'color', 'connectivity', 'connector', 'status',
+const EDITABLE = ['keyboardType', 'brand', 'name', 'manufacturer', 'size', 'location', 'modelNumber', 'serialNumber', 'designer', 'layout', 'layoutStandard', 'bottomRow', 'spacebar', 'color', 'connectivity', 'connector', 'status',
   'typingAngle', 'frontHeight', 'weight', 'currentBuildText', 'datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'pictureLink', 'mods', 'notes', 'included',
   'price', 'taxRate', 'shipping', 'discounts', 'acquisition', 'isFavorite', 'reviewText'].concat(RATINGS.map(r => r[0]));
 async function saveEdits(data, btn, errBox, picks = {}) {
@@ -2618,6 +2649,37 @@ function wirePhotos(k, type = 'keyboards') {
     if (type === 'keycaps') { const gp = document.querySelector('[data-panel="gallery"]'); if (gp && !gp.hidden) drawKitGallery(k); migrateKitStock(k); }
   }, err => { document.getElementById('photoGrid').innerHTML = `<span class="sub">Could not load photos: ${esc(explain(err))}</span>`; });
 }
+/* v0.86.0: scan a serial number with the phone camera. Live barcode / QR reading where the browser has a barcode reader
+   (Chrome on Android, Chrome/Edge on Mac); otherwise, or for a label with printed text only, take a photo, read it on screen and
+   type the number (the photo can be kept with the keyboard). Nothing leaves the device. */
+async function openSerialScan() {
+  const inp = document.getElementById('f_serialNumber'); if (!inp) return;
+  const can = 'BarcodeDetector' in window; let det = null, stream = null, timer = null, done = false;
+  if (can) { try { const fm = await BarcodeDetector.getSupportedFormats(); det = fm.length ? new BarcodeDetector({ formats: fm }) : null; } catch (e) { det = null; } }
+  const d = document.createElement('div'); d.className = 'gdlg askdlg'; d.id = 'scanDlg'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
+  d.innerHTML = `<div class="card askcard scancard"><p class="askmsg"><b>Scan the serial number</b></p>
+    <p class="sub" id="scanMsg">${det ? 'Point the camera at the barcode or QR code on the label.' : 'This browser can’t read barcodes (iPhone Safari and Windows can’t). Take a photo of the label and type the number from it.'}</p>
+    ${det ? '<video id="scanVid" playsinline muted></video>' : ''}<img id="scanImg" alt="" hidden>
+    <div id="scanType" hidden><label class="rc-f"><span>Serial number</span><input class="input" id="scanVal" autocomplete="off"></label>${editing ? '<label class="check" style="margin-top:8px"><input type="checkbox" id="scanKeep" checked> Also keep this photo with the keyboard</label>' : ''}</div>
+    <input type="file" id="scanFile" accept="image/*" capture="environment" hidden>
+    <div class="btnrow" style="justify-content:flex-end;margin-top:12px"><button class="btn" id="scanPhoto" type="button">Take a photo</button><button class="btn" id="scanNo" type="button">Cancel</button><button class="btn primary" id="scanUse" type="button" hidden>Use this number</button></div></div>`;
+  document.body.appendChild(d);
+  const $ = id => d.querySelector('#' + id), msg = $('scanMsg'); let photo = null;
+  const stop = () => { done = true; clearTimeout(timer); if (stream) stream.getTracks().forEach(t => t.stop()); }, close = () => { stop(); d.remove(); };
+  const fill = v => { inp.value = String(v).trim(); inp.dispatchEvent(new Event('input', { bubbles: true })); if (photo && $('scanKeep') && $('scanKeep').checked && editing) queuePhotos(editing, [photo]); close(); toast('Serial number filled in — Save to keep it'); };
+  if (det) { try { stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false }); const v = $('scanVid'); v.srcObject = stream; await v.play();
+      const tick = async () => { if (done) return; try { const r = await det.detect(v); if (r && r.length) { fill(r[0].rawValue); return; } } catch (e) {} timer = setTimeout(tick, 250); }; tick(); }
+    catch (e) { msg.textContent = 'The camera could not start (' + explain(e) + '). Take a photo instead.'; const v = $('scanVid'); if (v) v.hidden = true; } }
+  $('scanNo').onclick = close; d.addEventListener('click', e => { if (e.target === d) close(); });
+  $('scanPhoto').onclick = () => $('scanFile').click();
+  $('scanFile').onchange = async () => { const f = $('scanFile').files[0]; if (!f) return; photo = f; stop(); const v = $('scanVid'); if (v) v.hidden = true;
+    const img = $('scanImg'); img.src = URL.createObjectURL(f); img.hidden = false;
+    if (det) { try { const r = await det.detect(await createImageBitmap(f)); if (r && r.length) { $('scanVal').value = r[0].rawValue; msg.textContent = 'Found a code in the photo. Check it, then use it.'; } else msg.textContent = 'No barcode found in the photo. Type the number you see.'; } catch (e) { msg.textContent = 'Type the number you see in the photo.'; } }
+    else msg.textContent = 'Type the number you see in the photo.';
+    $('scanType').hidden = false; $('scanUse').hidden = false; $('scanVal').focus(); };
+  $('scanUse').onclick = () => { const v = $('scanVal').value.trim(); if (!v) { msg.textContent = 'Type the number first.'; return; } fill(v); };
+}
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('#serialScan')) { e.preventDefault(); openSerialScan(); } });
 function drawPhotoGrid(k) {
   const grid = document.getElementById('photoGrid'); if (!grid) return;
   const cur = photoItem(k);
@@ -3281,11 +3343,11 @@ function renderKeycapForm(s = null) {
           <h3 style="margin-bottom:14px">Notes</h3>
           <div class="frm">${fld('Notes', '<textarea class="input" name="notes" id="f_notes" rows="6" placeholder="Anything else worth remembering"></textarea>', { name: 'notes', full: true })}</div>
         </div>
+        <input type="hidden" id="f_gmkRef" value="${esc(s?.gmkRef || '')}"><div class="gmkmid">${gmkCardHtml(s)}</div>
       </div>
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
         ${s ? valueCardHtml('keycaps', s) + photoCardHtml(s, 'keycaps') : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the set first, then drop photos on its page.</p></div>'}
-        <input type="hidden" id="f_gmkRef" value="${esc(s?.gmkRef || '')}">${gmkCardHtml(s)}
         ${s ? mergeCardHtml(s) : ''}
         ${s ? kitInstallCardHtml(s) : '<div class="card side-card"><h3>Installed on</h3><p class="sub" style="margin:0">Save the set first, then install its kits on your keyboards.</p></div>'}
         <div class="card side-card stack savebar">
@@ -4905,7 +4967,7 @@ function refCardHtml(t, x) {
   return `<div class="card side-card" id="refCard"><h3>From the shop</h3>
     ${x.stockThumb ? `<img class="refimg" src="${x.stockThumb}" alt=""><p class="sub" style="margin:6px 0 0">Stock picture: your own photo. It is also the picture on the Summary; the list card shows your default photo. <button class="btn" id="refStockOff" style="padding:2px 8px">Use the shop picture</button></p>` : x.refImage ? `<a href="${esc(x.refUrl || x.refImage)}" target="_blank" rel="noopener"><img class="refimg" src="${esc(x.refImage)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>` : ''}
     <p class="sub" style="margin:8px 0 0">${has ? `Stock picture and details from ${esc(x.refSource || 'the product page')}${x.refUrl ? ` · <a class="lnk" href="${esc(x.refUrl)}" target="_blank" rel="noopener">open page ↗</a>` : ''}. Your own photos replace this picture on the card.` : 'No product page yet. Add a link to the maker’s or shop’s page and its picture.'}</p>
-    ${x.retailPrice != null ? `<p class="refret">Retail price <b>${money(x.retailPrice)}</b>${t === 'switches' && x.retailCount ? ` for ${x.retailCount} switches` : ''}${x.retailSource || x.retailPriceAt ? ` <span class="sub">(${esc([x.retailSource, x.retailPriceAt && fmtDate(x.retailPriceAt)].filter(Boolean).join(', '))})</span>` : ''}</p>` : ''}
+    ${x.retailPrice != null ? '<p class="refret sub">Retail price: see Paid and retail on the Summary.</p>' : ''}
     ${x.id ? `<details class="shopopts"${av ? ' open' : ''}><summary>${av ? 'Options the shop sells' : 'Options'}${sibs ? ` · ${sibs + 1} in your collection` : ''}</summary><div id="availBox">${availHtml(x, t)}</div></details>` : ''}
     <div class="btnrow" style="margin-top:10px"><button class="btn" id="refEditBtn">${has ? 'Edit link & picture' : '+ Add product page'}</button>${x.refUrl && /^https?:/.test(x.refUrl) ? '<button class="btn" id="refReread" title="Read the shop page again into this entry (fills what is empty; tick Replace there to refresh prices and pictures)">Read the page again</button>' : ''}</div>
     <div id="refForm" hidden><div style="margin-top:10px;display:grid;gap:8px">
@@ -5077,15 +5139,11 @@ function drawSummary(view, x, type) {
   if (vals.length) links.push(['Market value', `${money(vals[0].value)} (${fmtDate(vals[0].date)}${vals[0].source ? ', ' + vals[0].source : ''})`, '']);
   const linkedHtml = (() => { const rows = links.map(([k, v, h]) => { const key = 'linked|' + k + '|' + v, hid = hidden.includes(key); if (hid) nHidden++; return { k, v, h, key, hid }; }).filter(r => !r.hid || sumShowHidden);
       return rows.length ? `<div class="sumsec"><h4>Linked</h4><dl class="sumdl">${rows.map(r => `<dt class="${r.hid ? 'sumhid' : ''}">${esc(r.k)}</dt><dd class="sumrow${r.hid ? ' sumhid' : ''}" data-sk="${esc(r.key)}"><span class="sumv">${r.h ? `<a class="lnk" href="${r.h}">${esc(r.v)}</a>` : esc(r.v)}</span><span class="sumacts"><button class="lnk" data-sumhide title="${r.hid ? 'Show on the Summary' : 'Hide from the Summary'}">${r.hid ? 'Unhide' : 'Hide'}</button></span></dd>`).join('')}</dl></div>` : ''; })();
+  { let rdl = ''; if (type === 'switches' && live.retailPrice != null) { const sr = switchRetail(live); rdl = `<dl class="sumdl"><dt>Shop price</dt><dd><span class="sumv">${money(live.retailPrice)}${sr.count ? ` for ${sr.count} switches` : ' <span class="sub">(how many switches is that?)</span>'} <span class="sub">(${esc(live.retailSource || 'shop')}${live.retailPriceAt ? ', ' + esc(fmtDate(live.retailPriceAt)) : ''})</span> <button class="lnk" type="button" id="retCountEdit" title="How many switches the shop's price is for">change</button><span id="retCountBox" hidden> <input class="input" id="retCountIn" type="number" min="1" step="1" style="width:90px;display:inline-block" value="${sr.count || ''}"> <button class="btn" type="button" id="retCountSave">Save</button></span></span></dd></dl>`; }
+    const cs = paidRetailHtml(type, live, rdl); if (cs) secs.splice(Math.min(1, secs.length), 0, cs); }
   if ((live.alsoAvailable && ((live.alsoAvailable.groups || []).length || (live.alsoAvailable.layouts || []).length)) || avSiblings(type, live).length) secs.push(`<div class="sumsec" id="sumAvail"><div class="sec-title"><h4>Also available in</h4></div>${availHtml(live, type)}</div>`);
   if (type !== 'keyboards' && live.included) secs.push(`<div class="sumsec" id="sumIncluded"><h4>Included with the kit</h4><ul class="incl">${String(live.included).split('\n').filter(Boolean).map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>`);
-  if (live.retailPrice != null || live.shopText) {
-    const sr = type === 'switches' && live.retailPrice != null ? switchRetail(live) : null, per = sr ? (sr.count ? ` for ${sr.count} switches · ${money3(sr.each)} per switch` : ' <span class="sub">(how many switches is that? use “change” below)</span>') : '';
-    const kitRetail = type === 'keycaps' ? kitsOf(live).filter(k => k.retailPrice != null) : [];
-    secs.push(`<div class="sumsec" id="sumShop"><h4>From the shop</h4>${live.retailPrice != null ? `<dl class="sumdl"><dt>Retail price</dt><dd><span class="sumv">${money(live.retailPrice)}${per} <span class="sub">(${esc(live.retailSource || 'shop')}${live.retailPriceAt ? ', ' + esc(fmtDate(live.retailPriceAt)) : ''})</span>${sr ? ` <button class="lnk" type="button" id="retCountEdit" title="How many switches the shop's price is for">change</button><span id="retCountBox" hidden> <input class="input" id="retCountIn" type="number" min="1" step="1" style="width:90px;display:inline-block" value="${sr.count || ''}" placeholder="e.g. 10"> switches <button class="btn" type="button" id="retCountSave">Save</button></span>` : ''}</span>${sr && sr.cmp ? `<span class="sub" id="retCmp" style="display:block;margin-top:2px">${sr.cmp}</span>` : ''}</dd></dl>` : ''}
-      ${kitRetail.length ? `<dl class="sumdl">${kitRetail.map(k => `<dt>${esc(k.name)}</dt><dd><span class="sumv">${money(k.retailPrice)} <span class="sub">retail${k.retailSource ? ', ' + esc(k.retailSource) : ''}</span></span></dd>`).join('')}</dl>` : ''}
-      ${live.shopText ? `<details class="shoptext"><summary>Shop's description</summary><div class="rd-shoptext">${esc(live.shopText).replace(/\n/g, '<br>')}</div></details><p class="sub" style="margin:6px 0 0;font-size:11.5px">Text and pictures from ${live.shopTextUrl ? `<a class="lnk" href="${esc(live.shopTextUrl)}" target="_blank" rel="noopener">${esc(live.shopTextSource || 'the shop')}</a>` : esc(live.shopTextSource || 'the shop')}${live.shopTextAt ? ', read ' + esc(fmtDate(live.shopTextAt)) : ''}. The price you paid comes from your receipt.</p>` : ''}</div>`);
-  }
+  if (live.shopText) secs.push(`<div class="sumsec" id="sumShop"><h4>From the shop</h4><details class="shoptext"><summary>Shop's description</summary><div class="rd-shoptext">${esc(live.shopText).replace(/\n/g, '<br>')}</div></details><p class="sub" style="margin:6px 0 0;font-size:11.5px">Text and pictures from ${live.shopTextUrl ? `<a class="lnk" href="${esc(live.shopTextUrl)}" target="_blank" rel="noopener">${esc(live.shopTextSource || 'the shop')}</a>` : esc(live.shopTextSource || 'the shop')}${live.shopTextAt ? ', read ' + esc(fmtDate(live.shopTextAt)) : ''}. Prices are under ${type === 'keyboards' ? 'Build cost' : 'Paid and retail'}.</p></div>`);   // prices moved to Paid and retail (v0.86.0)
   const ext = live.summaryExtra || [];
   secs.push(`<div class="sumsec" id="sumExtra"><h4>Your details</h4>
     ${ext.length ? `<dl class="sumdl">${ext.map(e => `<dt>${esc(e.label)}</dt><dd class="sumrow"><span class="sumv">${sumDd(e.value || '', '')}</span><span class="sumacts"><button class="lnk" data-sumxdel="${esc(e.id)}" title="Remove this row">Remove</button></span></dd>`).join('')}</dl>` : '<p class="sub" style="margin:0 0 6px">Add any detail that has no field, e.g. Lube, Film, Mods, Serial number.</p>'}
@@ -5387,7 +5445,7 @@ function gmkCardHtml(s, live = false) {   // live = read the link and name from 
       <p style="margin:6px 0 2px"><b>GMK ${esc(ref.title)}</b> ${gmkStripHtml(ref)}</p>
       <p class="sub" style="margin:0">${esc([ref.designer, [ref.gbStart, ref.gbEnd].filter(Boolean).join(' → ')].filter(Boolean).join(' · '))}</p>
       ${(ref.kits || []).length ? (() => { const mine = s ? ownedKits(s) : [], pr = pairKits(mine, ref.kits); const hv = ref.kits.filter(k => pr.has(k)); return `<p class="sub" style="margin:8px 0 4px">${hv.length} of ${ref.kits.length} kits · ${Math.round(hv.length / ref.kits.length * 100)}%</p><span class="cbar wide"><span class="cfill" style="width:${hv.length / ref.kits.length * 100}%"></span></span>
-        <div class="kitlist">${ref.kits.map(k => { const have = hv.includes(k); return `<div class="kitrow${have ? ' have' : ''}"><span>${have ? '✓' : '○'} ${esc(k.name)}${gmkKitPrice(k) ? ` <span class="sub" style="margin:0">${gmkKitPrice(k)}</span>` : ''}</span>${!have && s ? (wishHas(s.name, k.name) ? '<span class="chip">On wishlist</span>' : `<button class="btn" data-wishkit="${esc(k.name)}">+ Wishlist</button>`) : ''}</div>`; }).join('')}</div>`; })() : ''}
+        <div class="kitlist">${ref.kits.map(k => { const have = hv.includes(k); return `<div class="kitrow${have ? ' have' : ''}"><span>${have ? '✓' : '○'} ${esc(k.name)}</span>${!have && s ? (wishHas(s.name, k.name) ? '<span class="chip">On wishlist</span>' : `<button class="btn" data-wishkit="${esc(k.name)}">+ Wishlist</button>`) : ''}</div>`; }).join('')}</div>`; })() : ''}
       <div class="btnrow" style="margin-top:10px"><button class="btn primary" id="gmkFill">Fill from catalog</button><button class="btn" id="gmkView">Details</button><button class="btn" id="gmkUnlink">Unlink</button></div>
       <p style="margin:8px 0 0">${matrixLinkHtml(ref, 'Matrix page for this set ↗')}</p>
       <p class="sub" style="margin:8px 0 0;font-size:11px">${esc(GMK_CREDIT)}</p></div>`;
@@ -5445,7 +5503,7 @@ const SW_EXCEL_FIELDS = ['manufacturer', 'name', 'typeExcel', 'switchType', 'tot
   'price', 'taxRate', 'shipping', 'discounts', 'excelTotal', 'excelRow'];
 const IMPORT_TYPES = {
   Keyboards: { key: 'keyboards', title: 'Keyboards', fields: EXCEL_FIELDS, col: () => kbCol(), saved: () => savedKeyboards, href: '#/keyboards',
-    who: x => x.brand, detail: x => (x.size || '') + (x.layout ? ' · ' + x.layout : ''), extraNew: () => ({}) },
+    who: x => x.brand, detail: x => (x.size || '') + (kbLayoutText(x) ? ' · ' + kbLayoutText(x) : ''), extraNew: () => ({}) },
   Switches: { key: 'switches', title: 'Switches', fields: SW_EXCEL_FIELDS, fillOnly: ['preLubed', 'pins', 'topMaterial', 'bottomMaterial', 'stemMaterial', 'springWeight', 'actuationForce', 'bottomOutForce'], col: () => swCol(), saved: () => savedSwitches, href: '#/switches',
     who: x => x.manufacturer, detail: x => [x.switchType, x.totalCount != null ? (x.countApprox ? '~' : '') + x.totalCount + ' pcs' : 'count ?'].filter(Boolean).join(' · '),
     extraNew: x => (x.importNotes ? { notes: x.importNotes } : {}) },
@@ -5992,7 +6050,7 @@ function buildWorkbook(version) {
     ['Size', 'Layout', 'Status', 'Location', 'Date Received', 'Market Value', 'Notes'],
     savedKeyboards.slice().sort(byExcel).map(k => { const sw = switchesOn(k.id).map(o => `${[o.w.manufacturer, o.w.name].filter(Boolean).join(' ')} × ${o.a.count}`), kc = kitsOn(k.id).map(o => `${o.s.name} — ${o.k.name}`), build = kc.concat(sw).join(' + ');
       return { ids: [k.id], money: k, lead: [k.brand, k.name, k.color, k.formFactorExcel || [k.size, k.connectivity].filter(Boolean).join(' · '), k.purchasedFrom, k.datePurchased, k.mods, k.receipt, k.pictureLink, build || k.currentBuildText],
-        extra: [k.size, k.layout, k.status, k.location, { date: 1, v: k.dateReceived }, { money: 1, v: valOf(k) }, k.notes] }; }), { date: 5, link: 8, green: 9 });
+        extra: [k.size, kbLayoutText(k), k.status, k.location, { date: 1, v: k.dateReceived }, { money: 1, v: valOf(k) }, k.notes] }; }), { date: 5, link: 8, green: 9 });
   /* Accessories, Cables, PCBs, Artisans share one shape */
   const partRow = (x, second) => ({ ids: [x.id], money: x, lead: [x.name, second(x), x.purchasedFrom, x.datePurchased, x.belongsToText, x.receipt, x.pictureLink, installedText(x)], extra: [x.manufacturer, x.location, { date: 1, v: x.dateReceived }, { money: 1, v: valOf(x) }, x.notes] });
   const isCable = x => x.excelTab === 'Cables' || /^cables?$/i.test(x.category || ''), acc = savedParts.accessories.slice().sort(byExcel), PX = ['Maker', 'Location', 'Date Received', 'Market Value', 'Notes'];
@@ -6434,7 +6492,9 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
     let colorOpt = optAt(/colou?r|finish|edition|colorway/i); if (colorOpt < 0) colorOpt = p.options.findIndex(o => /top case|^case$|^top$/i.test(o.name) && !o.values.every(x => /\b(wkl?|hhkb|tsangan|ansi|iso|pcb)\b/i.test(x))); const botOpt = p.options.findIndex(o => /bottom/i.test(o.name));
     if (v && colorOpt >= 0 && v.opts[colorOpt]) f.color = v.opts[colorOpt];
     if (v && botOpt >= 0 && botOpt !== colorOpt && v.opts[botOpt]) { const bv = String(v.opts[botOpt]).replace(/\s*bottom( case)?$/i, '').trim(), bm = (typeof CASE_MATS !== 'undefined' ? CASE_MATS : []).find(x => bv.toLowerCase().includes(x.toLowerCase().replace(/\s*\(.*\)/, ''))); if (bm) f.bottomCaseMaterial = bm; }   // Neo Cu: top case, a copper or brass bottom case, and a separate weight
-    const layOpt = p.options.findIndex(o => /layout|format/i.test(o.name) || o.values.every(x => /\b(wkl?|hhkb|tsangan)\b/i.test(x))); if (v && layOpt >= 0 && v.opts[layOpt]) { const lv = v.opts[layOpt], m = /\b(WKL|WK|HHKB|Tsangan)\b/i.exec(lv); f.layout = /layout|format/i.test(p.options[layOpt].name) || !m ? lv : m[1].toUpperCase().replace('TSANGAN', 'Tsangan'); }   // KeebsForAll: "Top Case & PCB: WK & ANSI PCB"
+    const layOpt = p.options.findIndex(o => /layout|format/i.test(o.name) || o.values.every(x => /\b(wkl?|hhkb|tsangan)\b/i.test(x))); if (v && layOpt >= 0 && v.opts[layOpt]) { const lv = v.opts[layOpt], m = /\b(WKL|WK|HHKB|Tsangan)\b/i.exec(lv); if (m) f.bottomRow = m[1].toUpperCase().replace('TSANGAN', 'Tsangan'); const sd = /\b(ANSI|ISO|JIS)\b/.exec(lv); if (sd) f.layoutStandard = sd[1]; if (!m && !sd) { const kl = KB_LAYOUTS.find(x => x.toLowerCase().startsWith(lv.toLowerCase().split(/[ /]/)[0])); if (kl) f.layout = kl; } }   // KeebsForAll: "Top Case & PCB: WK & ANSI PCB" → bottom row WK, standard ANSI
+    if (!f.layoutStandard) { const sd2 = /\b(ANSI|ISO|JIS)\b/.exec(p.title + ' ' + (p.text || '').slice(0, 3000)); if (sd2) f.layoutStandard = sd2[1]; }
+    { const sb = /\b(6\.25|6\.5|7|6)\s*u\s*space ?bar/i.exec(p.text || ''); if (sb) f.spacebar = sb[1] + 'u'; }
     const plOpt = optAt(/plate/i); if (plOpt >= 0 && optVal(plOpt) && typeof plateMaterialFrom === 'function') { const pm3 = plateMaterialFrom(optVal(plOpt)); f.plateMaterial = pm3 || optVal(plOpt).replace(/\s*plates?$/i, '').trim(); }   // a plate the list doesn't know ("Linen Micarta") is kept as written
     const pm = plateMaterialFrom(vl); if (pm && /plate/i.test(vl)) f.plateMaterial = pm;
   } else if (type === 'switches') {
@@ -6654,6 +6714,41 @@ async function rdSave() {
 }
 /* ---- Import page card and Settings card ---- */
 const money3 = n => { const v = Number(n) || 0; return '$' + (Math.abs(v) < 1 && Math.round(v * 1000) % 10 ? v.toFixed(3) : v.toFixed(2)); };   // $0.243 for per-switch prices, $0.35 otherwise
+/* v0.86.0: "Paid and retail" — the one place for prices, under Overview on every Summary. Keyboards itemize the build:
+   the board, its installed switches (your share of each lot by count), installed keycap kits and installed parts.
+   Paid = price + tax + shipping − discounts (as in the workbook). Retail = the shop's price for what you have
+   (switches: per switch × count; GMK kits without a shop price: the group-buy price from the private catalog). */
+function kitRetailOf(s, k) {
+  if (k.retailPrice != null && k.retailPrice !== '') return { v: Number(k.retailPrice), src: k.retailSource || 'shop' };
+  const ref = s.gmkRef && Array.isArray(gmkSets) && gmkSets.find(g => g.id === s.gmkRef); if (!ref) return { v: null, src: '' };
+  for (const [c, o] of pairKits(ownedKits(s), ref.kits || [], s.kitLinks)) if (o === k || o.id === k.id) { const v = c.priceUsd != null ? Number(c.priceUsd) : null; return { v, src: v != null ? 'GMK group buy' : '' }; }
+  return { v: null, src: '' };
+}
+function paidRetailRows(type, x) {
+  const rows = [], name = y => [y.brand || y.manufacturer, y.name].filter(Boolean).join(' ');
+  if (type === 'keyboards') {
+    rows.push({ k: 'Keyboard', label: name(x), paid: kbTotal(x), retail: x.retailPrice != null && x.retailPrice !== '' ? Number(x.retailPrice) : null, src: x.retailSource || '' });
+    if (x.id) {
+      switchesOn(x.id).forEach(({ w, a }) => { const n = Number(a.count) || 0, tc = Number(w.totalCount) || 0, sr = w.retailPrice != null ? switchRetail(w) : null;
+        rows.push({ k: 'Switches', label: `${name(w)} × ${n}`, href: '#/switches/' + w.id, paid: tc ? kbTotal(w) / tc * n : null, retail: sr && sr.each != null ? sr.each * n : null, src: w.retailSource || '', note: tc ? '' : 'lot has no count' }); });
+      savedKeycaps.forEach(s2 => kitsOf(s2).filter(k => k.installedOn === x.id && !k.notOwned).forEach(k => { const r = kitRetailOf(s2, k); rows.push({ k: 'Keycaps', label: `${s2.name} — ${k.name}`, href: '#/keycaps/' + s2.id, paid: kbTotal(k), retail: r.v, src: r.src }); }));
+      ['pcbs', 'accessories', 'artisans'].forEach(t => (savedParts[t] || []).filter(p => p.installedOn === x.id).forEach(p => rows.push({ k: t === 'pcbs' ? 'PCB' : t === 'artisans' ? 'Artisan' : p.category || 'Part', label: p.name, href: `#/${t}/${p.id}`, paid: kbTotal(p), retail: p.retailPrice != null && p.retailPrice !== '' ? Number(p.retailPrice) : null, src: p.retailSource || '' })));
+    }
+  } else if (type === 'keycaps') ownedKits(x).forEach(k => { const r = kitRetailOf(x, k); rows.push({ k: k.kitType || 'Kit', label: k.name, paid: kbTotal(k), retail: r.v, src: r.src }); });
+  else if (type === 'switches') { const n = Number(x.totalCount) || 0, sr = x.retailPrice != null && x.retailPrice !== '' ? switchRetail(x) : null; rows.push({ k: 'Switches', label: n ? `Your ${n} switches` : 'This lot', paid: kbTotal(x), retail: sr && sr.each != null && n ? sr.each * n : null, src: x.retailSource || '', note: sr && sr.each != null ? `${money3(sr.each)} each at retail${n ? ' · ' + money3(kbTotal(x) / n) + ' each paid' : ''}` : '' }); }
+  else rows.push({ k: '', label: name(x), paid: kbTotal(x), retail: x.retailPrice != null && x.retailPrice !== '' ? Number(x.retailPrice) : null, src: x.retailSource || '' });
+  return rows;
+}
+function paidRetailHtml(type, x, retailDl) {
+  const rows = paidRetailRows(type, x); if (!rows.length) return '';
+  const has = v => v != null && !isNaN(v), sumP = rows.reduce((a, r) => a + (has(r.paid) ? r.paid : 0), 0), withR = rows.filter(r => has(r.retail)), sumR = withR.reduce((a, r) => a + r.retail, 0), miss = rows.length - withR.length;
+  const many = rows.length > 1, diff = sumR - sumP;
+  return `<div class="sumsec" id="sumCost"><h4>${type === 'keyboards' ? 'Build cost: paid and retail' : 'Paid and retail'}</h4>${retailDl || ''}
+    <table class="costtbl"><thead><tr>${many ? '<th></th>' : ''}<th>Item</th><th class="num">Paid</th><th class="num">Retail</th></tr></thead><tbody>
+    ${rows.map(r => `<tr>${many ? `<td class="sub">${esc(r.k)}</td>` : ''}<td>${r.href ? `<a class="lnk" href="${r.href}">${esc(r.label)}</a>` : esc(r.label)}${r.note ? `<span class="sub"> · ${esc(r.note)}</span>` : ''}</td><td class="num">${has(r.paid) ? money(r.paid) : '—'}</td><td class="num">${has(r.retail) ? money(r.retail) + (r.src ? `<span class="sub"> ${esc(r.src)}</span>` : '') : '—'}</td></tr>`).join('')}</tbody>
+    ${many ? `<tfoot><tr><td></td><td><b>Total</b></td><td class="num"><b>${money(sumP)}</b></td><td class="num"><b>${withR.length ? money(sumR) : '—'}</b></td></tr></tfoot>` : ''}</table>
+    <p class="sub" style="margin:6px 0 0;font-size:11.5px">Paid = price + tax + shipping − discounts.${withR.length && !miss ? ` Retail is ${money(Math.abs(diff))} ${diff >= 0 ? 'more' : 'less'} than you paid.` : ''}${miss ? ` ${miss} item${miss === 1 ? ' has' : 's have'} no retail price yet (read the product page to add it)${withR.length ? ', so the retail total is only for the rest' : ''}.` : ''}${type === 'keycaps' || type === 'keyboards' ? ' GMK kits without a shop price use the group-buy price.' : ''}</p></div>`;
+}
 function switchRetail(x) {   // the shop's price is for a pack (or several): how many switches it covers, and how that compares with what you paid
   let count = Number(x.retailCount) || 0, from = 'saved';
   if (!count) { const t = String(x.shopText || ''), m = /pack size:\s*(\d{1,4})/i.exec(t) || /(\d{1,4})\s+switch(?:es)?\s+(?:per|in each|in every|in a)\s+(?:order|pack|bag)/i.exec(t) || /(?:pack|bag|set) of\s*(\d{1,4})/i.exec(t) || /(\d{1,4})\s*(?:pcs|pieces|switches)\s*(?:\/|per)\s*(?:pack|bag)/i.exec(t) || /\b(\d{1,4})[- ]?(?:pack|pcs)\b/i.exec(t); if (m) { count = Number(m[1]); from = 'text'; } }
@@ -6677,14 +6772,19 @@ function avBase(type, x) {   // model key: brand/maker + name without the option
   return rdNorm([type === 'keyboards' ? x.brand : type === 'keycaps' ? '' : x.manufacturer, nm].filter(Boolean).join(' ')).replace(/ /g, '');
 }
 function avSiblings(type, x) { if (!x || !x.id) return []; const key = avBase(type, x); if (!key) return []; return itemsOfType(type).filter(y => y.id !== x.id && !y.isSample && avBase(type, y) === key); }
-const avText = (type, y) => [y.color, y.caseMaterial, y.bottomCaseMaterial, y.weightMaterial, y.layout, y.plateMaterial, y.category, String(y.name || '').replace(/^[^-–(]*[-–(]\s*/, '')].filter(Boolean).join(' ');
+const avText = (type, y) => [y.color, y.caseMaterial, y.bottomCaseMaterial, y.weightMaterial, y.layout, y.layoutStandard, y.bottomRow, y.spacebar, y.plateMaterial, y.category, String(y.name || '').replace(/^[^-–(]*[-–(]\s*/, '')].filter(Boolean).join(' ');
 function avOwners(type, value, list) { const t = avTok(value); if (!t.length) return []; return list.filter(y => { const have = avTok(avText(type, y)); return t.every(w => have.includes(w)); }); }
-function avLabel(type, y) { const bits = type === 'keyboards' ? [y.color, y.layout].filter(Boolean) : [String(y.name || '').match(/[-–(]\s*(.+?)\)?$/) ? RegExp.$1 : y.color].filter(Boolean); return bits.join(' · ') || rcLabel(type, y); }
+function avLabel(type, y) { const bits = type === 'keyboards' ? [y.color, y.bottomRow || y.layout].filter(Boolean) : [String(y.name || '').match(/[-–(]\s*(.+?)\)?$/) ? RegExp.$1 : y.color].filter(Boolean); return bits.join(' · ') || rcLabel(type, y); }
 const avTitle = (type, y) => type === 'keyboards' ? rcLabel(type, y) : (y.manufacturer && !String(y.name || '').toLowerCase().startsWith(String(y.manufacturer).toLowerCase()) ? y.manufacturer + ' ' : '') + (y.name || '');
 const AV_SUFFIX = { 'Bottom Case': /\s+(bottom( case)?|case)$/i, 'Top Case': /\s+(top( case)?|case)$/i, 'Weight': /\s+weights?$/i, 'Plate': /\s+plates?$/i };
 const avGroupKey = n => /bottom/i.test(n) ? 'Bottom Case' : /\bweights?\b/i.test(n) ? 'Weight' : /^(top case( colou?r)?|case( colou?r)?|colou?r(way)?|finish|top)$/i.test(String(n).trim()) ? 'Top Case' : /layout/i.test(n) ? 'Layout' : /\bplate\b/i.test(n) ? 'Plate' : String(n).trim();
 const avValKey = (g, v) => String(v).replace(AV_SUFFIX[g] || /$^/, '').toLowerCase().replace(/[\s_-]+/g, ' ').trim();
 function avNorm(a) {   // one group per part ("Case Color" + "Top Case" → Top Case), one value per option ("Copper" + "Copper Bottom" → Copper)
+  if (a && (a.layouts || []).length) {   // v0.86.0: layouts named on the page join the Layout option group (one Layout list, not two)
+    const abbr = l => String(l).replace(/\s*\(.*\)\s*$/, '').trim(), groups = (a.groups || []).map(g => Object.assign({}, g, { values: g.values.slice() }));
+    let lg = groups.find(g => avGroupKey(g.name) === 'Layout'); if (!lg) { lg = { name: 'Layout', values: [], chosen: '' }; groups.push(lg); }
+    a.layouts.map(abbr).forEach(v => { if (v && !lg.values.some(w => avValKey('Layout', w).split(' ')[0] === v.toLowerCase())) lg.values.push(v); });
+    a = Object.assign({}, a, { groups, layouts: [] }); }
   if (!a || !(a.groups || []).length) return a; const out = [];
   a.groups.forEach(g => { const key = avGroupKey(g.name), clean = v => String(v).replace(AV_SUFFIX[key] || /$^/, '').trim() || String(v);
     let h = out.find(x => x.key === key);
@@ -6705,7 +6805,7 @@ function availHtml(x, type) {
   const a = x && avNorm(x.alsoAvailable), sib = avSiblings(type, x), mine = x && x.id ? [x, ...sib] : [];
   const hasOpts = a && ((a.groups || []).length || (a.layouts || []).length);
   const chip = (v, chosen) => { const own = avOwners(type, v, mine), me = v === chosen || own.some(y => y.id === x.id), others = own.filter(y => y.id !== x.id);
-    const tip = [me ? 'This one' : '', others.length ? 'You own: ' + others.map(y => avLabel(type, y)).join('; ') : ''].filter(Boolean).join(' · ');
+    const exp = [...KB_BOTTOM, ...KB_STANDARDS].find(e => new RegExp('^' + e[0] + '\\b', 'i').test(String(v).trim())), tip = [exp ? exp[2] : '', me ? 'This one' : '', others.length ? 'You own: ' + others.map(y => avLabel(type, y)).join('; ') : ''].filter(Boolean).join(' · ');   // layout chips explain themselves on hover
     return `<span class="pchip${me ? ' on' : ''}${others.length ? ' avown' : ''}"${tip ? ` title="${esc(tip)}"` : ''}>${me ? '✓ ' : ''}${others.length ? '● ' : ''}${esc(v)}</span>`; };
   const opts = hasOpts ? `${(a.groups || []).map(g => `<div class="avail"><div class="avail-h">${esc(g.name)}</div><div class="pchips">${g.values.map(v => chip(v, g.chosen)).join('')}</div></div>`).join('')}
     ${(a.layouts || []).length ? `<div class="avail"><div class="avail-h">Layouts named on the page</div><div class="pchips">${a.layouts.map(l => chip(l, '')).join('')}</div></div>` : ''}
@@ -6717,8 +6817,8 @@ function availHtml(x, type) {
 }
 function availEditDialog(type, id) {
   const x = itemsOfType(type).find(y => y.id === id); if (!x) return; const a = JSON.parse(JSON.stringify(x.alsoAvailable || { source: 'You', groups: [], layouts: [] }));
-  if (!a.groups) a.groups = []; if ((a.layouts || []).length && !a.groups.some(g => /layout/i.test(g.name))) { a.groups.push({ name: 'Layout', values: a.layouts.slice(), chosen: x.layout || '' }); a.layouts = []; }
-  if (!a.groups.length) a.groups.push({ name: type === 'keyboards' ? 'Color' : 'Option', values: [], chosen: '' }, ...(type === 'keyboards' ? [{ name: 'Layout', values: [], chosen: x.layout || '' }] : []));
+  if (!a.groups) a.groups = []; if ((a.layouts || []).length && !a.groups.some(g => /layout/i.test(g.name))) { a.groups.push({ name: 'Layout', values: a.layouts.slice(), chosen: x.bottomRow || x.layout || '' }); a.layouts = []; }
+  if (!a.groups.length) a.groups.push({ name: type === 'keyboards' ? 'Color' : 'Option', values: [], chosen: '' }, ...(type === 'keyboards' ? [{ name: 'Layout', values: [], chosen: x.bottomRow || x.layout || '' }] : []));
   const d = document.createElement('div'); d.className = 'gdlg askdlg'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.innerHTML = '<div class="card askcard mgcard"><div id="avBody"></div></div>'; document.body.appendChild(d);
   const body = d.querySelector('#avBody'), close = () => d.remove();
   const draw = () => { body.innerHTML = `<p class="askmsg"><b>Options for ${esc(rcLabel(type, x))}</b></p><p class="sub" style="margin:6px 0 10px">One value per line. Pick which one is yours. Shops often drop sold-out options; add them here.</p>
