@@ -459,6 +459,7 @@
   .scancard [hidden] { display: none !important; } .scanrow { display: flex; gap: 8px; } .scanrow .input { flex: 1; min-width: 0; } .scancard video, .scancard img { width: 100%; max-height: 52vh; object-fit: contain; background: #000; border-radius: 8px; margin-top: 10px; }
   .gmkmid > .card { margin-top: 16px; } .costtbl { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; } .costtbl th { text-align: left; font-size: 11.5px; color: var(--text-3); font-weight: 600; padding: 4px 6px; border-bottom: var(--bw) var(--bs) var(--line); } .costtbl td { padding: 5px 6px; border-bottom: var(--bw) var(--bs) var(--line); vertical-align: top; } .costtbl .num { text-align: right; white-space: nowrap; } .costtbl tfoot td { border-bottom: 0; } .costtbl td .sub { font-size: 11px; }
   .tiphint:empty { display: none; } .tiphint { font-size: 12px; }
+  .navtog { margin-left: auto; background: none; border: 0; color: var(--text-3); font-size: 12px; padding: 2px 6px; cursor: pointer; border-radius: 4px; } .navtog:hover { color: var(--text); background: var(--line); }
   .navitem.navsub { padding-left: 34px; font-size: 13px; } .navitem.navsub svg { width: 15px; height: 15px; }
   .sumhid { opacity: .45; } .sumrow .sumed { flex: 1; } .sumadd { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 8px; margin-top: 8px; }
   @media (hover: none) { .sumacts { opacity: 1; } } @media (max-width: 700px) { .sumadd { grid-template-columns: 1fr; } }
@@ -640,7 +641,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.88.0';
+const APP_VERSION = 'v0.89.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -735,6 +736,8 @@ const SECTIONS = [
   { id: 'import',      title: 'Import',      color: 'var(--text-3)', built: true },
   { id: 'settings',    title: 'Settings',    color: 'var(--text-3)', built: true }
 ];
+const navCollapsed = () => { try { return localStorage.getItem('kbc_nav_swparts') !== 'open'; } catch (e) { return true; } };   // v0.89.0: Switch parts folds under Switches (closed by default, remembered on the device)
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-navtog]'); if (!b) return; e.preventDefault(); e.stopPropagation(); try { localStorage.setItem('kbc_nav_swparts', navCollapsed() ? 'open' : 'closed'); } catch (err) {} renderNav((location.hash.match(/^#\/(\w+)/) || [])[1] || 'dashboard'); }, true);
 const SEC = Object.fromEntries(SECTIONS.filter(s => s.id).map(s => [s.id, s]));
 
 /* ===================== Step P.1: phone top bar (collapses on scroll, like the Keycap Collection app), bottom bar and menu ===================== */
@@ -761,7 +764,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(fals
 function renderNav(active) {
   document.getElementById('nav').innerHTML = SECTIONS.map(s => s.group
     ? `<div class="navgroup">${s.group}</div>`
-    : `<a class="navitem${s.id === active ? ' on' : ''}${s.sub ? ' navsub' : ''}" href="#/${s.id}" style="--c:${s.color}" title="${s.title}">${I[s.id]}<span class="t">${s.title}</span>${s.built ? '' : '<span class="soon">Later</span>'}</a>`).join('');
+    : s.sub && navCollapsed() && s.id !== active ? '' : `<a class="navitem${s.id === active ? ' on' : ''}${s.sub ? ' navsub' : ''}" href="#/${s.id}" style="--c:${s.color}" title="${s.title}">${I[s.id]}<span class="t">${s.title}</span>${s.id === 'switches' ? `<button class="navtog" type="button" data-navtog title="${navCollapsed() ? 'Show' : 'Hide'} Switch parts" aria-label="${navCollapsed() ? 'Show' : 'Hide'} Switch parts" aria-expanded="${!navCollapsed()}">${navCollapsed() ? '▸' : '▾'}</button>` : ''}${s.built ? '' : '<span class="soon">Later</span>'}</a>`).join('');
 }
 
 /* ===================== Data: sample keyboards (in-app only, not saved) ===================== */
@@ -1387,13 +1390,16 @@ function listFilterHtml(t) {
   return `<select class="select" data-listfilter="${t}" aria-label="Filter" title="Filter">${o('', 'Filter: all')}${o('fav', '★ Favorites')}
     <optgroup label="Work">${o('todo', `Not done yet (${its.length - nd})`)}${o('done', `Done (${nd})`)}${o('done7', 'Done in the last 7 days')}${o('queue', `My work queue (${nq})`)}</optgroup>
     <optgroup label="Last modified">${o('mod7', 'Changed in the last 7 days')}${o('mod30', 'Changed in the last 30 days')}${o('old30', 'Not changed for 30+ days')}</optgroup>
+    ${t === 'accessories' ? (() => { const cs = new Map(); its.forEach(x => { const c = x.category || '(none)'; if (!cs.has(c)) cs.set(c, { n: 0, subs: new Map() }); const e = cs.get(c); e.n++; if (x.subCategory) e.subs.set(x.subCategory, (e.subs.get(x.subCategory) || 0) + 1); });
+      return `<optgroup label="Category">${[...cs.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([c, e]) => o('cat:' + c, `${c} (${e.n})`) + [...e.subs.entries()].sort().map(([sc, n]) => o('sub:' + c + '|' + sc, `   ${c} › ${sc} (${n})`)).join('')).join('')}</optgroup>`; })() : ''}
     ${t === 'keycaps' ? `<optgroup label="Keycaps">${o('kc:incomplete', 'Missing kits')}${savedKeycaps.some(x => { const c = completionOf(x); return c && c.check.length; }) ? o('kc:kitcheck', '⚠ Kit names to check') : ''}${[...new Set(savedKeycaps.map(x => x.profile).filter(Boolean))].sort().map(p2 => o('kc:profile:' + p2, 'Profile: ' + p2)).join('')}</optgroup>` : ''}</select>
     <select class="select" data-workmenu="${t}" aria-label="Work list actions" title="Done marks and work queue"><option value="">Work…</option><option value="finish"${nq ? '' : ' disabled'}>Finish my queue: mark all ${nq} done</option><option value="clearq"${nq ? '' : ' disabled'}>Empty my queue (no done marks)</option><option value="reset"${nd ? '' : ' disabled'}>Reset: clear all ${nd} done marks</option></select>`;
 }
 function finishList(t, list) {
   const f = listFilter[t] || '', now = Date.now(), sort = t === 'keyboards' ? kbSort : t === 'switches' ? swSort : t === 'keycaps' ? kcSort : (partState[t] || {}).sort;
   const ok = { fav: x => x.isSample ? favs.has(x.id) : !!x.isFavorite, todo: x => !x.doneAt, done: x => !!x.doneAt, done7: x => x.doneAt && now - x.doneAt < 7 * DAY, queue: x => !!x.inQueue, mod7: x => now - modMs(x) < 7 * DAY, mod30: x => now - modMs(x) < 30 * DAY, old30: x => now - modMs(x) >= 30 * DAY }[f];
-  let out = ok ? list.filter(ok) : list.slice();
+  const okC = f.startsWith('cat:') ? (x => (x.category || '(none)') === f.slice(4)) : f.startsWith('sub:') ? (x => (x.category || '(none)') + '|' + (x.subCategory || '') === f.slice(4)) : null;
+  let out = ok ? list.filter(ok) : okC ? list.filter(okC) : list.slice();
   if (sort === 'modNew' || sort === 'modOld') out.sort((a, b) => (sort === 'modNew' ? -1 : 1) * (modMs(a) - modMs(b)));
   return out;
 }
@@ -1434,7 +1440,7 @@ const BULK_FIELDS = {
   keycaps: [['manufacturer', 'Maker / platform'], ['profile', 'Profile'], ['designer', 'Designer'], ['material', 'Material'], ['legends', 'Legends'], ['stemMount', 'Stem mount'], ['location', 'Location']],
   pcbs: [['manufacturer', 'Maker'], ['category', 'Category'], ['location', 'Location'], ['purchasedFrom', 'Purchased from']],
   artisans: [['manufacturer', 'Maker'], ['category', 'Category'], ['series', 'Series'], ['colorway', 'Colorway'], ['location', 'Location'], ['purchasedFrom', 'Purchased from']],
-  accessories: [['manufacturer', 'Maker'], ['category', 'Category'], ['style', 'Style / type'], ['location', 'Location'], ['purchasedFrom', 'Purchased from']] };
+  accessories: [['manufacturer', 'Maker'], ['category', 'Category'], ['subCategory', 'Sub-category'], ['style', 'Style / type'], ['location', 'Location'], ['purchasedFrom', 'Purchased from']] };
 function bulkEditDialog(t, ids) {
   const F = BULK_FIELDS[t] || [], d = document.createElement('div'); d.className = 'gdlg askdlg'; d.id = 'bulkDlg';
   const vals = f => [...new Set(itemsOfType(t).map(x => x[f]).filter(v => typeof v === 'string' && v.trim()))].sort((a, b) => a.localeCompare(b));
@@ -1678,6 +1684,12 @@ function ckFixes() {   // the Nov 21 fixes still to do, worked out from the data
   if (lay.length) F.push({ id: 'layout', group: 'Keyboard type and layout', title: `${lay.length} keyboard${lay.length === 1 ? '' : 's'}: move the old Layout value to its own field`, detail: lay.map(([k, o]) => `${[k.brand, k.name].filter(Boolean).join(' ')}: ${k.layout} → ${o.layoutStandard && o.layoutStandard !== (k.layoutStandard || '') ? 'Standard ' + o.layoutStandard : 'Bottom row ' + o.bottomRow}`).join(' · '),
     why: 'Layout now holds the arrangement (standard, Alice, ortholinear, split); ANSI / ISO / JIS go to Standard and WK / WKL / Tsangan / HHKB to Bottom row. Spacebar is left for you (or a product page) to set.', recs: lay.map(([k]) => ['keyboards', k.id]),
     run: async () => { for (const [k, o] of lay) await kbCol().doc(k.id).update({ layout: o.layout || firebase.firestore.FieldValue.delete(), layoutStandard: o.layoutStandard || firebase.firestore.FieldValue.delete(), bottomRow: o.bottomRow || firebase.firestore.FieldValue.delete(), updatedAt: now0() }); return lay.length + ' moved'; } });
+  // v0.89.0: Case sub-categories (CSTM top cases, ALT cases)
+  const subOf = x => /\bcstm\s?\d*/i.test(x.name || '') ? 'CSTM top cases' : /\balt\b/i.test(x.name || '') ? 'ALT cases' : '';
+  const toSub = (savedParts.accessories || []).filter(x => /^case$/i.test(x.category || '') && !x.subCategory && subOf(x));
+  if (toSub.length) F.push({ id: 'subcat', group: 'Case sub-categories', title: `${toSub.length} case${toSub.length === 1 ? '' : 's'}: set CSTM top cases / ALT cases`, detail: toSub.map(x => `${x.name} → ${subOf(x)}`).join(' · '),
+    why: 'Only accessories in the Case category whose name says CSTM or ALT. Check the list; untick if any is wrong and set those by hand (Sub-category on the Overview tab).', recs: toSub.map(x => ['accessories', x.id]),
+    run: async () => { for (const x of toSub) await colOfType('accessories').doc(x.id).update({ subCategory: subOf(x), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); return toSub.length + ' set'; } });
   // the two receipt plates saved under one name before v0.67 (Faraz will read that receipt again)
   (savedParts.accessories || []).filter(x => /^nuxroskb kraze plates$/i.test((x.name || '').trim()) && x.addedFrom === 'receipt').forEach(x => F.push({ id: 'del-' + x.id, group: 'Remove before reading the Kraze receipt again', title: `Delete ${x.name} ($${Number(x.price || 0).toFixed(2)})`, href: '#/accessories/' + x.id, detail: 'Saved under one name by the receipt bug fixed in v0.67; read that receipt again afterwards so each plate gets its own entry.', recs: [['accessories', x.id]], run: () => colOfType('accessories').doc(x.id).delete() }));
   // automatic option notes (the option is shown under Also available in)
@@ -3834,6 +3846,7 @@ async function removeKeyboardFromKits(kbId) {
    photos, favorite, and installedOn: <keyboardId>. Cables are accessories with category "Cable" (D3). */
 /* v0.88.0: two more lists. Deskmats (own page, between Keycaps and PCBs & Components) and Switch parts (under Switches:
    films, springs, stems, housings, switch pads). Both work like the other part lists (photos, purchase, values, merge, move). */
+const ACC_SUBCATS = ['CSTM top cases', 'ALT cases'];   // v0.89.0: Case sub-categories (Faraz); more can be typed
 const SWPART_TYPES = ['Films', 'Springs', 'Stems', 'Housings', 'Switch pads', 'Other'];
 const PART_TYPES = {
   deskmats: { title: 'Deskmats', singular: 'deskmat', addLabel: 'Add deskmat', icon: 'deskmats', makers: ['KBDfans', 'NovelKeys', 'Drop', 'CannonKeys', 'Divinikey', 'Deskhero', 'Mode', 'Geekark', 'Omnitype'],
@@ -3873,10 +3886,11 @@ const PART_TYPES = {
   accessories: { title: 'Accessories', singular: 'accessory', addLabel: 'Add accessory', icon: 'accessories', makers: ['Amazon Basics', 'Glorious', 'Durock', 'TX', 'Krytox', 'YMDK', 'KBDfans', 'Drop', 'Keychron', 'Kemove', 'Gateron', 'WS'],
     fields: [['manufacturer', 'Manufacturer', 'e.g. Glorious', 'maker'], ['name', 'Name', 'e.g. Coiled cable', 'text', null, 'req'],
       ['category', 'Category', 'e.g. Stabilizers', 'text', ['Cable', 'Case', 'Plate', 'Weights', 'Keyboard Parts', 'Stabilizers', 'Lube & Tools', 'Modding Supplies', 'Storage & Display', 'Switch Testers', 'Tools & Pullers', 'Wrist Rests', 'Other']],
+      ['subCategory', 'Sub-category', 'e.g. CSTM top cases', 'text', ACC_SUBCATS, null, 'A group inside the category, to list them together (Case: CSTM top cases, ALT cases). Type a new one any time.'],
       ['location', 'Location', 'e.g. Desk drawer', 'text'], ['style', 'Style / type', 'e.g. Coiled / USB-C / Aviator', 'text', null, 'more', 'Mostly used for cables (Excel Cables tab).']],
     checks: [], textareas: [['notes', 'Notes', 'Anything else worth remembering']],
-    sub: x => [x.category, x.manufacturer].filter(Boolean).join(' · '),
-    cols: [['Category', x => x.category], ['Maker', x => x.manufacturer], ['Belongs to', x => x.belongsToText]] }
+    sub: x => [[x.category, x.subCategory].filter(Boolean).join(' › '), x.manufacturer].filter(Boolean).join(' · '),
+    cols: [['Category', x => [x.category, x.subCategory].filter(Boolean).join(' › ')], ['Maker', x => x.manufacturer], ['Belongs to', x => x.belongsToText]] }
 };
 const PART_IDS = ['pcbs', 'artisans', 'accessories', 'deskmats', 'switchparts'];
 const savedParts = { pcbs: [], artisans: [], accessories: [], deskmats: [], switchparts: [] }, partsLoaded = { pcbs: false, artisans: false, accessories: false, deskmats: false, switchparts: false };
