@@ -302,6 +302,8 @@
   .pswatch { position: relative; background-size: cover !important; background-position: center !important; } .swbtn { background-size: cover !important; background-position: center !important; }
   .c-notex { position: absolute; left: 8px; bottom: 8px; font: inherit; font-size: 12px; padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.35); background: rgba(0,0,0,.55); color: #fff; cursor: pointer; }
   .c-frompic { position: absolute; right: 8px; bottom: 8px; font: inherit; font-size: 12px; padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.35); background: rgba(0,0,0,.55); color: #fff; cursor: pointer; }
+  .pchip.avown { border-style: dashed; } .avown-list { display: grid; gap: 6px; } .avown-row { display: flex; flex-direction: column; gap: 2px; padding: 8px 11px; border: var(--bw) var(--bs) var(--line); border-radius: 9px; color: var(--text); text-decoration: none; background: var(--bg-2); } .avown-row span { font-size: 12.5px; color: var(--text-3); } .avown-row.me { border-color: var(--kb); } a.avown-row:hover { border-color: var(--kb); }
+  .av-g { border-top: var(--bw) var(--bs) var(--line); padding: 10px 0; display: grid; gap: 6px; } .av-gh { display: flex; gap: 6px; } .av-gh .input { flex: 1; }
   .avail + .avail { margin-top: 12px; } .avail .pchip { cursor: default; } .avail-h { font-size: 12px; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; } .incl { margin: 0; padding-left: 18px; line-height: 1.7; font-size: 13.5px; }
   @media (max-width: 700px) { .rd-row { grid-template-columns: 1fr; } .rd-img { width: 100%; height: 160px; } .rd-grid .rd-wide { grid-column: 1 / -1; } .rd-prod { grid-template-columns: 80px minmax(0, 1fr); } .rd-prod img { width: 80px; height: 60px; } }
   .drop { border: 1.5px dashed var(--line-2); border-radius: var(--radius-s); padding: 16px 12px; text-align: center; cursor: pointer; display: grid; gap: 4px; background: var(--bg-2); outline: none; }
@@ -626,7 +628,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.78.0';
+const APP_VERSION = 'v0.80.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -4875,7 +4877,7 @@ function drawSummary(view, x, type) {
   if (vals.length) links.push(['Market value', `${money(vals[0].value)} (${fmtDate(vals[0].date)}${vals[0].source ? ', ' + vals[0].source : ''})`, '']);
   const linkedHtml = (() => { const rows = links.map(([k, v, h]) => { const key = 'linked|' + k + '|' + v, hid = hidden.includes(key); if (hid) nHidden++; return { k, v, h, key, hid }; }).filter(r => !r.hid || sumShowHidden);
       return rows.length ? `<div class="sumsec"><h4>Linked</h4><dl class="sumdl">${rows.map(r => `<dt class="${r.hid ? 'sumhid' : ''}">${esc(r.k)}</dt><dd class="sumrow${r.hid ? ' sumhid' : ''}" data-sk="${esc(r.key)}"><span class="sumv">${r.h ? `<a class="lnk" href="${r.h}">${esc(r.v)}</a>` : esc(r.v)}</span><span class="sumacts"><button class="lnk" data-sumhide title="${r.hid ? 'Show on the Summary' : 'Hide from the Summary'}">${r.hid ? 'Unhide' : 'Hide'}</button></span></dd>`).join('')}</dl></div>` : ''; })();
-  if (live.alsoAvailable && ((live.alsoAvailable.groups || []).length || (live.alsoAvailable.layouts || []).length)) secs.push(`<div class="sumsec" id="sumAvail"><div class="sec-title"><h4>Also available in</h4>${type === 'keyboards' ? '<button class="lnk" data-goto="available">Open</button>' : ''}</div>${availHtml(live, type)}</div>`);
+  if ((live.alsoAvailable && ((live.alsoAvailable.groups || []).length || (live.alsoAvailable.layouts || []).length)) || avSiblings(type, live).length) secs.push(`<div class="sumsec" id="sumAvail"><div class="sec-title"><h4>Also available in</h4>${type === 'keyboards' ? '<button class="lnk" data-goto="available">Open</button>' : ''}</div>${availHtml(live, type)}</div>`);
   if (type !== 'keyboards' && live.included) secs.push(`<div class="sumsec" id="sumIncluded"><h4>Included with the kit</h4><ul class="incl">${String(live.included).split('\n').filter(Boolean).map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>`);
   if (live.retailPrice != null || live.shopText) {
     const sr = type === 'switches' && live.retailPrice != null ? switchRetail(live) : null, per = sr ? (sr.count ? ` for ${sr.count} switches · ${money3(sr.each)} per switch` : ' <span class="sub">(how many switches is that? use “change” below)</span>') : '';
@@ -6066,7 +6068,7 @@ function rdSpecs(html) {   // { pairs: { 'top housing': 'PA12', ... }, bare: ['L
   return { pairs, bare };
 }
 function rdIncludes(html) {   // the "Includes:" / "In the box" list on the shop page, one item per line
-  const doc = new DOMParser().parseFromString('<div id="r">' + String(html || '') + '</div>', 'text/html'), head = /^(what'?s\s+)?(included|includes|in the box|box contents|package (contents|includes)|kit includes|contents|comes with)\s*:?$/i;
+  const doc = new DOMParser().parseFromString('<div id="r">' + String(html || '') + '</div>', 'text/html'), head = /^(what'?s\s+)?(included|includes|in the box|box contents|package (contents|includes)|kit includes|contents|comes with|contents? list|packing list|package list|in the package)\s*:?$/i;
   for (const el of doc.querySelectorAll('p, h1, h2, h3, h4, h5, h6, strong, b, div')) {
     if (!head.test(el.textContent.replace(/[\u00a0\s]+/g, ' ').trim())) continue;
     let n = el.closest('p, h1, h2, h3, h4, h5, h6, div:not(#r)') || el; for (let i = 0; i < 4 && n; i++) { n = n.nextElementSibling; if (n && /^(UL|OL)$/.test(n.tagName)) return [...n.querySelectorAll(':scope > li')].map(li => li.textContent.replace(/[\u00a0\s]+/g, ' ').trim()).filter(Boolean).slice(0, 40); if (n && n.textContent.trim()) break; }
@@ -6206,8 +6208,15 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
     if (!f.weightMaterial && matWt) { const m = wtm(matWt[1]); if (m) f.weightMaterial = m[1]; }
     const ang = pick('typing angle', 'angle'); if (ang) f.typingAngle = ang.replace(/\s*degrees?/i, '°');
     const fh = pick('front height'); if (fh) f.frontHeight = fh.replace(/(\d)\s*mm/i, '$1 mm');
+    const tx = p.text || '';   // specs written as sentences ("8-degree typing angle and 18.66mm front height")
+    if (!f.typingAngle) { const m = /(\d+(?:\.\d+)?)\s*(?:°|-?\s*degrees?)\s+typing angle/i.exec(tx) || /typing angle(?:\s+of|\s+is|:)?\s*(\d+(?:\.\d+)?)\s*(?:°|degrees?)/i.exec(tx); if (m) f.typingAngle = m[1] + '°'; }
+    if (!f.frontHeight) { const m = /(\d+(?:\.\d+)?)\s*mm\s+front height/i.exec(tx) || /front height(?:\s+of|\s+is|:)?\s*(\d+(?:\.\d+)?)\s*mm/i.exec(tx); if (m) f.frontHeight = m[1] + ' mm'; }
+    if (!f.mounting) { const ms = [...new Set([...tx.matchAll(/\b(pcb gasket|isolated top|leaf[- ]spring|o-?ring|gasket|top|tray|bottom|burger|sandwich|plateless|flex[- ]cut)\s+mount(?:ed|ing)?\b/gi)].map(m => m[1].replace(/^./, c => c.toUpperCase()) + ' mount'))]; if (ms.length) f.mounting = ms.slice(0, 3).join(', '); }
+    if (!f.size) { const m = /(?<![\d.])(40|60|65|75|80|96|98|100)(?![\d.]|\s*(?:mm|g|kg|°))/.exec(p.title); if (m) { const s = KB_SIZES.find(x => x.startsWith(m[1] + '%') || (m[1] === '80' && /^TKL/.test(x)) || (m[1] === '100' && /^Full/.test(x))); if (s) f.size = s; } }   // "Neo 60 Cu", "Neo65
     if (designer) f.designer = designer;
-    const colorOpt = p.options.findIndex(o => /colou?r|finish/i.test(o.name)); if (v && colorOpt >= 0 && v.opts[colorOpt]) f.color = v.opts[colorOpt];
+    const colorOpt = p.options.findIndex(o => /colou?r|finish|top case|^case$|top/i.test(o.name)), botOpt = p.options.findIndex(o => /bottom/i.test(o.name));
+    if (v && colorOpt >= 0 && v.opts[colorOpt]) f.color = v.opts[colorOpt];
+    if (v && botOpt >= 0 && botOpt !== colorOpt && v.opts[botOpt]) { const bv = String(v.opts[botOpt]).replace(/\s*bottom( case)?$/i, '').trim(); f.color = f.color ? `${f.color} / ${bv}` : bv; const m = wtm(bv); if (m && !f.weightMaterial) f.weightMaterial = m[1]; }   // Neo Cu style: a brass or copper bottom case is the weight
     const layOpt = p.options.findIndex(o => /layout|format/i.test(o.name)); if (v && layOpt >= 0 && v.opts[layOpt]) f.layout = v.opts[layOpt];
     const pm = plateMaterialFrom(vl); if (pm && /plate/i.test(vl)) f.plateMaterial = pm;
     if (vl) f.notes = 'Option chosen on ' + p.source + ': ' + vl;
@@ -6256,8 +6265,12 @@ function rdNorm(s) { return String(s || '').toLowerCase().replace(/\bcyl\b|\bkey
 const rdJoin = (maker, name) => maker && name && String(name).toLowerCase().startsWith(String(maker).toLowerCase()) ? name : [maker, name].filter(Boolean).join(' ');
 const rdMatchLabel = (type, x) => type === 'keyboards' ? rdJoin(x.brand, x.name) : type === 'keycaps' ? (x.name || '') : rdJoin(x.manufacturer, x.name);
 function rdPageUrl(p, vid) { try { const u = new URL(p.url); u.search = ''; if (vid && /^\d+$/.test(vid)) u.searchParams.set('variant', vid); return u.toString(); } catch (e) { return p.url; } }
-function rdSuggest(type, name, url, strict) {   // the saved entry this most likely is, or ''. strict: one option of a product with several, so only the same link or the same full name counts
+function rdSuggest(type, name, url, strict, color) {   // the saved entry this most likely is, or ''. strict: one option of a product with several, so only the same link or the same full name counts
   const all = itemsOfType(type); if (url) { const same = all.find(x => x.refUrl === url); if (same) return same.id; }
+  const tight = s => rdNorm(s).replace(/ /g, ''), exact = all.filter(x => { const lab = rdMatchLabel(type, x); return lab && tight(lab) === tight(name); });   // "Neo60 Cu" = "Neo 60 Cu"
+  if (exact.length && color) { const cw = rcTok(String(color).split(' / ')[0]).filter(w => !/^(anodi[sz]ed|spray|coated|e|coat|bottom|top|case)$/.test(w)), hit = exact.find(x => cw.some(w => rcTok(x.color || '').includes(w)));
+    if (hit) return hit.id; const plain = exact.find(x => !x.color); return plain ? plain.id : ''; }   // several colorways of one board: only the same color counts
+  if (exact.length) return exact[0].id;
   const n = rdNorm(name), toks = rcTok(name); let best = null;
   all.forEach(x => { const lab = rdMatchLabel(type, x); if (!lab) return; if (rdNorm(lab) === n) { best = { id: x.id, score: 9 }; return; } if (strict) return;
     const it = [...new Set(rcTok(lab).filter(w => !/^r\d+$/.test(w)))]; if (it.length < 2) return;
@@ -6270,7 +6283,7 @@ function rdNewRow(p, v, type) {
   type = type || rdGuessType(p, v); const f = rdFields(p, v, type), img = rdImageOf(p, v), packs = 1, pack = type === 'switches' ? rdPackCount(p, v) : null;
   const name = type === 'keycaps' ? f.name : (f.name || p.title), setName = f.name;
   const foreign = p.currency && p.currency !== 'USD', row = { vid: v ? v.id : '', vtitle: rdVariantLabel(v), type, name, setName, kitName: rdVariantLabel(v) || 'Base', shopPrice: v && v.price != null ? v.price : null, price: foreign ? null : v && v.price != null ? v.price : null, qty: packs, pack, img, copy: false, mode: 'new', itemId: '', replace: false };
-  const ex = rdSuggest(type, type === 'keycaps' ? setName : rdMatchLabel(type, Object.assign({}, f, { name })), type === 'keycaps' ? '' : rdPageUrl(p, v ? v.id : ''), type !== 'keycaps' && p.variants.length > 1); if (ex) { row.mode = 'existing'; row.itemId = ex; }
+  const ex = rdSuggest(type, type === 'keycaps' ? setName : rdMatchLabel(type, Object.assign({}, f, { name })), type === 'keycaps' ? '' : rdPageUrl(p, v ? v.id : ''), type !== 'keycaps' && p.variants.length > 1, type === 'keyboards' ? f.color : ''); if (ex) { row.mode = 'existing'; row.itemId = ex; }
   return row;
 }
 function rdMoney(p, n) { if (n == null || n === '') return ''; if (!p.currency || p.currency === 'USD') return money(n); const sym = { EUR: '€', GBP: '£', CAD: 'CA$', AUD: 'A$', JPY: '¥', KRW: '₩', CNY: 'CN¥' }[p.currency]; const t = Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); return sym ? sym + t : t + ' ' + p.currency; }
@@ -6395,7 +6408,7 @@ async function rdSave() {
         const kt = rdKitType(r.kitName), kit = clean({ id: newKitId(), name: String(r.kitName).trim(), kitType: kt === 'Other' && /\b(extension|add-?on)s?\b/i.test(p.title) ? 'Extensions' : kt, quantity: 1, refImage: r.img || '', notOwned: r.notOwned || undefined, ...retailBits(r) });
         if (r.mode === 'existing') { const s = savedKeycaps.find(x => x.id === r.itemId), kits = (kcKits.get(s.id) || kitsOf(s)).map(k => Object.assign({}, k)), hit = kits.find(k => kitKey(k.name) === kitKey(kit.name));
           if (hit) { if (hit.retailPrice == null || r.replace) Object.assign(hit, retailBits(r)); if (!hit.refImage && kit.refImage) hit.refImage = kit.refImage; } else kits.push(kit); kcKits.set(s.id, kits);
-          const upd = { kits }; Object.entries(Object.assign({}, base, shopBits(r))).forEach(([k, val]) => { if (k === 'name') return; if (blank(s[k]) || (r.replace && /^(ref|shopText|alsoAvailable|included)/.test(k))) upd[k] = val; });
+          const upd = { kits }; Object.entries(Object.assign({}, base, shopBits(r))).forEach(([k, val]) => { if (k === 'name') return; if (k === 'alsoAvailable' && s.alsoAvailable && val) { upd[k] = typeof avMerge === 'function' ? avMerge(s.alsoAvailable, val) : val; return; } if (blank(s[k]) || (r.replace && /^(ref|shopText|alsoAvailable|included)/.test(k))) upd[k] = val; });
           await withTimeout(kcCol().doc(s.id).update(clean(Object.assign(upd, { updatedAt: now, appVersion: APP_VERSION }))));
           if (r.copy && r.img) await rdKeepCopy('keycaps', s.id, r.img, 'From ' + p.source).catch(e => copyFails.push(r.kitName));
           done.push({ label: s.name + ' — ' + kit.name, what: hit ? 'kit updated' : 'kit added', href: '#/keycaps/' + s.id }); continue; }
@@ -6404,7 +6417,7 @@ async function rdSave() {
       const fields = clean(Object.assign({}, base, r.mode === 'new' ? { name: String(r.name).trim() } : {}, shopBits(r), retailBits(r)));
       if (r.type === 'switches' && r.pack) fields.totalCount = r.pack * (r.qty || 1);
       if (r.mode === 'existing') { const x = itemsOfType(r.type).find(y => y.id === r.itemId), upd = {};
-        Object.entries(fields).forEach(([k, val]) => { if (k === 'name') return; if (blank(x[k]) || (r.replace && /^(ref|shopText|retail|alsoAvailable|included)/.test(k))) upd[k] = val; });
+        Object.entries(fields).forEach(([k, val]) => { if (k === 'name') return; if (k === 'alsoAvailable' && x.alsoAvailable && val) { upd[k] = typeof avMerge === 'function' ? avMerge(x.alsoAvailable, val) : val; return; } if (blank(x[k]) || (r.replace && /^(ref|shopText|retail|alsoAvailable|included)/.test(k))) upd[k] = val; });   // options from a second shop are added, not dropped
         if (Object.keys(upd).length) await withTimeout(colOfType(r.type).doc(x.id).update(Object.assign(upd, { updatedAt: now, appVersion: APP_VERSION })));
         if (r.copy && r.img) await rdKeepCopy(r.type, x.id, r.img, 'From ' + p.source).catch(() => copyFails.push(rcLabel(r.type, x)));
         done.push({ label: rcLabel(r.type, x), what: Object.keys(upd).length ? 'updated' : 'already complete', href: `#/${r.type}/${x.id}` }); continue; }
@@ -6432,12 +6445,72 @@ function switchRetail(x) {   // the shop's price is for a pack (or several): how
       out.cmp += ` · you paid ${money(paid)} (${money3(paid / n)} each, before tax)` + (Math.abs(diff) < 0.01 ? ', the same as retail' : diff > 0 ? `, ${money(diff)} (${pc}%) less than retail` : `, ${money(-diff)} (${pc}%) more than retail`); } }
   return out;
 }
-function availHtml(x, type) {
-  const a = x && x.alsoAvailable; if (!a || (!(a.groups || []).length && !(a.layouts || []).length)) return `<p class="sub" style="margin:0">Nothing yet. This fills in by itself when you read the ${type === 'keyboards' ? 'keyboard' : 'item'}'s product page (Import → Read a product page; choose “Add to an entry I have” for one you already saved).</p>`;
-  return `${(a.groups || []).map(g => `<div class="avail"><div class="avail-h">${esc(g.name)}</div><div class="pchips">${g.values.map(v => `<span class="pchip${v === g.chosen ? ' on' : ''}"${v === g.chosen ? ' title="Yours"' : ''}>${v === g.chosen ? '✓ ' : ''}${esc(v)}</span>`).join('')}</div></div>`).join('')}
-    ${(a.layouts || []).length ? `<div class="avail"><div class="avail-h">Layouts named on the page</div><div class="pchips">${a.layouts.map(l => `<span class="pchip">${esc(l)}</span>`).join('')}</div></div>` : ''}
-    <p class="sub" style="margin:10px 0 0;font-size:11.5px">From ${a.url ? `<a class="lnk" href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.source || 'the shop')}</a>` : esc(a.source || 'the shop')}${a.at ? ', read ' + esc(fmtDate(a.at)) : ''}. ✓ marks the option you chose.</p>`;
+/* ===================== v0.80.0: "Also available in" knows what you own =====================
+   • Your other versions of the same product (same brand/maker and model; options after " - " or in brackets ignored) are listed under
+     "In your collection", with their color, case, weight material and layout, and link to them.
+   • Every option chip that matches one of your entries is marked: ✓ this entry, ● another entry you own (hover/tap shows which).
+   • Reading a second shop's page for the same entry merges its options in (sold-out layouts one shop hides, another lists).
+   • "Edit options" adds or removes values and groups by hand, and sets which one is yours. */
+const AV_GENERIC = new Set(['anodized', 'anodised', 'spray', 'coated', 'sprayed', 'coat', 'bottom', 'top', 'case', 'edition', 'version', 'color', 'colour', 'finish', 'with', 'and', 'the', 'kit', 'raw']);
+const avTok = s => String(s || '').toLowerCase().split(/[^a-z0-9%]+/).filter(w => w && !AV_GENERIC.has(w));
+function avBase(type, x) {   // model key: brand/maker + name without the option part
+  const nm = String(x.name || '').replace(/\s+[-–]\s+.*$/, '').replace(/\s*\([^)]*\)\s*$/, '');
+  return rdNorm([type === 'keyboards' ? x.brand : type === 'keycaps' ? '' : x.manufacturer, nm].filter(Boolean).join(' ')).replace(/ /g, '');
 }
+function avSiblings(type, x) { if (!x || !x.id) return []; const key = avBase(type, x); if (!key) return []; return itemsOfType(type).filter(y => y.id !== x.id && !y.isSample && avBase(type, y) === key); }
+const avText = (type, y) => [y.color, y.caseMaterial, y.weightMaterial, y.layout, y.plateMaterial, y.category, String(y.name || '').replace(/^[^-–(]*[-–(]\s*/, '')].filter(Boolean).join(' ');
+function avOwners(type, value, list) { const t = avTok(value); if (!t.length) return []; return list.filter(y => { const have = avTok(avText(type, y)); return t.every(w => have.includes(w)); }); }
+function avLabel(type, y) { const bits = type === 'keyboards' ? [y.color, y.layout].filter(Boolean) : [String(y.name || '').match(/[-–(]\s*(.+?)\)?$/) ? RegExp.$1 : y.color].filter(Boolean); return bits.join(' · ') || rcLabel(type, y); }
+const avTitle = (type, y) => type === 'keyboards' ? rcLabel(type, y) : (y.manufacturer && !String(y.name || '').toLowerCase().startsWith(String(y.manufacturer).toLowerCase()) ? y.manufacturer + ' ' : '') + (y.name || '');
+function avMerge(a, b) {   // two shops' option lists → one; values united, your choice kept unless the new read sets one
+  if (!a) return b; if (!b) return a; const groups = (a.groups || []).map(g => Object.assign({}, g, { values: g.values.slice() }));
+  (b.groups || []).forEach(g => { const h = groups.find(x => x.name.toLowerCase() === g.name.toLowerCase()); if (!h) { groups.push(Object.assign({}, g, { values: g.values.slice() })); return; }
+    g.values.forEach(v => { if (!h.values.some(w => w.toLowerCase() === v.toLowerCase())) h.values.push(v); }); if (g.chosen) h.chosen = g.chosen; });
+  const srcs = [...(a.sources || (a.source ? [{ source: a.source, url: a.url, at: a.at }] : [])), ...(b.sources || (b.source ? [{ source: b.source, url: b.url, at: b.at }] : []))].filter((s, i, l) => l.findIndex(t => t.source === s.source) === i);
+  return { source: srcs.map(s => s.source).join(', '), url: a.url || b.url, at: b.at || a.at, sources: srcs, groups, layouts: [...new Set([...(a.layouts || []), ...(b.layouts || [])])] };
+}
+function availHtml(x, type) {
+  const a = x && x.alsoAvailable, sib = avSiblings(type, x), mine = x && x.id ? [x, ...sib] : [];
+  const hasOpts = a && ((a.groups || []).length || (a.layouts || []).length);
+  const chip = (v, chosen) => { const own = avOwners(type, v, mine), me = v === chosen || own.some(y => y.id === x.id), others = own.filter(y => y.id !== x.id);
+    const tip = [me ? 'This one' : '', others.length ? 'You own: ' + others.map(y => avLabel(type, y)).join('; ') : ''].filter(Boolean).join(' · ');
+    return `<span class="pchip${me ? ' on' : ''}${others.length ? ' avown' : ''}"${tip ? ` title="${esc(tip)}"` : ''}>${me ? '✓ ' : ''}${others.length ? '● ' : ''}${esc(v)}</span>`; };
+  const opts = hasOpts ? `${(a.groups || []).map(g => `<div class="avail"><div class="avail-h">${esc(g.name)}</div><div class="pchips">${g.values.map(v => chip(v, g.chosen)).join('')}</div></div>`).join('')}
+    ${(a.layouts || []).length ? `<div class="avail"><div class="avail-h">Layouts named on the page</div><div class="pchips">${a.layouts.map(l => chip(l, '')).join('')}</div></div>` : ''}
+    <p class="sub" style="margin:10px 0 0;font-size:11.5px">From ${(a.sources && a.sources.length ? a.sources : [{ source: a.source, url: a.url }]).map(s => s.url ? `<a class="lnk" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.source || 'the shop')}</a>` : esc(s.source || 'the shop')).join(', ')}${a.at ? ', read ' + esc(fmtDate(a.at)) : ''}. ✓ this one · ● another one you own.</p>`
+    : `<p class="sub" style="margin:0">No shop options yet. They fill in by themselves when you read the ${type === 'keyboards' ? 'keyboard' : 'item'}'s product page (Import → Read a product page; “Add to an entry I have” for one you already saved), or add them with Edit options.</p>`;
+  const coll = sib.length ? `<div class="avail" style="margin-top:14px"><div class="avail-h">In your collection (${sib.length + 1})</div><div class="avown-list">
+      ${mine.map(y => `<a class="avown-row${y.id === x.id ? ' me' : ''}" href="#/${type}/${esc(y.id)}"><b>${esc(y.id === x.id ? 'This one' : avTitle(type, y))}</b><span>${esc((type === 'keyboards' ? [y.color, y.caseMaterial && 'Case: ' + y.caseMaterial, y.weightMaterial && 'Weight: ' + y.weightMaterial, y.layout && 'Layout: ' + y.layout] : [avLabel(type, y), y.category]).filter(Boolean).join(' · ') || '—')}</span></a>`).join('')}</div></div>` : '';
+  return opts + coll + (x && x.id ? `<div class="btnrow" style="margin-top:10px"><button class="btn" type="button" data-avedit="${esc(type)}|${esc(x.id)}">Edit options</button></div>` : '');
+}
+function availEditDialog(type, id) {
+  const x = itemsOfType(type).find(y => y.id === id); if (!x) return; const a = JSON.parse(JSON.stringify(x.alsoAvailable || { source: 'You', groups: [], layouts: [] }));
+  if (!a.groups) a.groups = []; if ((a.layouts || []).length && !a.groups.some(g => /layout/i.test(g.name))) { a.groups.push({ name: 'Layout', values: a.layouts.slice(), chosen: x.layout || '' }); a.layouts = []; }
+  if (!a.groups.length) a.groups.push({ name: type === 'keyboards' ? 'Color' : 'Option', values: [], chosen: '' }, ...(type === 'keyboards' ? [{ name: 'Layout', values: [], chosen: x.layout || '' }] : []));
+  const d = document.createElement('div'); d.className = 'gdlg askdlg'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.innerHTML = '<div class="card askcard mgcard"><div id="avBody"></div></div>'; document.body.appendChild(d);
+  const body = d.querySelector('#avBody'), close = () => d.remove();
+  const draw = () => { body.innerHTML = `<p class="askmsg"><b>Options for ${esc(rcLabel(type, x))}</b></p><p class="sub" style="margin:6px 0 10px">One value per line. Pick which one is yours. Shops often drop sold-out options; add them here.</p>
+      ${a.groups.map((g, i) => `<div class="av-g" data-g="${i}"><div class="av-gh"><input class="input" data-avf="name" value="${esc(g.name)}" placeholder="Group, e.g. Layout"><button class="btn" type="button" data-avdel="${i}" title="Remove this group">✕</button></div>
+        <textarea class="input" data-avf="values" rows="${Math.max(2, Math.min(8, g.values.length + 1))}" placeholder="e.g. WK&#10;WKL&#10;HHKB">${esc(g.values.join('\n'))}</textarea>
+        <label class="rc-f"><span>Yours</span><select class="select" data-avf="chosen"><option value="">—</option>${g.values.map(v => `<option${v === g.chosen ? ' selected' : ''}>${esc(v)}</option>`).join('')}</select></label></div>`).join('')}
+      <button class="btn" type="button" id="avAddG" style="margin-top:8px">+ Add a group</button>
+      <div class="btnrow" style="justify-content:flex-end;margin-top:12px"><button class="btn" type="button" id="avNo">Cancel</button><button class="btn primary" type="button" id="avGo">Save</button></div><p class="sub" id="avMsg" style="margin:6px 0 0"></p>`; };
+  d.addEventListener('input', e => { const g = e.target.closest('[data-g]'); if (!g) return; const G = a.groups[+g.dataset.g], f = e.target.dataset.avf;
+    if (f === 'name') G.name = e.target.value; else if (f === 'values') { G.values = e.target.value.split('\n').map(s => s.trim()).filter(Boolean); const sel = g.querySelector('[data-avf="chosen"]'), keep = G.chosen; sel.innerHTML = '<option value="">—</option>' + G.values.map(v => `<option${v === keep ? ' selected' : ''}>${esc(v)}</option>`).join(''); if (!G.values.includes(keep)) G.chosen = ''; } });
+  d.addEventListener('change', e => { const g = e.target.closest('[data-g]'); if (g && e.target.dataset.avf === 'chosen') a.groups[+g.dataset.g].chosen = e.target.value; });
+  d.onclick = async e => { if (e.target === d || e.target.closest('#avNo')) { close(); return; }
+    const del = e.target.closest('[data-avdel]'); if (del) { a.groups.splice(+del.dataset.avdel, 1); draw(); return; }
+    if (e.target.closest('#avAddG')) { a.groups.push({ name: '', values: [], chosen: '' }); draw(); return; }
+    if (!e.target.closest('#avGo')) return;
+    const groups = a.groups.filter(g => String(g.name).trim() && g.values.length).map(g => ({ name: String(g.name).trim(), values: g.values, chosen: g.chosen || '' }));
+    const out = groups.length || (a.layouts || []).length ? Object.assign({}, a, { groups, at: a.at || todayIso(), sources: a.sources || (a.source ? [{ source: a.source, url: a.url, at: a.at }] : [{ source: 'You' }]) }) : firebase.firestore.FieldValue.delete();
+    try { await withTimeout(colOfType(type).doc(id).update({ alsoAvailable: out, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); close(); toast('Options saved');
+      const box = document.getElementById('availBox'); if (box) box.innerHTML = availHtml(Object.assign({}, x, { alsoAvailable: out && out.groups ? out : null }), type); }
+    catch (err) { body.querySelector('#avMsg').textContent = 'Could not save: ' + explain(err); } };
+  draw();
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-avedit]'); if (!b) return; e.preventDefault(); const [t, id] = b.dataset.avedit.split('|'); if (formDirty) { toast('Save or discard your changes first'); return; } availEditDialog(t, id); });
+
 function linkCardHtml() {
   return `<div class="card" style="margin-top:16px"><h3>Read a product page</h3><p class="sub">Paste a link to a product on an approved shop. The app fills in the details, specs, retail price and pictures for you to check before saving. On your phone you can also use your browser's Share button and pick Keyboard Collection.</p>
     <div class="rd-urlrow"><input class="input" id="rdQuick" type="url" inputmode="url" placeholder="https://divinikey.com/products/…"><button class="btn primary" id="rdQuickGo">Read page</button></div>
