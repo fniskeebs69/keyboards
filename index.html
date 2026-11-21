@@ -448,6 +448,14 @@
   .sumrow { display: flex; gap: 8px; align-items: flex-start; } .sumrow .sumv { flex: 1; min-width: 0; } .sumacts { display: flex; gap: 8px; opacity: 0; transition: opacity .15s; flex-shrink: 0; }
   .sumrow:hover .sumacts, .sumrow:focus-within .sumacts, .sumacts.on { opacity: 1; } .sumacts .lnk { font-size: 12px; color: var(--text-3); } .sumacts .lnk:hover { color: var(--text); }
   .sumheadtxt { flex: 1; min-width: 0; display: grid; gap: 2px; } .sumheadtxt .sumrow { align-items: center; } .sumheadtxt textarea.sumed { min-height: 80px; }
+  .ck-card { margin-bottom: 16px; } .ck-card h3 .sub { font-weight: 400; margin-left: 6px; } .ck-h { margin: 14px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); }
+  .ck-row { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 8px 0; border-bottom: var(--bw) var(--bs) var(--line); } .ck-row:last-child { border-bottom: 0; }
+  .ck-tick { display: flex; gap: 10px; align-items: flex-start; flex: 1; min-width: 240px; } .ck-tick > span { display: grid; gap: 2px; } .ck-why { font-style: italic; } .ck-pick { max-width: 340px; } .ck-opt { margin-right: 12px; white-space: nowrap; }
+  .ckb { margin: 4px 0 10px 28px; display: grid; gap: 6px; } .ckb-h, .ckb-r { display: grid; grid-template-columns: minmax(180px, 1.4fr) minmax(170px, 1.3fr) 80px 100px; gap: 8px; align-items: center; } .ckb-h { font-size: 11.5px; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; } .ckb-r > span { display: grid; } .ckb-sum { font-size: 13px; margin-top: 4px; }
+  @media (max-width: 700px) { .ckb { margin-left: 0; } .ckb-h { display: none; } .ckb-r { grid-template-columns: 1fr 1fr; } .ckb-r > span, .ckb-r select { grid-column: 1 / -1; } }
+  .instwrap > .card { border: 0; padding: 0; background: none; box-shadow: none; margin: 14px 0 0; border-radius: 0; } .instwrap > .card + .card { border-top: var(--bw) var(--bs) var(--line); padding-top: 12px; } .instwrap > .card > h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); font-weight: 600; margin-bottom: 8px; }
+  .shopopts { margin-top: 10px; } .shopopts > summary { cursor: pointer; font-size: 13px; color: var(--text-2); } .shopopts[open] > summary { margin-bottom: 8px; } .refret { margin: 8px 0 0; font-size: 13px; }
+  .impold > summary { cursor: pointer; list-style: none; } .impold > summary::-webkit-details-marker { display: none; } .impold > summary::before { content: '▸ '; color: var(--text-3); } .impold[open] > summary::before { content: '▾ '; }
   .sumhid { opacity: .45; } .sumrow .sumed { flex: 1; } .sumadd { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 8px; margin-top: 8px; }
   @media (hover: none) { .sumacts { opacity: 1; } } @media (max-width: 700px) { .sumadd { grid-template-columns: 1fr; } }
   .sndlist { display: grid; gap: 10px; margin-top: 10px; } .snditem { border: var(--bw) var(--bs) var(--line); border-radius: var(--radius-s); padding: 8px; display: grid; gap: 6px; }
@@ -628,7 +636,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.80.0';
+const APP_VERSION = 'v0.85.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -687,6 +695,7 @@ const I = {
   list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',
   search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
   plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
   stats: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
   sounds: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4M7 6v12M11 9v6M15 4v16M19 8v8"/></svg>',
   back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
@@ -711,6 +720,7 @@ const SECTIONS = [
   { id: 'wishlist',    title: 'Wishlist',    color: '#f472b6', built: true },
   { group: 'TOOLS' },
   { id: 'value',       title: 'Value',       color: '#34d399', built: true },
+  { id: 'check',       title: 'Check my data', color: 'var(--ch1)', built: true },
   { id: 'stats',       title: 'Stats',       color: 'var(--ch1)', built: true },
   { id: 'sounds',      title: 'Sound compare', color: 'var(--sw)', built: true },
   { id: 'catalog',     title: 'Catalog',     color: 'var(--text-3)', built: true },
@@ -780,6 +790,7 @@ function refreshIfShowing() {
   else if (id === 'catalog') drawCatalog();
   else if (id === 'value') renderValue();
   else if (id === 'stats') renderStats();
+  else if (id === 'check' && !renderCheck.touched) renderCheck();   // redrawn as data arrives, until you tick or pick something
   else if (id === 'switches' && document.getElementById('swResults')) drawSwitchResults();
   else if (id === 'keycaps' && document.getElementById('kcResults')) drawKeycapResults();
   else if (PART_TYPES[id] && document.getElementById('ptResults')) drawPartResults(id);
@@ -1083,20 +1094,24 @@ function mergeDialog(type, firstId, secondId) {   // firstId = sacrifice, second
 const SPLIT_GUESS = [   // [match, type, category, make an entry by default, installed on the board by default]
   [/\bpcb\b/i, 'pcbs', '', true, true], [/daughter ?board|\bdb\b/i, 'accessories', 'Keyboard Parts', true, true], [/\bplates?\b/i, 'accessories', 'Plate', true, true],
   [/stabili[sz]er|\bstabs?\b/i, 'accessories', 'Stabilizers', true, true], [/\bfoams?\b|\bpe sheet|poron|ixpe/i, 'accessories', 'Keyboard Parts', true, true],
-  [/cable/i, 'accessories', 'Cable', true, false], [/top\s*\/\s*bottom case|\bcase\b.*\bcase\b/i, 'accessories', 'Case', false, true], [/\bcase\b/i, 'accessories', 'Case', true, true],
-  [/weight/i, 'accessories', 'Keyboard Parts', false, true], [/switch/i, 'accessories', 'Switch Parts', false, false], [/keycap/i, 'accessories', 'Other', false, false]];
+  [/cable/i, 'accessories', 'Cable', true, false], [/puller|opener|screwdriver|tweezer|\btools?\b/i, 'accessories', 'Tools & Pullers', false, false], [/carrying|travel case|\bbag\b|pouch|sleeve/i, 'accessories', 'Storage & Display', false, false],
+  [/top\s*\/\s*bottom case|\bcase\b.*\bcase\b|keyboard case|(top|bottom) case/i, 'accessories', 'Case', false, true], [/\bcase\b/i, 'accessories', 'Case', true, true],
+  [/weight/i, 'accessories', 'Keyboard Parts', false, true], [/switch(es)? (are )?(pre-?)?installed|\bswitches\b(?!.*(puller|opener|tester|film|spring))/i, 'switches', '', false, true], [/switch/i, 'accessories', 'Switch Parts', false, false], [/keycaps?( set)?\b(?!.*puller)/i, 'keycaps', '', false, true]];
 function splitGuess(text) { const g = SPLIT_GUESS.find(([re]) => re.test(text)); return g ? { type: g[1], category: g[2], on: g[3], installed: g[4] } : { type: 'accessories', category: 'Keyboard Parts', on: false, installed: false }; }
 function splitLinesFrom(k) {
-  const base = [k.brand, k.name].filter(Boolean).join(' ');
-  return String(k.included || '').split('\n').map(x => x.trim()).filter(Boolean).map(line => {
+  const base = [k.brand, k.name].filter(Boolean).join(' '), nk = x => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, ''), own = nk(k.name);
+  return String(k.included || '').split('\n').map(x => x.trim()).filter(Boolean).filter(line => !(own.length >= 3 && nk(line).includes(own) && /(keyboard|kit|barebones?)\s*$/i.test(line)))   // "80Retros GB40 FC 1983 Mechanical Keyboard" is the board itself
+    .map(line => {
     const m = /^(\d{1,3})\s*[x×]?\s+(.+)$/i.exec(line), qty = m ? Number(m[1]) : 1, what = (m ? m[2] : line).replace(/^(set of|pair of)\s+/i, '').trim(), g = splitGuess(what);
-    return { on: g.on, type: g.type, category: g.category, name: `${base} ${what}`.replace(/\s+/g, ' ').trim(), qty, price: '', installed: g.installed, from: line };
+    return { on: g.on, type: g.type, category: g.category, name: (own.length >= 3 && nk(what).includes(own) ? what : `${base} ${what}`).replace(/\s+/g, ' ').trim(), qty, price: '', installed: g.installed, from: line };
   });
 }
 function splitDialog(kbId) {
   if (formDirty) { toast('Save or discard your changes first'); return; }
   const k = savedKeyboards.find(x => x.id === kbId); if (!k) return;
-  let lines = splitLinesFrom(k); if (!lines.length) lines = [{ on: true, type: 'pcbs', category: '', name: [k.brand, k.name, 'PCB'].filter(Boolean).join(' '), qty: 1, price: '', installed: true }, { on: true, type: 'accessories', category: 'Plate', name: [k.brand, k.name, 'plate'].filter(Boolean).join(' '), qty: 1, price: '', installed: true }];
+  let lines = splitLinesFrom(k); const base0 = [k.brand, k.name].filter(Boolean).join(' '), NEED = { '40%': 47, '60%': 61, '65%': 68, '75%': 84, 'TKL (80%)': 87, '96%': 100, '98%': 100, '1800': 100, 'Full Size (100%)': 104 };
+  if (k.keyboardType === 'prebuilt') { if (!lines.some(l => l.type === 'switches') && !switchesOn(k.id).length) lines.push({ on: false, type: 'switches', category: '', name: base0 + ' stock switches', qty: NEED[k.size] || '', price: '', installed: true, from: 'Pre-built: the switches it came with' }); if (!lines.some(l => l.type === 'keycaps')) lines.push({ on: false, type: 'keycaps', category: '', name: base0 + ' stock keycaps', qty: 1, price: '', installed: true, from: 'Pre-built: the keycaps it came with' }); }
+  if (!lines.length) lines = [{ on: true, type: 'pcbs', category: '', name: [k.brand, k.name, 'PCB'].filter(Boolean).join(' '), qty: 1, price: '', installed: true }, { on: true, type: 'accessories', category: 'Plate', name: [k.brand, k.name, 'plate'].filter(Boolean).join(' '), qty: 1, price: '', installed: true }];
   const price = Number(k.price) || 0, cats = PART_TYPES.accessories.fields.find(f => f[0] === 'category')[4];
   const d = document.createElement('div'); d.className = 'gdlg askdlg'; d.id = 'splitDlg'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
   d.innerHTML = `<div class="card askcard mgcard"><div id="spBody"></div></div>`; document.body.appendChild(d);
@@ -1105,15 +1120,15 @@ function splitDialog(kbId) {
   const sum = () => Math.round(lines.filter(l => l.on).reduce((n, l) => n + (Number(l.price) || 0), 0) * 100) / 100;
   const lineHtml = (l, i) => `<div class="sp-line${l.on ? '' : ' off'}" data-sp="${i}">
       <label class="check sp-on"><input type="checkbox" data-spf="on"${l.on ? ' checked' : ''}> Make an entry</label>${l.from ? `<span class="sub sp-from">From the kit list: ${esc(l.from)}</span>` : ''}
-      <div class="sp-grid"><label class="rc-f"><span>Page</span><select class="select" data-spf="type"><option value="pcbs"${l.type === 'pcbs' ? ' selected' : ''}>PCBs</option><option value="accessories"${l.type === 'accessories' ? ' selected' : ''}>Accessories</option></select></label>
-        ${l.type === 'accessories' ? `<label class="rc-f"><span>Category</span><select class="select" data-spf="category">${cats.map(c => `<option${c === l.category ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></label>` : '<span></span>'}
+      <div class="sp-grid"><label class="rc-f"><span>Page</span><select class="select" data-spf="type">${[['pcbs', 'PCBs'], ['accessories', 'Accessories'], ['switches', 'Switches'], ['keycaps', 'Keycaps']].map(([v, t]) => `<option value="${v}"${l.type === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label>
+        ${l.type === 'accessories' ? `<label class="rc-f"><span>Category</span><select class="select" data-spf="category">${cats.map(c => `<option${c === l.category ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></label>` : l.type === 'switches' ? `<label class="rc-f"><span>How many</span><input class="input" type="number" min="1" step="1" data-spf="qty" value="${esc(l.qty || '')}" placeholder="e.g. 68"></label>` : '<span></span>'}
         <label class="rc-f sp-name"><span>Name</span><input class="input" data-spf="name" value="${esc(l.name)}"></label>
         <label class="rc-f"><span>Part of the price</span><span class="money-in"><span>$</span><input class="input" type="number" min="0" step="0.01" data-spf="price" value="${esc(l.price)}" placeholder="0.00"></span></label>
         <label class="check sp-inst"><input type="checkbox" data-spf="installed"${l.installed ? ' checked' : ''}> Installed on this keyboard</label></div></div>`;
   const totals = () => { const s = sum(), left = Math.round((price - s) * 100) / 100;
     return `<p class="sub" id="spSum" style="margin:12px 0 0">${k.price == null || k.price === '' ? 'This keyboard has no price yet, so parts are saved without moving any money.' : `Keyboard price ${money(price)} → <b>${money(Math.max(left, 0))}</b> after the split; parts ${money(s)}. The total you paid stays ${money(price)}.`}${left < 0 ? ' <b style="color:var(--bad-text)">The parts cost more than the keyboard.</b>' : ''}</p>`; };
   const draw = () => { body.innerHTML = `<p class="askmsg"><b>Split “${esc(rcLabel('keyboards', k))}” into parts</b></p>
-      <p class="sub" style="margin:6px 0 10px">Each ticked line becomes its own PCB or accessory entry, so your inventory shows it. Purchase date, seller, receipt and tax rate are copied. A price you type here is taken out of the keyboard's price, so your total doesn't change; leave it empty for a part that came with the board ($0). Shipping and discounts stay on the keyboard.</p>
+      <p class="sub" style="margin:6px 0 10px">Each ticked line becomes its own PCB, accessory, switch or keycap entry, so your inventory shows it (switches with their count; keycaps as a set with one kit). Purchase date, seller, receipt and tax rate are copied. A price you type here is taken out of the keyboard's price, so your total doesn't change; leave it empty for a part that came with the board ($0). Shipping and discounts stay on the keyboard.</p>
       ${k.included ? '' : '<p class="sub" style="margin:0 0 8px">This keyboard has no “Included with the kit” list, so two common parts are suggested. Read its product page to fill the list, or add your own lines.</p>'}
       <div id="spLines">${lines.map(lineHtml).join('')}</div>
       <button class="btn" type="button" id="spAdd" style="margin-top:8px">+ Add a part</button>${totals()}
@@ -1130,6 +1145,7 @@ function splitDialog(kbId) {
     const todo = lines.filter(l => l.on), msg = body.querySelector('#spMsg');
     if (!todo.length) { msg.textContent = 'Tick at least one line.'; return; }
     if (todo.some(l => !String(l.name).trim())) { msg.textContent = 'Every ticked line needs a name.'; return; }
+    if (todo.some(l => l.type === 'switches' && !(Number(l.qty) > 0))) { msg.textContent = 'Switch lines need how many switches.'; return; }
     if (todo.some(l => Number(l.price) < 0)) { msg.textContent = 'Prices cannot be negative.'; return; }
     if (k.price != null && k.price !== '' && sum() > price + 0.004) { msg.textContent = 'The parts cost more than the keyboard. Lower the part prices.'; return; }
     const go = body.querySelector('#spGo'); go.disabled = true; msg.textContent = 'Creating…';
@@ -1143,13 +1159,16 @@ async function splitRun(k, todo) {
   const keep = ['datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'orderNumber', 'taxRate', 'acquisition'], made = [];
   const hadPrice = !(kd.price == null || kd.price === ''), r2 = n => Math.round(n * 100) / 100;
   for (const l of todo) {
-    const d = { name: String(l.name).trim(), manufacturer: kd.brand || '', price: r2(Number(l.price) || 0), notes: `Came with ${label}${hadPrice ? (Number(l.price) ? `; ${money(l.price)} of its price moved here` : '; no separate price') : ''} (split ${fmtDate(when)}).`,
+    const d = { name: String(l.name).trim(), manufacturer: l.type === 'switches' || l.type === 'keycaps' ? '' : kd.brand || '', price: r2(Number(l.price) || 0), notes: `Came with ${label}${hadPrice ? (Number(l.price) ? `; ${money(l.price)} of its price moved here` : '; no separate price') : ''} (split ${fmtDate(when)}).`,
       source: 'app', addedFrom: 'split', splitFrom: k.id, createdAt: now, updatedAt: now, appVersion: APP_VERSION };
     if (l.type === 'accessories') d.category = l.category || 'Keyboard Parts';
-    if (l.qty > 1) d.notes += ` Quantity on the kit list: ${l.qty}.`;
+    if (l.qty > 1 && l.type !== 'switches') d.notes += ` Quantity on the kit list: ${l.qty}.`;
     keep.forEach(f => { if (!blank(kd[f]) && !(Array.isArray(kd[f]) && !kd[f].length)) d[f] = kd[f]; });
-    if (l.installed) d.installedOn = k.id;
-    const ref = partCol(l.type).doc(); await withTimeout(ref.set(d)); made.push({ t: l.type, id: ref.id, name: d.name });
+    if (!d.manufacturer) delete d.manufacturer;
+    if (l.type === 'switches') { d.totalCount = Number(l.qty); if (l.installed) d.allocations = [{ keyboardId: k.id, count: Number(l.qty) }]; }
+    else if (l.type === 'keycaps') { const kit = { id: newKitId(), name: 'Base', kitType: 'Base', quantity: 1, price: d.price }; keep.forEach(f => { if (d[f] !== undefined) { kit[f] = d[f]; delete d[f]; } }); delete d.price; if (l.installed) kit.installedOn = k.id; d.kits = [kit]; }
+    else if (l.installed) d.installedOn = k.id;
+    const ref = colOfType(l.type).doc(); await withTimeout(ref.set(d)); made.push({ t: l.type, id: ref.id, name: d.name });
   }
   const moved = r2(todo.reduce((n, l) => n + (Number(l.price) || 0), 0)), upd = { updatedAt: now };
   if (hadPrice && moved) upd.price = r2(Number(kd.price) - moved);
@@ -1159,7 +1178,7 @@ async function splitRun(k, todo) {
 }
 async function splitUndo(r) {
   const DEL = firebase.firestore.FieldValue.delete();
-  for (const m of r.made) await withTimeout(partCol(m.t).doc(m.id).delete());
+  for (const m of r.made) await withTimeout(colOfType(m.t).doc(m.id).delete());
   await withTimeout(kbCol().doc(r.kbId).update({ price: r.before.price === null ? DEL : r.before.price, notes: r.before.notes === null ? DEL : r.before.notes }));
 }
 
@@ -1564,6 +1583,160 @@ function allPurchases() {   // one row per thing bought: { t, name, date, seller
   savedKeycaps.forEach(st => kitsOf(st).forEach(k => add('keycaps', st.name + ' — ' + k.name, k))); PART_IDS.forEach(t => savedParts[t].forEach(x => add(t, x.name, x)));
   return out;
 }
+/* ===================== v0.83.0: Check my data (Tools) =====================
+   Two parts. (1) "Fixes waiting for you": one-time corrections Faraz gave in chat (Nov 21), shown as tick boxes with what
+   each will change; nothing is written until "Apply ticked fixes" (a copy of every record it touches is saved on this
+   device first: localStorage kbc_backup_check_<date>). Each fix is found from the data itself, so once applied it no
+   longer shows. (2) Checks worked out from your records every time: spellings, keyboards with no type, accessories with
+   no category, entries with the same name, and old "Option chosen on" notes. */
+const CK_SELLER = 'u/Spirit_of_the_walrus (r/mechmarket)';
+const CK_LISTING = [   // the seller's mechmarket post (Faraz, Nov 21): bought together with the Neo65 Cu Red, one PayPal receipt
+  { key: 'bcp', label: 'Black Cherry Pie Frankenswitch', re: /black cherry pie|franken/i, weak: /\bbcp\b/i, maker: '', ct: 77, ask: '$20',
+    fields: { switchType: 'Linear', lubedBy: 'Seller (' + CK_SELLER + ')', springType: 'SW Chewy', springLength: '17.5 mm', springWeight: '63.5 g', springLube: 'Krytox GPL 105', stemLube: 'Krytox 205g0' },
+    note: 'Frankenswitch built, lubed and filmed by the seller: top housing Cherry Black, bottom housing JWK Black, stem KNC Unga Bunga, TX films 0.125 mm, SW Chewy 17.5 mm 63.5 g springs; 105 on springs, 205 on housings and stems.' },
+  { key: 'sonja', label: 'HMX Sonja', re: /sonja/i, maker: 'HMX', ct: 59, ask: '$10' },
+  { key: 'sand', label: 'Haimu Pastel Sand', re: /pastel sand|\bsand\b/i, maker: 'Haimu', ct: 71, ask: '$10' },
+  { key: 'peach', label: 'Haimu Pastel Peach', re: /pastel peach|\bpeach\b/i, maker: 'Haimu', ct: 70, ask: '$10' },
+  { key: 'film', label: 'HMX 80Retros Film Sample pack', re: /film sample|sample pack/i, maker: 'HMX', ct: null, ask: '$20' },
+  { key: 'kd200', label: 'HMX KD 200', re: /kd ?200/i, maker: 'HMX', ct: 36, ask: '', canister: true },
+  { key: 'joker', label: 'HMX Joker', re: /joker/i, maker: 'HMX', ct: 34, ask: '', canister: true },
+  { key: 'fj400', label: 'HMX FJ 400', re: /fj ?400/i, maker: 'HMX', ct: 34, ask: '', canister: true },
+  { key: 'game', label: 'HMX Game 1989', re: /game ?1989/i, maker: 'HMX', ct: 34, ask: '', canister: true }];
+const ckNk = x => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const ckNeo = re => savedKeyboards.filter(k => /neo/i.test(k.name || '') && re.test([k.brand, k.name, k.color].join(' ')));
+function ckKbChange(k, want) {   // fields to change on a keyboard (only those that differ), with the Colorway kept in step
+  const u = {}; Object.entries(want).forEach(([f, v]) => { if ((k[f] || '') !== v) u[f] = v; });
+  if (want.bottomCaseMaterial && / \/ (copper|brass)$/i.test(k.color || '')) u.color = k.color.replace(/ \/ (copper|brass)$/i, '');   // the bottom is its own field now
+  let cw = (k.colorway || []).map(c => Object.assign({}, c));
+  if (u.weightMaterial === 'No weight') cw = cw.filter(c => !isWeightRow(c));
+  else if (u.weightMaterial) cw = weightColorway(cw, u.weightMaterial, k.weightMaterial || '') || cw;
+  const bot = u.bottomCaseMaterial || want.bottomCaseMaterial; if (bot) { const m = WEIGHT_MATS.find(x => x[1].toLowerCase() === bot.toLowerCase()), i = cw.findIndex(isBottomRow);
+    if (m && i >= 0) { if (cw[i].hex !== m[2]) cw[i] = Object.assign({}, cw[i], { hex: m[2], source: 'material' }); } else cw = bottomColorway(cw, bot, '') || cw; }
+  if (JSON.stringify(cw) !== JSON.stringify(k.colorway || [])) u.colorway = cw; return Object.keys(u).length ? u : null;
+}
+const ckDesc = u => Object.entries(u).filter(([f]) => f !== 'colorway' && f !== 'alsoAvailable').map(([f, v]) => `${MG_LABELS[f] || ({ bottomCaseMaterial: 'Bottom case material', weightMaterial: 'Weight material', caseMaterial: 'Case material' })[f] || f}: ${v === null ? '(removed)' : String(v).split('\n')[0]}`).join(' · ') + (u.colorway ? ' · Colorway updated' : '') + (u.alsoAvailable ? ' · options updated' : '');
+function ckFixes() {   // the Nov 21 fixes still to do, worked out from the data
+  const F = [], kbFix = (k, want, why) => { const u = ckKbChange(k, want); if (u) F.push({ id: 'kb-' + k.id, group: 'Neo keyboards', title: `${k.name} — ${k.color || ''}`, href: '#/keyboards/' + k.id, detail: ckDesc(u), why, recs: [['keyboards', k.id]], run: () => kbCol().doc(k.id).update(Object.assign(u, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() })) }); };
+  const red = ckNeo(/neo ?65 ?cu.*red|red.*neo ?65/i)[0], greige = ckNeo(/neo ?65.*greige/i)[0], teal65 = ckNeo(/neo ?65.*teal/i)[0], core = ckNeo(/neo ?60 ?core/i)[0], n75 = ckNeo(/neo ?75/i)[0];
+  if (red) kbFix(red, Object.assign({ bottomCaseMaterial: 'Brass', weightMaterial: 'PVD · Mirror Dusk' }, red.included ? {} : { included: 'Neo65 Cu top case (Red anodized)\nBrass bottom case\nMirror Dusk PVD weight\nAluminum plate\nSolder PCB' }), 'Brass bottom, Mirror Dusk PVD weight; came with a Neo solder PCB and an aluminum plate.');
+  if (greige) kbFix(greige, { bottomCaseMaterial: 'Copper', weightMaterial: 'PVD · Mirror Golden' }, 'Copper bottom, Mirror Golden PVD weight.');
+  if (teal65) kbFix(teal65, Object.assign({ weightMaterial: 'PVD · Mirror Dusk' }, teal65.bottomCaseMaterial ? {} : { bottomCaseMaterial: 'Copper' }), 'Mirror Dusk PVD weight.');
+  if (core) kbFix(core, { weightMaterial: 'Copper' }, 'Unibody: the whole case is grey, so no separate bottom; copper weight.');
+  if (n75) { const badges = ['Silver Nova Badge', 'Silver Vortex Badge', 'Golden Vortex Badge', 'Black Vortex Badge'], av = n75.alsoAvailable || { source: 'Qwertykeys', groups: [], layouts: [] };
+    const want = { bottomCaseMaterial: 'Brass', weightMaterial: 'No weight' }; if (!/vortex/i.test(n75.weightsAccents || '')) want.weightsAccents = [n75.weightsAccents, 'Silver Vortex badge'].filter(Boolean).join(', ');
+    const u0 = ckKbChange(n75, want) || {}; if (!(av.groups || []).some(g => /badge/i.test(g.name))) u0.alsoAvailable = Object.assign({}, av, { groups: (av.groups || []).concat([{ name: 'Accent Badge', values: badges, chosen: 'Silver Vortex Badge' }]) });
+    if (Object.keys(u0).length) F.push({ id: 'kb-' + n75.id, group: 'Neo keyboards', title: `${n75.name} — ${n75.color || ''}`, href: '#/keyboards/' + n75.id, detail: ckDesc(u0) + (u0.alsoAvailable ? ' (Accent Badge: Silver Nova, Silver Vortex ✓, Golden Vortex, Black Vortex)' : ''), why: 'Brass bottom, no separate weight; Silver Vortex badge (4 badge options).', recs: [['keyboards', n75.id]], run: () => kbCol().doc(n75.id).update(Object.assign(u0, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() })) }); }
+  if (red) {   // the PCB and plate that came with the red board: link one you already have, else add it at $0
+    const onRed = t => itemsOfType(t).some(x => x.installedOn === red.id && (t === 'pcbs' ? /solder/i.test(x.name + ' ' + (x.notes || '')) || x.solder : /plate/i.test((x.category || '') + ' ' + x.name) && /alu/i.test(x.name)));
+    const copy = { datePurchased: red.datePurchased, purchasedFrom: red.purchasedFrom, receipt: red.receipt, taxRate: red.taxRate };
+    [['pcbs', 'Qwertykeys Neo65 Solder PCB', {}, /neo ?65.*solder|solder.*neo ?65/i], ['accessories', 'Qwertykeys Neo65 Cu Aluminum Plate', { category: 'Plate', manufacturer: 'Qwertykeys' }, /neo ?65.*plate.*alu|neo ?65.*alu.*plate/i]].forEach(([t, name, extra, re]) => {
+      if (onRed(t)) return; const have = itemsOfType(t).find(x => re.test(x.name || '') && !x.installedOn);
+      F.push({ id: 'part-' + t, group: 'Neo keyboards', title: have ? `Link ${have.name}` : `Add ${name}`, href: have ? `#/${t}/${have.id}` : '', recs: have ? [[t, have.id]] : [],
+        detail: have ? `Installed on ${red.name} (${red.color}); nothing else changes` : `New ${t === 'pcbs' ? 'PCB' : 'accessory (Plate)'}, installed on ${red.name} (${red.color}), $0 — came with the board; purchase date, seller and receipt copied`,
+        why: 'Came with the Neo65 Cu Red.', run: () => have ? colOfType(t).doc(have.id).update({ installedOn: red.id, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+          : colOfType(t).doc().set(Object.assign({ name, price: 0, shipping: 0, discounts: 0, installedOn: red.id, notes: `Came with the ${red.name} (${red.color}) from ${CK_SELLER}; its price is in the keyboard's price.`, createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp(), appVersion: APP_VERSION, source: 'app', addedFrom: 'check' }, t === 'pcbs' ? { manufacturer: 'Qwertykeys', solder: true } : {}, extra, Object.fromEntries(Object.entries(copy).filter(([, v]) => v != null && v !== '')))) }); }); }
+  // the switches bought with the red board: the workbook keeps them as one "Neo65 Cu Red Bundle" entry
+  const bundle = savedSwitches.find(w => /neo ?65.*bundle/i.test(w.name || '') && !/split into separate entries/i.test(w.notes || '')), base = bundle || red;
+  if (base && !(bundle && savedSwitches.some(w => w.splitFrom === bundle.id)) && !(!bundle && savedSwitches.some(w => (w.notes || '').includes('Spirit_of_the_walrus')))) {
+    const lst = bundle ? [bundle.specsText, bundle.typeExcel, bundle.notes].join(' ') : '', day0 = base.datePurchased;
+    const rows = CK_LISTING.map(L => { const cands = savedSwitches.filter(w => w !== bundle && (L.re.test([w.manufacturer, w.name].join(' ')) || (L.weak && L.weak.test(w.name))));
+      const mine = cands.find(w => w.datePurchased === day0 || (w.notes || '').includes('Spirit_of_the_walrus'));
+      const inList = !bundle || L.re.test(lst) || (L.weak && L.weak.test(lst)) || (L.key === 'kd200' && /kd ?200/i.test(lst)) || (L.key === 'fj400' && /fj ?400/i.test(lst));
+      return { L, cands, pick: !inList ? 'skip' : mine ? mine.id : 'new' }; });
+    const tot = Number(bundle && bundle.price) || 0, pcs = rows.filter(r => r.pick === 'new' && r.L.ct).reduce((a2, r) => a2 + r.L.ct, 0);
+    rows.forEach(r => { r.price = tot && pcs && r.pick === 'new' && r.L.ct ? Math.round(tot * r.L.ct / pcs * 100) / 100 : 0; });
+    if (tot && pcs) { const diff = Math.round((tot - rows.reduce((a2, r) => a2 + r.price, 0)) * 100) / 100, last = [...rows].reverse().find(r => r.price); if (last) last.price = Math.round((last.price + diff) * 100) / 100; }
+    F.push({ id: 'bundle', group: 'Switches from the same seller', title: bundle ? `Split “${[bundle.manufacturer, bundle.name].filter(Boolean).join(' ')}” into one entry per switch` : `Add the switches bought with the ${red.name} (${red.color})`, href: bundle ? '#/switches/' + bundle.id : '', recs: bundle ? [['switches', bundle.id]] : [], bundleRows: rows, bundle, tot,
+      why: `From ${CK_SELLER}'s listing. Each line becomes its own switch entry with the listed count, a share of the price and the bundle's purchase date, seller, receipt and tax rate; an entry you already have is matched instead and only gets the note and empty fields. Lines your workbook doesn't list start as Skip. Prices start in proportion to the counts: change them to what you actually paid.`,
+      run: async () => { const V = renderCheck.vals || {}, rs = rows.map((r, i) => ({ r, pick: V['ckbPick=' + i] || 'skip', ct: String(V['ckbCt=' + i] || '').trim(), pr: String(V['ckbPr=' + i] || '').trim() }));
+        const moved = Math.round(rs.filter(x => x.pick === 'new').reduce((a2, x) => a2 + (Number(x.pr) || 0), 0) * 100) / 100; if (tot && moved > tot + 0.005) throw new Error(`the new entries' prices ($${moved.toFixed(2)}) are more than the bundle's $${tot.toFixed(2)}`);
+        const now = firebase.firestore.FieldValue.serverTimestamp(), copy = Object.fromEntries(['datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'pictureLink', 'taxRate', 'orderNumber'].filter(f => !blank(base[f])).map(f => [f, base[f]])), out = [];
+        for (const x of rs) { const L = x.r.L; if (x.pick === 'skip') continue;
+          const note = `Bought from ${CK_SELLER} with the Neo65 Cu Red (same PayPal order).${L.ct ? ` Seller listed ${L.ct} pcs.` : ''}${L.canister ? ' Came in the special film canister packaging.' : ''}${L.note ? ' ' + L.note : ''}`;
+          if (x.pick === 'new') { const d = Object.assign({ name: L.label.replace(/^(HMX|Haimu)\s+/, ''), price: Number(x.pr) || 0, shipping: 0, discounts: 0, notes: note, createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app', addedFrom: 'split' }, L.maker ? { manufacturer: L.maker } : {}, L.fields || {}, copy, x.ct ? { totalCount: Number(x.ct) } : {}, bundle ? { splitFrom: bundle.id } : {});
+            await swCol().doc().set(d); out.push(L.label + ' added'); continue; }
+          const w = savedSwitches.find(y => y.id === x.pick); if (!w) continue; const u = {}; Object.entries(L.fields || {}).forEach(([f, v]) => { if (blank(w[f])) u[f] = v; }); if (x.ct && w.totalCount == null) u.totalCount = Number(x.ct);
+          if (!(w.notes || '').includes(CK_SELLER)) u.notes = [w.notes, note].filter(Boolean).join('\n'); if (Object.keys(u).length) await swCol().doc(w.id).update(Object.assign(u, { updatedAt: now })); out.push(L.label + ' → ' + w.name); }
+        if (bundle) { const left = Math.round((tot - moved) * 100) / 100, del = !!(renderCheck.vals || {}).ckbDel && left < 0.005;
+          if (del) { await swCol().doc(bundle.id).delete(); out.push('bundle entry removed'); }
+          else { await swCol().doc(bundle.id).update({ price: left, notes: [bundle.notes, `Split into separate entries on ${new Date().toISOString().slice(0, 10)} (${out.length} lines); $${moved.toFixed(2)} moved to them.`].filter(Boolean).join('\n'), updatedAt: now }); out.push(`bundle kept with $${left.toFixed(2)}`); } }
+        return out.join('; '); } }); }
+  // the two receipt plates saved under one name before v0.67 (Faraz will read that receipt again)
+  (savedParts.accessories || []).filter(x => /^nuxroskb kraze plates$/i.test((x.name || '').trim()) && x.addedFrom === 'receipt').forEach(x => F.push({ id: 'del-' + x.id, group: 'Remove before reading the Kraze receipt again', title: `Delete ${x.name} ($${Number(x.price || 0).toFixed(2)})`, href: '#/accessories/' + x.id, detail: 'Saved under one name by the receipt bug fixed in v0.67; read that receipt again afterwards so each plate gets its own entry.', recs: [['accessories', x.id]], run: () => colOfType('accessories').doc(x.id).delete() }));
+  // automatic option notes (the option is shown under Also available in)
+  const optRe = /^Option chosen on [^:\n]+:.*$\n?/gm;
+  LIST_TYPES.forEach(t => itemsOfType(t).filter(x => /^Option chosen on [^:\n]+:/m.test(x.notes || '') && (x.alsoAvailable || x.refUrl)).forEach(x => { const rest = String(x.notes).replace(optRe, '').trim();
+    F.push({ id: 'note-' + x.id, group: 'Old automatic notes', title: [x.brand || x.manufacturer, x.name, x.color && '(' + x.color + ')'].filter(Boolean).join(' '), href: `#/${t}/${x.id}`, detail: `Remove “${(String(x.notes).match(/^Option chosen on .*$/m) || [''])[0]}” (the option is marked under Also available in)`, recs: [[t, x.id]], run: () => colOfType(t).doc(x.id).update({ notes: rest || firebase.firestore.FieldValue.delete(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }) }); }));
+  return F;
+}
+const CK_OLD_CATS = /^cases & plates$/i;
+function ckCatGuess(n) { n = String(n || ''); return /desk ?mat/i.test(n) ? 'Deskmat' : /cover plate|badge|diffuser|screen|weights?\b/i.test(n) ? 'Keyboard Parts' : /switch plates?|\bplates?\b/i.test(n) ? 'Plate' : /\bcases?\b/i.test(n) ? 'Case' : rdAccCategory({ title: n, tags: [] }, null); }
+function ckCatsToSort() { return (savedParts.accessories || []).filter(x => x.category && (CK_OLD_CATS.test(x.category) || (/desk ?mat/i.test(x.name) && x.category !== 'Deskmat'))).map(x => ({ x, g: ckCatGuess(x.name) })); }
+function ckSpellings() {
+  const all = LIST_TYPES.flatMap(t => itemsOfType(t).map(x => [t, x])), out = [];
+  SNAP_POOLS.forEach(pool => { const m = new Map(); all.forEach(([t, x]) => pool.forEach(f => { const v = x[f]; if (typeof v !== 'string' || !v.trim()) return; const k = ckNk(v); if (!k) return; if (!m.has(k)) m.set(k, new Map()); const e = m.get(k); e.set(v.trim(), (e.get(v.trim()) || 0) + 1); }));
+    m.forEach((e, k) => { if (e.size > 1) out.push({ pool, key: k, forms: [...e.entries()].sort((a, b) => b[1] - a[1]) }); }); });
+  return out;
+}
+function ckSameNames() {
+  const out = []; LIST_TYPES.forEach(t => { const m = new Map(); itemsOfType(t).forEach(x => { const k = ckNk([x.brand || x.manufacturer, x.name, x.color].join(' ')); if (!m.has(k)) m.set(k, []); m.get(k).push(x); }); m.forEach(xs => { if (xs.length > 1) out.push({ t, xs }); }); }); return out;
+}
+function renderCheck() {
+  const view = document.getElementById('view'), F = ckFixes(), sortCats = ckCatsToSort(), sp = ckSpellings(), noType = savedKeyboards.filter(k => !k.keyboardType), noCat = (savedParts.accessories || []).filter(x => !x.category), same = ckSameNames();
+  const cats = PART_TYPES.accessories.fields.find(f => f[0] === 'category')[4];
+  const groups = [...new Set(F.map(f => f.group))];
+  const bundleHtml = f => `<div class="ck-row"><label class="ck-tick"><input type="checkbox" data-ckfix="bundle" checked><span><b>${f.href ? `<a href="${esc(f.href)}">${esc(f.title)}</a>` : esc(f.title)}</b><span class="sub ck-why">${esc(f.why)}</span></span></label></div>
+    <div class="ckb"><div class="ckb-h"><span>From the listing</span><span>Save as</span><span>Count</span>${f.bundle ? '<span>Price</span>' : ''}</div>${f.bundleRows.map((r, i) => `<div class="ckb-r"><span><b>${esc(r.L.label)}</b><span class="sub">${r.L.ct ? r.L.ct + ' pcs' : 'pack'}${r.L.ask ? ' · seller asked ' + r.L.ask : ''}</span></span>
+      <select class="select" data-ckb-pick="${i}"><option value="skip"${r.pick === 'skip' ? ' selected' : ''}>Skip${f.bundle && r.pick === 'skip' ? ' (not in your workbook list)' : ''}</option><option value="new"${r.pick === 'new' ? ' selected' : ''}>New switch entry</option>${r.cands.map(w => `<option value="${esc(w.id)}"${w.id === r.pick ? ' selected' : ''}>${esc([w.manufacturer, w.name].filter(Boolean).join(' '))}${w.totalCount != null ? ' · ' + w.totalCount + ' pcs' : ''}${w.datePurchased ? ' · ' + w.datePurchased : ''}</option>`).join('')}</select>
+      <input class="input" data-ckb-ct="${i}" inputmode="numeric" value="${r.L.ct || ''}" aria-label="Count">${f.bundle ? `<input class="input" data-ckb-pr="${i}" inputmode="decimal" value="${r.price ? r.price.toFixed(2) : ''}" placeholder="0.00" aria-label="Price">` : ''}</div>`).join('')}
+      ${f.bundle ? `<div class="ckb-sum" id="ckbSum"></div><label class="ck-opt"><input type="checkbox" id="ckbDel" checked> Delete the bundle entry when its whole price has moved to the new entries (a copy is kept on this device)</label>` : ''}</div>`;
+  const fixRow = f => f.bundleRows ? bundleHtml(f) : `<div class="ck-row"><label class="ck-tick"><input type="checkbox" data-ckfix="${esc(f.id)}" ${f.listing ? '' : 'checked'}><span><b>${f.href ? `<a href="${esc(f.href)}">${esc(f.title)}</a>` : esc(f.title)}</b>${f.detail ? `<span class="sub">${esc(f.detail)}</span>` : ''}${f.why ? `<span class="sub ck-why">${esc(f.why)}</span>` : ''}</span></label>
+      ${f.listing ? `<select class="select ck-pick" data-ckpick="${esc(f.id)}"><option value="skip">Skip</option>${f.cands.length ? `<optgroup label="Matching names">${f.cands.map(w => `<option value="${esc(w.id)}"${w.id === f.pick ? ' selected' : ''}>${esc([w.manufacturer, w.name].filter(Boolean).join(' '))}${w.totalCount != null ? ' · ' + w.totalCount + ' pcs' : ''}${w.datePurchased ? ' · ' + w.datePurchased : ''}${w.purchasedFrom ? ' · ' + w.purchasedFrom : ''}</option>`).join('')}</optgroup>` : ''}<option value="new">Add as a new switch entry</option><optgroup label="All switch entries">${f.swOpts().filter(w => !f.cands.includes(w)).map(w => `<option value="${esc(w.id)}">${esc([w.manufacturer, w.name].filter(Boolean).join(' '))}${w.totalCount != null ? ' · ' + w.totalCount : ''}</option>`).join('')}</optgroup></select>` : ''}</div>`;
+  view.innerHTML = `<div class="pagehead"><div><h1>Check my data</h1><p>Things to tidy, found in your records. Nothing changes until you press a button.</p></div></div>
+    ${F.length ? `<div class="card ck-card"><h3>Fixes waiting for you <span class="sub">(from our chat, Nov 21)</span></h3>
+      ${groups.map(g => `<h4 class="ck-h">${esc(g)}</h4>${F.filter(f => f.group === g).map(fixRow).join('')}`).join('')}
+      <div class="btnrow" style="margin-top:14px"><button class="btn primary" id="ckApply">Apply ticked fixes</button><span class="sub" id="ckMsg"></span></div></div>` : `<div class="card"><h3>Fixes waiting for you</h3><p class="sub">None — everything from our chat is done.</p></div>`}
+    <div class="card ck-card"><h3>Spellings <span class="sub">${sp.length ? sp.length + ' to choose' : 'all consistent'}</span></h3>
+      ${sp.map((g, i) => `<div class="ck-row"><span>${g.forms.map(([v, n], j) => `<label class="ck-opt"><input type="radio" name="cksp${i}" value="${esc(v)}"${j === 0 ? ' checked' : ''}> ${esc(v)} <span class="sub">(${n})</span></label>`).join(' ')}</span><button class="btn" data-cksp="${i}">Use this spelling</button></div>`).join('')}</div>
+    <div class="card ck-card"><h3>Keyboards with no type <span class="sub">${noType.length}</span></h3>${noType.length ? `<p class="sub">Most came from the workbook. Set each one here (saved straight away), or use Select → Edit fields on the Keyboards page for many at once.</p>` : ''}
+      ${noType.length > 8 ? '<details><summary class="lnk">Show all ' + noType.length + '</summary>' : ''}${noType.map(k => `<div class="ck-row"><a href="#/keyboards/${esc(k.id)}">${esc([k.brand, k.name, k.color && '(' + k.color + ')'].filter(Boolean).join(' '))}</a><select class="select ck-pick" data-cktype="${esc(k.id)}"><option value="">Choose…</option>${Object.entries(KB_TYPES).map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('')}</select></div>`).join('')}${noType.length > 8 ? '</details>' : ''}</div>
+    <div class="card ck-card"><h3>Accessories with no category <span class="sub">${noCat.length}</span></h3>
+      ${noCat.map(x => { const g = rdAccCategory({ title: x.name, tags: [] }, null); return `<div class="ck-row"><a href="#/accessories/${esc(x.id)}">${esc(x.name)}</a><select class="select ck-pick" data-ckcat="${esc(x.id)}"><option value="">Choose…</option>${cats.map(c => `<option${c === g ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select><button class="btn" data-ckcatgo="${esc(x.id)}">Save</button></div>`; }).join('')}</div>
+    <div class="card ck-card"><h3>Categories to sort <span class="sub">${sortCats.length || 'none'}</span></h3>${sortCats.length ? `<p class="sub">The workbook's “Cases & Plates” mixes switch plates, cases and weights, and the app has Plate, Case and Keyboard Parts for those (the Build tab's plate and case pickers use them). A category is suggested from each name; change any, then apply.</p>
+      ${sortCats.length > 8 ? '<details open><summary class="lnk">' + sortCats.length + ' entries</summary>' : ''}${sortCats.map(({ x, g }) => `<div class="ck-row"><a href="#/accessories/${esc(x.id)}">${esc(x.name)}</a><span class="sub">${esc(x.category)} →</span><select class="select ck-pick" data-cksort="${esc(x.id)}">${cats.map(c => `<option${c === g ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></div>`).join('')}${sortCats.length > 8 ? '</details>' : ''}
+      <div class="btnrow" style="margin-top:10px"><button class="btn primary" id="ckSortGo">Apply these ${sortCats.length} categories</button></div>` : ''}</div>
+    <div class="card ck-card"><h3>Same name more than once <span class="sub">${same.length}</span></h3>${same.length ? `<p class="sub">Could be two you really own, or one entry saved twice. Open one and use Merge… if they are the same thing.</p>` : ''}
+      ${same.map(g => `<div class="ck-row"><span>${esc(SEC[g.t].title)}: ${g.xs.map(x => `<a href="#/${g.t}/${esc(x.id)}">${esc(x.name)}${x.price != null ? ' · $' + Number(x.price).toFixed(2) : ''}${x.addedFrom ? ' · ' + esc(x.addedFrom) : x.excelRow ? ' · Excel row ' + x.excelRow : ''}</a>`).join(' &nbsp;·&nbsp; ')}</span></div>`).join('')}</div>`;
+  const bf = F.find(f => f.bundleRows && f.bundle); const bsum = () => { const el = document.getElementById('ckbSum'); if (!el || !bf) return; let m = 0; bf.bundleRows.forEach((r, i) => { if (document.querySelector(`[data-ckb-pick="${i}"]`).value === 'new') m += Number(document.querySelector(`[data-ckb-pr="${i}"]`).value) || 0; });
+    const left = Math.round((bf.tot - m) * 100) / 100; el.innerHTML = `Bundle price $${bf.tot.toFixed(2)} · moved to new entries $${m.toFixed(2)} · left on the bundle <b${left < -0.004 ? ' style="color:var(--bad-text)"' : ''}>$${left.toFixed(2)}</b>`; };
+  view.querySelectorAll('[data-ckb-pick], [data-ckb-pr]').forEach(el => el.addEventListener('input', bsum)); view.querySelectorAll('[data-ckb-pick]').forEach(el => el.addEventListener('change', bsum)); bsum();
+  renderCheck.touched = false; view.querySelectorAll('.ck-card').forEach(c => c.addEventListener('change', () => { renderCheck.touched = true; }));
+  const msg = document.getElementById('ckMsg');
+  document.getElementById('ckApply')?.addEventListener('click', async () => {
+    const ticked = F.filter(f => document.querySelector(`[data-ckfix="${CSS.escape(f.id)}"]`)?.checked); if (!ticked.length) { msg.textContent = 'Nothing ticked.'; return; }
+    const dels = ticked.filter(f => f.id.startsWith('del-')).length;
+    if (!(await askConfirm(`Apply ${ticked.length} fix${ticked.length === 1 ? '' : 'es'}?${dels ? ` ${dels} entr${dels === 1 ? 'y is' : 'ies are'} deleted (no undo here, but a copy is kept on this device).` : ''} A copy of every record it changes is saved on this device first.`, { ok: 'Apply', cancel: 'Not yet', danger: !!dels }))) return;
+    const btn = document.getElementById('ckApply'); btn.disabled = true; msg.textContent = 'Saving a copy…';
+    const ser = x => JSON.parse(JSON.stringify(x, (k, v) => v && typeof v.toDate === 'function' ? { __ts: v.toDate().toISOString() } : v));
+    const recs = []; ticked.forEach(f => f.recs.forEach(([t, id]) => { const x = itemsOfType(t).find(y => y.id === id); if (x) recs.push({ t, x: ser(x) }); }));
+    ticked.filter(f => f.bundleRows).forEach(f => f.bundleRows.forEach((r, i) => { const w = savedSwitches.find(y => y.id === document.querySelector(`[data-ckb-pick="${i}"]`)?.value); if (w) recs.push({ t: 'switches', x: ser(w) }); }));
+    try { if (!lsSet('kbc_backup_check_' + new Date().toISOString().slice(0, 10), recs)) throw new Error('storage'); } catch (e) { if (!(await askConfirm('The copy could not be saved on this device (storage full?). Apply anyway?', { ok: 'Apply anyway', cancel: 'Stop' }))) { btn.disabled = false; msg.textContent = ''; return; } }
+    renderCheck.touched = true; const vals = {}; view.querySelectorAll('[data-ckb-pick], [data-ckb-ct], [data-ckb-pr], #ckbDel').forEach(el => { vals[el.id || Object.keys(el.dataset).map(k => k + '=' + el.dataset[k]).join()] = el.type === 'checkbox' ? el.checked : el.value; }); renderCheck.vals = vals;
+    const res = []; for (const f of ticked) { msg.textContent = `Saving ${res.length + 1} of ${ticked.length}…`;
+      try { const r = await withTimeout(Promise.resolve(f.run(f.listing ? document.querySelector(`[data-ckpick="${CSS.escape(f.id)}"]`)?.value : undefined))); res.push(f.title + ': ' + (typeof r === 'string' ? r : 'done')); } catch (e) { res.push(f.title + ': failed — ' + explain(e)); } }
+    toast(`${res.filter(r => !/failed/.test(r)).length} of ${ticked.length} fixes saved`); setTimeout(() => { renderCheck(); const m = document.getElementById('ckMsg') || document.querySelector('.pagehead p'); if (m) m.textContent = 'Last run: ' + res.join(' · '); }, 900);
+  });
+  document.getElementById('ckSortGo')?.addEventListener('click', async e => { const sel = [...view.querySelectorAll('[data-cksort]')], ch = sel.filter(s2 => { const x = savedParts.accessories.find(y => y.id === s2.dataset.cksort); return x && s2.value && s2.value !== x.category; });
+    if (!(await askConfirm(`Change the category of ${ch.length} accessor${ch.length === 1 ? 'y' : 'ies'}?`, { ok: 'Change' }))) return; e.target.disabled = true;
+    for (const s2 of ch) await withTimeout(colOfType('accessories').doc(s2.dataset.cksort).update({ category: s2.value, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); toast(`${ch.length} categories saved`); renderCheck.touched = false; setTimeout(renderCheck, 700); });
+  view.querySelectorAll('[data-cksp]').forEach(b => b.addEventListener('click', async () => { const g = sp[+b.dataset.cksp], v = view.querySelector(`input[name="cksp${b.dataset.cksp}"]:checked`).value;
+    const hits = []; LIST_TYPES.forEach(t => itemsOfType(t).forEach(x => { const u = {}; g.pool.forEach(f => { if (typeof x[f] === 'string' && x[f].trim() !== v && ckNk(x[f]) === g.key) u[f] = v; }); if (Object.keys(u).length) hits.push([t, x.id, u]); }));
+    if (!(await askConfirm(`Change ${hits.length} entr${hits.length === 1 ? 'y' : 'ies'} to “${v}”?`, { ok: 'Change' }))) return; b.disabled = true;
+    for (const [t, id, u] of hits) await withTimeout(colOfType(t).doc(id).update(Object.assign(u, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() }))); toast(`${hits.length} updated`); setTimeout(renderCheck, 700); }));
+  view.querySelectorAll('[data-cktype]').forEach(s => s.addEventListener('change', async () => { if (!s.value) return; s.disabled = true; await withTimeout(kbCol().doc(s.dataset.cktype).update({ keyboardType: s.value, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); toast('Saved'); }));
+  view.querySelectorAll('[data-ckcatgo]').forEach(b => b.addEventListener('click', async () => { const s = view.querySelector(`[data-ckcat="${CSS.escape(b.dataset.ckcatgo)}"]`); if (!s.value) return; b.disabled = true; await withTimeout(colOfType('accessories').doc(b.dataset.ckcatgo).update({ category: s.value, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); toast('Saved'); setTimeout(renderCheck, 600); }));
+}
+
 function renderStats() {
   const view = document.getElementById('view'), P = allPurchases(), m0 = v => '$' + Math.round(v).toLocaleString('en-US'), hid = spendHidden, blur = hid ? ' class="blur"' : '';
   const total = P.reduce((a, p) => a + p.total, 0), items = savedKeyboards.length + savedSwitches.length + savedKeycaps.length + PART_IDS.reduce((a, t) => a + savedParts[t].length, 0);
@@ -1759,6 +1932,7 @@ function route() {
   else if (sec.id === 'catalog') renderCatalog();
   else if (sec.id === 'value') renderValue();
   else if (sec.id === 'stats') renderStats();
+  else if (sec.id === 'check') renderCheck();
   else if (sec.id === 'sounds') renderSounds();
   else if (sec.id === 'wishlist') renderWishlist();
   else view.innerHTML = comingLaterHtml(sec);
@@ -2023,7 +2197,7 @@ function renderKeyboardDetail(id) {
 
 /* ===================== Step 2.2: Add keyboard form (Overview tab) ===================== */
 const KB_TYPES = { custom: 'Custom keyboard', prebuilt: 'Pre-Built keyboard', oem: 'OEM keyboard', vintage: 'Vintage keyboard' };
-const KB_SIZES = ['Macropad', 'Numpad', '40%', '60%', '65%', '75%', 'TKL (80%)', '96%', '1800', 'Full Size (100%)', 'Other'];
+const KB_SIZES = ['Macropad', 'Numpad', '40%', '60%', '65%', '75%', 'TKL (80%)', '96%', '98%', '1800', 'Full Size (100%)', 'Other'];
 const KB_LAYOUTS = ['ANSI', 'ISO', 'WK', 'WKL', 'Tsangan', 'Alice', 'Ortholinear', 'Split / Ergonomic', 'HHKB', 'Other'];
 const KB_CONN = ['Wired', 'Wireless (3-Mode)', 'Bluetooth + Wired', '2.4 GHz + Wired'];
 const KB_STATUS = ['Built', 'In progress', 'Barebones', 'Sold'];
@@ -2032,6 +2206,7 @@ const BUILD_FIELDS = [ // [field, label, placeholder, suggestions]
   ['mounting', 'Mounting', 'e.g. Gasket', ['Gasket', 'Top mount', 'Tray mount', 'Sandwich', 'Leaf spring', 'O-ring', 'Burger', 'Integrated plate', 'PCB mount', 'Bottom mount']],
   ['plateMaterial', 'Plate material', 'e.g. Aluminum', ['Aluminum', 'Brass', 'Carbon Fiber', 'FR4', 'PC (Polycarbonate)', 'POM', 'PP', 'Steel', 'Copper', 'No plate']],
   ['caseMaterial', 'Case material', '', [], 'case'],
+  ['bottomCaseMaterial', 'Bottom case material', '', [], 'case'],
   ['weightMaterial', 'Weight material', '', [], 'weight'],
   ['daughterboard', 'Daughterboard', 'e.g. Unified C3', ['Built-in', 'Unified C3', 'Unified C4', 'Other', 'None']],
   ['foam', 'Foam', 'e.g. PE + case foam', ['None', 'Case foam', 'Plate foam', 'PE foam', 'Poron', 'IXPE', 'Full foam kit', 'Tape mod']],
@@ -2042,8 +2217,8 @@ const BUILD_FIELDS = [ // [field, label, placeholder, suggestions]
   ['weightsAccents', 'Accents', 'e.g. Brass badge, knob, side inlay', []],
   ['builtBy', 'Built by', 'e.g. Me', ['Me', 'Factory']]
 ];
-const KB_FIXED = ['caseMaterial', 'weightMaterial', 'weightsAccents'];   // set by the kit, shown on Overview; the rest of BUILD_FIELDS can change with each build
-const kbBuildFld = ([n, label, ph, sug, kind], k) => kind ? fld(label, selectHtml(n, uniq((kind === 'case' ? CASE_MATS : WEIGHT_MATS.map(m => m[1]).concat('No weight')).concat(k && k[n] ? [k[n]] : [])), kind === 'case' ? 'Choose the case material…' : 'Choose the weight material…'), { name: n, hint: kind === 'weight' ? 'Also sets the Weight color on the Colorway card.' : '' }) : fld(label, inputHtml(n, ph, sug.length ? 'dl_' + n : ''), { name: n });
+const KB_FIXED = ['caseMaterial', 'bottomCaseMaterial', 'weightMaterial', 'weightsAccents'];   // set by the kit, shown on Overview; the rest of BUILD_FIELDS can change with each build
+const kbBuildFld = ([n, label, ph, sug, kind], k) => kind ? fld(label, selectHtml(n, uniq((kind === 'case' ? CASE_MATS : WEIGHT_MATS.map(m => m[1]).concat('No weight')).concat(k && k[n] ? [k[n]] : [])), n === 'bottomCaseMaterial' ? 'Same as the case' : kind === 'case' ? 'Choose the case material…' : 'Choose the weight material…'), { name: n, hint: kind === 'weight' ? 'The separate weight piece. Also sets the Weight color on the Colorway card.' : n === 'caseMaterial' ? 'The top case, or the whole case if it is one material.' : n === 'bottomCaseMaterial' ? 'Only when the bottom case is a different material (e.g. a Neo Cu copper or brass bottom). Also sets the Bottom case color.' : '' }) : fld(label, inputHtml(n, ph, sug.length ? 'dl_' + n : ''), { name: n });
 const RATINGS = [['ratingOverall', 'Overall'], ['ratingBuildQuality', 'Build quality'], ['ratingTypingFeel', 'Typing feel'], ['ratingSound', 'Sound'], ['ratingBuildExperience', 'Build experience'], ['ratingAesthetics', 'Aesthetics']];
 const PRELOADED_BRANDS = ["8BitDo", "Akko", "CannonKeys", "Drop", "Drop + Tokyo Keyboard", "Drop × Keydous", "Ducky", "Freebird", "GeekElite", "Geonworks", "HHKB", "Ikki68", "KBDcraft", "KBDfans", "Keebfront", "Keebmonkey", "Keychron", "Keydous", "Leopold", "Lofree", "Megalodon", "Mekanisk", "Meletrix", "Mode", "Monsgeek", "NovelKeys", "OLKB", "Omnitype", "Owlab", "Qwertykeys", "Rama Works", "Redragon", "Skyloone", "TGR", "Varmilo", "Voice", "WOBKEY", "Wooting", "Wuque Studio"];
 const PRELOADED_SELLERS = ["Amazon", "CannonKeys", "Divinikey", "Drop", "eBay", "eBay + PayPal", "Included with Keyboard", "KBDfans", "NuPhy", "Omnitype", "PayPal", "PayPal P2P"]; // "Purchased From" values in your v18 workbook
@@ -2081,12 +2256,12 @@ function renderKeyboardForm(k = null) {
       <div>
         <div class="tabs" role="tablist">
           <button class="on" data-tab="overview" role="tab">Overview<span class="err" id="errOverview"></span></button>
-          <button data-tab="build" role="tab">Build</button><button data-tab="purchase" role="tab">Purchase<span class="err" id="errPurchase"></span></button><button data-tab="notes" role="tab">Notes</button><button data-tab="review" role="tab">Review</button><button data-tab="available" role="tab">Also available in</button>
+          <button data-tab="build" role="tab">Build</button><button data-tab="purchase" role="tab">Purchase<span class="err" id="errPurchase"></span></button><button data-tab="notes" role="tab">Notes</button><button data-tab="review" role="tab">Review</button>
         </div>
         <div class="card" data-panel="overview">
           <h3 style="margin-bottom:14px">Overview</h3>
           <div class="frm">
-            ${fld('Keyboard type', selectHtml('keyboardType', Object.entries(KB_TYPES), '', 'custom'), { name: 'keyboardType', req: true, full: true })}
+            ${fld('Keyboard type', selectHtml('keyboardType', Object.entries(KB_TYPES), 'Choose the type…', 'custom'), { name: 'keyboardType', full: true })}
             ${fld('Brand', inputHtml('brand', 'e.g. Keychron', 'dlBrands'), { name: 'brand' })}
             ${fld('Name', inputHtml('name', 'e.g. Q6 Max'), { name: 'name', req: true })}
             ${fld('Manufacturer', inputHtml('manufacturer', 'e.g. Keychron', 'dlMakers'), { name: 'manufacturer', hint: 'Who made it, if different from the brand.' })}
@@ -2103,7 +2278,7 @@ function renderKeyboardForm(k = null) {
               ${fld('Status', selectHtml('status', KB_STATUS, 'Select status'), { name: 'status' })}
               ${fld('Typing angle', inputHtml('typingAngle', 'e.g. 7°'), { name: 'typingAngle' })}
               ${fld('Front height', inputHtml('frontHeight', 'e.g. 18 mm'), { name: 'frontHeight' })}
-              ${fld('Weight', inputHtml('weight', 'e.g. 2.1 kg'), { name: 'weight' })}
+              ${fld('Board weight', inputHtml('weight', 'e.g. 2.1 kg'), { name: 'weight', hint: 'How heavy the built board is. The weight piece is Weight material.' })}
             </div></details>
           </div>
         </div>
@@ -2126,7 +2301,6 @@ ${purchasePanelHtml(savedKeyboards)}
             ${fld('Notes', '<textarea class="input" name="notes" id="f_notes" rows="6" placeholder="Anything else worth remembering"></textarea>', { name: 'notes', full: true })}
           </div>
         </div>
-        <div class="card" data-panel="available" hidden><h3>Also available in</h3><div id="availBox">${availHtml(k, 'keyboards')}</div></div>
         <div class="card" data-panel="review" hidden>
           <h3>Review</h3><p class="sub">Your own ratings. All are optional; click the left half of a star for a half star.</p>
           <div class="rates">${RATINGS.map(([n, label]) => `<div class="rate"><label>${label}</label><div class="row">
@@ -2139,7 +2313,7 @@ ${purchasePanelHtml(savedKeyboards)}
       </div>
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
-        ${k ? valueCardHtml('keyboards', k) + colorwayCardHtml(k) + refCardHtml('keyboards', k) + photoCardHtml(k) + switchesOnKeyboardCardHtml(k) + kbSoundCardHtml(k) + kbTimelineCardHtml(k) + keycapsOnKeyboardCardHtml(k) + partsOnKeyboardCardHtml(k) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the keyboard first, then drop photos on its page.</p></div>'}
+        ${k ? valueCardHtml('keyboards', k) + colorwayCardHtml(k) + refCardHtml('keyboards', k) + photoCardHtml(k) + `<div class="card side-card instwrap" id="kbInstalled"><h3>Installed on this board</h3><p class="sub" style="margin:0">Switches, keycaps and parts on this keyboard. The PCB, plate and case pickers on the Build tab set the same links.</p>${switchesOnKeyboardCardHtml(k) + keycapsOnKeyboardCardHtml(k) + partsOnKeyboardCardHtml(k)}</div>` + kbSoundCardHtml(k) + kbTimelineCardHtml(k) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the keyboard first, then drop photos on its page.</p></div>'}
         <div class="card side-card stack savebar">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${k ? 'Save changes' : 'Save keyboard'}</button>
           <button class="btn" id="btnCancel">${k ? 'Discard changes' : 'Cancel'}</button>
@@ -2238,6 +2412,7 @@ function fillKeyboardForm(k) {
   ['keyboardType', 'brand', 'name', 'manufacturer', 'size', 'location', 'modelNumber', 'serialNumber', 'designer', 'layout', 'color', 'connectivity', 'connector', 'status',
    'typingAngle', 'frontHeight', 'weight', 'currentBuildText', 'datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'pictureLink', 'mods', 'notes', 'reviewText', 'included']
     .concat(BUILD_FIELDS.map(f => f[0]), RATINGS.map(r => r[0])).forEach(n => { if (k[n] != null && k[n] !== '') st.fields['f_' + n] = String(k[n]); });
+  if (k.id) st.fields.f_keyboardType = k.keyboardType || '';   // workbook boards have no type yet
   ['price', 'shipping', 'discounts'].forEach(n => { if (k[n] != null) st.fields['f_' + n] = String(k[n]); });
   if (k.taxRate != null) st.fields.f_taxRatePct = String(Math.round(k.taxRate * 1e8) / 1e6);
   // a saved value that is not in a dropdown's list is added so it is never lost
@@ -2313,7 +2488,7 @@ function showFieldError(name, msg, focus = true) {
 }
 function readKeyboardForm() {
   const v = n => (document.getElementById('f_' + n)?.value || '').trim();
-  const data = { keyboardType: v('keyboardType') || 'custom' };
+  const data = {}; if (v('keyboardType')) data.keyboardType = v('keyboardType');
   ['brand', 'name', 'manufacturer', 'size', 'location', 'modelNumber', 'serialNumber', 'designer', 'layout', 'color', 'connectivity', 'connector', 'status', 'typingAngle', 'frontHeight', 'weight', 'currentBuildText', 'included']
     .concat(BUILD_FIELDS.map(f => f[0]))
     .forEach(n => { const x = v(n); if (x) data[n] = x; });
@@ -2331,6 +2506,14 @@ function readKeyboardForm() {
   if (acq.length) data.acquisition = acq;
   return data;
 }
+/* v0.82.0: a brand, maker, designer, shop or location typed with different capitals or spacing reuses the spelling already in the collection */
+const SNAP_POOLS = [['brand', 'manufacturer'], ['designer'], ['purchasedFrom', 'refSource', 'retailSource'], ['location']];
+function snapSpelling(data) {
+  const nk = x => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, ''), all = [...savedKeyboards, ...savedSwitches, ...savedKeycaps, ...Object.values(savedParts).flat()];
+  SNAP_POOLS.forEach(pool => pool.forEach(f => { const v = data[f]; if (!v || typeof v !== 'string') return; const key = nk(v); if (!key) return; const counts = new Map();
+    all.forEach(x => pool.forEach(g => { const w = x[g]; if (typeof w === 'string' && w !== v && nk(w) === key) counts.set(w.trim(), (counts.get(w.trim()) || 0) + 1); }));
+    if (counts.size) data[f] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0]; })); return data;
+}
 async function saveKeyboard() {
   const btn = document.getElementById('btnSave'), errBox = document.getElementById('formErr');
   errBox.style.display = 'none';
@@ -2344,8 +2527,8 @@ async function saveKeyboard() {
   if (problems.length) { problems.forEach(([f, m], i) => showFieldError(f, m, i === 0)); return; }
   btn.disabled = true; btn.textContent = 'Saving…';
   const picks = readBuildSlots();
-  { const prev = editing ? (savedKeyboards.find(x => x.id === editing.id) || editing) : null, cw = weightColorway(prev ? prev.colorway || [] : [], data.weightMaterial || '', prev ? prev.weightMaterial || '' : ''); if (cw) { if (editing) picks._cw = cw; else data.colorway = cw; } }
-  if (editing) return saveEdits(data, btn, errBox, picks);
+  { const prev = editing ? (savedKeyboards.find(x => x.id === editing.id) || editing) : null, cw0 = weightColorway(prev ? prev.colorway || [] : [], data.weightMaterial || '', prev ? prev.weightMaterial || '' : ''), cw = bottomColorway(cw0 || (prev ? prev.colorway || [] : []), data.bottomCaseMaterial || '', prev ? prev.bottomCaseMaterial || '' : '') || cw0; if (cw) { if (editing) picks._cw = cw; else data.colorway = cw; } }
+  snapSpelling(data); if (editing) return saveEdits(data, btn, errBox, picks);
   try {
     const now = firebase.firestore.FieldValue.serverTimestamp();
     const ref = await withTimeout(kbCol().add(Object.assign(data, { createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app' })));
@@ -2887,7 +3070,7 @@ async function saveSwitch() {
   if (nums.shipping !== null) data.shipping = Math.round(nums.shipping * 100) / 100;
   if (nums.discounts !== null) data.discounts = Math.round(nums.discounts * 100) / 100;
   const acq = [...document.querySelectorAll('input[name="acq"]:checked')].map(c => c.value); if (acq.length) data.acquisition = acq;
-  btn.disabled = true; btn.textContent = 'Saving…';
+  snapSpelling(data); btn.disabled = true; btn.textContent = 'Saving…';
   const now = firebase.firestore.FieldValue.serverTimestamp();
   if (editing) {
     const w = editing, del = firebase.firestore.FieldValue.delete(), upd = {};
@@ -3257,7 +3440,7 @@ async function saveKeycapSet() {
   if (problems.length || kitBad || colorBad) return;
   data.kits = kits;
   if (palette.length) data.palette = palette;
-  btn.disabled = true; btn.textContent = 'Saving…';
+  snapSpelling(data); btn.disabled = true; btn.textContent = 'Saving…';
   const now = firebase.firestore.FieldValue.serverTimestamp();
   if (editing) {
     const s = editing, del = firebase.firestore.FieldValue.delete(), upd = {};
@@ -3602,7 +3785,7 @@ const PART_TYPES = {
     cols: [['Maker', x => x.manufacturer], ['Series', x => x.series], ['Colorway', x => x.colorway]] },
   accessories: { title: 'Accessories', singular: 'accessory', addLabel: 'Add accessory', icon: 'accessories', makers: ['Amazon Basics', 'Glorious', 'Durock', 'TX', 'Krytox', 'YMDK', 'KBDfans', 'Drop', 'Keychron', 'Kemove', 'Gateron', 'WS'],
     fields: [['manufacturer', 'Manufacturer', 'e.g. Glorious', 'maker'], ['name', 'Name', 'e.g. Coiled cable', 'text', null, 'req'],
-      ['category', 'Category', 'e.g. Stabilizers', 'text', ['Cable', 'Case', 'Cases & Plates', 'Plate', 'Deskmat', 'Keyboard Parts', 'Lube & Tools', 'Modding Supplies', 'Springs', 'Stabilizers', 'Storage & Display', 'Switch Parts', 'Switch Testers', 'Tools & Pullers', 'Wrist Rests', 'Other']],
+      ['category', 'Category', 'e.g. Stabilizers', 'text', ['Cable', 'Case', 'Plate', 'Deskmat', 'Keyboard Parts', 'Lube & Tools', 'Modding Supplies', 'Springs', 'Stabilizers', 'Storage & Display', 'Switch Parts', 'Switch Testers', 'Tools & Pullers', 'Wrist Rests', 'Other']],
       ['location', 'Location', 'e.g. Desk drawer', 'text'], ['style', 'Style / type', 'e.g. Coiled / USB-C / Aviator', 'text', null, 'more', 'Mostly used for cables (Excel Cables tab).']],
     checks: [], textareas: [['notes', 'Notes', 'Anything else worth remembering']],
     sub: x => [x.category, x.manufacturer].filter(Boolean).join(' · '),
@@ -3818,7 +4001,7 @@ async function savePart(t) {
   const keep = (f, val, r) => { if (val === null) return; data[f] = old && old[f] != null && Math.round(old[f] * r) === Math.round(val * r) ? old[f] : Math.round(val * r) / r; };   // unchanged on screen: keep Excel's precision
   keep('price', nums.price, 100); keep('taxRate', nums.taxRatePct === null ? null : nums.taxRatePct / 100, 1e8); keep('shipping', nums.shipping, 100); keep('discounts', nums.discounts, 100);
   const acq = [...document.querySelectorAll('input[name="acq"]:checked')].map(c => c.value); if (acq.length) data.acquisition = acq;
-  btn.disabled = true; btn.textContent = 'Saving…';
+  snapSpelling(data); btn.disabled = true; btn.textContent = 'Saving…';
   const now = firebase.firestore.FieldValue.serverTimestamp();
   if (old) {
     const del = firebase.firestore.FieldValue.delete(), upd = {};
@@ -4423,7 +4606,9 @@ const WEIGHT_MATS = [
   ['pc', 'Polycarbonate (PC)', '#DDE6EC'],
   ['glass', 'Glass', '#CFE3E8'],
   ['carbon', 'Carbon fiber', '#2A2A2A'],
-  ['pvd', 'PVD (multicolor)', '#7B68EE']];
+  ['pvd', 'PVD (multicolor)', '#7B68EE'],
+  ['pvd-dusk', 'PVD · Mirror Dusk', '#7A5C8E'],   // Qwertykeys mirror PVD weights (v0.83.0); colors are Claude's picks, adjustable
+  ['pvd-golden', 'PVD · Mirror Golden', '#C9A43B']];
 const PVD_GRAD = 'linear-gradient(135deg,#5B3FD1,#1E9FD6,#2BB673,#E8C547,#D6336C)';
 const matOf = id => WEIGHT_MATS.find(m => m[0] === id);
 const swBg = c => c && c.texture && /^data:image\//.test(c.texture) ? `url('${c.texture}') center / cover, ${normHex(c.hex) || 'transparent'}` : null;   // a saved texture sample shows instead of the flat color
@@ -4716,10 +4901,13 @@ function openKitView(s, t) {
 /* Product page reference (filled from a vendor page Faraz sends): picture shown from the vendor's site, link to the page. */
 function refCardHtml(t, x) {
   const has = x.refImage || x.refUrl;
-  return `<div class="card side-card" id="refCard"><h3>Product page</h3>
+  const av = x.alsoAvailable && ((x.alsoAvailable.groups || []).length || (x.alsoAvailable.layouts || []).length), sibs = x.id ? avSiblings(t, x).length : 0;
+  return `<div class="card side-card" id="refCard"><h3>From the shop</h3>
     ${x.stockThumb ? `<img class="refimg" src="${x.stockThumb}" alt=""><p class="sub" style="margin:6px 0 0">Stock picture: your own photo. It is also the picture on the Summary; the list card shows your default photo. <button class="btn" id="refStockOff" style="padding:2px 8px">Use the shop picture</button></p>` : x.refImage ? `<a href="${esc(x.refUrl || x.refImage)}" target="_blank" rel="noopener"><img class="refimg" src="${esc(x.refImage)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>` : ''}
     <p class="sub" style="margin:8px 0 0">${has ? `Stock picture and details from ${esc(x.refSource || 'the product page')}${x.refUrl ? ` · <a class="lnk" href="${esc(x.refUrl)}" target="_blank" rel="noopener">open page ↗</a>` : ''}. Your own photos replace this picture on the card.` : 'No product page yet. Add a link to the maker’s or shop’s page and its picture.'}</p>
-    <div class="btnrow" style="margin-top:10px"><button class="btn" id="refEditBtn">${has ? 'Edit' : '+ Add product page'}</button></div>
+    ${x.retailPrice != null ? `<p class="refret">Retail price <b>${money(x.retailPrice)}</b>${t === 'switches' && x.retailCount ? ` for ${x.retailCount} switches` : ''}${x.retailSource || x.retailPriceAt ? ` <span class="sub">(${esc([x.retailSource, x.retailPriceAt && fmtDate(x.retailPriceAt)].filter(Boolean).join(', '))})</span>` : ''}</p>` : ''}
+    ${x.id ? `<details class="shopopts"${av ? ' open' : ''}><summary>${av ? 'Options the shop sells' : 'Options'}${sibs ? ` · ${sibs + 1} in your collection` : ''}</summary><div id="availBox">${availHtml(x, t)}</div></details>` : ''}
+    <div class="btnrow" style="margin-top:10px"><button class="btn" id="refEditBtn">${has ? 'Edit link & picture' : '+ Add product page'}</button>${x.refUrl && /^https?:/.test(x.refUrl) ? '<button class="btn" id="refReread" title="Read the shop page again into this entry (fills what is empty; tick Replace there to refresh prices and pictures)">Read the page again</button>' : ''}</div>
     <div id="refForm" hidden><div style="margin-top:10px;display:grid;gap:8px">
       <div class="fld"><label for="refUrlIn">Product page link</label><input class="input" id="refUrlIn" type="url" placeholder="https://…" value="${esc(x.refUrl || '')}"></div>
       <div class="fld"><label for="refImgIn">Picture link</label><input class="input" id="refImgIn" type="url" placeholder="https://… (.jpg, .png, .webp)" value="${esc(x.refImage || '')}"><div class="hint">Right-click the picture on the shop page → Copy image address.</div></div>
@@ -4729,7 +4917,19 @@ function refCardHtml(t, x) {
       <p class="sub" style="margin:0" id="refMsg"></p>
     </div></div></div>`;
 }
+/* v0.85.0: workbook text the app now holds in its own fields is folded away on the Summary (under "Show hidden rows"); the text stays on its tab */
+function sumWorkbookCovered(type, x) {
+  const out = [], nk = v => String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  if (type === 'keycaps' && paletteOf(x).length && x.colorsText) out.push('overview|Colors (from Excel)', 'colors|Colors (from Excel)');
+  if (type === 'keyboards' && x.currentBuildText && x.id && (switchesOn(x.id).length || savedKeycaps.some(s2 => kitsOf(s2).some(k => k.installedOn === x.id)))) out.push('build|Current build');
+  const STOP = /^(top|bottom|housings?|pins?|stem|g|gf|mm|x|pcs|and|with|the)$/, words = v => nk(v).replace(/(\d)\s*(gf|g|mm|pins?|x|pcs)\b/g, '$1').split(' ').filter(w => w && !STOP.test(w));
+  if (type === 'switches' && x.specsText) { const haveW = new Set(words([x.manufacturer, x.name, x.switchType, x.pins, x.mechanism, x.topMaterial, x.bottomMaterial, x.stemMaterial, x.actuationForce, x.bottomOutForce, x.springWeight, x.springLength, x.totalTravel, x.notes, x.totalCount != null ? String(x.totalCount) : ''].join(' ')));
+    const left = words(x.specsText).filter(w => !haveW.has(w));
+    if (!left.length) out.push('notes|Additional specifications'); }
+  return out;
+}
 function wireRefCard(t, x) {
+  const rr = document.getElementById('refReread'); if (rr) rr.onclick = () => { if (formDirty) { toast('Save or discard your changes first'); return; } sessionStorage.setItem('kbc_link', x.refUrl); location.hash = '#/import/link'; };
   const card = document.getElementById('refCard'); if (!card) return;
   const $ = id => document.getElementById(id), form = $('refForm');
   const prev = () => { const u = $('refImgIn').value.trim(); $('refPrev').innerHTML = /^https?:\/\//.test(u) ? `<img class="refimg" src="${esc(u)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<p class=&quot;sub&quot; style=&quot;margin:0;color:var(--danger)&quot;>That picture link did not load. Check it is a direct image link.</p>'">` : ''; };
@@ -4850,7 +5050,7 @@ function drawSummary(view, x, type) {
   const box = view.querySelector('#sumBox'); if (!box) return;
   const live = (type === 'keyboards' ? savedKeyboards : type === 'switches' ? savedSwitches : type === 'keycaps' ? savedKeycaps : savedParts[type] || []).find(y => y.id === x.id) || x;
   if (sumShowFor !== live.id) { sumShowFor = live.id; sumShowHidden = false; }
-  const secs = [], hidden = live.summaryHidden || []; let nHidden = 0;
+  const secs = [], hidden = (live.summaryHidden || []).concat(sumWorkbookCovered(type, live)); let nHidden = 0;
   view.querySelectorAll('.tabs [data-tab]').forEach(b => {
     const t = b.dataset.tab; if (t === 'summary' || t === 'gallery') return;
     const panel = view.querySelector(`[data-panel="${t}"]`); if (!panel) return;
@@ -4877,7 +5077,7 @@ function drawSummary(view, x, type) {
   if (vals.length) links.push(['Market value', `${money(vals[0].value)} (${fmtDate(vals[0].date)}${vals[0].source ? ', ' + vals[0].source : ''})`, '']);
   const linkedHtml = (() => { const rows = links.map(([k, v, h]) => { const key = 'linked|' + k + '|' + v, hid = hidden.includes(key); if (hid) nHidden++; return { k, v, h, key, hid }; }).filter(r => !r.hid || sumShowHidden);
       return rows.length ? `<div class="sumsec"><h4>Linked</h4><dl class="sumdl">${rows.map(r => `<dt class="${r.hid ? 'sumhid' : ''}">${esc(r.k)}</dt><dd class="sumrow${r.hid ? ' sumhid' : ''}" data-sk="${esc(r.key)}"><span class="sumv">${r.h ? `<a class="lnk" href="${r.h}">${esc(r.v)}</a>` : esc(r.v)}</span><span class="sumacts"><button class="lnk" data-sumhide title="${r.hid ? 'Show on the Summary' : 'Hide from the Summary'}">${r.hid ? 'Unhide' : 'Hide'}</button></span></dd>`).join('')}</dl></div>` : ''; })();
-  if ((live.alsoAvailable && ((live.alsoAvailable.groups || []).length || (live.alsoAvailable.layouts || []).length)) || avSiblings(type, live).length) secs.push(`<div class="sumsec" id="sumAvail"><div class="sec-title"><h4>Also available in</h4>${type === 'keyboards' ? '<button class="lnk" data-goto="available">Open</button>' : ''}</div>${availHtml(live, type)}</div>`);
+  if ((live.alsoAvailable && ((live.alsoAvailable.groups || []).length || (live.alsoAvailable.layouts || []).length)) || avSiblings(type, live).length) secs.push(`<div class="sumsec" id="sumAvail"><div class="sec-title"><h4>Also available in</h4></div>${availHtml(live, type)}</div>`);
   if (type !== 'keyboards' && live.included) secs.push(`<div class="sumsec" id="sumIncluded"><h4>Included with the kit</h4><ul class="incl">${String(live.included).split('\n').filter(Boolean).map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>`);
   if (live.retailPrice != null || live.shopText) {
     const sr = type === 'switches' && live.retailPrice != null ? switchRetail(live) : null, per = sr ? (sr.count ? ` for ${sr.count} switches · ${money3(sr.each)} per switch` : ' <span class="sub">(how many switches is that? use “change” below)</span>') : '';
@@ -5690,7 +5890,7 @@ async function rcSave() {
         done.push({ type: t, id: item.id, label: rcLabel(t, item), what });
       } else { const name = String(r0.newName).trim(); let data;
         if (t === 'keycaps') data = { name, kits: xs.map(newKit) };
-        else { data = Object.assign({ name }, apply({}, sumP(xs), true)); if (t === 'switches') { const m = /(\d+)\s*(?:pack|pcs|pieces|ct|count|switches)\b/i.exec(r0.name); if (m) data.totalCount = +m[1] * xs.reduce((a, x) => a + (x.r.qty || 1), 0); } else if ((r0.qty || 1) > 1) data.notes = `Quantity ${r0.qty} on the receipt (${rcpt.seller || 'seller'}${rcpt.orderNumber ? ', ' + rcpt.orderNumber : ''}); the price is for all ${r0.qty}.`; }
+        else { data = Object.assign({ name }, apply({}, sumP(xs), true)); if (t === 'accessories' && typeof rdAccCategory === 'function') data.category = rdAccCategory({ title: name + ' ' + ((xs[0].L && xs[0].L.option) || ''), tags: [] }, null); if (t === 'switches') { const m = /(\d+)\s*(?:pack|pcs|pieces|ct|count|switches)\b/i.exec(r0.name); if (m) data.totalCount = +m[1] * xs.reduce((a, x) => a + (x.r.qty || 1), 0); } else if ((r0.qty || 1) > 1) data.notes = `Quantity ${r0.qty} on the receipt (${rcpt.seller || 'seller'}${rcpt.orderNumber ? ', ' + rcpt.orderNumber : ''}); the price is for all ${r0.qty}.`; }
         const ref = colOfType(t).doc(); await withTimeout(ref.set(Object.assign(data, { createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app', addedFrom: 'receipt' })));
         done.push({ type: t, id: ref.id, label: name, what: 'new ' + (SEC[t].singular || 'entry') });
       } }
@@ -5999,6 +6199,13 @@ function weightColorway(list, label, before) {   // the Colorway list with its W
   const row = { hex: m[2], material: m[0], source: 'material' };
   return i >= 0 ? list.map((c, n) => n === i ? Object.assign({}, c, row) : c) : list.concat([Object.assign({ id: 'w' + Math.random().toString(36).slice(2, 10), label: 'Weight' }, row)]);
 }
+const isBottomRow = c => !c.material && /bottom/i.test(c.label || '');
+function bottomColorway(list, label, before) {   // adds or updates the Colorway's Bottom case color for a metal bottom; a color you set by hand is kept
+  if ((label || '') === (before || '')) return null; const m = WEIGHT_MATS.find(x => x[1].toLowerCase() === String(label).toLowerCase()); if (!m) return null;
+  const i = list.findIndex(isBottomRow); if (i >= 0 && (list[i].source !== 'material' || list[i].hex === m[2])) return null;
+  const row = { hex: m[2], source: 'material' };
+  return i >= 0 ? list.map((c, n) => n === i ? Object.assign({}, c, row) : c) : list.concat([Object.assign({ id: 'b' + Math.random().toString(36).slice(2, 10), label: 'Bottom case' }, row)]);
+}
 function syncWeightField(k, list) {   // Colorway card -> Build tab: the first Weight color's material becomes the Weight material field
   const w = list.find(isWeightRow), m = w && matOf(w.material), label = m ? m[1] : ''; const cur = savedKeyboards.find(x => x.id === k.id) || k;
   if (!m || (cur.weightMaterial || '') === label) return; const f = document.getElementById('f_weightMaterial');
@@ -6068,7 +6275,7 @@ function rdSpecs(html) {   // { pairs: { 'top housing': 'PA12', ... }, bare: ['L
   return { pairs, bare };
 }
 function rdIncludes(html) {   // the "Includes:" / "In the box" list on the shop page, one item per line
-  const doc = new DOMParser().parseFromString('<div id="r">' + String(html || '') + '</div>', 'text/html'), head = /^(what'?s\s+)?(included|includes|in the box|box contents|package (contents|includes)|kit includes|contents|comes with|contents? list|packing list|package list|in the package)\s*:?$/i;
+  const doc = new DOMParser().parseFromString('<div id="r">' + String(html || '') + '</div>', 'text/html'), head = /^(what'?s\s+)?(included|includes|in the box|box contents|package (contents|includes)|kit includes|contents|comes with|contents? list|packing list|package list|in the package|include)\s*:?$/i;
   for (const el of doc.querySelectorAll('p, h1, h2, h3, h4, h5, h6, strong, b, div')) {
     if (!head.test(el.textContent.replace(/[\u00a0\s]+/g, ' ').trim())) continue;
     let n = el.closest('p, h1, h2, h3, h4, h5, h6, div:not(#r)') || el; for (let i = 0; i < 4 && n; i++) { n = n.nextElementSibling; if (n && /^(UL|OL)$/.test(n.tagName)) return [...n.querySelectorAll(':scope > li')].map(li => li.textContent.replace(/[\u00a0\s]+/g, ' ').trim()).filter(Boolean).slice(0, 40); if (n && n.textContent.trim()) break; }
@@ -6169,11 +6376,13 @@ async function rdRead(url) {
 const rdHas = (arr, re) => arr.some(t => re.test(t));
 function rdGuessType(p, v) {
   const tags = p.tags, vt = v && v.title !== 'Default Title' ? v.title : '', all = p.title + ' ' + vt;
-  if (rdHas(tags, /artisan/i) || /artisan/i.test(p.title)) return 'artisans';
+  if ((rdHas(tags, /artisan/i) || /artisan/i.test(p.title)) && !/keycaps? set|key ?set/i.test(p.title)) return 'artisans';   // KBDfans tags full keycap sets "Artisan keycaps"
   if (/desk ?mat|mouse ?pad|wrist ?rest/i.test(vt)) return 'accessories';
-  if (/^switch(es)?$/i.test(p.productType) || ((rdHas(tags, /\bswitch\b/i) || /\b(linear|tactile|clicky|silent|magnetic|hall effect)?\s*switch(es)?$/i.test(p.title)) && !/tester|opener|puller|film|spring|lube|station|sampler|keyboard/i.test(all))) return 'switches';
+  const tBare = p.title.replace(/\s*\([^)]*\)\s*$/, '');   // "… Linear Switches (10PCS)"
+  if (/^switch(es)?$/i.test(p.productType) || ((rdHas(tags, /\bswitch\b/i) || /\b(linear|tactile|clicky|silent|magnetic|hall effect)?\s*switch(es)?$/i.test(tBare)) && !/tester|opener|puller|film|spring|station|sampler|keyboard/i.test(all) && !/\blube\b/i.test(p.title))) return 'switches';   // a "Hand Lubed" option is still a switch
   if (/keycap/i.test(p.productType) || /keycaps?\b/i.test(p.title)) return 'keycaps';
   if (/keyboard|barebone/i.test(p.title) && !/accessor|parts|plates?|cable|deskmat|desk mat|case only|carrying|pcb/i.test(p.title)) return 'keyboards';   // a keyboard's options may mention its PCB
+  if (/^keyboards?( kits?)?$|keyboard kit/i.test(p.productType) && !/\b(pcbs?|plates?|case only|parts|accessor)/i.test(p.title)) return 'keyboards';   // KeebsForAll "Top Case & PCB" option
   if (/\bpcb\b/i.test(vt) && !/foam/i.test(vt)) return 'pcbs';
   if (/\bpcbs?\b/i.test(p.title) && !/foam|accessor|parts/i.test(p.title)) return 'pcbs';
   if (/\bplates?\b/i.test(all) || rdHas(tags, /^plate$/i)) return 'accessories';
@@ -6190,44 +6399,54 @@ const rdStrip = (title, vendor, re) => { let t = String(title || ''); if (vendor
 const rdUnit = (s, u) => { const m = /(\d+(?:\.\d+)?)(?:\s*[±+-]\s*(\d+(?:\.\d+)?))?\s*(mm|g|gf)?/i.exec(String(s || '')); return m ? `${m[1]}${m[2] ? '±' + m[2] : ''} ${u}` : ''; };
 const rdVariantLabel = v => v && v.title && v.title !== 'Default Title' ? v.title : '';
 function rdPackCount(p, v) {
-  const t = p.text + ' ' + (v ? v.title : ''), m = /(\d{1,4})\s+(?:included in each pack|switches? (?:per|in each) pack)/i.exec(t) || /(\d{1,4})\s*(?:-|\s)?\s*(?:set|pack|pcs|pieces|count|ct)\b/i.exec(v ? v.title : '') || /(?:pack of|set of)\s*(\d{1,4})/i.exec(t) || /pack size:\s*(\d{1,4})/i.exec(t);
+  const qi = p.options.findIndex(o => /^(qty|quantity|count|pack|pack size|amount)$/i.test(o.name)); if (v && qi >= 0 && /^\s*\d{1,4}\s*(pcs|switches|x)?\s*$/i.test(v.opts[qi] || '')) return Number(/\d{1,4}/.exec(v.opts[qi])[0]);   // Mode: "Qty: 70 | 90 | 110"
+  const t = p.text + ' ' + (v ? v.title : ''), m = /(\d{1,4})\s+(?:included in each pack|switches? (?:per|in each) pack)/i.exec(t) || /(\d{1,4})\s*(?:-|\s)?\s*(?:set|pack|pcs|pieces|count|ct)\b/i.exec(v ? v.title : '') || /\((\d{1,4})\s*(?:pcs|pieces|pack|ct)\)/i.exec(p.title) || /(?:pack of|set of)\s*(\d{1,4})/i.exec(t) || /pack size:\s*(\d{1,4})/i.exec(t);
   return m ? Number(m[1]) : null;
 }
 function rdFields(p, v, type) {   // fields for a new entry of this type, from the product and the chosen option
   const P = p.spec.pairs, bare = p.spec.bare, vl = rdVariantLabel(v), f = {}, pick = (...ks) => { for (const k of ks) for (const key of Object.keys(P)) if (key === k || key.startsWith(k)) return P[key]; return ''; };
+  const pickU = (re, ...ks) => { for (const k of ks) for (const key of Object.keys(P)) if ((key === k || key.startsWith(k)) && re.test(P[key])) return P[key]; return ''; };
+  const optAt = re => p.options.findIndex(o => re.test(o.name)), optVal = i => (v && i >= 0 && v.opts[i]) || '';
+  if (/^(third party|default( vendor)?|other|unknown)$/i.test(String(p.vendor || '').trim())) p.vendor = '';   // KBDfans lists some makers as "Third Party"
   const madeBy = (bare.find(b => /^(designed (?:&|and) )?manufactured by\s/i.test(b)) || '').replace(/^.*manufactured by\s+/i, ''), designer = (bare.find(b => /^designed by\s/i.test(b)) || pick('designer', 'designed by')).replace(/^designed by\s+/i, '');
   if (type === 'keyboards') {
-    f.brand = p.vendor; f.name = rdStrip(p.title, p.vendor, /(\s+(barebones?|keyboard|kit|pre-?built|diy))+$/i); f.keyboardType = /pre-?built/i.test(p.title + p.tags.join(' ')) ? 'prebuilt' : 'custom';
-    const lay = (bare.find(b => /\d+%\s*layout|\btkl\b|full[- ]size/i.test(b)) || p.tags.find(t => /\d+%\s*layout|\btkl\b|full[- ]size/i.test(t)) || ''), pct = /(\d+)%/.exec(lay);
+    f.brand = p.vendor; f.name = rdStrip(p.title, p.vendor, /(\s+(barebones?|mechanical|keyboard|kit|pre-?built|diy))+$/i); f.keyboardType = /pre-?built/i.test(p.title + p.tags.join(' ')) ? 'prebuilt' : 'custom';
+    const lay = (bare.find(b => /\d+%\s*layout|\btkl\b|full[- ]size/i.test(b)) || p.tags.find(t => /\d+%\s*layout|\btkl\b|full[- ]size/i.test(t)) || (/\d+%/.test(pick('layout', 'size', 'form factor')) ? pick('layout', 'size', 'form factor') : '') || (/\d+%/.test(p.productType) ? p.productType : '') || p.tags.find(t => /^\d{2,3}%$/.test(t.trim())) || (/\b\d{2,3}%\s*layout/i.exec(p.text) || [''])[0] || (/\btkl\b/i.test(p.title) ? 'TKL' : '')), pct = /(\d+)%/.exec(lay);
     if (pct) { const s = KB_SIZES.find(x => x.startsWith(pct[1] + '%') || (pct[1] === '80' && /^TKL/.test(x)) || (pct[1] === '100' && /^Full/.test(x))); if (s) f.size = s; } else if (/tkl/i.test(lay)) f.size = 'TKL (80%)';
-    const mount = pick('mount', 'mounting'); if (mount) f.mounting = mount;
+    const mount = pick('mount', 'mounting', 'structure'); if (mount) f.mounting = /^[A-Z ]+$/.test(mount) ? mount.charAt(0) + mount.slice(1).toLowerCase() + (/mount/i.test(mount) ? '' : ' mount') : mount;
+    // a plate spec like "Alu/Carbon fiber/PC/PEI/FR4" lists choices, so it is left blank
+    const plt = pick('plate material', 'plate'); if (plt && !/[\/,]|\bor\b/i.test(plt) && typeof plateMaterialFrom === 'function') { const pm2 = plateMaterialFrom(plt); if (pm2) f.plateMaterial = pm2; }
     const mat = pick('material', 'materials'), matCase = /(?:top|bottom|case|housing)[^,;]*?[-:]\s*([^,;]+)/i.exec(mat), matWt = /weights?\s*[-:]\s*([^,;]+)/i.exec(mat);
-    const cm = pick('case material', 'case') || (matCase ? matCase[1] : '') || (mat && !matWt ? mat : ''); if (cm) { const m = CASE_MATS.find(x => cm.toLowerCase().includes(x.toLowerCase().replace(/\s*\(.*\)/, ''))); f.caseMaterial = m || cm; }
+    const cm = pick('case material', 'top case material', 'top case', 'case') || (matCase ? matCase[1] : '') || (mat && !matWt ? mat : ''); if (cm) { const m = CASE_MATS.find(x => cm.toLowerCase().includes(x.toLowerCase().replace(/\s*\(.*\)/, ''))); f.caseMaterial = m || cm; }
     const wtm = (s2) => WEIGHT_MATS.find(x => s2.toLowerCase().includes(x[1].toLowerCase().split(' ·')[0].replace(/\s*\(.*\)/, '').toLowerCase()));
     const wt = pick('weight material', 'weight'); if (wt) { if (/\d\s*(kg|g|lbs?)\b/i.test(wt)) f.weight = wt.replace(/\s*\(.*\)\s*$/, m2 => ' ' + m2.trim()).trim(); else { const m = wtm(wt); if (m) f.weightMaterial = m[1]; } }
     if (!f.weightMaterial && matWt) { const m = wtm(matWt[1]); if (m) f.weightMaterial = m[1]; }
     const ang = pick('typing angle', 'angle'); if (ang) f.typingAngle = ang.replace(/\s*degrees?/i, '°');
-    const fh = pick('front height'); if (fh) f.frontHeight = fh.replace(/(\d)\s*mm/i, '$1 mm');
+    const fh = pick('front height'); if (fh) f.frontHeight = fh.replace(/^\s*(approx\.?|approximately|about|~)\s*/i, '').replace(/(\d)\s*mm/i, '$1 mm');
+    const ctx = (bare.join(' ') + ' ' + (p.text || '') + ' ' + pick('connectivity', 'connection', 'firmware')).toLowerCase(); if (/tri-?mode|3-?mode|three[- ]mode/.test(ctx) || (/bluetooth/.test(ctx) && /2\.4\s*g/.test(ctx))) f.connectivity = 'Wireless (3-Mode)'; else if (/bluetooth/.test(ctx)) f.connectivity = 'Bluetooth + Wired'; else if (/2\.4\s*g/.test(ctx)) f.connectivity = '2.4 GHz + Wired';
+    if (!/barebones?|\bkit\b|diy/i.test(p.title) && (/switches (are )?(pre-?)?installed|installed by default|with .*switches|pre-?built|fully assembled/i.test(ctx) || (bare.some(b => /\bswitch(es)?\b/i.test(b)) && bare.some(b => /\bkeycaps?\b/i.test(b))))) f.keyboardType = 'prebuilt';   // comes with switches and keycaps
     const tx = p.text || '';   // specs written as sentences ("8-degree typing angle and 18.66mm front height")
     if (!f.typingAngle) { const m = /(\d+(?:\.\d+)?)\s*(?:°|-?\s*degrees?)\s+typing angle/i.exec(tx) || /typing angle(?:\s+of|\s+is|:)?\s*(\d+(?:\.\d+)?)\s*(?:°|degrees?)/i.exec(tx); if (m) f.typingAngle = m[1] + '°'; }
     if (!f.frontHeight) { const m = /(\d+(?:\.\d+)?)\s*mm\s+front height/i.exec(tx) || /front height(?:\s+of|\s+is|:)?\s*(\d+(?:\.\d+)?)\s*mm/i.exec(tx); if (m) f.frontHeight = m[1] + ' mm'; }
     if (!f.mounting) { const ms = [...new Set([...tx.matchAll(/\b(pcb gasket|isolated top|leaf[- ]spring|o-?ring|gasket|top|tray|bottom|burger|sandwich|plateless|flex[- ]cut)\s+mount(?:ed|ing)?\b/gi)].map(m => m[1].replace(/^./, c => c.toUpperCase()) + ' mount'))]; if (ms.length) f.mounting = ms.slice(0, 3).join(', '); }
     if (!f.size) { const m = /(?<![\d.])(40|60|65|75|80|96|98|100)(?![\d.]|\s*(?:mm|g|kg|°))/.exec(p.title); if (m) { const s = KB_SIZES.find(x => x.startsWith(m[1] + '%') || (m[1] === '80' && /^TKL/.test(x)) || (m[1] === '100' && /^Full/.test(x))); if (s) f.size = s; } }   // "Neo 60 Cu", "Neo65
     if (designer) f.designer = designer;
-    const colorOpt = p.options.findIndex(o => /colou?r|finish|top case|^case$|top/i.test(o.name)), botOpt = p.options.findIndex(o => /bottom/i.test(o.name));
+    let colorOpt = optAt(/colou?r|finish|edition|colorway/i); if (colorOpt < 0) colorOpt = p.options.findIndex(o => /top case|^case$|^top$/i.test(o.name) && !o.values.every(x => /\b(wkl?|hhkb|tsangan|ansi|iso|pcb)\b/i.test(x))); const botOpt = p.options.findIndex(o => /bottom/i.test(o.name));
     if (v && colorOpt >= 0 && v.opts[colorOpt]) f.color = v.opts[colorOpt];
-    if (v && botOpt >= 0 && botOpt !== colorOpt && v.opts[botOpt]) { const bv = String(v.opts[botOpt]).replace(/\s*bottom( case)?$/i, '').trim(); f.color = f.color ? `${f.color} / ${bv}` : bv; const m = wtm(bv); if (m && !f.weightMaterial) f.weightMaterial = m[1]; }   // Neo Cu style: a brass or copper bottom case is the weight
-    const layOpt = p.options.findIndex(o => /layout|format/i.test(o.name)); if (v && layOpt >= 0 && v.opts[layOpt]) f.layout = v.opts[layOpt];
+    if (v && botOpt >= 0 && botOpt !== colorOpt && v.opts[botOpt]) { const bv = String(v.opts[botOpt]).replace(/\s*bottom( case)?$/i, '').trim(), bm = (typeof CASE_MATS !== 'undefined' ? CASE_MATS : []).find(x => bv.toLowerCase().includes(x.toLowerCase().replace(/\s*\(.*\)/, ''))); if (bm) f.bottomCaseMaterial = bm; }   // Neo Cu: top case, a copper or brass bottom case, and a separate weight
+    const layOpt = p.options.findIndex(o => /layout|format/i.test(o.name) || o.values.every(x => /\b(wkl?|hhkb|tsangan)\b/i.test(x))); if (v && layOpt >= 0 && v.opts[layOpt]) { const lv = v.opts[layOpt], m = /\b(WKL|WK|HHKB|Tsangan)\b/i.exec(lv); f.layout = /layout|format/i.test(p.options[layOpt].name) || !m ? lv : m[1].toUpperCase().replace('TSANGAN', 'Tsangan'); }   // KeebsForAll: "Top Case & PCB: WK & ANSI PCB"
+    const plOpt = optAt(/plate/i); if (plOpt >= 0 && optVal(plOpt) && typeof plateMaterialFrom === 'function') { const pm3 = plateMaterialFrom(optVal(plOpt)); f.plateMaterial = pm3 || optVal(plOpt).replace(/\s*plates?$/i, '').trim(); }   // a plate the list doesn't know ("Linen Micarta") is kept as written
     const pm = plateMaterialFrom(vl); if (pm && /plate/i.test(vl)) f.plateMaterial = pm;
-    if (vl) f.notes = 'Option chosen on ' + p.source + ': ' + vl;
   } else if (type === 'switches') {
-    f.manufacturer = p.vendor; f.name = rdStrip(p.title, p.vendor, /\s+(silent\s+)?(linear|tactile|clicky|magnetic|hall effect)?\s*switch(es)?$/i);
+    f.manufacturer = p.vendor; f.name = rdStrip(p.title, p.vendor, /\s+(silent\s+)?(linear|tactile|clicky|magnetic|hall effect)?\s*switch(es)?(\s*\(\s*\d+\s*(pcs|pc|pieces|x)\s*\))?$/i);
     const tt = (p.title + ' ' + p.tags.join(' ') + ' ' + bare.join(' ')).toLowerCase();
     f.switchType = /silent/.test(tt) && /tactile/.test(tt) ? 'Silent tactile' : /silent/.test(tt) ? 'Silent linear' : /hall effect|magnetic/.test(tt) ? 'Hall effect (magnetic)' : /tactile/.test(tt) ? 'Tactile' : /clicky/.test(tt) ? 'Clicky' : /linear/.test(tt) ? 'Linear' : '';
     const map = [['top housing', 'topMaterial'], ['bottom housing', 'bottomMaterial'], ['stem', 'stemMaterial']]; map.forEach(([k, n]) => { const x = pick(k); if (x) f[n] = x; });
     const sp = pick('spring'); if (sp) { const l = /(\d+(?:\.\d+)?)\s*mm/i.exec(sp); if (l) f.springLength = l[1] + ' mm'; f.springType = /two|dual|2[- ]stage/i.test(sp) ? 'Two stage' : /progressive/i.test(sp) ? 'Progressive' : /long/i.test(sp) || (l && Number(l[1]) >= 20) ? 'Long spring' : /single/i.test(sp) ? 'Single stage' : ''; if (!f.springType) delete f.springType; }
-    const act = pick('actuation'); if (act) f.actuationForce = rdUnit(act, 'gf'); const bo = pick('bottom-out', 'bottom out'); if (bo) f.bottomOutForce = rdUnit(bo, 'gf');
-    const pre = pick('pre-travel', 'pretravel', 'pre travel'); if (pre) f.preTravel = rdUnit(pre, 'mm'); const tot = pick('total travel', 'travel'); if (tot) f.totalTravel = rdUnit(tot, 'mm');
+    const G = /\d\s*(g|gf|grams?)\b/i, MM = /\d\s*mm\b/i;
+    const act = pickU(G, 'actuation force', 'operating force', 'actuation'); if (act) f.actuationForce = rdUnit(act, 'gf'); const bo = pickU(G, 'bottom-out force', 'bottom out force', 'bottom-out', 'bottom out', 'end force'); if (bo) f.bottomOutForce = rdUnit(bo, 'gf');
+    const pre = pickU(MM, 'pre-travel', 'pretravel', 'pre travel', 'actuation travel', 'actuation distance', 'actuation point', 'actuation'); if (pre) f.preTravel = rdUnit(pre, 'mm'); const tot = pickU(MM, 'total travel', 'bottom-out travel', 'bottom out travel', 'travel'); if (tot) f.totalTravel = rdUnit(tot, 'mm');
+    const sty = pick('switch type', 'type'); if (sty && !f.switchType) { const s2 = sty.toLowerCase(); f.switchType = /silent/.test(s2) && /tactile/.test(s2) ? 'Silent tactile' : /silent/.test(s2) ? 'Silent linear' : /tactile/.test(s2) ? 'Tactile' : /clicky/.test(s2) ? 'Clicky' : /linear/.test(s2) ? 'Linear' : f.switchType; }
     if (/\bmx\b/i.test(bare.join(' ')) || /mx/i.test(p.tags.join(' '))) f.mechanism = 'MX';
     const pins = /([35])[- ]?pin/i.exec(bare.join(' ') + ' ' + p.text); if (pins) f.pins = pins[1] + '-pin';
     if (bare.some(b => /^(factory )?(lubed|pre-?lubed|lubed from factory)$/i.test(b.trim()))) f.preLubed = true;
@@ -6241,7 +6460,7 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
     if (designer) f.designer = designer;
     const prof = KC_PROFILES.find(x => new RegExp('\\b' + x + '\\b', 'i').test(bare.join(' ') + ' ' + pick('profile') + ' ' + p.tags.filter(t => /profile/i.test(t)).join(' '))); if (prof) f.profile = prof; else if (f.manufacturer === 'GMK') f.profile = 'Cherry';
     const mat = KC_MATERIALS.find(x => new RegExp('\\b' + x + '\\b').test(bare.join(' ') + ' ' + pick('material') + ' ' + p.tags.join(' '))); if (mat) f.material = mat;
-    const leg = bare.join(' ') + ' ' + pick('legends', 'legend', 'manufacturing method', 'printing', 'legend method') + ' ' + p.tags.join(' ') + ' ' + p.productType; f.legends = /doubleshot|double-shot/i.test(leg) ? 'Doubleshot' : /dye-?sub/i.test(leg) ? 'Dye-sub' : /uv print/i.test(leg) ? 'UV printed' : /laser/i.test(leg) ? 'Lasered' : ''; if (!f.legends) delete f.legends;
+    const leg = bare.join(' ') + ' ' + ['legends', 'legend', 'manufacturing method', 'production method', 'printing method', 'printing', 'legend method'].map(k => pick(k)).join(' ') + ' ' + p.tags.join(' ') + ' ' + p.productType; f.legends = /double[- ]?shot/i.test(leg) ? 'Doubleshot' : /dye-?sub/i.test(leg) ? 'Dye-sub' : /uv print/i.test(leg) ? 'UV printed' : /laser/i.test(leg) ? 'Lasered' : ''; if (!f.legends) delete f.legends;
     if (/mx compatible|mx stem|compatible with mx|mx[- ]style/i.test(bare.join(' ')) || /\bmx\b/i.test(pick('switch stem', 'stem', 'compatib'))) f.stemMount = 'MX';
     const col = pick('colors', 'colours', 'color codes'); if (col) f.colorsText = col;
   } else if (type === 'pcbs') {
@@ -6392,7 +6611,7 @@ async function rdSave() {
   btn.disabled = true; btn.textContent = 'Saving…';
   const now = firebase.firestore.FieldValue.serverTimestamp(), today = todayIso(), done = [], copyFails = [];
   const pageUrl = v => rdPageUrl(p, v);
-  const shopBits = r => { const v = p.variants.find(x => x.id === r.vid) || null, av = rdAvailable(p, v);
+  const shopBits = r => { const v = p.variants.find(x => x.id === r.vid) || null, av = avNorm(rdAvailable(p, v));
     return { refUrl: pageUrl(r.vid), refSource: p.source, refImage: r.img || (p.images[0] || {}).src || '', refImages: p.images.map(x => x.src).slice(0, 16), shopText: p.text || '', shopTextSource: p.source, shopTextUrl: pageUrl(''), shopTextAt: today,
       included: (p.includes || []).join('\n'), alsoAvailable: av.groups.length || av.layouts.length ? av : null }; };
   const retailBits = r => r.price == null ? {} : Object.assign({ retailPrice: rcRound(r.price * (r.type === 'switches' ? (r.qty || 1) : 1)), retailPriceAt: today, retailSource: p.source }, r.type === 'switches' && r.pack ? { retailCount: r.pack * (r.qty || 1) } : {});   // switches: how many switches that price buys
@@ -6421,12 +6640,12 @@ async function rdSave() {
         if (Object.keys(upd).length) await withTimeout(colOfType(r.type).doc(x.id).update(Object.assign(upd, { updatedAt: now, appVersion: APP_VERSION })));
         if (r.copy && r.img) await rdKeepCopy(r.type, x.id, r.img, 'From ' + p.source).catch(() => copyFails.push(rcLabel(r.type, x)));
         done.push({ label: rcLabel(r.type, x), what: Object.keys(upd).length ? 'updated' : 'already complete', href: `#/${r.type}/${x.id}` }); continue; }
-      const ref = colOfType(r.type).doc(); await withTimeout(ref.set(Object.assign(fields, { createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app', addedFrom: 'product page' })));
+      snapSpelling(fields); const ref = colOfType(r.type).doc(); await withTimeout(ref.set(Object.assign(fields, { createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app', addedFrom: 'product page' })));
       if (r.copy && r.img) await rdKeepCopy(r.type, ref.id, r.img, 'From ' + p.source).catch(() => copyFails.push(fields.name));
       done.push({ label: rcLabel(r.type, fields) || fields.name, what: 'new ' + (SEC[r.type].singular || 'entry'), href: `#/${r.type}/${ref.id}` });
     }
     for (const { rows, data } of kcNew.values()) {
-      const ref = kcCol().doc(); await withTimeout(ref.set(Object.assign(data, { kits: rows.map(x => x.kit), createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app', addedFrom: 'product page' })));
+      snapSpelling(data); const ref = kcCol().doc(); await withTimeout(ref.set(Object.assign(data, { kits: rows.map(x => x.kit), createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app', addedFrom: 'product page' })));
       for (const { r } of rows) if (r.copy && r.img) await rdKeepCopy('keycaps', ref.id, r.img, 'From ' + p.source + ' · ' + r.kitName).catch(() => copyFails.push(r.kitName));
       done.push({ label: data.name + ' (' + rows.map(x => x.kit.name).join(', ') + ')', what: 'new keycap set', href: '#/keycaps/' + ref.id });
     }
@@ -6458,19 +6677,32 @@ function avBase(type, x) {   // model key: brand/maker + name without the option
   return rdNorm([type === 'keyboards' ? x.brand : type === 'keycaps' ? '' : x.manufacturer, nm].filter(Boolean).join(' ')).replace(/ /g, '');
 }
 function avSiblings(type, x) { if (!x || !x.id) return []; const key = avBase(type, x); if (!key) return []; return itemsOfType(type).filter(y => y.id !== x.id && !y.isSample && avBase(type, y) === key); }
-const avText = (type, y) => [y.color, y.caseMaterial, y.weightMaterial, y.layout, y.plateMaterial, y.category, String(y.name || '').replace(/^[^-–(]*[-–(]\s*/, '')].filter(Boolean).join(' ');
+const avText = (type, y) => [y.color, y.caseMaterial, y.bottomCaseMaterial, y.weightMaterial, y.layout, y.plateMaterial, y.category, String(y.name || '').replace(/^[^-–(]*[-–(]\s*/, '')].filter(Boolean).join(' ');
 function avOwners(type, value, list) { const t = avTok(value); if (!t.length) return []; return list.filter(y => { const have = avTok(avText(type, y)); return t.every(w => have.includes(w)); }); }
 function avLabel(type, y) { const bits = type === 'keyboards' ? [y.color, y.layout].filter(Boolean) : [String(y.name || '').match(/[-–(]\s*(.+?)\)?$/) ? RegExp.$1 : y.color].filter(Boolean); return bits.join(' · ') || rcLabel(type, y); }
 const avTitle = (type, y) => type === 'keyboards' ? rcLabel(type, y) : (y.manufacturer && !String(y.name || '').toLowerCase().startsWith(String(y.manufacturer).toLowerCase()) ? y.manufacturer + ' ' : '') + (y.name || '');
+const AV_SUFFIX = { 'Bottom Case': /\s+(bottom( case)?|case)$/i, 'Top Case': /\s+(top( case)?|case)$/i, 'Weight': /\s+weights?$/i, 'Plate': /\s+plates?$/i };
+const avGroupKey = n => /bottom/i.test(n) ? 'Bottom Case' : /\bweights?\b/i.test(n) ? 'Weight' : /^(top case( colou?r)?|case( colou?r)?|colou?r(way)?|finish|top)$/i.test(String(n).trim()) ? 'Top Case' : /layout/i.test(n) ? 'Layout' : /\bplate\b/i.test(n) ? 'Plate' : String(n).trim();
+const avValKey = (g, v) => String(v).replace(AV_SUFFIX[g] || /$^/, '').toLowerCase().replace(/[\s_-]+/g, ' ').trim();
+function avNorm(a) {   // one group per part ("Case Color" + "Top Case" → Top Case), one value per option ("Copper" + "Copper Bottom" → Copper)
+  if (!a || !(a.groups || []).length) return a; const out = [];
+  a.groups.forEach(g => { const key = avGroupKey(g.name), clean = v => String(v).replace(AV_SUFFIX[key] || /$^/, '').trim() || String(v);
+    let h = out.find(x => x.key === key);
+    if (!h) { const ks = new Set(g.values.map(v => avValKey(key, v))); h = out.find(x => { const hs = new Set(x.values.map(v => avValKey(x.key, v))); const both = [...ks].filter(k => hs.has(k)).length; return both >= 2 && both >= Math.min(ks.size, hs.size) / 2; }); }   // same values under another name
+    if (!h) { h = { key, name: g.name, values: [], chosen: '' }; out.push(h); } else if (/^(top|bottom) case$/i.test(g.name.trim()) && !/^(top|bottom) case$/i.test(h.name.trim())) h.name = g.name;   // two shops, one part: keep the clearer name
+    g.values.forEach(v => { const k = avValKey(h.key, v); if (!h.values.some(w => avValKey(h.key, w) === k)) h.values.push(clean(v)); });
+    if (g.chosen) { const k = avValKey(h.key, g.chosen); h.chosen = h.values.find(w => avValKey(h.key, w) === k) || clean(g.chosen); } });
+  return Object.assign({}, a, { groups: out.map(({ key, ...g }) => g) });
+}
 function avMerge(a, b) {   // two shops' option lists → one; values united, your choice kept unless the new read sets one
-  if (!a) return b; if (!b) return a; const groups = (a.groups || []).map(g => Object.assign({}, g, { values: g.values.slice() }));
+  if (!a) return avNorm(b); if (!b) return avNorm(a); const groups = (a.groups || []).map(g => Object.assign({}, g, { values: g.values.slice() }));
   (b.groups || []).forEach(g => { const h = groups.find(x => x.name.toLowerCase() === g.name.toLowerCase()); if (!h) { groups.push(Object.assign({}, g, { values: g.values.slice() })); return; }
     g.values.forEach(v => { if (!h.values.some(w => w.toLowerCase() === v.toLowerCase())) h.values.push(v); }); if (g.chosen) h.chosen = g.chosen; });
   const srcs = [...(a.sources || (a.source ? [{ source: a.source, url: a.url, at: a.at }] : [])), ...(b.sources || (b.source ? [{ source: b.source, url: b.url, at: b.at }] : []))].filter((s, i, l) => l.findIndex(t => t.source === s.source) === i);
-  return { source: srcs.map(s => s.source).join(', '), url: a.url || b.url, at: b.at || a.at, sources: srcs, groups, layouts: [...new Set([...(a.layouts || []), ...(b.layouts || [])])] };
+  return avNorm({ source: srcs.map(s => s.source).join(', '), url: a.url || b.url, at: b.at || a.at, sources: srcs, groups, layouts: [...new Set([...(a.layouts || []), ...(b.layouts || [])])] });
 }
 function availHtml(x, type) {
-  const a = x && x.alsoAvailable, sib = avSiblings(type, x), mine = x && x.id ? [x, ...sib] : [];
+  const a = x && avNorm(x.alsoAvailable), sib = avSiblings(type, x), mine = x && x.id ? [x, ...sib] : [];
   const hasOpts = a && ((a.groups || []).length || (a.layouts || []).length);
   const chip = (v, chosen) => { const own = avOwners(type, v, mine), me = v === chosen || own.some(y => y.id === x.id), others = own.filter(y => y.id !== x.id);
     const tip = [me ? 'This one' : '', others.length ? 'You own: ' + others.map(y => avLabel(type, y)).join('; ') : ''].filter(Boolean).join(' · ');
@@ -6480,7 +6712,7 @@ function availHtml(x, type) {
     <p class="sub" style="margin:10px 0 0;font-size:11.5px">From ${(a.sources && a.sources.length ? a.sources : [{ source: a.source, url: a.url }]).map(s => s.url ? `<a class="lnk" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.source || 'the shop')}</a>` : esc(s.source || 'the shop')).join(', ')}${a.at ? ', read ' + esc(fmtDate(a.at)) : ''}. ✓ this one · ● another one you own.</p>`
     : `<p class="sub" style="margin:0">No shop options yet. They fill in by themselves when you read the ${type === 'keyboards' ? 'keyboard' : 'item'}'s product page (Import → Read a product page; “Add to an entry I have” for one you already saved), or add them with Edit options.</p>`;
   const coll = sib.length ? `<div class="avail" style="margin-top:14px"><div class="avail-h">In your collection (${sib.length + 1})</div><div class="avown-list">
-      ${mine.map(y => `<a class="avown-row${y.id === x.id ? ' me' : ''}" href="#/${type}/${esc(y.id)}"><b>${esc(y.id === x.id ? 'This one' : avTitle(type, y))}</b><span>${esc((type === 'keyboards' ? [y.color, y.caseMaterial && 'Case: ' + y.caseMaterial, y.weightMaterial && 'Weight: ' + y.weightMaterial, y.layout && 'Layout: ' + y.layout] : [avLabel(type, y), y.category]).filter(Boolean).join(' · ') || '—')}</span></a>`).join('')}</div></div>` : '';
+      ${mine.map(y => `<a class="avown-row${y.id === x.id ? ' me' : ''}" href="#/${type}/${esc(y.id)}"><b>${esc(y.id === x.id ? 'This one' : avTitle(type, y))}</b><span>${esc((type === 'keyboards' ? [y.color, y.caseMaterial && 'Case: ' + y.caseMaterial, y.bottomCaseMaterial && 'Bottom: ' + y.bottomCaseMaterial, y.weightMaterial && 'Weight: ' + y.weightMaterial, y.layout && 'Layout: ' + y.layout] : [avLabel(type, y), y.category]).filter(Boolean).join(' · ') || '—')}</span></a>`).join('')}</div></div>` : '';
   return opts + coll + (x && x.id ? `<div class="btnrow" style="margin-top:10px"><button class="btn" type="button" data-avedit="${esc(type)}|${esc(x.id)}">Edit options</button></div>` : '');
 }
 function availEditDialog(type, id) {
@@ -6550,16 +6782,18 @@ function renderImport() {
     ${linkCardHtml()}
     ${receiptCardHtml()}
     ${excelCardHtml()}
-    <div class="card" style="margin-top:16px"><h3>1 · Choose an import file</h3>
+    <details class="card impold" id="impOld" style="margin-top:16px"${importFile || gmkImport || xlColors ? ' open' : ''}><summary><h3 style="display:inline">Workbook and other files</h3> <span class="sub">— one-time imports (done), GMK catalog, colors, old app photos, and the check against Excel</span></summary>
+    <div style="margin-top:12px"><h3>1 · Choose an import file</h3>
       <p class="sub">Pick an import file made from your workbook: ${Object.values(IMPORT_TYPES).map(T => `<b>${T.metaKey || T.key}_import_v18.json</b>`).join(', ')}, <b>colors_import_v18.json</b>, <b>old_keycap_photos.json</b> (kit photos from your Keycap Collection app), or the private <b>gmk_catalog_private.json</b>. Keep these files on your PC; never upload them to the GitHub repo, which is public.</p>
       <label class="btn primary" style="width:max-content">Choose file…<input type="file" id="impFile" accept=".json,application/json" hidden ${ready ? '' : 'disabled'}></label>
       ${ready ? '' : '<p class="sub" style="margin:10px 0 0">Importing needs Firebase (open the https site).</p>'}
       <div id="impMsg" class="sub" style="margin:10px 0 0"></div></div>
     <div id="impPreview"></div>
-    <div id="reconcile"></div>`;
+    <div id="reconcile"></div></details>
+    <p class="sub" style="margin:14px 2px 0">Tidying up: <a class="lnk" href="#/check">Check my data</a> lists spellings, missing types and categories, and same-name entries.</p>`;
   lastImportMsg = ''; wireReceiptCard(); wireExcelCard(); wireLinkCard();
   document.getElementById('impFile').onchange = async e => {
-    const f = e.target.files[0]; if (!f) return;
+    const f = e.target.files[0]; if (!f) return; const od = document.getElementById('impOld'); if (od) od.open = true;
     const msg = document.getElementById('impMsg');
     try {
       const data = JSON.parse(await f.text());
