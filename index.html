@@ -641,7 +641,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.89.0';
+const APP_VERSION = 'v0.90.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -1103,8 +1103,8 @@ function mergeDialog(type, firstId, secondId) {   // firstId = sacrifice, second
    Purchase date, seller, receipt, order number and tax rate are copied; shipping and discounts stay on the keyboard.
    Undo for 10 seconds deletes the new parts and puts the keyboard's price and notes back. */
 const SPLIT_GUESS = [   // [match, type, category, make an entry by default, installed on the board by default]
-  [/\bpcb\b/i, 'pcbs', '', true, true], [/daughter ?board|\bdb\b/i, 'pcbs', '', true, true], [/\bec\b.*\bkit\b|electro-?capacitive/i, 'pcbs', '', true, true], [/\bplates?\b/i, 'accessories', 'Plate', true, true],
-  [/stabili[sz]er|\bstabs?\b/i, 'accessories', 'Stabilizers', true, true], [/\bfoams?\b|\bpe sheet|poron|ixpe/i, 'accessories', 'Keyboard Parts', true, true],
+  [/\bfoams?\b|\bpe sheet|poron|ixpe|\beva\b|neoprene/i, 'accessories', 'Foam', true, true], [/\bpcb\b/i, 'pcbs', '', true, true], [/daughter ?board|\bdb\b/i, 'pcbs', '', true, true], [/\bec\b.*\bkit\b|electro-?capacitive/i, 'pcbs', '', true, true], [/\bplates?\b/i, 'accessories', 'Plate', true, true],
+  [/stabili[sz]er|\bstabs?\b/i, 'accessories', 'Stabilizers', true, true], 
   [/cable/i, 'accessories', 'Cable', true, false], [/puller|opener|screwdriver|tweezer|\btools?\b/i, 'accessories', 'Tools & Pullers', false, false], [/carrying|travel case|\bbag\b|pouch|sleeve/i, 'accessories', 'Storage & Display', false, false],
   [/top\s*\/\s*bottom case|\bcase\b.*\bcase\b|keyboard case|(top|bottom) case/i, 'accessories', 'Case', false, true], [/\bcase\b/i, 'accessories', 'Case', true, true],
   [/weight/i, 'accessories', 'Weights', false, true], [/desk ?mat|keyboard mat/i, 'deskmats', '', false, false], [/switch films?|\bsprings?\b|switch pads?/i, 'switchparts', '', false, false], [/switch(es)? (are )?(pre-?)?installed|\bswitches\b(?!.*(puller|opener|tester|film|spring))/i, 'switches', '', false, true], [/switch/i, 'accessories', 'Switch Parts', false, false], [/keycaps?( set)?\b(?!.*puller)/i, 'keycaps', '', false, true]];
@@ -1172,7 +1172,7 @@ async function splitRun(k, todo) {
   for (const l of todo) {
     const d = { name: String(l.name).trim(), manufacturer: l.type === 'switches' || l.type === 'keycaps' ? '' : kd.brand || '', price: r2(Number(l.price) || 0), notes: `Came with ${label}${hadPrice ? (Number(l.price) ? `; ${money(l.price)} of its price moved here` : '; no separate price') : ''} (split ${fmtDate(when)}).`,
       source: 'app', addedFrom: 'split', splitFrom: k.id, createdAt: now, updatedAt: now, appVersion: APP_VERSION };
-    if (l.type === 'accessories') d.category = l.category || 'Keyboard Parts';
+    if (l.type === 'accessories') { d.category = l.category || 'Keyboard Parts'; foamFill(d, l.from || d.name); }
     if (l.qty > 1 && l.type !== 'switches') d.notes += ` Quantity on the kit list: ${l.qty}.`;
     keep.forEach(f => { if (!blank(kd[f]) && !(Array.isArray(kd[f]) && !kd[f].length)) d[f] = kd[f]; });
     if (!d.manufacturer) delete d.manufacturer;
@@ -1440,7 +1440,7 @@ const BULK_FIELDS = {
   keycaps: [['manufacturer', 'Maker / platform'], ['profile', 'Profile'], ['designer', 'Designer'], ['material', 'Material'], ['legends', 'Legends'], ['stemMount', 'Stem mount'], ['location', 'Location']],
   pcbs: [['manufacturer', 'Maker'], ['category', 'Category'], ['location', 'Location'], ['purchasedFrom', 'Purchased from']],
   artisans: [['manufacturer', 'Maker'], ['category', 'Category'], ['series', 'Series'], ['colorway', 'Colorway'], ['location', 'Location'], ['purchasedFrom', 'Purchased from']],
-  accessories: [['manufacturer', 'Maker'], ['category', 'Category'], ['subCategory', 'Sub-category'], ['style', 'Style / type'], ['location', 'Location'], ['purchasedFrom', 'Purchased from']] };
+  accessories: [['manufacturer', 'Maker'], ['category', 'Category'], ['subCategory', 'Sub-category'], ['material', 'Material'], ['style', 'Style / type'], ['location', 'Location'], ['purchasedFrom', 'Purchased from']] };
 function bulkEditDialog(t, ids) {
   const F = BULK_FIELDS[t] || [], d = document.createElement('div'); d.className = 'gdlg askdlg'; d.id = 'bulkDlg';
   const vals = f => [...new Set(itemsOfType(t).map(x => x[f]).filter(v => typeof v === 'string' && v.trim()))].sort((a, b) => a.localeCompare(b));
@@ -1690,6 +1690,13 @@ function ckFixes() {   // the Nov 21 fixes still to do, worked out from the data
   if (toSub.length) F.push({ id: 'subcat', group: 'Case sub-categories', title: `${toSub.length} case${toSub.length === 1 ? '' : 's'}: set CSTM top cases / ALT cases`, detail: toSub.map(x => `${x.name} → ${subOf(x)}`).join(' · '),
     why: 'Only accessories in the Case category whose name says CSTM or ALT. Check the list; untick if any is wrong and set those by hand (Sub-category on the Overview tab).', recs: toSub.map(x => ['accessories', x.id]),
     run: async () => { for (const x of toSub) await colOfType('accessories').doc(x.id).update({ subCategory: subOf(x), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); return toSub.length + ' set'; } });
+  // v0.90.0: foam sub-categories, and switch pads back from Switch parts to Foam
+  const foamNo = (savedParts.accessories || []).filter(x => x.category === 'Foam' && (!x.subCategory || (!x.material && foamMat(x.name))));
+  if (foamNo.length) F.push({ id: 'foamsub', group: 'Foam', title: `${foamNo.length} foam entr${foamNo.length === 1 ? 'y' : 'ies'}: set sub-category and material`, detail: foamNo.map(x => `${x.name} → ${[x.subCategory || foamSub(x.name), x.material || foamMat(x.name)].filter(Boolean).join(', ')}`).join(' · '), recs: foamNo.map(x => ['accessories', x.id]),
+    run: async () => { for (const x of foamNo) { const u = foamFill({ category: 'Foam', subCategory: x.subCategory, material: x.material }, x.name); delete u.category; Object.keys(u).forEach(k => { if (u[k] === undefined) delete u[k]; }); await colOfType('accessories').doc(x.id).update(Object.assign(u, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); } return foamNo.length + ' set'; } });
+  const padsBack = (savedParts.switchparts || []).filter(x => isFoamName(x.name) || x.partType === 'Switch pads');
+  if (padsBack.length) F.push({ id: 'padsback', group: 'Foam', title: `${padsBack.length} switch pad / foam entr${padsBack.length === 1 ? 'y' : 'ies'}: back to Accessories › Foam`, detail: padsBack.map(x => x.name).join(' · '), recs: padsBack.map(x => ['switchparts', x.id]),
+    run: async () => { for (const x of padsBack) { await moveEntry('switchparts', x.id, 'accessories'); const u = foamFill({ category: 'Foam' }, x.name); await colOfType('accessories').doc(x.id).update(Object.assign(u, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); } return padsBack.length + ' moved'; } });
   // the two receipt plates saved under one name before v0.67 (Faraz will read that receipt again)
   (savedParts.accessories || []).filter(x => /^nuxroskb kraze plates$/i.test((x.name || '').trim()) && x.addedFrom === 'receipt').forEach(x => F.push({ id: 'del-' + x.id, group: 'Remove before reading the Kraze receipt again', title: `Delete ${x.name} ($${Number(x.price || 0).toFixed(2)})`, href: '#/accessories/' + x.id, detail: 'Saved under one name by the receipt bug fixed in v0.67; read that receipt again afterwards so each plate gets its own entry.', recs: [['accessories', x.id]], run: () => colOfType('accessories').doc(x.id).delete() }));
   // automatic option notes (the option is shown under Also available in)
@@ -1700,7 +1707,7 @@ function ckFixes() {   // the Nov 21 fixes still to do, worked out from the data
 }
 const CK_OLD_CATS = /^(cases & plates|deskmats?|switch parts|springs)$/i;   // v0.88.0: deskmats and switch parts have their own lists
 function ckCatGuess(n, cat) { const [t, c] = partGuess(n); if (t !== 'accessories') return '@' + t; if (/^switch parts|springs$/i.test(cat || '') && c === 'Other') return '@switchparts'; if (/^deskmats?$/i.test(cat || '')) return '@deskmats'; return c; }
-function ckCatsToSort() { return (savedParts.accessories || []).filter(x => x.category && (CK_OLD_CATS.test(x.category) || partGuess(x.name)[0] !== 'accessories' || (/^keyboard parts$/i.test(x.category) && partGuess(x.name)[1] === 'Weights'))).map(x => ({ x, g: ckCatGuess(x.name, x.category) })); }
+function ckCatsToSort() { return (savedParts.accessories || []).filter(x => x.category && (CK_OLD_CATS.test(x.category) || partGuess(x.name)[0] !== 'accessories' || (/^keyboard parts$/i.test(x.category) && partGuess(x.name)[1] === 'Weights') || (partGuess(x.name)[1] === 'Foam' && x.category !== 'Foam'))).map(x => ({ x, g: ckCatGuess(x.name, x.category) })); }
 function ckSpellings() {
   const all = LIST_TYPES.flatMap(t => itemsOfType(t).map(x => [t, x])), out = [];
   SNAP_POOLS.forEach(pool => { const m = new Map(); all.forEach(([t, x]) => pool.forEach(f => { const v = x[f]; if (typeof v !== 'string' || !v.trim()) return; const k = ckNk(v); if (!k) return; if (!m.has(k)) m.set(k, new Map()); const e = m.get(k); e.set(v.trim(), (e.get(v.trim()) || 0) + 1); }));
@@ -1731,7 +1738,7 @@ function renderCheck() {
       ${noType.length > 8 ? '<details><summary class="lnk">Show all ' + noType.length + '</summary>' : ''}${noType.map(k => `<div class="ck-row"><a href="#/keyboards/${esc(k.id)}">${esc([k.brand, k.name, k.color && '(' + k.color + ')'].filter(Boolean).join(' '))}</a><select class="select ck-pick" data-cktype="${esc(k.id)}"><option value="">Choose…</option>${Object.entries(KB_TYPES).map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('')}</select></div>`).join('')}${noType.length > 8 ? '</details>' : ''}</div>
     <div class="card ck-card"><h3>Accessories with no category <span class="sub">${noCat.length}</span></h3>
       ${noCat.map(x => { const g = ckCatGuess(x.name, ''); return `<div class="ck-row"><a href="#/accessories/${esc(x.id)}">${esc(x.name)}</a><select class="select ck-pick" data-ckcat="${esc(x.id)}"><option value="">Choose…</option>${cats.map(c => `<option${c === g ? ' selected' : ''}>${esc(c)}</option>`).join('')}<option value="@pcbs"${g === '@pcbs' ? ' selected' : ''}>→ Move to PCBs & Components</option><option value="@deskmats"${g === '@deskmats' ? ' selected' : ''}>→ Move to Deskmats</option><option value="@switchparts"${g === '@switchparts' ? ' selected' : ''}>→ Move to Switch parts</option></select><button class="btn" data-ckcatgo="${esc(x.id)}">Save</button></div>`; }).join('')}</div>
-    <div class="card ck-card"><h3>Categories to sort <span class="sub">${sortCats.length || 'none'}</span></h3>${sortCats.length ? `<p class="sub">The workbook's “Cases & Plates” mixes switch plates, cases and weights; the app has Plate, Case, Weights and Keyboard Parts for those (the Build tab's plate and case pickers use them). Deskmats and switch parts (films, springs, stems, pads) now have their own lists, and daughterboards / EC kits go to PCBs & Components. A category is suggested from each name; change any, then apply.</p>
+    <div class="card ck-card"><h3>Categories to sort <span class="sub">${sortCats.length || 'none'}</span></h3>${sortCats.length ? `<p class="sub">The workbook's “Cases & Plates” mixes switch plates, cases and weights; the app has Plate, Case, Weights and Keyboard Parts for those (the Build tab's plate and case pickers use them). Foam (case, plate, PCB, PE sheet, switch pads, stabilizer foam) is its own category; deskmats and switch parts (films, springs, stems) have their own lists, and daughterboards / EC kits go to PCBs & Components. A category is suggested from each name; change any, then apply.</p>
       ${sortCats.length > 8 ? '<details open><summary class="lnk">' + sortCats.length + ' entries</summary>' : ''}${sortCats.map(({ x, g }) => `<div class="ck-row"><a href="#/accessories/${esc(x.id)}">${esc(x.name)}</a><span class="sub">${esc(x.category)} →</span><select class="select ck-pick" data-cksort="${esc(x.id)}">${cats.map(c => `<option${c === g ? ' selected' : ''}>${esc(c)}</option>`).join('')}<option value="@pcbs"${g === '@pcbs' ? ' selected' : ''}>→ Move to PCBs & Components</option><option value="@deskmats"${g === '@deskmats' ? ' selected' : ''}>→ Move to Deskmats</option><option value="@switchparts"${g === '@switchparts' ? ' selected' : ''}>→ Move to Switch parts</option></select></div>`).join('')}${sortCats.length > 8 ? '</details>' : ''}
       <div class="btnrow" style="margin-top:10px"><button class="btn primary" id="ckSortGo">Apply these ${sortCats.length} categories</button></div>` : ''}</div>
     <div class="card ck-card"><h3>Same name more than once <span class="sub">${same.length}</span></h3>${same.length ? `<p class="sub">Could be two you really own, or one entry saved twice. Open one and use Merge… if they are the same thing.</p>` : ''}
@@ -1757,7 +1764,7 @@ function renderCheck() {
   });
   document.getElementById('ckSortGo')?.addEventListener('click', async e => { const sel = [...view.querySelectorAll('[data-cksort]')], ch = sel.filter(s2 => { const x = savedParts.accessories.find(y => y.id === s2.dataset.cksort); return x && s2.value && s2.value !== x.category; });
     if (!(await askConfirm(`Change the category of ${ch.length} accessor${ch.length === 1 ? 'y' : 'ies'}?`, { ok: 'Change' }))) return; e.target.disabled = true;
-    for (const s2 of ch) { if (s2.value[0] === '@') await moveEntry('accessories', s2.dataset.cksort, s2.value.slice(1)); else await withTimeout(colOfType('accessories').doc(s2.dataset.cksort).update({ category: s2.value, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); } toast(`${ch.length} categories saved`); renderCheck.touched = false; setTimeout(renderCheck, 700); });
+    for (const s2 of ch) { if (s2.value[0] === '@') await moveEntry('accessories', s2.dataset.cksort, s2.value.slice(1)); else { const x = savedParts.accessories.find(y => y.id === s2.dataset.cksort), u = foamFill({ category: s2.value, subCategory: x.subCategory, material: x.material }, x.name); Object.keys(u).forEach(k => { if (u[k] === undefined) delete u[k]; }); await withTimeout(colOfType('accessories').doc(s2.dataset.cksort).update(Object.assign(u, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() }))); } } toast(`${ch.length} categories saved`); renderCheck.touched = false; setTimeout(renderCheck, 700); });
   view.querySelectorAll('[data-cksp]').forEach(b => b.addEventListener('click', async () => { const g = sp[+b.dataset.cksp], v = view.querySelector(`input[name="cksp${b.dataset.cksp}"]:checked`).value;
     const hits = []; LIST_TYPES.forEach(t => itemsOfType(t).forEach(x => { const u = {}; g.pool.forEach(f => { if (typeof x[f] === 'string' && x[f].trim() !== v && ckNk(x[f]) === g.key) u[f] = v; }); if (Object.keys(u).length) hits.push([t, x.id, u]); }));
     if (!(await askConfirm(`Change ${hits.length} entr${hits.length === 1 ? 'y' : 'ies'} to “${v}”?`, { ok: 'Change' }))) return; b.disabled = true;
@@ -3846,8 +3853,15 @@ async function removeKeyboardFromKits(kbId) {
    photos, favorite, and installedOn: <keyboardId>. Cables are accessories with category "Cable" (D3). */
 /* v0.88.0: two more lists. Deskmats (own page, between Keycaps and PCBs & Components) and Switch parts (under Switches:
    films, springs, stems, housings, switch pads). Both work like the other part lists (photos, purchase, values, merge, move). */
-const ACC_SUBCATS = ['CSTM top cases', 'ALT cases'];   // v0.89.0: Case sub-categories (Faraz); more can be typed
-const SWPART_TYPES = ['Films', 'Springs', 'Stems', 'Housings', 'Switch pads', 'Other'];
+const ACC_SUBCAT_MAP = { Case: ['CSTM top cases', 'ALT cases'], Foam: ['Case foam', 'Plate foam', 'PCB foam', 'PE sheet', 'Switch pads', 'Stabilizer / stem foam', 'Foam kit', 'Other foam'] };   // v0.89.0 / v0.90.0; more can be typed
+const ACC_SUBCATS = Object.values(ACC_SUBCAT_MAP).flat();
+const FOAM_MATS = ['Poron', 'PE', 'IXPE', 'EVA', 'Neoprene', 'Silicone', 'EPDM', 'Polyurethane'];
+/* v0.90.0: Foam is its own accessory category (switch films stay Switch parts). Sub-category = where it goes; Material = what foam. */
+const isFoamName = n => /\bfoams?\b|poron|\bpe (sheet|foam)|\bixpe\b|\beva\b|neoprene|switch pads?|\b(stab|stem)\w* pads?\b|dampen/i.test(String(n || '')) && !/\bfilms?\b/i.test(String(n || ''));
+function foamSub(n) { n = String(n || ''); return /switch pads?/i.test(n) ? 'Switch pads' : /stab|stem/i.test(n) ? 'Stabilizer / stem foam' : /\bkit\b|\bset\b|\(.*,.*\)/i.test(n) ? 'Foam kit' : /pe sheet|\bixpe\b|\bpe\b.*\b(sheet|film)\b/i.test(n) ? 'PE sheet' : /\bpcb\b/i.test(n) ? 'PCB foam' : /plate|\btop\b/i.test(n) ? 'Plate foam' : /case|bottom/i.test(n) ? 'Case foam' : 'Other foam'; }
+function foamMat(n) { n = String(n || ''); const m = [[/poron/i, 'Poron'], [/\bixpe\b/i, 'IXPE'], [/\bpe\b/i, 'PE'], [/\beva\b/i, 'EVA'], [/neoprene/i, 'Neoprene'], [/silicone/i, 'Silicone'], [/epdm/i, 'EPDM'], [/polyurethane|\bpu\b/i, 'Polyurethane']].filter(([re]) => re.test(n)).map(x => x[1]).filter((v, i, arr) => !(v === 'PE' && arr.includes('IXPE'))); return m.join(' + '); }   // a kit can list several
+function foamFill(d, name) { if (d.category !== 'Foam') return d; if (!d.subCategory) d.subCategory = foamSub(name || d.name); if (!d.material) { const m = foamMat(name || d.name); if (m) d.material = m; } return d; }
+const SWPART_TYPES = ['Films', 'Springs', 'Stems', 'Housings', 'Other'];   // switch pads are Foam (v0.90.0)
 const PART_TYPES = {
   deskmats: { title: 'Deskmats', singular: 'deskmat', addLabel: 'Add deskmat', icon: 'deskmats', makers: ['KBDfans', 'NovelKeys', 'Drop', 'CannonKeys', 'Divinikey', 'Deskhero', 'Mode', 'Geekark', 'Omnitype'],
     fields: [['manufacturer', 'Maker', 'e.g. NovelKeys', 'maker'], ['name', 'Name', 'e.g. GMK Olivia deskmat', 'text', null, 'req'], ['designer', 'Designer', 'e.g. Olivia', 'text'],
@@ -3885,9 +3899,9 @@ const PART_TYPES = {
     cols: [['Maker', x => x.manufacturer], ['Series', x => x.series], ['Colorway', x => x.colorway]] },
   accessories: { title: 'Accessories', singular: 'accessory', addLabel: 'Add accessory', icon: 'accessories', makers: ['Amazon Basics', 'Glorious', 'Durock', 'TX', 'Krytox', 'YMDK', 'KBDfans', 'Drop', 'Keychron', 'Kemove', 'Gateron', 'WS'],
     fields: [['manufacturer', 'Manufacturer', 'e.g. Glorious', 'maker'], ['name', 'Name', 'e.g. Coiled cable', 'text', null, 'req'],
-      ['category', 'Category', 'e.g. Stabilizers', 'text', ['Cable', 'Case', 'Plate', 'Weights', 'Keyboard Parts', 'Stabilizers', 'Lube & Tools', 'Modding Supplies', 'Storage & Display', 'Switch Testers', 'Tools & Pullers', 'Wrist Rests', 'Other']],
+      ['category', 'Category', 'e.g. Stabilizers', 'text', ['Cable', 'Case', 'Plate', 'Weights', 'Foam', 'Keyboard Parts', 'Stabilizers', 'Lube & Tools', 'Modding Supplies', 'Storage & Display', 'Switch Testers', 'Tools & Pullers', 'Wrist Rests', 'Other']],
       ['subCategory', 'Sub-category', 'e.g. CSTM top cases', 'text', ACC_SUBCATS, null, 'A group inside the category, to list them together (Case: CSTM top cases, ALT cases). Type a new one any time.'],
-      ['location', 'Location', 'e.g. Desk drawer', 'text'], ['style', 'Style / type', 'e.g. Coiled / USB-C / Aviator', 'text', null, 'more', 'Mostly used for cables (Excel Cables tab).']],
+      ['location', 'Location', 'e.g. Desk drawer', 'text'], ['material', 'Material', 'e.g. Poron', 'text', FOAM_MATS, null, 'What it is made of (for foam: Poron, PE, IXPE, EVA, Neoprene…).'], ['style', 'Style / type', 'e.g. Coiled / USB-C / Aviator', 'text', null, 'more', 'Mostly used for cables (Excel Cables tab).']],
     checks: [], textareas: [['notes', 'Notes', 'Anything else worth remembering']],
     sub: x => [[x.category, x.subCategory].filter(Boolean).join(' › '), x.manufacturer].filter(Boolean).join(' · '),
     cols: [['Category', x => [x.category, x.subCategory].filter(Boolean).join(' › ')], ['Maker', x => x.manufacturer], ['Belongs to', x => x.belongsToText]] }
@@ -4399,7 +4413,7 @@ function bundleSplitDialog(type, id) {
       for (const l of todo) {
         const dd = { name: String(l.name).trim(), price: r2(Number(l.price) || 0), shipping: 0, discounts: 0, notes: `Came in “${bd.name}”${Number(l.price) ? `; ${money(l.price)} of its price moved here` : '; no separate price'} (split ${fmtDate(todayIso())}).${l.qty > 1 ? ` Quantity: ${l.qty}.` : ''}`, source: 'app', addedFrom: 'split', splitFrom: id, splitFromType: type, createdAt: now, updatedAt: now, appVersion: APP_VERSION };
         if (bd.manufacturer) dd.manufacturer = bd.manufacturer; keep.forEach(f => { if (!blank(bd[f]) && !(Array.isArray(bd[f]) && !bd[f].length)) dd[f] = bd[f]; });
-        if (l.type === 'accessories') dd.category = l.category || 'Other'; if (l.type === 'switchparts') { dd.partType = swPartTypeOf(dd.name); if (l.qty > 1) dd.quantity = String(l.qty); }
+        if (l.type === 'accessories') { dd.category = l.category || 'Other'; foamFill(dd, l.from || dd.name); } if (l.type === 'switchparts') { dd.partType = swPartTypeOf(dd.name); if (l.qty > 1) dd.quantity = String(l.qty); }
         const ref = colOfType(l.type).doc(); await withTimeout(ref.set(dd)); made.push({ t: l.type, id: ref.id, name: dd.name });
       }
       const moved = r2(sum()), left = r2(price - moved);
@@ -6072,7 +6086,7 @@ async function rcSave() {
         done.push({ type: t, id: item.id, label: rcLabel(t, item), what });
       } else { const name = String(r0.newName).trim(); let data;
         if (t === 'keycaps') data = { name, kits: xs.map(newKit) };
-        else { data = Object.assign({ name }, apply({}, sumP(xs), true)); if (t === 'accessories' && typeof rdAccCategory === 'function') data.category = rdAccCategory({ title: name + ' ' + ((xs[0].L && xs[0].L.option) || ''), tags: [] }, null); if (t === 'switches') { const m = /(\d+)\s*(?:pack|pcs|pieces|ct|count|switches)\b/i.exec(r0.name); if (m) data.totalCount = +m[1] * xs.reduce((a, x) => a + (x.r.qty || 1), 0); } else if ((r0.qty || 1) > 1) data.notes = `Quantity ${r0.qty} on the receipt (${rcpt.seller || 'seller'}${rcpt.orderNumber ? ', ' + rcpt.orderNumber : ''}); the price is for all ${r0.qty}.`; }
+        else { data = Object.assign({ name }, apply({}, sumP(xs), true)); if (t === 'accessories' && typeof rdAccCategory === 'function') data.category = rdAccCategory({ title: name + ' ' + ((xs[0].L && xs[0].L.option) || ''), tags: [] }, null); if (t === 'accessories') foamFill(data, name); if (t === 'switches') { const m = /(\d+)\s*(?:pack|pcs|pieces|ct|count|switches)\b/i.exec(r0.name); if (m) data.totalCount = +m[1] * xs.reduce((a, x) => a + (x.r.qty || 1), 0); } else if ((r0.qty || 1) > 1) data.notes = `Quantity ${r0.qty} on the receipt (${rcpt.seller || 'seller'}${rcpt.orderNumber ? ', ' + rcpt.orderNumber : ''}); the price is for all ${r0.qty}.`; }
         const ref = colOfType(t).doc(); await withTimeout(ref.set(Object.assign(data, { createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app', addedFrom: 'receipt' })));
         done.push({ type: t, id: ref.id, label: name, what: 'new ' + (SEC[t].singular || 'entry') });
       } }
@@ -6576,13 +6590,14 @@ function rdGuessType(p, v) {
 }
 function partGuess(n) {   // v0.88.0: which list (and accessory category) a part name belongs to
   n = String(n || '');
+  if (isFoamName(n)) return ['accessories', 'Foam'];   // foam first: stabilizer / stem foam and PCB foam are Foam too
   if (/stabili|\bstabs?\b/i.test(n)) return ['accessories', 'Stabilizers'];
   if (/snap\b|pcbsnap|keysnap|gasket|o-?ring/i.test(n)) return ['accessories', 'Keyboard Parts'];   // PCB-mount gaskets (PCBsnap / KeySnap) are keyboard parts
   if (/desk ?mat|keyboard mat|mouse ?pad/i.test(n)) return ['deskmats', ''];
   if (/daughter ?board|\bec\b.*\b(kit|pcb)\b|electro-?capacitive/i.test(n) || (/\bpcbs?\b/i.test(n) && !/foam|snap|gasket|screw|stand-?off|sticker|case|bag|mount|bundle|add-?on|plate|cover/i.test(n))) return ['pcbs', ''];
-  if (/switch films?|\bfilms?\b(?!.*canister)|\bsprings?\b|\bstems?\b|switch pads?|switch housings?/i.test(n) && !/spring ?steel|leaf-?spring|tester|opener|puller/i.test(n)) return ['switchparts', ''];
+  if (/switch films?|\bfilms?\b(?!.*canister)|\bsprings?\b|\bstems?\b|switch housings?/i.test(n) && !/spring ?steel|leaf-?spring|tester|opener|puller/i.test(n)) return ['switchparts', ''];
 
-  if (/cover plate|badge|diffuser|screen|knob|feet|(?<!switch )foam(?! switch)|screws?\b|battery|filler/i.test(n) && !/switch (films?|pads?)/i.test(n)) return ['accessories', 'Keyboard Parts'];
+  if (/cover plate|badge|diffuser|screen|knob|feet|screws?\b|battery|filler/i.test(n)) return ['accessories', 'Keyboard Parts'];
   if (/weights?\b/i.test(n)) return ['accessories', 'Weights'];
   if (/switch plates?|\bplates?\b/i.test(n)) return ['accessories', 'Plate'];
   if (/carrying|travel case|\bbag\b|pouch|sleeve|storage|display/i.test(n)) return ['accessories', 'Storage & Display'];
@@ -6597,9 +6612,9 @@ function partGuess(n) {   // v0.88.0: which list (and accessory category) a part
 const swPartTypeOf = n => /film/i.test(n) ? 'Films' : /spring/i.test(n) ? 'Springs' : /stem/i.test(n) ? 'Stems' : /housing/i.test(n) ? 'Housings' : /pad/i.test(n) ? 'Switch pads' : 'Other';
 function rdAccCategory(p, v) {
   const s = p.title + ' ' + (v ? v.title : '') + ' ' + p.tags.join(' ');
-  return /weights?\b/i.test(s) && !/plate/i.test(s) ? 'Weights' : /\bplates?\b/i.test(s) ? 'Plate' : /stabili/i.test(s) ? 'Stabilizers' : /cable/i.test(s) ? 'Cable' : /tester/i.test(s) ? 'Switch Testers'
+  return isFoamName(p.title + ' ' + (v ? v.title : '')) ? 'Foam' : /weights?\b/i.test(s) && !/plate/i.test(s) ? 'Weights' : /\bplates?\b/i.test(s) ? 'Plate' : /stabili/i.test(s) ? 'Stabilizers' : /cable/i.test(s) ? 'Cable' : /tester/i.test(s) ? 'Switch Testers'
     : /lube|brush/i.test(s) ? 'Lube & Tools' : /puller|opener|tool/i.test(s) ? 'Tools & Pullers' : /wrist/i.test(s) ? 'Wrist Rests' : /storage|display|carrying|case\b/i.test(s) ? (/carrying|storage|display/i.test(s) ? 'Storage & Display' : 'Case')
-    : /foam|daughterboard|feet|screw|gasket|badge|knob|parts/i.test(s) ? 'Keyboard Parts' : 'Other';
+    : isFoamName(s) ? 'Foam' : /daughterboard|feet|screw|gasket|badge|knob|parts/i.test(s) ? 'Keyboard Parts' : 'Other';
 }
 const rdStrip = (title, vendor, re) => { let t = String(title || ''); if (vendor && t.toLowerCase().startsWith(vendor.toLowerCase() + ' ')) t = t.slice(vendor.length + 1); return t.replace(re, '').replace(/\s{2,}/g, ' ').trim() || String(title || ''); };
 const rdUnit = (s, u) => { const m = /(\d+(?:\.\d+)?)(?:\s*[±+-]\s*(\d+(?:\.\d+)?))?\s*(mm|g|gf)?/i.exec(String(s || '')); return m ? `${m[1]}${m[2] ? '±' + m[2] : ''} ${u}` : ''; };
@@ -6681,7 +6696,7 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
     f.manufacturer = madeBy || p.vendor; f.name = rdStrip(p.title, p.vendor, /\s+artisan(\s+keycaps?)?$/i); if (vl) f.colorway = vl;
     if (/resin/i.test(bare.join(' '))) f.material = 'Resin'; if (/mx compatible/i.test(bare.join(' '))) f.stem = 'MX';
   } else {
-    f.manufacturer = p.vendor; f.name = vl ? `${rdStrip(p.title, '', /$/)} - ${vl}` : p.title; f.category = rdAccCategory(p, v); if (vl) f.style = vl;
+    f.manufacturer = p.vendor; f.name = vl ? `${rdStrip(p.title, '', /$/)} - ${vl}` : p.title; f.category = rdAccCategory(p, v); foamFill(f, p.title + ' ' + vl); if (vl) f.style = vl;
   }
   Object.keys(f).forEach(k => (f[k] === '' || f[k] == null) && delete f[k]);
   return f;
