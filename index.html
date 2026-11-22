@@ -641,7 +641,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.91.0';
+const APP_VERSION = 'v0.92.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -1509,6 +1509,7 @@ function sumCarSlides(t, x) {
   if (x.refImage) add(x.refImage, x.refImage, 'Picture from ' + (x.refSource || 'the product page'));
   (x.refImages || []).forEach(u => add(u, u, 'Picture from ' + (x.refSource || 'the product page')));
   if (t === 'keycaps') (x.kitPhotos || []).forEach(k => add(k.url, k.url, k.name));
+  if (t === 'keycaps') kitsOf(x).forEach(k => add(k.refImage, k.refImage, k.name + (k.notOwned ? ' (not owned)' : '') + (k.refSource ? ' · ' + k.refSource : '')));   // v0.92.0
   return out;
 }
 function drawSumCarousel() {
@@ -4996,6 +4997,8 @@ function setPhotoCoverOf(s) {   // picture for a keycap card with no photo of yo
   if ((s.kitStock || []).length) { const b = s.kitStock.find(e => /base/i.test(e.name)) || s.kitStock[0]; if (b.thumb) return b.thumb; }   // records from v0.52–v0.53
   const ph = s.kitPhotos || [];
   if (ph.length) { const pr = pairKits(ownedKits(s), ph), own = ph.find(p => pr.has(p)); return (own || ph[0]).url || ''; }
+  const shopKits = ownedKits(s).filter(k => k.refImage);   // v0.92.0: the shop's picture of a kit you own (product page reader, or added by hand)
+  if (shopKits.length) return (shopKits.find(k => /\bbase\b|\bcore\b|\balphas?\b/i.test((k.kitType || '') + ' ' + k.name)) || shopKits[0]).refImage;
   const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef); if (!ref) return '';
   const ks = (ref.kits || []).filter(k => k.img), pairs = pairKits(ownedKits(s), ref.kits || []), own = ks.find(ck => pairs.has(ck));
   return (own || ks[0] || {}).img || '';
@@ -6374,6 +6377,7 @@ function kitPicsOf(s) {   // every kit picture known for a set: your kit stock p
   const out = [], seen = new Set(), add = (name, url) => { const k = kitKey(name || ''); if (!url || seen.has(k)) return; seen.add(k); out.push({ name, url }); };
   (s.kitStock || []).forEach(e => { const th = kitStockThumb(e) || (s.kitStockCover && s.kitStockCover.photoId === e.photoId ? s.kitStockCover.thumb : ''); add(e.name, th); });
   (s.kitPhotos || []).forEach(p => add(p.name, p.url));
+  [...ownedKits(s), ...kitsOf(s).filter(k => k.notOwned)].forEach(k => add(k.name, k.refImage));   // v0.92.0: each kit's shop picture
   const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef); if (ref) (ref.kits || []).forEach(ck => add(ck.name, ck.img));
   return out;
 }
@@ -6574,7 +6578,7 @@ function rdGuessType(p, v) {
   const tags = p.tags, vt = v && v.title !== 'Default Title' ? v.title : '', all = p.title + ' ' + vt;
   if ((rdHas(tags, /artisan/i) || /artisan/i.test(p.title)) && !/keycaps? set|key ?set/i.test(p.title)) return 'artisans';   // KBDfans tags full keycap sets "Artisan keycaps"
   if (/desk ?mat|mouse ?pad/i.test(vt)) return 'deskmats';   // a deskmat option on a keycap page (v0.88.0)
-  if (/\bartisans?\b/i.test(vt) && /keycap/i.test(p.productType + ' ' + p.title) && !p.gmkRef) return 'artisans';   // not on Matrix pages: GMK's catalog counts an artisan as one of the set's kits   // an artisan option on a keycap page (v0.91.0)
+  if (/\bartisans?\b/i.test(vt) && /keycap/i.test(p.productType + ' ' + p.title) && !p.gmkRef) return 'artisans';   // not on Matrix pages: GMK's catalog counts an artisan as one of the set's kits   // an artisan option on a keycap page (v0.92.0)
   if (/wrist ?rest/i.test(vt)) return 'accessories';
   if (/desk ?mat|mouse ?pad|keyboard mat/i.test(p.title) && !/keycap/i.test(p.title)) return 'deskmats';
   if (partGuess(p.title)[0] === 'switchparts' && !/\bswitches\b(?!.*(films?|springs?|stems?|pads?))/i.test(p.title)) return 'switchparts';
@@ -6704,7 +6708,7 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
   Object.keys(f).forEach(k => (f[k] === '' || f[k] == null) && delete f[k]);
   return f;
 }
-function kcCleanTitle(title, maker) {   // v0.91.0 (KPrepublic): "[GBEXTERAS] GLOVE x Domikey Illusion Keycaps Cherry Profile ABS…" → { name: 'Domikey Illusion', designer: 'GLOVE' }
+function kcCleanTitle(title, maker) {   // v0.92.0 (KPrepublic): "[GBEXTERAS] GLOVE x Domikey Illusion Keycaps Cherry Profile ABS…" → { name: 'Domikey Illusion', designer: 'GLOVE' }
   let t = String(title || '').replace(/^\s*(\[[^\]]*\]\s*)+/, '').replace(/\s+/g, ' ').trim(), designer = '';
   t = t.replace(/\s+(keycaps?|keycap set|key ?caps?)\b.*$/i, '').replace(/\s+(extension|add-?on)s?(\s+kits?)?$|\s+kits?$/i, '').trim() || t;
   const m = /^(.+?)\s+[x×]\s+(.+)$/i.exec(t);
