@@ -436,7 +436,6 @@
   .wright { display: grid; gap: 8px; align-content: start; min-width: 0; } .wright .input { width: 100%; box-sizing: border-box; min-width: 0; } .wrgb > label { min-width: 0; } .wright label { font-size: 11.5px; color: var(--text-3); display: grid; gap: 3px; } .wright .input { padding: 6px 8px; font-size: 13px; color: var(--text); }
   .wprev { display: grid; grid-template-columns: 1fr 1fr; height: 44px; border-radius: var(--radius-s); overflow: hidden; border: var(--bw) var(--bs) var(--line); }
   .wrgb { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; } .wright .btn { font-size: 12.5px; padding: 6px 8px; }
-  .wphoto { margin-top: 10px; } .wpc { max-width: 100%; cursor: crosshair; border-radius: var(--radius-s); border: var(--bw) var(--bs) var(--line); }
   .xsw { display: inline-block; width: 18px; height: 14px; border-radius: var(--radius-xs); margin-right: 3px; border: 1px solid var(--swatch-line); }
   .cwlist { display: grid; gap: 6px; } .cwrow { display: grid; grid-template-columns: 34px 1fr auto; gap: 8px; align-items: center; } .cwrow .btn { padding: 3px 8px; }
   .mtable td { vertical-align: top; } .mtable .msel { max-width: 320px; padding: 6px 8px; font-size: 13px; } .mtable .msearch { margin-top: 6px; max-width: 320px; padding: 6px 8px; font-size: 13px; } .mtable .gpick { max-width: 320px; margin-top: 4px; }
@@ -453,7 +452,18 @@
   .kg.own:not(div) { border-color: color-mix(in srgb, var(--ok) 55%, var(--line)); } .kg.own .kgbadge { background: var(--ok-bg); color: var(--ok-on); }
   .kg.miss { border-style: dashed; } .kg.miss .kgimg img { filter: grayscale(1) brightness(.8); opacity: .45; } .kg.miss .kgname { color: var(--text-3); }
   .kg.miss:hover .kgimg img, .kg.miss:focus-visible .kgimg img { filter: none; opacity: 1; } .kg.miss:hover .kgname, .kg.miss:focus-visible .kgname { color: var(--text); }
-  .gdlg > .kv-card { width: min(860px, 100%); } .kvimg { border-radius: var(--radius-s); overflow: hidden; background: var(--well); } .kvimg img { width: 100%; max-height: 60vh; object-fit: contain; display: block; }
+  .gdlg > .kv-card { width: min(860px, 100%); }
+  .sth { width: 28px; height: 28px; border-radius: 6px; overflow: hidden; display: grid; place-items: center; background: var(--well); color: var(--text-3); } .sth img { width: 100%; height: 100%; object-fit: cover; } .sth svg { width: 16px; height: 16px; }
+  .slotbox { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 12px; border-radius: var(--radius); background: linear-gradient(180deg, var(--well), var(--surface)); border: 1px solid var(--line); }
+  .slotcol { display: flex; flex-direction: column; gap: 8px; min-width: 0; } .slotcol > small { text-align: center; color: var(--text-3); letter-spacing: .08em; text-transform: uppercase; font-size: 11px; }
+  .reel { position: relative; height: 118px; overflow: hidden; border-radius: var(--radius-s); background: var(--bg); border: 2px solid var(--line); box-shadow: inset 0 10px 14px -10px rgba(0,0,0,.6), inset 0 -10px 14px -10px rgba(0,0,0,.6); }
+  .slotcol.held .reel { border-color: var(--accent); } .slotcol.spin .reel { border-color: var(--text-3); }
+  .reel .strip { will-change: transform; } .rcell { height: 118px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 6px; box-sizing: border-box; }
+  .rcell img { max-width: 100%; height: 74px; object-fit: contain; border-radius: 6px; } .rcell svg { width: 44px; height: 44px; color: var(--text-3); } .rcell b { font-size: 12px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+  .heldtag { position: absolute; top: 6px; right: 6px; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: var(--accent); color: var(--bg); display: none; } .slotcol.held .heldtag { display: block; }
+  .slotcol .pick { margin: 0; } .slotcol .pbody { display: flex; flex-direction: column; gap: 4px; min-height: 64px; } .holdbtn { align-self: flex-start; margin-top: 4px; }
+  .slotgo { font-size: 16px; padding: 10px 28px; }
+  @media (max-width: 640px) { .slotbox { gap: 6px; padding: 6px; } .rcell b { font-size: 11px; } .slotcol .sub { font-size: 11px; } } .kvimg { border-radius: var(--radius-s); overflow: hidden; background: var(--well); } .kvimg img { width: 100%; max-height: 60vh; object-fit: contain; display: block; }
   .kvthumbs { display: flex; gap: 6px; margin-top: 8px; } .kvthumbs img { width: 96px; aspect-ratio: 16/9; object-fit: cover; border-radius: var(--radius-xs); cursor: pointer; border: var(--bw) var(--bs) var(--line); }
   .chip.kvown { background: var(--ok-bg); color: var(--ok-on); } .kit.flash { outline: 2px solid var(--kc); outline-offset: 2px; border-radius: var(--radius-s); }
   .sumhead { display: flex; gap: 14px; align-items: center; margin-bottom: 6px; } .sumhead img { width: 120px; aspect-ratio: 4/3; object-fit: cover; border-radius: var(--radius-s); flex: none; }
@@ -589,9 +599,9 @@
   /* sound compare, timeline, pick-my-build, QR labels */
   .sndrow.playing td { background: color-mix(in srgb, var(--accent) 16%, transparent); } .sndrow td { vertical-align: middle; }
   .tlist { display: grid; gap: 8px; margin: 0 0 10px; padding: 0; list-style: none; } .tlist li { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: baseline; font-size: 13px; } .tlist time { color: var(--text-3); font-size: 12px; white-space: nowrap; } .tlist .lnk { color: var(--text-3); }
-  .pickgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; } .pick { border: var(--bw) var(--bs) var(--line); border-radius: var(--radius-s); overflow: hidden; display: flex; flex-direction: column; } .pick .pimg { aspect-ratio: 4/3; background: var(--well); display: grid; place-items: center; color: var(--text-3); } .pick .pimg img { width: 100%; height: 100%; object-fit: cover; }
+  .pick { border: var(--bw) var(--bs) var(--line); border-radius: var(--radius-s); overflow: hidden; display: flex; flex-direction: column; }
   .pick .pbody { padding: 10px; display: grid; gap: 4px; } .pick small { color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; font-size: 10.5px; } .pick label { font-size: 12px; color: var(--text-2); display: flex; gap: 6px; align-items: center; }
-  @media (max-width: 700px) { .pickgrid { grid-template-columns: 1fr; } .pick { flex-direction: row; } .pick .pimg { width: 110px; flex-shrink: 0; } .statgrid { grid-template-columns: 1fr; } }
+  @media (max-width: 700px) { .statgrid { grid-template-columns: 1fr; } }
   .qrsheet { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; } .qrlabel { background: #fff; color: #111; border-radius: 8px; padding: 10px; text-align: center; font-family: system-ui, sans-serif; break-inside: avoid; } .qrlabel img { width: 120px; height: 120px; image-rendering: pixelated; display: block; margin: 0 auto 6px; } .qrlabel b { display: block; font-size: 13px; line-height: 1.25; } .qrlabel span { font-size: 11px; color: #555; }
   #printArea { display: none; }
   @media print { body.printing > *:not(#printArea) { display: none !important; } body.printing { background: #fff !important; } body.printing #printArea { display: block; padding: 8mm; } body.printing .qrsheet { grid-template-columns: repeat(4, 1fr); gap: 4mm; } body.printing .qrlabel { border: 1px dashed #999; border-radius: 0; } }
@@ -661,7 +671,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.96.0';
+const APP_VERSION = 'v0.98.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -741,8 +751,9 @@ const SECTIONS = [
   { group: 'COLLECTION' },
   { id: 'keyboards',   title: 'Keyboards',   color: 'var(--kb)',  built: true,  singular: 'keyboard' },
   { id: 'switches',    title: 'Switches',    color: 'var(--sw)',  built: true,  singular: 'switches' },
-  { id: 'switchparts', title: 'Switch parts', color: 'var(--sw)',  built: true,  singular: 'switch part', sub: true },
+  { id: 'switchparts', title: 'Switch parts', color: 'var(--sw)',  built: true,  singular: 'switch part', sub: true, parent: 'switches' },
   { id: 'keycaps',     title: 'Keycaps',     color: 'var(--kc)',  built: true,  singular: 'keycap set' },
+  { id: 'kcgmk',       title: 'GMK',         color: 'var(--kc)',  built: true,  sub: true, parent: 'keycaps', maker: 'GMK' },   // v0.97.0: Keycaps filtered to one maker
   { id: 'deskmats',    title: 'Deskmats',    color: 'var(--kc)',  built: true,  singular: 'deskmat' },
   { id: 'pcbs',        title: 'PCBs & Components', color: 'var(--pcb)', built: true,  singular: 'PCB' },
   { id: 'accessories', title: 'Accessories', color: 'var(--ac)',  built: true,  singular: 'accessory' },
@@ -758,8 +769,9 @@ const SECTIONS = [
   { id: 'settings',    title: 'Settings',    color: 'var(--text-3)', built: true },
   { id: 'help',        title: 'Help',        color: 'var(--text-3)', built: true }
 ];
-const navCollapsed = () => { try { return localStorage.getItem('kbc_nav_swparts') !== 'open'; } catch (e) { return true; } };   // v0.89.0: Switch parts folds under Switches (closed by default, remembered on the device)
-document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-navtog]'); if (!b) return; e.preventDefault(); e.stopPropagation(); try { localStorage.setItem('kbc_nav_swparts', navCollapsed() ? 'open' : 'closed'); } catch (err) {} renderNav((location.hash.match(/^#\/(\w+)/) || [])[1] || 'dashboard'); }, true);
+const NAV_KEYS = { switches: 'kbc_nav_swparts', keycaps: 'kbc_nav_kcsub' };   // v0.89.0 Switch parts under Switches; v0.97.0 GMK under Keycaps. Closed by default, remembered on the device
+const navCollapsed = (par = 'switches') => { try { return localStorage.getItem(NAV_KEYS[par]) !== 'open'; } catch (e) { return true; } };
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-navtog]'); if (!b) return; e.preventDefault(); e.stopPropagation(); const par = b.dataset.navtog || 'switches'; try { localStorage.setItem(NAV_KEYS[par], navCollapsed(par) ? 'open' : 'closed'); } catch (err) {} renderNav((location.hash.match(/^#\/(\w+)/) || [])[1] || 'dashboard'); }, true);
 const SEC = Object.fromEntries(SECTIONS.filter(s => s.id).map(s => [s.id, s]));
 
 /* ===================== Step P.1: phone top bar (collapses on scroll, like the Keycap Collection app), bottom bar and menu ===================== */
@@ -784,9 +796,10 @@ document.addEventListener('click', e => {
 document.addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
 
 function renderNav(active) {
+  const subsOf = id => SECTIONS.filter(x => x.parent === id).map(x => x.title).join(', ');
   document.getElementById('nav').innerHTML = SECTIONS.map(s => s.group
     ? `<div class="navgroup">${s.group}</div>`
-    : s.sub && navCollapsed() && s.id !== active ? '' : `<a class="navitem${s.id === active ? ' on' : ''}${s.sub ? ' navsub' : ''}" href="#/${s.id}" style="--c:${s.color}" title="${s.title}">${I[s.id]}<span class="t">${s.title}</span>${s.id === 'switches' ? `<button class="navtog" type="button" data-navtog title="${navCollapsed() ? 'Show' : 'Hide'} Switch parts" aria-label="${navCollapsed() ? 'Show' : 'Hide'} Switch parts" aria-expanded="${!navCollapsed()}">${navCollapsed() ? '▸' : '▾'}</button>` : ''}${s.built ? '' : '<span class="soon">Later</span>'}</a>`).join('');
+    : s.sub && navCollapsed(s.parent) && s.id !== active ? '' : `<a class="navitem${s.id === active ? ' on' : ''}${s.sub ? ' navsub' : ''}" href="#/${s.id}" style="--c:${s.color}" title="${s.title}">${I[s.id] || I[s.parent] || ''}<span class="t">${s.title}</span>${NAV_KEYS[s.id] ? `<button class="navtog" type="button" data-navtog="${s.id}" title="${navCollapsed(s.id) ? 'Show' : 'Hide'} ${subsOf(s.id)}" aria-label="${navCollapsed(s.id) ? 'Show' : 'Hide'} ${subsOf(s.id)}" aria-expanded="${!navCollapsed(s.id)}">${navCollapsed(s.id) ? '▸' : '▾'}</button>` : ''}${s.built ? '' : '<span class="soon">Later</span>'}</a>`).join('');
 }
 
 /* ===================== Data: sample keyboards (in-app only, not saved) ===================== */
@@ -815,7 +828,7 @@ function startKeyboardListener() {
 }
 function refreshIfShowing() {
   timelineDiff();
-  const id = (location.hash.replace(/^#\/?/, '').split('/')[0]) || 'dashboard';
+  const id0 = (location.hash.replace(/^#\/?/, '').split('/')[0]) || 'dashboard', id = SEC[id0] && SEC[id0].maker ? SEC[id0].parent : id0;   // Keycaps › GMK redraws like Keycaps
   if (formDirty && editing && VALUE_TYPES.includes(id)) { const cur = itemsOfType(id).find(x => x.id === editing.id); if (cur && swapValueCardIfOnly(id, cur)) return; }
   if (id === 'dashboard') route();
   else if (id === 'import') { clearTimeout(refreshIfShowing._t); refreshIfShowing._t = setTimeout(() => { if (location.hash === '#/import') { drawImportPreview(); drawReconcile(); } }, 120); }   // many records arrive at once during an import: redraw once, not per record
@@ -1024,6 +1037,7 @@ async function mgRun(type, keepId, sacId, choice) {
   const finalName = upd.name || keep.name;
   if (type === 'switches') (await withTimeout(soundCol().where('itemId', '==', sacId).get(), 60000)).docs.forEach(p => touch(p.ref, p.data(), { itemId: keepId }));
   if (type === 'keycaps') (await withTimeout(soundCol().where('keycapSetId', '==', sacId).get(), 60000)).docs.forEach(p => { const d = p.data(), now = { keycapSetId: keepId }; if (kitIdMap[d.kitId]) now.kitId = kitIdMap[d.kitId]; touch(p.ref, d, now); });
+  if (type === 'keycaps') setsLinkedTo(sacId).forEach(({ t, x }) => touch(partCol(t).doc(x.id), x, { keycapSetId: keepId }));   // v0.97.0: artisans and deskmats follow their set
   if (type === 'keyboards') {
     savedSwitches.forEach(w => { const al = allocsOf(w); if (!al.some(a => a.keyboardId === sacId)) return; const m = new Map();
       al.forEach(a => { const id = a.keyboardId === sacId ? keepId : a.keyboardId, p = m.get(id); m.set(id, p ? Object.assign({}, p, { count: (Number(p.count) || 0) + (Number(a.count) || 0) }) : Object.assign({}, a, { keyboardId: id })); });
@@ -1345,7 +1359,7 @@ async function duplicateItem(type, id, opts, name, groups) {
 /* ---------- Bulk select on list pages ---------- */
 const LIST_TYPES = ['keyboards', 'switches', 'keycaps', 'pcbs', 'artisans', 'accessories', 'deskmats', 'switchparts'], LOC_TYPES = ['keyboards', 'switches', 'keycaps'];
 let selMode = false, selIds = new Set(), selType = '';
-const listTypeNow = () => { const h = location.hash.replace(/^#\//, ''); return LIST_TYPES.includes(h) ? h : ''; };
+const listTypeNow = () => { const h = location.hash.replace(/^#\//, ''), sub = SEC[h] && SEC[h].maker && SEC[h].parent; return LIST_TYPES.includes(h) ? h : sub || ''; };   // a maker sub-page (Keycaps › GMK) is the Keycaps list
 const idOfEl = el => (el.getAttribute('href') || el.dataset.href || '').split('/')[2] || '';
 function setSelMode(on) { selMode = on; selIds = new Set(); selType = listTypeNow(); document.getElementById('view').classList.toggle('selmode', on); drawSelBar(); markSel(); const b = document.getElementById('btnSelect'); if (b) { b.textContent = on ? 'Done' : 'Select'; b.classList.toggle('primary', on); } }
 function markSel() { document.querySelectorAll('#view a.kcard, #view tr.row[data-href]').forEach(el => el.classList.toggle('sel', selMode && selIds.has(idOfEl(el)))); }
@@ -1897,25 +1911,53 @@ function wireKbTimeline(k) {
 }
 /* ---------- Pick my build: a random keyboard + keycaps not on a board + loose switches that are enough ---------- */
 function keysNeeded(k) { const z = String(k.size || ''); return /macro/i.test(z) ? 12 : /numpad/i.test(z) ? 21 : /40/.test(z) ? 47 : /60/.test(z) ? 61 : /65/.test(z) ? 68 : /75/.test(z) ? 84 : /80|TKL/i.test(z) ? 87 : /96|1800/.test(z) ? 100 : /100|full/i.test(z) ? 104 : 70; }
-let pickState = { kb: null, kc: null, sw: null, lock: {} };
+let pickState = { kb: null, kc: null, sw: null, lock: {}, spinning: false };
+/* v0.97.0: Pick my build is a slot machine. Three reels (keyboard, keycaps, switches) spin and stop one after another;
+   Hold keeps a reel where it is on the next spin. The switches reel only offers switches with enough loose ones for the board when it can. */
+function pickCands(slot) {
+  if (slot === 'kb') return savedKeyboards.slice();
+  if (slot === 'kc') return savedKeycaps.flatMap(s2 => { const free = kitsOf(s2).filter(k => !k.installedOn && !k.notOwned); const k = free.find(x => /base|full|alpha/i.test((x.kitType || '') + ' ' + x.name)) || free[0]; return k ? [{ s: s2, k }] : []; });
+  const need = keysNeeded(pickState.kb), ok = savedSwitches.filter(w => (looseCount(w) || 0) >= need), some = savedSwitches.filter(w => (looseCount(w) || 0) > 0);
+  return ok.length ? ok : some;
+}
+function pickFace(slot, v) {   // [picture, title, sub, href]
+  if (!v) return ['', '', slot === 'kc' ? 'Every kit is already on a keyboard.' : slot === 'sw' ? 'No loose switches with a count.' : '', ''];
+  if (slot === 'kb') return [v.coverThumb || v.stockThumb || v.refImage, v.name, [v.brand, v.size, `about ${keysNeeded(v)} keys`].filter(Boolean).join(' · '), '#/keyboards/' + v.id];
+  if (slot === 'kc') return [v.s.coverThumb || setPhotoCoverOf(v.s), v.s.name, [v.k.name, v.s.profile].filter(Boolean).join(' · '), '#/keycaps/' + v.s.id];
+  return [v.coverThumb || v.stockThumb || v.refImage, [v.manufacturer, v.name].filter(Boolean).join(' '), `${looseCount(v)} loose · ${v.switchType || ''}`, '#/switches/' + v.id];
+}
 function pickBuild() {
-  const rnd = a => a[Math.floor(Math.random() * a.length)];
+  const rnd = a => a.length ? a[Math.floor(Math.random() * a.length)] : null, SLOTS = [['kb', 'Keyboard', 'keyboards'], ['kc', 'Keycaps', 'keycaps'], ['sw', 'Switches', 'switches']];
   if (!savedKeyboards.length) { toast('Add or import your keyboards first'); return; }
-  const roll = () => { const L = pickState.lock;
-    if (!L.kb || !pickState.kb) pickState.kb = rnd(savedKeyboards);
-    if (!L.kc || !pickState.kc) { const c = savedKeycaps.flatMap(s2 => { const free = kitsOf(s2).filter(k => !k.installedOn && !k.notOwned); const k = free.find(x => /base|full|alpha/i.test((x.kitType || '') + ' ' + x.name)) || free[0]; return k ? [{ s: s2, k }] : []; }); pickState.kc = c.length ? rnd(c) : null; }
-    if (!L.sw || !pickState.sw || L.kb === false) { const need = keysNeeded(pickState.kb), ok = savedSwitches.filter(w => (looseCount(w) || 0) >= need), some = savedSwitches.filter(w => (looseCount(w) || 0) > 0); pickState.sw = ok.length ? rnd(ok) : some.length ? rnd(some) : null; } };
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches, ROW = 118;
+  const cell = (slot, v) => { const [img, t] = pickFace(slot, v); return `<div class="rcell">${img ? `<img src="${img.startsWith('data:') ? img : esc(img)}" alt="" referrerpolicy="no-referrer">` : I[SLOTS.find(x => x[0] === slot)[2]]}<b>${esc(t || '—')}</b></div>`; };
   let d = document.getElementById('pickDlg'); if (!d) { d = document.createElement('div'); d.className = 'gdlg'; d.id = 'pickDlg'; document.body.appendChild(d);
-    d.onclick = e => { if (e.target === d || e.target.closest('[data-x]')) { d.remove(); return; } if (e.target.id === 'pickAgain') { roll(); draw(); } const a = e.target.closest('a[href]'); if (a) d.remove(); };
-    d.onchange = e => { const c = e.target.closest('[data-lock]'); if (c) pickState.lock[c.dataset.lock] = c.checked; }; }
-  const tile = (slot, label, img, title, sub, href, warn) => `<div class="pick"><div class="pimg">${img ? `<img src="${img.startsWith('data:') ? img : esc(img)}" alt="" referrerpolicy="no-referrer">` : I[slot === 'kb' ? 'keyboards' : slot === 'kc' ? 'keycaps' : 'switches']}</div><div class="pbody"><small>${label}</small>${title ? `<a class="lnk" href="${href}"><b>${esc(title)}</b></a><span class="sub" style="margin:0">${esc(sub || '')}</span>${warn ? `<span style="color:var(--warn);font-size:12px">${esc(warn)}</span>` : ''}<label><input type="checkbox" data-lock="${slot}"${pickState.lock[slot] ? ' checked' : ''}> Keep this one</label>` : `<span class="sub" style="margin:0">${esc(sub)}</span>`}</div></div>`;
-  const draw = () => { const { kb, kc, sw } = pickState, need = keysNeeded(kb), have = sw ? looseCount(sw) : 0;
-    d.innerHTML = `<div class="card kv-card" style="max-width:760px"><div class="sec-title"><h3>Pick my build</h3><button class="btn" data-x>✕</button></div><p class="sub">A random board with keycaps that are not on a keyboard and loose switches. Tick “Keep this one” and shuffle the rest.</p>
-      <div class="pickgrid">${tile('kb', 'Keyboard', kb.coverThumb || kb.stockThumb || kb.refImage, kb.name, [kb.brand, kb.size, `about ${need} keys`].filter(Boolean).join(' · '), '#/keyboards/' + kb.id)}
-      ${kc ? tile('kc', 'Keycaps', kc.s.coverThumb || setPhotoCoverOf(kc.s), kc.s.name, [kc.k.name, kc.s.profile].filter(Boolean).join(' · '), '#/keycaps/' + kc.s.id) : tile('kc', 'Keycaps', '', '', 'Every kit is already on a keyboard.')}
-      ${sw ? tile('sw', 'Switches', sw.coverThumb || sw.stockThumb || sw.refImage, [sw.manufacturer, sw.name].filter(Boolean).join(' '), `${have} loose · ${sw.switchType || ''}`, '#/switches/' + sw.id, have < need ? `Only ${have} loose; this board needs about ${need}` : '') : tile('sw', 'Switches', '', '', 'No loose switches with a count.')}</div>
-      <div class="btnrow" style="margin-top:14px"><button class="btn primary" id="pickAgain">🎲 Shuffle</button></div></div>`; };
-  pickState.lock = {}; pickState.kb = pickState.kc = pickState.sw = null; roll(); draw();
+    d.onclick = e => { if (e.target === d || e.target.closest('[data-x]')) { d.remove(); return; } if (e.target.closest('#pickAgain')) spin(); const h = e.target.closest('[data-hold]'); if (h && !pickState.spinning) { const k = h.dataset.hold; pickState.lock[k] = !pickState.lock[k]; info(); } const a = e.target.closest('a[href]'); if (a) d.remove(); };
+    d.onchange = e => { const c = e.target.closest('[data-lock]'); if (c) { pickState.lock[c.dataset.lock] = c.checked; info(); } }; }
+  d.innerHTML = `<div class="card kv-card slotm" style="max-width:820px"><div class="sec-title"><h3>🎰 Pick my build</h3><button class="btn" data-x>✕</button></div>
+    <p class="sub">Spin for a random board, keycaps that are not on a keyboard, and loose switches. Hold the ones you like and spin the rest.</p>
+    <div class="slotbox">${SLOTS.map(([k, l]) => `<div class="slotcol" data-slot="${k}"><small>${l}</small><div class="reel"><div class="strip"></div><span class="heldtag">HELD</span></div><div class="pick"><div class="pbody"></div></div></div>`).join('')}</div>
+    <div class="btnrow" style="margin-top:14px;justify-content:center"><button class="btn primary slotgo" id="pickAgain">🎰 Spin</button></div></div>`;
+  const info = () => SLOTS.forEach(([k]) => { const col = d.querySelector(`[data-slot="${k}"]`); if (!col) return; const v = pickState[k], [, t, sub, href] = pickFace(k, v), held = !!pickState.lock[k];
+    col.classList.toggle('held', held); const need = keysNeeded(pickState.kb), warn = k === 'sw' && v && looseCount(v) < need ? `Only ${looseCount(v)} loose; this board needs about ${need}` : '';
+    col.querySelector('.pbody').innerHTML = t ? `<a class="lnk" href="${href}"><b>${esc(t)}</b></a><span class="sub" style="margin:0">${esc(sub)}</span>${warn ? `<span style="color:var(--warn);font-size:12px">${esc(warn)}</span>` : ''}
+      <button type="button" class="btn${held ? ' primary' : ''} holdbtn" data-hold="${k}" aria-pressed="${held}">${held ? '🔒 Held' : 'Hold'}</button><label style="display:none"><input type="checkbox" data-lock="${k}"${held ? ' checked' : ''}></label>` : `<span class="sub" style="margin:0">${esc(sub)}</span>`; });
+  const spin = () => {
+    if (pickState.spinning) return; const L = pickState.lock, go = SLOTS.map(x => x[0]).filter(k => !L[k] || !pickState[k]);
+    if (!go.length) { toast('Everything is held. Release one to spin it.'); return; }
+    go.forEach(k => { if (k !== 'sw') pickState[k] = rnd(pickCands(k)); }); if (go.includes('sw') || (go.includes('kb') && !L.sw)) pickState.sw = rnd(pickCands('sw'));
+    if (go.includes('kb') && !go.includes('sw') && L.sw && pickState.sw && looseCount(pickState.sw) < keysNeeded(pickState.kb)) toast('The held switches may not be enough for this board');
+    pickState.spinning = true; const btn = d.querySelector('#pickAgain'); btn.disabled = true; let left = go.length;
+    go.forEach((k, i) => { const col = d.querySelector(`[data-slot="${k}"]`), strip = col.querySelector('.strip'), pool = pickCands(k), filler = Array.from({ length: still ? 0 : 14 + i * 5 }, () => rnd(pool)), all = filler.concat([pickState[k]]);
+      col.querySelector('.pbody').innerHTML = '<span class="sub" style="margin:0">…</span>'; col.classList.add('spin');
+      strip.style.transition = 'none'; strip.style.transform = 'translateY(0)'; strip.innerHTML = all.map(v => cell(k, v)).join('');
+      const end = () => { col.classList.remove('spin'); if (--left === 0) { pickState.spinning = false; btn.disabled = false; info(); } };
+      if (still) { end(); return; }
+      void strip.offsetHeight; strip.style.transition = `transform ${1.1 + i * .55}s cubic-bezier(.15,.85,.25,1.02)`; strip.style.transform = `translateY(-${(all.length - 1) * ROW}px)`;
+      strip.addEventListener('transitionend', end, { once: true }); });
+  };
+  SLOTS.forEach(([k]) => { const st = d.querySelector(`[data-slot="${k}"] .strip`); st.innerHTML = cell(k, null); });
+  pickState.lock = {}; pickState.kb = pickState.kc = pickState.sw = null; pickState.spinning = false; spin();
 }
 /* ---------- QR labels ---------- */
 function qrDataUrl(text) { const q = qrcode(0, 'M'); q.addData(text); q.make(); return q.createDataURL(6, 2); }
@@ -2046,12 +2088,16 @@ const HELP = [
     s: ['Keyboard → Build timeline: switch, keycap and part changes are logged by themselves; add your own notes; remove lines you don\'t want.'], go: '#/keyboards' },
   { id: 'share', t: 'Share a picture of a build or a list', g: 'Keyboards', k: 'share image picture png build card instagram post grid',
     s: ['Keyboard → "Share build card": photo, colorway, switches, keycaps and parts (what you paid only if ticked).', 'Every list has Share: the cards on screen as one picture.'], go: '#/keyboards' },
-  { id: 'pick', t: 'Pick my build (shuffle)', g: 'Keyboards', k: 'pick my build random shuffle suggest which keyboard today',
-    s: ['Dashboard → "Pick my build": a random keyboard, a free keycap kit and switches with enough loose ones; "Keep this one", Shuffle.'], go: '#/dashboard' },
+  { id: 'pick', t: 'Pick my build (slot machine)', g: 'Keyboards', k: 'pick my build random shuffle spin slot machine roulette hold reel suggest which keyboard today',
+    s: ['Dashboard → "🎰 Pick my build": three reels spin for a keyboard, a keycap kit that is not on a board, and switches with enough loose ones.', 'Press Hold under a reel to keep it, then Spin again for the rest. Hold all three and it tells you to release one.'], go: '#/dashboard' },
 
   // ---------- Switches ----------
   { id: 'sounds', t: 'Record and compare switch sounds', g: 'Switches', ctx: ['switches', 'sounds'], k: 'sound test record recording audio typing compare listen play',
     s: ['Switch page → Sound tests → record up to 30 s; the board and keycaps are noted.', 'Tools → Sound compare: tick recordings in the order to play, then "Play selected in turn".'], go: '#/sounds' },
+  { id: 'kcmaker', t: 'Keycaps › GMK (one maker\'s sets)', g: 'Keycaps', ctx: ['keycaps', 'kcgmk'], k: 'gmk keycaps maker menu dropdown sub menu only gmk filter collapse',
+    s: ['Menu → ▸ next to Keycaps shows "GMK": the Keycaps page with only GMK sets (search, sort and filters still work).', 'Keycaps itself always shows every set. The menu remembers if it is open on this device.'], go: '#/kcgmk' },
+  { id: 'setparts', t: 'Artisans and deskmats in a keycap set', g: 'Keycaps', ctx: ['keycaps', 'artisans', 'deskmats'], k: 'artisan deskmat link set belongs part of keycap set pair account total',
+    s: ['Keycap set page → "Artisans & deskmats": link one from the list, take a "Looks like part of this set" suggestion, or + New artisan / + New deskmat (saved into this set).', 'On an artisan or deskmat page, "Part of a keycap set" links or unlinks it. They still show on their own Artisans / Deskmats pages.', 'The card adds their paid amounts to the set\'s, shown apart, so nothing is counted twice in totals.'], go: '#/keycaps' },
   { id: 'swparts', t: 'Switch parts (films, springs, stems)', g: 'Switches', ctx: ['switchparts'], k: 'switch parts films springs stems housings collapse menu',
     s: ['Menu → ▸ next to Switches shows "Switch parts" (films, springs, stems, housings).', 'Switch pads are Foam (Accessories), lube is Lube & Tools.'], go: '#/switchparts' },
 
@@ -2062,8 +2108,8 @@ const HELP = [
     s: ['Sets linked to the GMK catalog (or with a kit marked not owned) show "2/4 kits · 50%".', 'GMK reference card: missing kits with "+ Wishlist"; Filter → Missing kits.'], go: '#/keycaps' },
   { id: 'gmk', t: 'GMK catalog and Matrix pages', g: 'Keycaps', ctx: ['keycaps', 'catalog'], k: 'gmk catalog matrix link fill from catalog reference group buy colors codes',
     s: ['Keycap set → GMK reference card: suggested catalog sets, or search; link it.', '"Fill from catalog" fills empty fields and the catalog colors.', 'A Matrix page link in the reader builds the set from the private catalog.'], go: '#/catalog' },
-  { id: 'colors', t: 'Colors: palette, color wheel, textures', g: 'Keycaps', ctx: ['keycaps'], k: 'colors colour palette wheel hex pick from picture texture gmk code ral pantone eyedropper',
-    s: ['Keycap set → Colors tab: + Add color, roles (Alpha, Modifier…), hex, GMK code, RAL, Pantone.', '"Pick from a picture" takes a color from any of its pictures, with an optional texture sample.', 'A GMK set fills the nearest GMK code; names are filled automatically until you type one.'], go: '#/keycaps' },
+  { id: 'colors', t: 'Colors: palette, color wheel, textures', g: 'Keycaps', ctx: ['keycaps'], k: 'colors colour palette wheel hex pick from picture texture gmk code ral classic design pantone eyedropper color name purple blue wrong',
+    s: ['Keycap set → Colors tab: + Add color, roles (Alpha, Modifier…), hex, GMK code, RAL, Pantone.', 'Type a GMK, RAL (Design like 240 50 25 or Classic like 9001) or Pantone code into an empty color and its hex fills in. A Pantone code with no known hex says so: use "Pick from a picture" or type the hex, and the app remembers it for that code.', '"Pick from a picture" takes a color from any of its pictures, with an optional texture sample.', 'A GMK set fills the nearest GMK code; names (now with more purples) are filled automatically until you type one.'], go: '#/keycaps' },
 
   // ---------- Other lists ----------
   { id: 'categories', t: 'Accessory categories and sub-categories', g: 'Other lists', ctx: ['accessories', 'pcbs', 'deskmats'], k: 'category sub-category foam case cstm alt weights plate cable deskmat pcb components daughterboard',
@@ -2147,7 +2193,7 @@ function route() {
   if (parts[1] !== lastTab.id) lastTab = { id: null, tab: 'overview' }; // the tab is only remembered while staying on one keyboard
   const sec = SEC[id] || SEC.dashboard;
   document.documentElement.style.setProperty('--accent', sec.color.startsWith('var(--text') ? 'var(--kb)' : sec.color);
-  renderNav(sec.id); renderMobileBar(sec.id); document.getElementById('mTitle').dataset.page = sec.title; setMenu(false); updateMobileTop();
+  renderNav(sec.id); renderMobileBar(sec.maker ? sec.parent : sec.id); document.getElementById('mTitle').dataset.page = sec.title; setMenu(false); updateMobileTop();
   document.title = sec.title + ' · Keyboard Collection';
   { const fab = document.getElementById('helpFab'); if (fab) { fab.hidden = sec.id === 'help'; fab.onclick = openHelp; } }
   const view = document.getElementById('view');
@@ -2160,7 +2206,7 @@ function route() {
   else if (sec.id === 'switches') renderSwitches();
   else if (sec.id === 'keycaps' && parts[1] === 'new') renderKeycapForm();
   else if (sec.id === 'keycaps' && parts[1]) { const ks = savedKeycaps.find(x => x.id === parts[1]); if (ks) renderKeycapForm(ks); else view.innerHTML = `<a class="crumb" href="#/keycaps">${I.back}Keycaps</a><div class="card empty" id="kcDetailFor"><h2>${db && !isFile && !kcLoaded ? 'Loading…' : 'Keycap set not found'}</h2><p>${db && !isFile && !kcLoaded ? 'Fetching from Firebase.' : 'It may have been deleted.'}</p></div>`; }
-  else if (sec.id === 'keycaps') renderKeycaps();
+  else if (sec.id === 'keycaps' || sec.id === 'kcgmk') { kcMaker = sec.maker || ''; renderKeycaps(); }
   else if (PART_TYPES[sec.id] && sec.built) {
     const t = sec.id;
     if (parts[1] === 'new') renderPartForm(t);
@@ -2283,7 +2329,7 @@ function dashboardHtml() {
   const total = mix.reduce((a, m) => a + m.n, 0) || 1;
   const comingTile = (title, icon, color, when) => `<div class="card tile" style="--c:${color}"><span class="ic">${icon}</span><div><div class="lbl">${title}</div><div class="big" style="color:var(--text-3)">—</div><div class="hint">Coming in ${when}</div></div></div>`;
   return `
-  <div class="pagehead"><div><h1>Dashboard</h1><p>Your keyboard collection at a glance.</p></div><div class="tools"><button class="btn" id="btnPickBuild" type="button" onclick="pickBuild()">🎲 Pick my build</button></div></div>
+  <div class="pagehead"><div><h1>Dashboard</h1><p>Your keyboard collection at a glance.</p></div><div class="tools"><button class="btn" id="btnPickBuild" type="button" onclick="pickBuild()">🎰 Pick my build</button></div></div>
   ${activeSamples().length ? '<div class="note">Includes the 5 sample keyboards from your v18 workbook (marked "Sample"). They go away when you import your Excel list (Import page).</div>' : ''}
   <div class="dash-grid">
     <a class="card tile" href="#/keyboards" style="--c:var(--kb)" title="Keyboards and switches"><span class="ic">${I.boxes}</span><div><div class="lbl">Total items</div><div class="big">${kbs.length + sws.length + kcs.length + pts.length}</div><div class="hint">${kbs.length} keyboards · ${sws.length} switch entries · ${kcs.length} keycap set${kcs.length === 1 ? '' : 's'}${PART_IDS.map(t => ` · ${savedParts[t].length} ${savedParts[t].length === 1 ? PART_TYPES[t].singular : t === 'pcbs' ? 'PCBs' : PART_TYPES[t].title.toLowerCase()}`).join('')}</div></div></a>
@@ -3466,9 +3512,11 @@ function sortKeycaps(list) {
   return [...list].sort({ newest: by(s => s._date, -1), oldest: by(s => s._date, 1), nameAZ: by(s => s.name, 1), nameZA: by(s => s.name, -1), brandAZ: by(s => s.manufacturer, 1), brandZA: by(s => s.manufacturer, -1),
     completion: (a, b) => pct(b) - pct(a) || a.name.localeCompare(b.name) }[kcSort]);
 }
+let kcMaker = '';   // v0.97.0: '' = all sets; 'GMK' on the Keycaps › GMK page
+const kcMakerOk = s => !kcMaker || new RegExp('\\b' + kcMaker + '\\b', 'i').test((s.manufacturer || '') + ' ' + (s.name || ''));
 function renderKeycaps() {
   document.getElementById('view').innerHTML = `
-    <div class="pagehead"><div><h1>Keycaps</h1><p id="kcCount"></p></div>
+    <div class="pagehead"><div><h1>${kcMaker ? `<a href="#/keycaps" style="color:inherit;text-decoration:none">Keycaps</a> › ${esc(kcMaker)}` : 'Keycaps'}</h1><p id="kcCount"></p></div>
       <div class="tools">
         <select class="select" id="kcSort" aria-label="Sort">${Object.entries(SORTS).concat([['completion', 'Most complete']]).map(([v, t]) => `<option value="${v}"${v === kcSort ? ' selected' : ''}>${t.replace('Brand', 'Maker')}</option>`).join('')}</select>${listFilterHtml('keycaps')}
         <select class="select" id="kcMainPic" aria-label="Main picture" title="Which kit's picture every set shows in Gallery view">${Object.entries(KC_PIC_MODES).map(([v, m]) => `<option value="${v}"${v === kcMainPic ? ' selected' : ''}>${m.label}</option>`).join('')}</select>
@@ -3491,12 +3539,13 @@ function renderKeycaps() {
 }
 function drawKeycapResults() {
   const box = document.getElementById('kcResults'); if (!box) return;
-  const all = savedKeycaps, found = twoPass(all, kcQuery.trim(), kcMain, kcExtra), list = lastLists.keycaps = finishList('keycaps', sortKeycaps(found.list.filter(kcChipOk)));
+  const all = savedKeycaps.filter(kcMakerOk), found = twoPass(all, kcQuery.trim(), kcMain, kcExtra), list = lastLists.keycaps = finishList('keycaps', sortKeycaps(found.list.filter(kcChipOk)));
   const kits = all.reduce((n, s) => n + kitsOf(s).length, 0);
   document.getElementById('kcCount').textContent = (kcQuery.trim() || kcChip || list.length !== all.length ? `${list.length} of ${all.length} sets` : `${all.length} set${all.length === 1 ? '' : 's'}`) + ` · ${kits} kit${kits === 1 ? '' : 's'}` + (db && !isFile && !kcLoaded ? ' · loading…' : '');
+  if (!all.length && kcMaker) { box.innerHTML = `<div class="card empty"><div class="big">${I.keycaps}</div><h2>No ${esc(kcMaker)} sets yet</h2><p><a href="#/keycaps">See all keycaps</a></p></div>`; return; }
   if (!all.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.keycaps}</div><h2>No keycap sets yet</h2><p>Add a set with its kits, or import your Excel Keycaps tab on the Import page.</p><p style="margin-top:14px"><a class="btn primary" href="#/keycaps/new">${I.plus}Add keycap set</a></p></div>`; return; }
   if (!list.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.search}</div><h2>No matches</h2><p>${kcQuery.trim() ? `Nothing matches "${esc(kcQuery)}".` : 'No sets with this filter.'}</p></div>`; return; }
-  const sub = s => [s.manufacturer, `${kitsOf(s).length} kit${kitsOf(s).length === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
+  const sub = s => { const lp = setsLinkedTo(s.id), na = lp.filter(p => p.t === 'artisans').length, nd = lp.length - na; return [s.manufacturer, `${kitsOf(s).length} kit${kitsOf(s).length === 1 ? '' : 's'}`, na ? `${na} artisan${na === 1 ? '' : 's'}` : '', nd ? `${nd} deskmat${nd === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · '); };
   if (kcView === 'gallery') {
     box.innerHTML = `<div class="gallery">${list.map(s => `
       <a class="kcard" href="#/keycaps/${esc(s.id)}">
@@ -3615,6 +3664,7 @@ function renderKeycapForm(s = null) {
         ${s ? valueCardHtml('keycaps', s) + photoCardHtml(s, 'keycaps') : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save the set first, then drop photos on its page.</p></div>'}
         ${s ? mergeCardHtml(s) : ''}
         ${s ? kitInstallCardHtml(s) : '<div class="card side-card"><h3>Installed on</h3><p class="sub" style="margin:0">Save the set first, then install its kits on your keyboards.</p></div>'}
+        ${s ? setPartsCardHtml(s) : ''}
         <div class="card side-card stack savebar">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${s ? 'Save changes' : 'Save keycap set'}</button>
           ${s ? '<button class="btn" id="btnCancel">Discard changes</button>' : '<a class="btn" href="#/keycaps">Cancel</a>'}
@@ -3642,7 +3692,9 @@ function renderKeycapForm(s = null) {
     if (pc && pc.dataset.source !== 'manual') { pc.dataset.source = 'manual'; const ch = pc.querySelector('.pfoot .chip'); if (ch) ch.textContent = 'Manual'; }   // your edit wins over the catalog
     if (pc) {
       if (e.target.classList.contains('c-gmk') && !pc.querySelector('.c-hex').value.trim()) { const h = gmkHex({ sys: 'GMK', code: e.target.value.trim() }); if (h) { pc.querySelector('.c-hex').value = h; } }   // GMK standard code → hex
-      if (e.target.classList.contains('c-ral') && !pc.querySelector('.c-hex').value.trim()) { const h = ralDesignHex(e.target.value.trim()); if (h) pc.querySelector('.c-hex').value = h; }   // RAL Design code → hex
+      if (e.target.classList.contains('c-ral') && !pc.querySelector('.c-hex').value.trim()) { const h = ralHex(e.target.value.trim()); if (h) pc.querySelector('.c-hex').value = h; }   // RAL Design or Classic code → hex
+      if (e.target.classList.contains('c-pantone') && !pc.querySelector('.c-hex').value.trim()) { const h = pantoneHexOf(e.target.value.trim()); if (h) pc.querySelector('.c-hex').value = h; }   // v0.97.0: Pantone code → hex
+      pantoneHint(pc);
       autoColorFields(pc, e.target.classList.contains('c-name') ? 'name' : e.target.classList.contains('c-gmk') ? 'gmk' : '');
       const h = normHex(pc.querySelector('.c-hex').value), sw = pc.querySelector('.pswatch'), tx = pc.dataset.tex;
       sw.style.background = swBg({ texture: tx, hex: h }) || h || 'transparent'; sw.innerHTML = (h || tx ? '' : '<span>' + (pc.querySelector('.c-hex').value.trim() ? 'Not a valid hex' : 'Enter a hex') + '</span>') + (tx ? '<button type="button" class="c-notex" title="Show the flat color instead">Remove texture</button>' : '') + '<button type="button" class="c-frompic" title="Tap the color on one of this item\'s pictures">Pick from a picture</button>';
@@ -3694,7 +3746,7 @@ function renderKeycapForm(s = null) {
     Object.entries(st.fields).forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.value = val; });
     document.getElementById('f_isFavorite').checked = st.fav;
     if (['designer', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText'].some(n => s[n])) document.getElementById('moreDetails').open = true;
-    setEditState(false); wirePhotos(s, 'keycaps'); wireValueCard('keycaps', s); wireKitInstall(s); wireMergeCard(s);
+    setEditState(false); wirePhotos(s, 'keycaps'); wireValueCard('keycaps', s); wireKitInstall(s); wireMergeCard(s); wireSetParts(s);
     document.getElementById('btnCancel').onclick = () => { formDirty = false; renderKeycapForm(savedKeycaps.find(x => x.id === s.id) || s); toast('Changes discarded'); };
     document.getElementById('btnDelete').onclick = async () => {
       if (!await askConfirm(`Delete "${s.name}" with all its kits and photos? You can undo this for 10 seconds.`)) return;
@@ -3767,6 +3819,7 @@ async function saveKeycapSet() {
   if (problems.length || kitBad || colorBad) return;
   data.kits = kits;
   if (palette.length) data.palette = palette;
+  learnPantone(palette.filter(c => c.pantone && c.hex && !c.texture).map(c => [c.pantone, c.hex]));   // v0.97.0: remember Pantone codes you gave a hex
   snapSpelling(data); btn.disabled = true; btn.textContent = 'Saving…';
   const now = firebase.firestore.FieldValue.serverTimestamp();
   if (editing) {
@@ -4013,7 +4066,7 @@ function colorCardHtml(c) {
       <div class="pfields">
         <label class="wide">Color name<input class="input c-name" placeholder="Filled in from the color, or type your own" value="${val(c.name || (c.nameAuto !== false && normHex(c.hex) ? colorNameOf(c.hex) : ''))}"></label>
         <label>Hex (approximate)<span class="hexrow"><button type="button" class="c-pick swbtn" style="background:${hex || 'transparent'}" aria-label="Open the color wheel" title="Color wheel"></button><input class="input c-hex mono" placeholder="#92ACA0" value="${val(c.hex)}"></span></label>
-        <label>Pantone<input class="input c-pantone" placeholder="e.g. 5575 C" value="${val(c.pantone)}"></label>
+        <label>Pantone<input class="input c-pantone" placeholder="e.g. 5575 C" value="${val(c.pantone)}"><span class="sub c-panhint" style="margin:2px 0 0;font-size:11.5px">${c.pantone && !hex ? pantoneHintText(c.pantone) : ''}</span></label>
         <label>RAL<input class="input c-ral" placeholder="e.g. 7044" value="${val(c.ral)}"></label>
         <label>GMK code<input class="input c-gmk" placeholder="e.g. WS1" value="${val(c.gmk)}"><span class="sub c-gmkhint" style="margin:2px 0 0;font-size:11.5px"></span></label>
       </div>
@@ -4022,6 +4075,8 @@ function colorCardHtml(c) {
       <div class="pfoot"><span class="chip">${c.source === 'catalog' ? 'Catalog' : c.source === 'excel' ? 'Excel' : 'Manual'}</span><button type="button" class="btn danger c-del">Remove color</button></div>
     </div></div>`;
 }
+function pantoneHintText(code) { return pantoneHexOf(code) ? '' : `No hex known for Pantone ${esc(code)} yet. Use Pick from a picture or type the hex; the app remembers it for this code.`; }
+function pantoneHint(pc) { const t = pc.querySelector('.c-panhint'); if (!t) return; const code = pc.querySelector('.c-pantone').value.trim(); t.innerHTML = code && !normHex(pc.querySelector('.c-hex').value) ? pantoneHintText(code) : ''; }
 function readColorCard(el) {
   const q = c => el.querySelector(c).value.trim();
   return { id: el.dataset.color, nameAuto: !!el.dataset.nameauto, name: q('.c-name'), hex: q('.c-hex'), pantone: q('.c-pantone'), ral: q('.c-ral'), gmk: q('.c-gmk'), texture: el.dataset.tex || '', roles: [...el.querySelectorAll('.c-role:checked')].map(x => x.value) };
@@ -4108,8 +4163,8 @@ const PART_TYPES = {
       ['material', 'Surface', 'e.g. Cloth', 'text', ['Cloth', 'Cordura', 'Felt', 'Leather', 'PU leather', 'Hard (plastic / glass)'], 'more'], ['edges', 'Edges', 'e.g. Stitched', 'text', ['Stitched', 'Unstitched', 'Laser-cut'], 'more'],
       ['thickness', 'Thickness', 'e.g. 4 mm', 'text', ['3 mm', '4 mm', '5 mm'], 'more'], ['location', 'Location', 'e.g. On the desk', 'text', null, 'more']],
     checks: [], textareas: [['notes', 'Notes', 'Anything else worth remembering']],
-    sub: x => [x.designer || x.manufacturer, x.size].filter(Boolean).join(' · '),
-    cols: [['Maker', x => x.manufacturer], ['Size', x => x.size], ['Colorway', x => x.colorway]] },
+    sub: x => [x.designer || x.manufacturer, x.size, setNameOf(x)].filter(Boolean).join(' · '),
+    cols: [['Maker', x => x.manufacturer], ['Size', x => x.size], ['Keycap set', x => setNameOf(x)]] },
   switchparts: { title: 'Switch parts', singular: 'switch part', addLabel: 'Add switch part', icon: 'switchparts', makers: ['TX', 'Deskeys', 'Durock', 'Sprit', 'TX', 'KNC Keys', 'Gateron', 'Kailh', 'JWK', 'Haimu'],
     fields: [['manufacturer', 'Maker', 'e.g. TX', 'maker'], ['name', 'Name', 'e.g. TX switch films 0.125 mm', 'text', null, 'req'], ['partType', 'Type', 'Choose…', 'select', SWPART_TYPES],
       ['spec', 'Size / weight', 'e.g. 0.125 mm, 63.5 g, 17.5 mm', 'text'], ['quantity', 'How many', 'e.g. 120', 'text'],
@@ -4134,8 +4189,8 @@ const PART_TYPES = {
       ['material', 'Material', 'e.g. Resin', 'text', ['Resin', 'Metal', 'Brass', 'Aluminum', 'Ceramic', 'Wood', 'Clay', 'Glass'], 'more'], ['stem', 'Stem', 'e.g. MX', 'text', ['MX', 'Alps', 'Topre', 'Choc'], 'more'],
       ['sculpt', 'Sculpt', 'e.g. Keyforge Dragon', 'text', null, 'more'], ['location', 'Location', 'e.g. Display case', 'text', null, 'more']],
     checks: [], textareas: [['notes', 'Notes', 'Anything else worth remembering']],
-    sub: x => [x.manufacturer, x.colorway].filter(Boolean).join(' · '),
-    cols: [['Maker', x => x.manufacturer], ['Series', x => x.series], ['Colorway', x => x.colorway]] },
+    sub: x => [x.manufacturer, x.colorway, setNameOf(x)].filter(Boolean).join(' · '),
+    cols: [['Maker', x => x.manufacturer], ['Series', x => x.series], ['Keycap set', x => setNameOf(x)]] },
   accessories: { title: 'Accessories', singular: 'accessory', addLabel: 'Add accessory', icon: 'accessories', makers: ['Amazon Basics', 'Glorious', 'Durock', 'TX', 'Krytox', 'YMDK', 'KBDfans', 'Drop', 'Keychron', 'Kemove', 'Gateron', 'WS'],
     fields: [['manufacturer', 'Manufacturer', 'e.g. Glorious', 'maker'], ['name', 'Name', 'e.g. Coiled cable', 'text', null, 'req'],
       ['category', 'Category', 'e.g. Stabilizers', 'text', ['Cable', 'Case', 'Plate', 'Weights', 'Foam', 'Keyboard Parts', 'Stabilizers', 'Lube & Tools', 'Modding Supplies', 'Storage & Display', 'Switch Testers', 'Tools & Pullers', 'Wrist Rests', 'Other']],
@@ -4156,10 +4211,11 @@ function startPartListeners() {
     partsLoaded[t] = true;
     const c = document.getElementById('kbPartsCard'), k = editing && savedKeyboards.find(x => x.id === editing.id);
     if (c && k && location.hash.startsWith('#/keyboards/')) { c.outerHTML = partsOnKeyboardCardHtml(k); wirePartsOnKeyboard(k); return; }
+    if (SET_LINK_TYPES.includes(t) && location.hash.startsWith('#/keycaps/') && redrawSetPartsCard()) return;   // v0.97.0
     if (location.hash.startsWith('#/' + t + '/') && document.getElementById('ptDetailFor')) {
       const cur = savedParts[t].find(x => x.id === editing?.id), card = document.getElementById('ptInstCard');
       if (formDirty && cur && swapValueCardIfOnly(t, cur)) {}
-      else if (formDirty && cur && card) { card.outerHTML = partInstallCardHtml(t, cur); wirePartInstall(t, cur); }
+      else if (formDirty && cur && card) { card.outerHTML = partInstallCardHtml(t, cur); wirePartInstall(t, cur); const sc = document.getElementById('ptSetCard'); if (sc) { sc.outerHTML = partSetCardHtml(t, cur); wirePartSet(t, cur); } }
       else if (formDirty) toast('This item changed on another device. Save or discard to see it.'); else route();
       return;
     }
@@ -4252,6 +4308,67 @@ function wirePartsOnKeyboard(k) {
 async function removeKeyboardFromParts(kbId) {
   for (const { t, x } of partsOn(kbId)) await withTimeout(partCol(t).doc(x.id).update({ installedOn: firebase.firestore.FieldValue.delete() }));
 }
+
+/* ===================== v0.97.0: artisans and deskmats that belong to a keycap set =====================
+   The artisan or deskmat keeps keycapSetId. Both lists stay as they are; the set's page shows them in "Artisans & deskmats",
+   and its paid total can be seen with them added (shown apart, so nothing is counted twice anywhere else). */
+const SET_LINK_TYPES = ['artisans', 'deskmats'];
+function setNameOf(x) { const st = x && x.keycapSetId && savedKeycaps.find(y => y.id === x.keycapSetId); return st ? st.name : ''; }
+let partLinkPrefill = null;   // { t, setId } from "+ Add artisan / deskmat" on a set's page; used when that new entry is saved
+function setMakerWord(n) { const m = String(n || '').toLowerCase().match(/^\s*(gmk|cyl|kat|kam|sa|dcx|mt3|epbt|pbtfans|jtk|keyreative|domikey|osa|nicepbt|xda|dsa|cherry)\b/); return m ? m[1] : ''; }
+function setCoreName(n) { return String(n || '').toLowerCase().replace(/\s\d\s*$/, '').replace(/^\s*(gmk|cyl|gmk cyl|kat|kam|sa|dcx|mt3|epbt|pbtfans|jtk|keyreative|domikey|osa|nicepbt|xda|dsa|cherry)\s+/, '').replace(/\b(r\d+|round \d+|keycaps?|keycap set|set)\b/g, '').replace(/[^a-z0-9]/g, ''); }
+function setsLinkedTo(setId) { return SET_LINK_TYPES.flatMap(t => savedParts[t].filter(x => x.keycapSetId === setId).map(x => ({ t, x }))); }
+function guessSetFor(x) {   // the keycap set whose name is in this artisan / deskmat's name, series or colorway; null if none or several equally good
+  const txt = [x.name, x.series, x.colorway].filter(Boolean).join(' ').toLowerCase().replace(/[^a-z0-9]/g, ''); if (!txt) return null;
+  const hits = savedKeycaps.map(st => ({ st, c: setCoreName(st.name) })).filter(h => h.c.length >= 4 && txt.includes(h.c)).sort((a, b) => b.c.length - a.c.length);
+  if (!hits.length) return null; let best = hits.filter(h => h.c === hits[0].c);
+  if (best.length > 1) { const words = ' ' + [x.name, x.series, x.colorway, x.manufacturer].filter(Boolean).join(' ').toLowerCase() + ' '; const mk = best.filter(h => { const w = setMakerWord(h.st.name); return w && words.includes(' ' + w + ' '); }); if (mk.length) best = mk; }
+  if (best.length > 1) { const own = best.filter(h => kitsOf(h.st).some(k => !k.notOwned)); if (own.length === 1) best = own; }   // two rounds of one set: no guess unless only one is owned
+  return best.length === 1 ? best[0].st : null;
+}
+function kcSetOptions(sel = '') { return savedKeycaps.slice().sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' })).map(st => `<option value="${esc(st.id)}"${st.id === sel ? ' selected' : ''}>${esc(st.name)}</option>`).join(''); }
+function partSetCardHtml(t, x) {   // on an artisan / deskmat page
+  const st = x.keycapSetId && savedKeycaps.find(y => y.id === x.keycapSetId), g = !x.keycapSetId ? guessSetFor(x) : null;
+  return `<div class="card side-card" id="ptSetCard"><h3>Part of a keycap set</h3>
+    ${savedKeycaps.length ? `<select class="select" id="ptSetSel" aria-label="Keycap set"><option value="">Not part of a set</option>${kcSetOptions(x.keycapSetId || '')}</select>` : '<p class="sub" style="margin:0">Add keycap sets first.</p>'}
+    ${st ? `<p class="sub" style="margin:8px 0 0"><a class="lnk" href="#/keycaps/${esc(st.id)}">Open ${esc(st.name)}</a></p>` : x.keycapSetId ? '<p class="sub kih" style="margin:8px 0 0">That keycap set was deleted.</p>' : ''}
+    ${g ? `<p class="sub kih" style="margin:8px 0 0">Looks like ${esc(g.name)}. <button class="btn" id="ptSetGuess" data-set="${esc(g.id)}">Link it</button></p>` : ''}</div>`;
+}
+async function setPartSet(t, id, setId) {
+  await withTimeout(partCol(t).doc(id).update({ keycapSetId: setId || firebase.firestore.FieldValue.delete(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }));
+}
+function wirePartSet(t, x) {
+  const go = async setId => { try { await setPartSet(t, x.id, setId); toast(setId ? 'Linked to the keycap set' : 'Removed from the keycap set'); } catch (e) { toast('Could not update: ' + explain(e)); } };
+  const sel = document.getElementById('ptSetSel'); if (sel) sel.onchange = () => go(sel.value);
+  const g = document.getElementById('ptSetGuess'); if (g) g.onclick = () => go(g.dataset.set);
+}
+function setPartsCardHtml(s) {   // on a keycap set's page
+  const r2 = v => Math.round(v * 100) / 100, on = setsLinkedTo(s.id), paid = on.reduce((a, { x }) => a + r2(kbTotal(x)), 0), own = r2(setTotal(s));
+  const sugg = SET_LINK_TYPES.flatMap(t => savedParts[t].filter(x => !x.keycapSetId && guessSetFor(x) === s).map(x => ({ t, x })));
+  const free = SET_LINK_TYPES.flatMap(t => savedParts[t].filter(x => !x.keycapSetId).map(x => ({ t, x })));
+  const one = t => PART_TYPES[t].singular;
+  return `<div class="card side-card" id="kcPartsCard"><h3>Artisans & deskmats</h3>
+    ${on.length ? `<div class="alist">${on.map(({ t, x }) => `<div class="arow" style="grid-template-columns:auto 1fr auto auto;gap:8px"><span class="sth">${x.coverThumb ? `<img src="${x.coverThumb}" alt="">` : I[t]}</span><a class="lnk" href="#/${t}/${esc(x.id)}">${esc(x.name)}</a><span class="chip">${esc(one(t))}</span><button class="btn" data-kpun="${t}|${esc(x.id)}" aria-label="Remove from this set">✕</button></div>`).join('')}</div>
+      <p class="sub" style="margin:8px 0 0">Set ${money(own)} + these ${money(paid)} = <b>${money(own + paid)}</b> paid.</p>`
+      : '<p class="sub" style="margin:0 0 8px">None linked yet.</p>'}
+    ${sugg.length ? `<div class="note" style="margin:8px 0 0">Looks like part of this set: ${sugg.map(({ t, x }) => `<button class="btn" data-kplink="${t}|${esc(x.id)}" style="margin:4px 4px 0 0">+ ${esc(x.name)}</button>`).join('')}</div>` : ''}
+    ${free.length ? `<div class="aadd" style="grid-template-columns:1fr auto;margin-top:8px"><select class="select" id="kcPtPick"><option value="">Link an artisan or deskmat…</option>${SET_LINK_TYPES.map(t => `<optgroup label="${PART_TYPES[t].title}">${free.filter(f => f.t === t).sort((a, b) => a.x.name.localeCompare(b.x.name)).map(f => `<option value="${t}|${esc(f.x.id)}">${esc(f.x.name)}</option>`).join('')}</optgroup>`).join('')}</select><button class="btn primary" id="kcPtAdd">Link</button></div>` : ''}
+    <div class="btnrow" style="margin-top:8px"><a class="btn" href="#/artisans/new" data-kpnew="artisans">+ New artisan</a><a class="btn" href="#/deskmats/new" data-kpnew="deskmats">+ New deskmat</a></div></div>`;
+}
+function wireSetParts(s) {
+  const card = document.getElementById('kcPartsCard'); if (!card) return;
+  const go = async (v, setId) => { const [t, id] = v.split('|'); try { await setPartSet(t, id, setId); toast(setId ? 'Linked to this set' : 'Removed from this set'); } catch (e) { toast('Could not update: ' + explain(e)); } };
+  card.onclick = e => {
+    const rm = e.target.closest('[data-kpun]'); if (rm) { go(rm.dataset.kpun, ''); return; }
+    const lk = e.target.closest('[data-kplink]'); if (lk) { go(lk.dataset.kplink, s.id); return; }
+    if (e.target.id === 'kcPtAdd') { const v = document.getElementById('kcPtPick').value; if (v) go(v, s.id); return; }
+    const nw = e.target.closest('[data-kpnew]'); if (nw) partLinkPrefill = { t: nw.dataset.kpnew, setId: s.id };
+  };
+}
+function redrawSetPartsCard() {   // parts changed while a set's page is open
+  const c = document.getElementById('kcPartsCard'), st = editing && savedKeycaps.find(x => x.id === editing.id); if (!c || !st) return false;
+  c.outerHTML = setPartsCardHtml(st); wireSetParts(st); return true;
+}
 /* ---------- add / edit ---------- */
 function partFieldHtml(t, f) {
   const [n, label, ph, kind, opts, flag, hint] = f;
@@ -4290,7 +4407,7 @@ ${purchasePanelHtml(all)}
       </div>
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
-        ${x ? valueCardHtml(t, x) + refCardHtml(t, x) + photoCardHtml(x, t) + partInstallCardHtml(t, x) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save first, then drop photos on its page.</p></div>'}
+        ${x ? valueCardHtml(t, x) + refCardHtml(t, x) + photoCardHtml(x, t) + (SET_LINK_TYPES.includes(t) ? partSetCardHtml(t, x) : '') + partInstallCardHtml(t, x) : '<div class="card side-card"><h3>Photos</h3><p class="sub" style="margin:0">Save first, then drop photos on its page.</p></div>'}
         <div class="card side-card stack savebar">
           <button class="btn primary" id="btnSave" ${ready ? '' : 'disabled'}>${x ? 'Save changes' : 'Save ' + P.singular}</button>
           ${x ? '<button class="btn" id="btnCancel">Discard changes</button>' : `<a class="btn" href="#/${t}">Cancel</a>`}
@@ -4323,7 +4440,7 @@ ${purchasePanelHtml(all)}
     applyState(st);
     P.checks.forEach(([n]) => { document.getElementById('f_' + n).checked = !!x[n]; });
     if (more.some(f => x[f[0]]) || P.checks.some(([n]) => x[n])) document.getElementById('moreDetails').open = true;
-    setEditState(false); wirePhotos(x, t); wireValueCard(t, x); wireRefCard(t, x); wirePartInstall(t, x);
+    setEditState(false); wirePhotos(x, t); wireValueCard(t, x); wireRefCard(t, x); wirePartInstall(t, x); if (SET_LINK_TYPES.includes(t)) wirePartSet(t, x);
     document.getElementById('btnCancel').onclick = () => { formDirty = false; renderPartForm(t, savedParts[t].find(y => y.id === x.id) || x); toast('Changes discarded'); };
     document.getElementById('btnDelete').onclick = async () => {
       if (!await askConfirm(`Delete "${x.name}" and its photos? You can undo this for 10 seconds.`)) return;
@@ -4331,7 +4448,8 @@ ${purchasePanelHtml(all)}
       catch (e) { toast('Delete failed: ' + explain(e)); }
     };
     restoreTab(view, x, t);
-  } else { if (partPrefill && partPrefill.t === t) { Object.entries(partPrefill).forEach(([n, v]) => { const el = n !== 't' && document.getElementById('f_' + n); if (el) el.value = v; }); } partPrefill = null; document.getElementById('f_name').focus(); }
+  } else { if (partLinkPrefill && partLinkPrefill.t === t) { const st = savedKeycaps.find(y => y.id === partLinkPrefill.setId); if (st) document.querySelector('.pagehead p').textContent = `It will be linked to ${st.name}. Only the name is required.`; else partLinkPrefill = null; } else partLinkPrefill = null;
+    if (partPrefill && partPrefill.t === t) { Object.entries(partPrefill).forEach(([n, v]) => { const el = n !== 't' && document.getElementById('f_' + n); if (el) el.value = v; }); } partPrefill = null; document.getElementById('f_name').focus(); }
   updateCalc();
 }
 function partTextFields(t) { return PART_TYPES[t].fields.map(f => f[0]).concat(PART_TYPES[t].textareas.map(f => f[0]), ['datePurchased', 'dateReceived', 'purchasedFrom', 'receipt', 'pictureLink']); }
@@ -4372,8 +4490,9 @@ async function savePart(t) {
     return;
   }
   try {
+    let linked = null; if (SET_LINK_TYPES.includes(t)) { linked = partLinkPrefill && partLinkPrefill.t === t ? savedKeycaps.find(y => y.id === partLinkPrefill.setId) : guessSetFor(data); if (linked) data.keycapSetId = linked.id; } partLinkPrefill = null;   // v0.97.0
     const ref = await withTimeout(partCol(t).add(Object.assign(data, { createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app' })));
-    toast(`Saved "${data.name}"`); location.hash = `#/${t}/` + ref.id;
+    toast(`Saved "${data.name}"` + (linked ? ` in ${linked.name}` : '')); location.hash = `#/${t}/` + ref.id;
   } catch (e) { errBox.style.display = 'block'; errBox.textContent = 'Could not save: ' + explain(e) + ' Your entries are still here; try again.'; btn.disabled = false; btn.textContent = 'Save ' + P.singular; }
 }
 
@@ -4773,14 +4892,28 @@ const COLOR_NAMES = [['Black', '#111111'], ['Charcoal', '#333538'], ['Dark Gray'
   ['Navy', '#1b2a4a'], ['Dark Blue', '#173a73'], ['Royal Blue', '#2a4fb5'], ['Blue', '#1f6fc2'], ['Cobalt', '#0047ab'], ['Sky Blue', '#7cbfe6'], ['Light Blue', '#a8cbe8'], ['Baby Blue', '#c7def2'], ['Powder Blue', '#b0c4d6'], ['Steel Blue', '#4f6f8f'], ['Slate Blue', '#5a6e8c'], ['Denim', '#3d5a80'], ['Prussian Blue', '#1d3b57'],
   ['Teal', '#00757a'], ['Petrol Blue', '#005f78'], ['Dark Teal', '#0b4f55'], ['Turquoise', '#2bb5b0'], ['Cyan', '#1bb3d1'], ['Aqua', '#7fd8d4'], ['Mint', '#a8e0c5'], ['Seafoam', '#8fcfb0'], ['Sage', '#9cae8c'], ['Olive', '#6b6b2c'], ['Army Green', '#4b5320'], ['Moss', '#64703b'], ['Forest Green', '#1f5a32'],
   ['Dark Green', '#183f2a'], ['British Racing Green', '#1f3d2b'], ['Green', '#2e8b47'], ['Kelly Green', '#3c9b3c'], ['Lime', '#8cc63f'], ['Light Green', '#a9d18e'], ['Pistachio', '#b9d29a'], ['Chartreuse', '#b8d433'],
-  ['Yellow', '#f1cf1c'], ['Lemon', '#f5e663'], ['Pale Yellow', '#f4ea9e'], ['Mustard', '#d4a514'], ['Amber', '#f0a30a'], ['Orange', '#ee6b0f'], ['Burnt Orange', '#c4561c'], ['Tangerine', '#f58a2b'], ['Apricot', '#f6b27a']];
+  ['Yellow', '#f1cf1c'], ['Lemon', '#f5e663'], ['Pale Yellow', '#f4ea9e'], ['Mustard', '#d4a514'], ['Amber', '#f0a30a'], ['Orange', '#ee6b0f'], ['Burnt Orange', '#c4561c'], ['Tangerine', '#f58a2b'], ['Apricot', '#f6b27a'],
+  ['Vermilion', '#ef4a1f'], ['Slate Purple', '#6a5f96'], ['Dusty Purple', '#82709e'], ['Dusty Lavender', '#a395bd'], ['Blue Violet', '#4f43a0'], ['Indigo', '#3b2d78'], ['Periwinkle', '#8e94d6'], ['Iris', '#5b50c8'], ['Grape', '#5a2a86'], ['Royal Purple', '#5f259f'], ['Amethyst', '#9966cc'], ['Orchid', '#b56bc4'], ['Eggplant', '#3d1f3d'], ['Midnight Blue', '#0c1e30']];   // v0.97.0: more purples, so a muted purple isn't called a blue
 function hexLab(h) { h = normHex(h); if (!h) return null; const lin = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
   const r = lin(parseInt(h.slice(1, 3), 16)), g = lin(parseInt(h.slice(3, 5), 16)), b = lin(parseInt(h.slice(5, 7), 16));
   const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b), m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b), s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
   return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s, 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s]; }   // OKLab
 const labDist = (a, b) => Math.hypot(a[0] - b[0], (a[1] - b[1]) * 1.6, (a[2] - b[2]) * 1.6) * 100;   // hue and colorfulness count a bit more than lightness, so a dark teal stays a teal
+function nameDist(a, b) {   // v0.97.0: OKLCh, with hue weighted most, so purple vs blue decides the name before small lightness differences do
+  const ca = Math.hypot(a[1], a[2]), cb = Math.hypot(b[1], b[2]), dh = Math.atan2(a[2], a[1]) - Math.atan2(b[2], b[1]);
+  return Math.hypot(a[0] - b[0], (ca - cb) * 1.6, 2 * Math.sqrt(ca * cb) * Math.sin(dh / 2) * 2.0) * 100; }
 let colorNameLab = null;
-function colorNameOf(hex) { const L = hexLab(hex); if (!L) return ''; colorNameLab = colorNameLab || COLOR_NAMES.map(([n, h]) => [n, hexLab(h)]); let best = null, bd = 1e9; colorNameLab.forEach(([n, l]) => { const d = labDist(L, l); if (d < bd) { bd = d; best = n; } }); return best; }
+function colorNameOf(hex) { const L = hexLab(hex); if (!L) return ''; colorNameLab = colorNameLab || COLOR_NAMES.map(([n, h]) => [n, hexLab(h)]); let best = null, bd = 1e9; colorNameLab.forEach(([n, l]) => { const d = nameDist(L, l); if (d < bd) { bd = d; best = n; } }); return best; }
+/* v0.97.0: Pantone code → hex. The table lives only in your private Firebase settings (meta/settings.pantoneHex), never in this file.
+   It is filled from the catalog's Pantone colors and learns each Pantone code you give a hex to. */
+let pantoneMap = (() => { try { return JSON.parse(localStorage.getItem('kbc_pantone_hex') || '{}') || {}; } catch (e) { return {}; } })();
+function pantoneKey(v) { return String(v || '').toUpperCase().split(/\/|\bOR\b/)[0].replace(/PANTONE|PMS/g, '').replace(/^\s*PQ[-\s]*/, '').replace(/[\s-]+/g, ''); }
+function pantoneHexOf(v) { const k = pantoneKey(v); if (!k) return null; return normHex(pantoneMap[k]) || normHex(pantoneMap[k + 'C']) || normHex(pantoneMap[k.replace(/U$/, 'C')]) || null; }
+function setPantoneMap(m) { if (!m || typeof m !== 'object') return; pantoneMap = Object.assign({}, m); try { localStorage.setItem('kbc_pantone_hex', JSON.stringify(pantoneMap)); } catch (e) {} }
+function learnPantone(pairs) {   // [[code, hex]]: remembers codes that have no hex yet; never overwrites one
+  const add = {}; pairs.forEach(([c, h]) => { const k = pantoneKey(c), hx = normHex(h); if (k && hx && !pantoneHexOf(c) && !add[k]) add[k] = hx; });
+  if (!Object.keys(add).length) return; setPantoneMap(Object.assign({}, pantoneMap, add));
+  if (db && !isFile) settingsRef().set({ pantoneHex: add }, { merge: true }).catch(() => {}); }
 function gmkNearest(hex) {   // closest GMK standard color (from the private catalog's standard color list); null when that list isn't loaded
   const L = hexLab(hex), std = gmkMeta && gmkMeta.standardColors; if (!L || !std) return null; let best = null;
   Object.entries(std).forEach(([code, h]) => { const l = hexLab(h); if (!l) return; const d = labDist(L, l); if (!best || d < best.d) best = { code, hex: normHex(h), d }; }); return best; }
@@ -4789,15 +4922,17 @@ function isGmkSetForm() { const v = n => ((document.querySelector(`#view [name="
 function autoColorFields(pc, changed) {   // fills the color name and (GMK sets) the closest GMK code; only fields that are empty or were filled this way before
   const h = normHex(pc.querySelector('.c-hex').value), nm = pc.querySelector('.c-name'), gk = pc.querySelector('.c-gmk'), hint = pc.querySelector('.c-gmkhint');
   if (changed === 'name') delete pc.dataset.nameauto; if (changed === 'gmk') { delete pc.dataset.gmkauto; if (hint) hint.textContent = ''; }
-  if (h && (!nm.value.trim() || pc.dataset.nameauto)) { const n = colorNameOf(h); if (n && nm.value !== n) nm.value = n; pc.dataset.nameauto = '1'; }
+  if (h && (!nm.value.trim() || pc.dataset.nameauto || /^(pantone|ral)\s/i.test(nm.value.trim()))) {   // a name that is only a code (catalog fill without a hex) also gets replaced
+    const n = colorNameOf(h); if (n && nm.value !== n) nm.value = n; pc.dataset.nameauto = '1'; }
   if (h && changed !== 'gmk' && isGmkSetForm() && (!gk.value.trim() || pc.dataset.gmkauto)) { const g = gmkNearest(h);
     if (g) { gk.value = g.code; pc.dataset.gmkauto = '1'; if (hint) hint.textContent = `Closest GMK standard color: ${g.code} ${g.hex} (${gmkMatchWord(g.d)}). Type over it if the set uses another code.`; } }
   else if (hint && !pc.dataset.gmkauto) hint.textContent = '';
 }
-function gmkHex(c) {   // c = { sys: GMK | RAL | Pantone | Hex, code, hex? }; RAL and Pantone have no hex in this data
+function gmkHex(c) {   // c = { sys: GMK | RAL | Pantone | Hex, code, hex? }; RAL from RAL Design / Classic, Pantone from your private table
   if (!c) return null; if (c.hex) return c.hex;
   const code = String(c.code).split(/\s+or\s+/i)[0].trim();
-  if (c.sys === 'RAL') return ralDesignHex(code);
+  if (c.sys === 'RAL') return ralHex(code);
+  if (c.sys === 'Pantone') return pantoneHexOf(code);
   return c.sys === 'GMK' && gmkMeta && gmkMeta.standardColors ? gmkMeta.standardColors[code.toUpperCase()] || null : null;
 }
 function gmkCodeLabel(c, withAlt = false) {
@@ -4888,8 +5023,11 @@ function gmkMatchScore(name, s) {   // 3 exact, 2 exact ignoring round/R-number 
 
 /* ===================== Color tools: RAL Design math + built-in color wheel =====================
    RAL Design codes ("280 20 15") are CIE LCh coordinates: hue 280°, lightness 20, chroma 15. The app converts
-   them to an approximate screen hex (D65 sRGB). RAL Classic (4 digits) and Pantone have no public formula, so
-   for those use the color wheel, the eyedropper or "pick from photo". All screen colors are approximate. */
+   them to an approximate screen hex (D65 sRGB). RAL Classic (4 digits) has no formula: v0.98.0 uses the published
+   screen values (ral-colors package, MIT license, 215 colors). Pantone comes from your private table. All screen colors are approximate. */
+const RAL_CLASSIC = {1000:'CDBA88',1001:'D0B084',1002:'D2AA6D',1003:'F9A800',1004:'E49E00',1005:'CB8E00',1006:'E29000',1007:'E88C00',1011:'AF804F',1012:'DDAF27',1013:'E3D9C6',1014:'DDC49A',1015:'E6D2B5',1016:'F1DD38',1017:'F6A950',1018:'FACA30',1019:'A48F7A',1020:'A08F65',1021:'F6B600',1023:'F7B500',1024:'BA8F4C',1026:'FFFF00',1027:'A77F0E',1028:'FF9B00',1032:'E2A300',1033:'F99A1C',1034:'EB9C52',1035:'908370',1036:'80643F',1037:'F09200',2000:'DD7907',2001:'BE4E20',2002:'C63927',2003:'FA842B',2004:'E75B12',2005:'FF2300',2007:'FFA421',2008:'F3752C',2009:'E15501',2010:'D4652F',2011:'EC7C25',2012:'DB6A50',2013:'954527',2017:'FA4402',3000:'AB2524',3001:'A02128',3002:'A1232B',3003:'8D1D2C',3004:'701F29',3005:'5E2028',3007:'402225',3009:'703731',3011:'7E292C',3012:'CB8D73',3013:'9C322E',3014:'D47479',3015:'E1A6AD',3016:'AC4034',3017:'D3545F',3018:'D14152',3020:'C1121C',3022:'D56D56',3024:'F70000',3026:'FF0000',3027:'B42041',3028:'E72512',3031:'AC323B',3032:'711521',3033:'B24C43',4001:'8A5A83',4002:'933D50',4003:'D15B8F',4004:'691639',4005:'83639D',4006:'992572',4007:'4A203B',4008:'904684',4009:'A38995',4010:'C63678',4011:'8773A1',4012:'6B6880',5000:'384C70',5001:'1F4764',5002:'2B2C7C',5003:'2A3756',5004:'1D1F2A',5005:'154889',5007:'41678D',5008:'313C48',5009:'2E5978',5010:'13447C',5011:'232C3F',5012:'3481B8',5013:'232D53',5014:'6C7C98',5015:'2874B2',5017:'0E518D',5018:'21888F',5019:'1A5784',5020:'0B4151',5021:'07737A',5022:'2F2A5A',5023:'4D668E',5024:'6A93B0',5025:'296478',5026:'102C54',6000:'327662',6001:'28713E',6002:'276235',6003:'4B573E',6004:'0E4243',6005:'0F4336',6006:'40433B',6007:'283424',6008:'35382E',6009:'26392F',6010:'3E753B',6011:'68825B',6012:'31403D',6013:'797C5A',6014:'444337',6015:'3D403A',6016:'026A52',6017:'468641',6018:'48A43F',6019:'B7D9B1',6020:'354733',6021:'86A47C',6022:'3E3C32',6024:'008754',6025:'53753C',6026:'005D52',6027:'81C0BB',6028:'2D5546',6029:'007243',6032:'0F8558',6033:'478A84',6034:'7FB0B2',6035:'1B542C',6036:'005D4C',6037:'25E712',6038:'00F700',7000:'7E8B92',7001:'8F999F',7002:'817F68',7003:'7A7B6D',7004:'9EA0A1',7005:'6B716F',7006:'756F61',7008:'746643',7009:'5B6259',7010:'575D57',7011:'555D61',7012:'596163',7013:'555548',7015:'51565C',7016:'373F43',7021:'2E3234',7022:'4B4D46',7023:'818479',7024:'474A50',7026:'374447',7030:'939388',7031:'5D6970',7032:'B9B9A8',7033:'818979',7034:'939176',7035:'CBD0CC',7036:'9A9697',7037:'7C7F7E',7038:'B4B8B0',7039:'6B695F',7040:'9DA3A6',7042:'8F9695',7043:'4E5451',7044:'BDBDB2',7045:'91969A',7046:'82898E',7047:'CFD0CF',7048:'888175',8000:'887142',8001:'9C6B30',8002:'7B5141',8003:'80542F',8004:'8F4E35',8007:'6F4A2F',8008:'6F4F28',8011:'5A3A29',8012:'673831',8014:'49392D',8015:'633A34',8016:'4C2F26',8017:'44322D',8019:'3F3A3A',8022:'211F20',8023:'A65E2F',8024:'79553C',8025:'755C49',8028:'4E3B2B',8029:'773C27',9001:'EFEBDC',9002:'DDDED4',9003:'F4F8F4',9004:'2E3032',9005:'0A0A0D',9006:'A5A8A6',9007:'8F8F8C',9010:'F7F9EF',9011:'292C2F',9012:'FFFDE6',9016:'F7FBF5',9017:'2A2D2F',9018:'CFD3CD',9022:'9C9C9C',9023:'7E8182'};
+function ralHex(code) {   // RAL Design ("240 50 25") by formula, RAL Classic ("9001", "RAL 9001") from the table
+  const d = ralDesignHex(code); if (d) return d; const m = String(code || '').match(/^\s*(?:RAL\s*)?(\d{4})\s*$/i); return m && RAL_CLASSIC[m[1]] ? '#' + RAL_CLASSIC[m[1]] : null; }
 function ralDesignHex(code) {
   const m = String(code || '').match(/^(?:RAL\s*)?(\d{3})\s+(\d{2})\s+(\d{2})$/i); if (!m) return null;
   const h = +m[1] * Math.PI / 180, L = +m[2], C = +m[3];
@@ -5241,7 +5379,6 @@ function setPhotoCoverOf(s) {   // picture for a keycap card with no photo of yo
   const ks = (ref.kits || []).filter(k => k.img), pairs = pairKits(ownedKits(s), ref.kits || []), own = ks.find(ck => pairs.has(ck));
   return (own || ks[0] || {}).img || '';
 }
-function catalogCoverOf(s) { return setPhotoCoverOf(s); }
 let kgFilter = 'all';
 function formKits() { return [...document.querySelectorAll('#kitList .kit')].map(readKitRow).filter(k => k.name); }
 /* Reference list for the gallery: the linked GMK catalog set, else the kit list from your old Keycap Collection app.
@@ -5815,18 +5952,19 @@ function openKeycapStats() {
    yourself (Manual) are never replaced. Nothing is saved until you click Save. */
 const GMK_GROUPS = [[/^alpha/i, 'alpha'], [/^mod/i, 'modifier'], [/^accent/i, 'accent'], [/^space/i, 'spacebar'], [/^novel/i, 'novelty']];
 function gmkGroupRole(g) { const m = GMK_GROUPS.find(([re]) => re.test(g || '')); return m ? m[1] : null; }
-function gmkPaletteFrom(set) {
+function gmkPaletteFrom(set) {   // v0.97.0: a color with a known hex gets a color name; its code stays in its own field
   const map = new Map();
   (set.colors || []).forEach(row => {
     const grp = gmkGroupRole(row.group);
     [['base', row.base], ['legend', row.legend]].forEach(([use, c]) => {
-      if (!c) return; const k = c.sys + '|' + String(c.code).split(/\s+or\s+/i)[0].trim().toUpperCase();
-      if (!map.has(k)) { const hex = gmkHex(c), code = String(c.code).split(/\s+or\s+/i)[0].trim(); const e = { id: 'c' + Math.random().toString(36).slice(2, 10), name: gmkCodeLabel(c, true), roles: [], source: 'catalog', notes: [] };
-        if (hex) e.hex = hex.toUpperCase(); if (c.sys === 'GMK') e.gmk = code; if (c.sys === 'RAL') e.ral = code; if (c.sys === 'Pantone') e.pantone = code; map.set(k, e); }
+      if (!c) return; if (c.sys === 'GMK' && !c.hex && /^\d{3,5}\s*-?\s*[CU]$/i.test(String(c.code).trim())) c = Object.assign({}, c, { sys: 'Pantone' });   // v0.97.0: a few catalog rows list a Pantone number (5395C) as a GMK code
+      const k = c.sys + '|' + String(c.code).split(/\s+or\s+/i)[0].trim().toUpperCase();
+      if (!map.has(k)) { const hex = gmkHex(c), code = String(c.code).split(/\s+or\s+/i)[0].trim(); const e = { id: 'c' + Math.random().toString(36).slice(2, 10), name: hex ? colorNameOf(hex) : gmkCodeLabel(c, true), roles: [], source: 'catalog', notes: [] };
+        if (hex) { e.hex = hex.toUpperCase(); e.nameAuto = true; } if (c.sys === 'GMK') e.gmk = code; if (c.sys === 'RAL') e.ral = code; if (c.sys === 'Pantone') e.pantone = code; map.set(k, e); }
       const e = map.get(k); if (grp) { const r = grp + '-' + use; if (!e.roles.includes(r)) e.roles.push(r); } else if (row.group && !e.notes.includes(row.group)) e.notes.push(row.group);
     });
   });
-  return [...map.values()].map(e => { if (e.notes.length) e.name += ` (also ${e.notes.join(', ')})`; delete e.notes; return e; });
+  return [...map.values()].map(e => { if (e.notes.length) { e.name += ` (also ${e.notes.join(', ')})`; delete e.nameAuto; } delete e.notes; return e; });
 }
 function gmkCandidates(name) {
   if (!gmkSets) return [];
@@ -6354,6 +6492,7 @@ async function rcSave() {
       } else { const name = String(r0.newName).trim(); let data;
         if (t === 'keycaps') data = { name, kits: xs.map(newKit) };
         else { data = Object.assign({ name }, apply({}, sumP(xs), true)); if (t === 'accessories' && typeof rdAccCategory === 'function') data.category = rdAccCategory({ title: name + ' ' + ((xs[0].L && xs[0].L.option) || ''), tags: [] }, null); if (t === 'accessories') foamFill(data, name); if (t === 'switches') { const m = /(\d+)\s*(?:pack|pcs|pieces|ct|count|switches)\b/i.exec(r0.name); if (m) data.totalCount = +m[1] * xs.reduce((a, x) => a + (x.r.qty || 1), 0); } else if ((r0.qty || 1) > 1) data.notes = `Quantity ${r0.qty} on the receipt (${rcpt.seller || 'seller'}${rcpt.orderNumber ? ', ' + rcpt.orderNumber : ''}); the price is for all ${r0.qty}.`; }
+        if (SET_LINK_TYPES.includes(t)) { const g = guessSetFor(data); if (g) data.keycapSetId = g.id; }   // v0.97.0
         const ref = colOfType(t).doc(); await withTimeout(ref.set(Object.assign(data, { createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app', addedFrom: 'receipt' })));
         done.push({ type: t, id: ref.id, label: name, what: 'new ' + (SEC[t].singular || 'entry') });
       } }
@@ -7179,6 +7318,7 @@ async function rdSave() {
         if (Object.keys(upd).length) await withTimeout(colOfType(r.type).doc(x.id).update(Object.assign(upd, { updatedAt: now, appVersion: APP_VERSION })));
         if (r.copy && r.img) await rdKeepCopy(r.type, x.id, r.img, 'From ' + p.source).catch(() => copyFails.push(rcLabel(r.type, x)));
         done.push({ label: rcLabel(r.type, x), what: Object.keys(upd).length ? 'updated' : 'already complete', href: `#/${r.type}/${x.id}` }); continue; }
+      if (SET_LINK_TYPES.includes(r.type) && !fields.keycapSetId) { const g = guessSetFor(fields); if (g) fields.keycapSetId = g.id; }   // v0.97.0: an artisan or deskmat from a set's page joins that set
       snapSpelling(fields); const ref = colOfType(r.type).doc(); await withTimeout(ref.set(Object.assign(fields, { createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app', addedFrom: 'product page' })));
       if (r.copy && r.img) await rdKeepCopy(r.type, ref.id, r.img, 'From ' + p.source).catch(() => copyFails.push(fields.name));
       done.push({ label: rcLabel(r.type, fields) || fields.name, what: 'new ' + (SEC[r.type].singular || 'entry'), href: `#/${r.type}/${ref.id}` });
@@ -7832,7 +7972,7 @@ const settingsRef = () => db.collection(FIRESTORE_COLLECTION).doc(ROOT_DOC).coll
 function saveThemeSoon() { if (!db || isFile) return; clearTimeout(themeSaveTimer); themeSaveTimer = setTimeout(() => { themeRemoteAt = Date.now(); settingsRef().set({ theme: themeCfg, themeAt: themeRemoteAt }, { merge: true }).catch(() => {}); }, 900); }
 function startThemeSync() {   // another device changed the theme → follow it
   if (!db || isFile || themeUnsub) return;
-  try { themeUnsub = settingsRef().onSnapshot(snap => { const d = snap.exists ? snap.data() : null; if (d && d.boxOrder && Number(d.boxOrderAt) > boxOrderAt) { boxOrder = d.boxOrder; boxOrderAt = Number(d.boxOrderAt); lsSet('kbc_box_order', boxOrder); lsSet('kbc_box_order_at', boxOrderAt); applyBoxOrder(); } if (!d || !d.theme || !d.themeAt || d.themeAt <= themeRemoteAt) return; themeRemoteAt = d.themeAt;
+  try { themeUnsub = settingsRef().onSnapshot(snap => { const d = snap.exists ? snap.data() : null; if (d && d.pantoneHex) setPantoneMap(Object.assign({}, pantoneMap, d.pantoneHex)); if (d && d.boxOrder && Number(d.boxOrderAt) > boxOrderAt) { boxOrder = d.boxOrder; boxOrderAt = Number(d.boxOrderAt); lsSet('kbc_box_order', boxOrder); lsSet('kbc_box_order_at', boxOrderAt); applyBoxOrder(); } if (!d || !d.theme || !d.themeAt || d.themeAt <= themeRemoteAt) return; themeRemoteAt = d.themeAt;
     if (JSON.stringify(Object.assign({}, THEME_DEFAULT, d.theme)) !== JSON.stringify(themeCfg)) { applyTheme(d.theme, true); if (location.hash === '#/settings') drawThemeCard(); } }, () => {}); } catch (e) {}
 }
 /* Theme from a keycap set's palette: darkest (or lightest) color becomes the background, the most colorful ones the accents */
