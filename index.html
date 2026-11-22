@@ -641,7 +641,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.92.0';
+const APP_VERSION = 'v0.94.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -6465,7 +6465,10 @@ function rdSpecs(html) {   // { pairs: { 'top housing': 'PA12', ... }, bare: ['L
     el.innerHTML.split(/<br\s*\/?>/i).map(h => new DOMParser().parseFromString(h, 'text/html').body.textContent.replace(/[\u00a0\s]+/g, ' ').trim()).filter(Boolean).forEach(line => {
       const bul = /^[-•·*–]\s+/.test(line); line = line.replace(/^[-•·*–]\s+/, ''); if (line.length > 160) return; const m = /^([^:]{2,32}):\s*(.+)$/.exec(line);
       if (m) { const k = m[1].trim().toLowerCase(); if (!(k in pairs)) pairs[k] = m[2].trim(); } else if (bul) bare.push(line); }); el.dataset.split = '1'; });
-  doc.querySelectorAll('li, p:not([data-split]), tr').forEach(el => {
+  doc.querySelectorAll('tr').forEach(tr => { const c = [...tr.children].filter(x => /^(td|th)$/i.test(x.tagName)); if (c.length !== 2) return;   // v0.94.0: two-column spec tables (CannonKeys: "Switch Type | Linear")
+    const k = c[0].textContent.replace(/[\u00a0\s]+/g, ' ').trim().replace(/:$/, '').toLowerCase(), val = c[1].textContent.replace(/[\u00a0\s]+/g, ' ').trim();
+    if (k && val && k.length <= 32 && val.length <= 160 && !(k in pairs)) { pairs[k] = val; tr.dataset.done = '1'; } });
+  doc.querySelectorAll('li, p:not([data-split]), tr:not([data-done])').forEach(el => {
     let own = ''; el.childNodes.forEach(c => { if (!(c.nodeType === 1 && /^(ul|ol)$/i.test(c.tagName))) own += c.textContent; });
     own = own.replace(/[ \s]+/g, ' ').trim().replace(/^[•·*–-]\s*/, ''); if (!own || own.length > 220) return;
     const m = /^([^:]{2,32}):\s*(.+)$/.exec(own);
@@ -6542,7 +6545,7 @@ async function rdRead(url) {
     const imgs = prod ? [].concat(prod.image || []).map(i => typeof i === 'string' ? i : i && (i.url || i.contentUrl)).filter(Boolean) : [];
     const offers = prod ? [].concat(prod.offers || []).flatMap(o => o && o['@type'] === 'AggregateOffer' ? [].concat(o.offers || [{ price: o.lowPrice, name: '' }]) : [o]).filter(Boolean) : [];
     out.currency = String((offers[0] && offers[0].priceCurrency) || meta('product:price:currency') || meta('og:price:currency') || 'USD').toUpperCase();
-    Object.assign(out, { kind: prod ? 'jsonld' : 'meta', title: (prod && prod.name) || meta('og:title') || doc.title || '', vendor: prod && (typeof prod.brand === 'string' ? prod.brand : prod.brand && prod.brand.name) || '',
+    Object.assign(out, { kind: prod ? 'jsonld' : 'meta', productType: prod && typeof prod.category === 'string' ? prod.category : '', title: (prod && prod.name) || meta('og:title') || doc.title || '', vendor: prod && (typeof prod.brand === 'string' ? prod.brand : prod.brand && prod.brand.name) || '',
       html: (prod && prod.description) ? '<p>' + esc(prod.description).replace(/\n+/g, '</p><p>') + '</p>' : (meta('og:description') ? '<p>' + esc(meta('og:description')) + '</p>' : ''),
       images: (imgs.length ? imgs : [meta('og:image')].filter(Boolean)).map((s, i) => ({ id: 'i' + i, src: new URL(s, final).toString() })),
       variants: (offers.length ? offers : [{ price: meta('product:price:amount') || meta('og:price:amount') }]).map((o, i) => ({ id: 'v' + i, title: o.name || (offers.length > 1 ? 'Option ' + (i + 1) : 'Default Title'), price: Number(o.price) || null, opts: [] })) });
@@ -6564,6 +6567,27 @@ async function rdRead(url) {
     if (extra.length) out.html += `<p><strong>Specifications</strong></p><ul>${extra.map(t => '<li>' + esc(t) + '</li>').join('')}</ul>`;
     if (out.kind !== 'shopify') { const og = [...doc.querySelectorAll('meta[property="og:image:secure_url"], meta[property="og:image"]')].map(m => m.content).filter(Boolean);   // all the page's pictures, not only the first
       og.forEach(s => { try { const src = new URL(s.replace(/^http:/, 'https:'), final).toString(); if (!out.images.some(i => i.src === src || i.src.split('?')[0] === src.split('?')[0])) out.images.push({ id: 'i' + out.images.length, src }); } catch (e) {} }); }
+    if (out.kind !== 'shopify') {   // v0.93.0: the product's picture gallery (carousel slides, gallery/slider blocks, preloaded pictures); product data and share tags often name only the first picture (Milktooth)
+      const addImg = raw => { let s0 = String(raw || '').trim().split(/\s+/)[0]; if (!s0 || /^data:|\.svg(\?|$)|logo|icon|sprite|avatar|favicon|payment|badge|spinner|placeholder|loading/i.test(s0)) return;
+        try { let u = new URL(s0.replace(/^\/\//, 'https://').replace(/^http:/, 'https:'), final); if (/\/_next\/image\/?$/.test(u.pathname) && u.searchParams.get('url')) u = new URL(u.searchParams.get('url'), final);   // Next.js picture resizer → the picture itself
+          const src = u.toString(); if (!out.images.some(i => i.src === src || i.src.split('?')[0] === src.split('?')[0])) out.images.push({ id: 'i' + out.images.length, src }); } catch (e) {} };
+      const best = img => { const ss = img.getAttribute('srcset') || img.getAttribute('data-srcset') || ''; if (ss) { const c = ss.split(',').map(x => x.trim().split(/\s+/)).filter(x => x[0]).sort((a, b) => (parseFloat(b[1]) || 0) - (parseFloat(a[1]) || 0))[0]; if (c) return c[0]; }
+        return img.getAttribute('data-zoom-image') || img.getAttribute('data-large_image') || img.getAttribute('data-src') || img.getAttribute('src'); };
+      const skip = el => el.closest('header, footer, nav, [class*="recommend" i], [class*="related" i], [class*="upsell" i], [class*="also-like" i]');
+      doc.querySelectorAll('[aria-roledescription="carousel"], [aria-roledescription="slide"], [class*="gallery" i], [class*="carousel" i], [class*="slider" i], [class*="swiper" i], [class*="product-image" i], [class*="product__media" i], [class*="product-media" i], [data-gallery]').forEach(box => {
+        if (skip(box)) return; box.querySelectorAll('img').forEach(img => { const a = img.closest('a[href]'), h = a ? a.getAttribute('href') : ''; if (a && !/\.(jpe?g|png|webp|avif|gif)(\?|$)/i.test(h) && !h.startsWith('#')) return;   // a picture that links to another page is another product
+          addImg(best(img)); }); });
+      doc.querySelectorAll('link[rel="preload"][as="image"]').forEach(l => { if (l.getAttribute('href')) addImg(l.getAttribute('href')); });
+      // kit lists embedded in the page's own data (Milktooth catalog pages: kit_name + group-buy price, resale estimate, a photo per kit)
+      const un = page.text.replace(/\\"/g, '"'), km = /"kits"\s*:\s*(\[\s*\{\s*"kit_name"[\s\S]*?\}\s*\])/.exec(un);
+      if (km) { try { const kits = JSON.parse(km[1]).filter(k => k && k.kit_name); let ps = []; try { const pm = /"photoSections"\s*:\s*(\[[\s\S]*?\}\s*\])/.exec(un); ps = pm ? JSON.parse(pm[1]) : []; } catch (e) {}
+        const picOf = nm => ((ps.find(x => String(x.name).toLowerCase() === String(nm).toLowerCase()) || {}).photos || [])[0] || '';
+        if (kits.length) { out.options = [{ name: 'Kit', values: kits.map(k => k.kit_name) }];
+          out.variants = kits.map((k, i) => ({ id: 'k' + i, title: k.kit_name, price: Number(k.gb) > 0 ? Number(k.gb) : null, opts: [k.kit_name], imageSrc: picOf(k.kit_name) }));
+          kits.forEach(k => addImg(picOf(k.kit_name)));
+          const rows = kits.map(k => `${k.kit_name}: ${Number(k.gb) > 0 ? 'group-buy price $' + k.gb : 'group-buy price unknown'}${Number(k.est_resale) > 0 ? ` · ${out.source} resale estimate $${k.est_resale}` : ''}`);
+          out.html += `<p><strong>Kits</strong></p><ul>${rows.map(t => '<li>' + esc(t) + '</li>').join('')}</ul>`; if (!out.productType) out.productType = 'Keycaps'; } } catch (e) {} }
+    }
   }
   const corp = x => String(x || '').replace(/,?\s+(llc|inc\.?|ltd\.?|co\.|corp\.?)$/i, '').trim(); out.vendor = corp(out.vendor); out.source = corp(out.source);
   if (!out.title) throw new Error('No product information was found on that page. It may not be a product page, or the shop hides it from readers.');
@@ -6578,7 +6602,7 @@ function rdGuessType(p, v) {
   const tags = p.tags, vt = v && v.title !== 'Default Title' ? v.title : '', all = p.title + ' ' + vt;
   if ((rdHas(tags, /artisan/i) || /artisan/i.test(p.title)) && !/keycaps? set|key ?set/i.test(p.title)) return 'artisans';   // KBDfans tags full keycap sets "Artisan keycaps"
   if (/desk ?mat|mouse ?pad/i.test(vt)) return 'deskmats';   // a deskmat option on a keycap page (v0.88.0)
-  if (/\bartisans?\b/i.test(vt) && /keycap/i.test(p.productType + ' ' + p.title) && !p.gmkRef) return 'artisans';   // not on Matrix pages: GMK's catalog counts an artisan as one of the set's kits   // an artisan option on a keycap page (v0.92.0)
+  if (/\bartisans?\b/i.test(vt) && /keycap/i.test(p.productType + ' ' + p.title) && !p.gmkRef) return 'artisans';   // not on Matrix pages: GMK's catalog counts an artisan as one of the set's kits   // an artisan option on a keycap page (v0.91.0)
   if (/wrist ?rest/i.test(vt)) return 'accessories';
   if (/desk ?mat|mouse ?pad|keyboard mat/i.test(p.title) && !/keycap/i.test(p.title)) return 'deskmats';
   if (partGuess(p.title)[0] === 'switchparts' && !/\bswitches\b(?!.*(films?|springs?|stems?|pads?))/i.test(p.title)) return 'switchparts';
@@ -6626,14 +6650,15 @@ const rdUnit = (s, u) => { const m = /(\d+(?:\.\d+)?)(?:\s*[±+-]\s*(\d+(?:\.\d+
 const rdVariantLabel = v => v && v.title && v.title !== 'Default Title' ? v.title : '';
 function rdPackCount(p, v) {
   const qi = p.options.findIndex(o => /^(qty|quantity|count|pack|pack size|amount)$/i.test(o.name)); if (v && qi >= 0 && /^\s*\d{1,4}\s*(pcs|switches|x)?\s*$/i.test(v.opts[qi] || '')) return Number(/\d{1,4}/.exec(v.opts[qi])[0]);   // Mode: "Qty: 70 | 90 | 110"
-  const t = p.text + ' ' + (v ? v.title : ''), m = /(\d{1,4})\s+(?:included in each pack|switches? (?:per|in each) pack)/i.exec(t) || /(\d{1,4})\s*(?:-|\s)?\s*(?:set|pack|pcs|pieces|count|ct)\b/i.exec(v ? v.title : '') || /\((\d{1,4})\s*(?:pcs|pieces|pack|ct)\)/i.exec(p.title) || /(?:pack of|set of)\s*(\d{1,4})/i.exec(t) || /pack size:\s*(\d{1,4})/i.exec(t);
+  if (v && /^\s*(\d{1,4})\s*(?:\||\/|x\b|pcs\b|switches\b)/i.test(v.title || '')) return Number(/\d{1,4}/.exec(v.title)[0]);   // v0.94.0 CannonKeys: "36 | Dry"
+  const t = p.text + ' ' + (v ? v.title : ''), m = /(\d{1,4})\s+(?:included in each pack|switches? (?:per|in each) pack)/i.exec(t) || /(?:available in|sold in)\s+(?:quantities|packs|sets) of\s*(\d{1,4})/i.exec(t) || /(\d{1,4})\s*(?:-|\s)?\s*(?:set|pack|pcs|pieces|count|ct)\b/i.exec(v ? v.title : '') || /\((\d{1,4})\s*(?:pcs|pieces|pack|ct)\)/i.exec(p.title) || /(?:pack of|set of)\s*(\d{1,4})/i.exec(t) || /pack size:\s*(\d{1,4})/i.exec(t);
   return m ? Number(m[1]) : null;
 }
 function rdFields(p, v, type) {   // fields for a new entry of this type, from the product and the chosen option
   const P = p.spec.pairs, bare = p.spec.bare, vl = rdVariantLabel(v), f = {}, pick = (...ks) => { for (const k of ks) for (const key of Object.keys(P)) if (key === k || key.startsWith(k)) return P[key]; return ''; };
   const pickU = (re, ...ks) => { for (const k of ks) for (const key of Object.keys(P)) if ((key === k || key.startsWith(k)) && re.test(P[key])) return P[key]; return ''; };
   const optAt = re => p.options.findIndex(o => re.test(o.name)), optVal = i => (v && i >= 0 && v.opts[i]) || '';
-  if (/^(third party|default( vendor)?|other|unknown)$/i.test(String(p.vendor || '').trim())) p.vendor = '';   // KBDfans lists some makers as "Third Party"
+  if (/^(third party|default( vendor)?|other|unknown|stocked|in[- ]?stock|pre-?orders?|group[- ]?buys?|gb|extras?|ready to ship|sale|clearance|restock)$/i.test(String(p.vendor || '').trim())) p.vendor = '';   // KBDfans lists some makers as "Third Party"; CannonKeys files stock items under "Stocked" (v0.94.0)
   const madeBy = (bare.find(b => /^(designed (?:&|and) )?manufactured by\s/i.test(b)) || '').replace(/^.*manufactured by\s+/i, ''), designer = (bare.find(b => /^designed by\s/i.test(b)) || pick('designer', 'designed by')).replace(/^designed by\s+/i, '');
   if (type === 'keyboards') {
     f.brand = p.vendor; f.name = rdStrip(p.title, p.vendor, /(\s+(barebones?|mechanical|keyboard|kit|pre-?built|diy))+$/i); f.keyboardType = /pre-?built/i.test(p.title + p.tags.join(' ')) ? 'prebuilt' : 'custom';
@@ -6666,7 +6691,7 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
     const plOpt = optAt(/plate/i); if (plOpt >= 0 && optVal(plOpt) && typeof plateMaterialFrom === 'function') { const pm3 = plateMaterialFrom(optVal(plOpt)); f.plateMaterial = pm3 || optVal(plOpt).replace(/\s*plates?$/i, '').trim(); }   // a plate the list doesn't know ("Linen Micarta") is kept as written
     const pm = plateMaterialFrom(vl); if (pm && /plate/i.test(vl)) f.plateMaterial = pm;
   } else if (type === 'switches') {
-    f.manufacturer = p.vendor; f.name = rdStrip(p.title, p.vendor, /\s+(silent\s+)?(linear|tactile|clicky|magnetic|hall effect)?\s*switch(es)?(\s*\(\s*\d+\s*(pcs|pc|pieces|x)\s*\))?$/i);
+    f.manufacturer = p.vendor || pick('manufacturer', 'brand', 'maker'); f.name = rdStrip(p.title, p.vendor, /\s+(silent\s+)?(linear|tactile|clicky|magnetic|hall effect)?\s*switch(es)?(\s*\(\s*\d+\s*(pcs|pc|pieces|x)\s*\))?$/i);
     const tt = (p.title + ' ' + p.tags.join(' ') + ' ' + bare.join(' ')).toLowerCase();
     f.switchType = /silent/.test(tt) && /tactile/.test(tt) ? 'Silent tactile' : /silent/.test(tt) ? 'Silent linear' : /hall effect|magnetic/.test(tt) ? 'Hall effect (magnetic)' : /tactile/.test(tt) ? 'Tactile' : /clicky/.test(tt) ? 'Clicky' : /linear/.test(tt) ? 'Linear' : '';
     const map = [['top housing', 'topMaterial'], ['bottom housing', 'bottomMaterial'], ['stem', 'stemMaterial']]; map.forEach(([k, n]) => { const x = pick(k); if (x) f[n] = x; });
@@ -6678,6 +6703,11 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
     if (/\bmx\b/i.test(bare.join(' ')) || /mx/i.test(p.tags.join(' '))) f.mechanism = 'MX';
     const pins = /([35])[- ]?pin/i.exec(bare.join(' ') + ' ' + p.text); if (pins) f.pins = pins[1] + '-pin';
     if (bare.some(b => /^(factory )?(lubed|pre-?lubed|lubed from factory)$/i.test(b.trim()))) f.preLubed = true;
+    if (/^(yes|factory|lubed|true)\b/i.test(pick('factory lube', 'factory lubed', 'factory lubrication', 'pre-lubed', 'prelubed', 'lubed'))) f.preLubed = true;   // v0.94.0: "Factory Lube: Yes"
+    if (/\b(dry|unlubed|no lube|not lubed|stock)\b/i.test(vl)) delete f.preLubed; else if (/\blubed\b/i.test(vl) && !/hand[- ]?lubed/i.test(vl)) f.preLubed = true;   // the option chosen wins ("36 | Dry" / "36 | Lubed")
+    { const fs = [pick('spring weight', 'spring force', 'force', 'spring'), p.text || ''].join(' ');   // "50g actuation, 65g bottom out"
+      if (!f.actuationForce) { const m = /(\d+(?:\.\d+)?)\s*(?:g|gf|grams?)\s*(?:actuation|operating)/i.exec(fs) || /(?:actuation|operating)(?: force)?\s*(?:of|:|-)?\s*(\d+(?:\.\d+)?)\s*(?:g|gf|grams?)\b/i.exec(fs); if (m) f.actuationForce = m[1] + ' gf'; }
+      if (!f.bottomOutForce) { const m = /(\d+(?:\.\d+)?)\s*(?:g|gf|grams?)\s*(?:bottom[- ]?out|end)/i.exec(fs) || /bottom[- ]?out(?: force)?\s*(?:of|:|-)?\s*(\d+(?:\.\d+)?)\s*(?:g|gf|grams?)\b/i.exec(fs); if (m) f.bottomOutForce = m[1] + ' gf'; } }
     const snd = pick('sound profile', 'sound', 'descriptors'); if (snd) f.descriptors = snd.split(/[,/]/).map(s => s.trim().toLowerCase()).filter(Boolean).join(', ');
     if (designer) f.notes = 'Designed by ' + designer + (madeBy ? ', made by ' + madeBy : '') + '.';
   } else if (type === 'keycaps') {
@@ -6708,7 +6738,7 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
   Object.keys(f).forEach(k => (f[k] === '' || f[k] == null) && delete f[k]);
   return f;
 }
-function kcCleanTitle(title, maker) {   // v0.92.0 (KPrepublic): "[GBEXTERAS] GLOVE x Domikey Illusion Keycaps Cherry Profile ABS…" → { name: 'Domikey Illusion', designer: 'GLOVE' }
+function kcCleanTitle(title, maker) {   // v0.91.0 (KPrepublic): "[GBEXTERAS] GLOVE x Domikey Illusion Keycaps Cherry Profile ABS…" → { name: 'Domikey Illusion', designer: 'GLOVE' }
   let t = String(title || '').replace(/^\s*(\[[^\]]*\]\s*)+/, '').replace(/\s+/g, ' ').trim(), designer = '';
   t = t.replace(/\s+(keycaps?|keycap set|key ?caps?)\b.*$/i, '').replace(/\s+(extension|add-?on)s?(\s+kits?)?$|\s+kits?$/i, '').trim() || t;
   const m = /^(.+?)\s+[x×]\s+(.+)$/i.exec(t);
