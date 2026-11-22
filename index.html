@@ -220,6 +220,17 @@
   .calc { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px 14px; border-radius: var(--radius-s); background: var(--bg-2); border: var(--bw) var(--bs) var(--line); }
   .calc div { font-size: 12px; color: var(--text-3); } .calc b { display: block; font-size: 17px; color: var(--text); font-variant-numeric: tabular-nums; margin-top: 2px; }
   .calc .tot b { font-size: 22px; color: var(--accent); }
+  #helpFab { position: fixed; right: 18px; bottom: 18px; z-index: 40; width: 40px; height: 40px; border-radius: 50%; border: var(--bw) var(--bs) var(--line); background: var(--bg-1); color: var(--text-2); font-weight: 700; font-size: 18px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+  #helpFab:hover { color: var(--text); border-color: var(--accent); }
+  @media (max-width: 700px) { #helpFab { top: 10px; bottom: auto; right: 12px; width: 34px; height: 34px; font-size: 15px; box-shadow: none; z-index: 60; } }
+  .help-a { border-top: var(--bw) var(--bs) var(--line); padding: 8px 0; } .help-a summary { cursor: pointer; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; } .help-a summary .sub { font-size: 11.5px; margin: 0; }
+  .help-a ol, .help-r ol { margin: 8px 0 8px 18px; padding: 0; line-height: 1.5; font-size: 13.5px; } .help-a li, .help-r li { margin: 3px 0; }
+  .help-g h4 { margin: 16px 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); }
+  .help-chat { display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow: auto; margin-bottom: 10px; }
+  .help-q { align-self: flex-end; background: var(--accent); color: var(--on-accent, #0b0d10); padding: 7px 12px; border-radius: 14px 14px 4px 14px; max-width: 80%; font-size: 13.5px; }
+  .help-r { align-self: flex-start; background: var(--bg-2); border: var(--bw) var(--bs) var(--line); padding: 10px 14px; border-radius: 14px 14px 14px 4px; max-width: 92%; font-size: 13.5px; }
+  .tgtbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; border-color: var(--accent); margin-bottom: 14px; }
+  .readinto { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 6px; } .readinto .sub { margin: 0; font-size: 12px; }
   .pr-up { color: var(--bad-text); font-weight: 650; } .pr-dn { color: var(--ok-text); font-weight: 650; } .pr-eq { color: var(--text-2); }
   .vsret { grid-column: 1 / -1; padding: 10px 14px; border-radius: var(--radius-s); background: var(--bg-2); border: var(--bw) var(--bs) var(--line); font-size: 13px; color: var(--text-2); }
   .vsret b { color: var(--text); font-variant-numeric: tabular-nums; }
@@ -640,7 +651,7 @@ try { var tv = JSON.parse(localStorage.getItem('kbc_theme_vars') || 'null'); if 
   <div class="mscrim" id="mScrim"></div>
   <main class="main"><header class="mtop" id="mTop"><button class="mmenu" id="mMenu" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <span class="mlogo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 18l1.6-10.2A2 2 0 0 1 8.6 6h6.8a2 2 0 0 1 2 1.8L19 18"/><path d="M3.5 18h17"/><path d="M9 10.5h6"/></svg></span><span class="mt"><b id="mTitle">FSN · Keyboard Collection</b><span>Faraz's vault</span></span></header>
-    <div class="page"><div id="protoWarn" role="alert"></div><div id="view"></div></div></main>
+    <div class="page"><div id="protoWarn" role="alert"></div><div id="view"></div></div></main><button id="helpFab" type="button" title="Help: how to do things in this app" aria-label="Help">?</button>
   <nav class="mbar" id="mBar" aria-label="Quick navigation"></nav>
 </div>
 <div class="toast" id="toast" role="status"></div>
@@ -650,7 +661,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.95.0';
+const APP_VERSION = 'v0.96.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -711,6 +722,7 @@ const I = {
   list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',
   search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
   plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  help: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.3-2.4 3.8"/><path d="M12 17h.01"/></svg>',
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
   stats: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
   sounds: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4M7 6v12M11 9v6M15 4v16M19 8v8"/></svg>',
@@ -743,7 +755,8 @@ const SECTIONS = [
   { id: 'sounds',      title: 'Sound compare', color: 'var(--sw)', built: true },
   { id: 'catalog',     title: 'Catalog',     color: 'var(--text-3)', built: true },
   { id: 'import',      title: 'Import',      color: 'var(--text-3)', built: true },
-  { id: 'settings',    title: 'Settings',    color: 'var(--text-3)', built: true }
+  { id: 'settings',    title: 'Settings',    color: 'var(--text-3)', built: true },
+  { id: 'help',        title: 'Help',        color: 'var(--text-3)', built: true }
 ];
 const navCollapsed = () => { try { return localStorage.getItem('kbc_nav_swparts') !== 'open'; } catch (e) { return true; } };   // v0.89.0: Switch parts folds under Switches (closed by default, remembered on the device)
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-navtog]'); if (!b) return; e.preventDefault(); e.stopPropagation(); try { localStorage.setItem('kbc_nav_swparts', navCollapsed() ? 'open' : 'closed'); } catch (err) {} renderNav((location.hash.match(/^#\/(\w+)/) || [])[1] || 'dashboard'); }, true);
@@ -1569,7 +1582,7 @@ function wireUnitPrice() {
 /* ---------- Keyboard shortcuts ---------- */
 const SHORTCUTS = [['/', 'Jump to the search box'], ['N', 'Add a new item (on a list page)'], ['Ctrl + S', 'Save changes'], ['Esc', 'Close a box, or leave select mode'], ['G then D / K / S / C', 'Go to Dashboard / Keyboards / Switches / Keycaps'], ['?', 'Show this list']];
 function showShortcuts() { if (document.getElementById('keysDlg')) return; const d = document.createElement('div'); d.className = 'gdlg'; d.id = 'keysDlg';
-  d.innerHTML = `<div class="card kv-card" style="max-width:460px"><div class="sec-title"><h3>Keyboard shortcuts</h3><button class="btn" data-x>✕</button></div><dl class="keysdl">${SHORTCUTS.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl></div>`;
+  d.innerHTML = `<div class="card kv-card" style="max-width:460px"><div class="sec-title"><h3>Keyboard shortcuts</h3><button class="btn" data-x>✕</button></div><dl class="keysdl">${SHORTCUTS.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl><p class="sub" style="margin:10px 0 0">How-to articles and the Help me assistant: <a class="lnk" href="#/help" onclick="sessionStorage.setItem('kbc_help_from', location.hash)">Help →</a></p></div>`;
   d.onclick = e => { if (e.target === d || e.target.closest('[data-x]')) d.remove(); }; document.body.appendChild(d); }
 let gKeyAt = 0;
 document.addEventListener('keydown', e => {
@@ -1942,6 +1955,189 @@ function restoreListPrefs() {
   let tm = null; const save = () => { clearTimeout(tm); tm = setTimeout(() => { try { const [p, q] = listPrefsNow(), key = JSON.stringify([p, q]); if (key === listPrefsLast) return; listPrefsLast = key; lsSet('kbc_list_prefs', p); sessionStorage.setItem('kbc_list_q', JSON.stringify(q)); } catch (e) {} }, 400); };
   ['click', 'change', 'input'].forEach(ev => document.addEventListener(ev, save, true));
 }
+/* ===================== v0.96.0: Help page — how-to articles, search, "Help me" assistant, "?" button =====================
+   Everything here is written for this app's own buttons and menus. No AI service: the assistant matches the question
+   against the articles (words, synonyms, word endings) and answers with the best one, so it works offline and costs nothing. */
+const HELP = [
+  // ---------- Getting around ----------
+  { id: 'search', t: 'Find anything', g: 'Getting around', ctx: ['keyboards', 'switches', 'keycaps', 'accessories', 'pcbs', 'deskmats', 'artisans', 'switchparts', 'wishlist'], k: 'search find look up where is filter name type box',
+    s: ['Open a list (Keyboards, Switches, Keycaps…) and type in the search box at the top. Press / anywhere to jump to it.', 'Names come first: it looks at name, maker, designer, profile and kit names. Only when nothing matches does it also look in colors, notes and specs.', 'The Catalog page (Tools → Catalog) lists every keyboard model, switch, keycap set and designer you own; clicking one opens that list already searched.'], go: '#/keyboards' },
+  { id: 'shortcuts', t: 'Keyboard shortcuts', g: 'Getting around', k: 'shortcut keys hotkey keyboard ctrl save quick jump',
+    s: ['/ jumps to search, N starts a new item on a list page, Ctrl+S saves, Esc closes a box or leaves select mode.', 'G then D / K / S / C jumps to Dashboard, Keyboards, Switches, Keycaps.', 'Press ? (Shift + /) for the full list.'], go: '' },
+  { id: 'filter', t: 'Sort, filter, card size and list view', g: 'Getting around', ctx: ['keyboards', 'switches', 'keycaps', 'accessories', 'pcbs', 'deskmats', 'artisans', 'switchparts'], k: 'sort filter order newest last modified favorites view gallery list card size big small tiny pictures only',
+    s: ['On every list: Sort (newest, name, last modified, longest untouched…) and Filter (favorites, work, last modified; keycaps also missing kits and profiles; accessories also each category › sub-category).', 'The two buttons next to them switch between gallery cards and a list.', 'On a computer the size menu sets the cards: Tiny to Extra large, Wide pictures, or Pictures only. Each list remembers its own settings on this device.'], go: '#/keycaps' },
+  { id: 'work', t: 'Done marks and the work queue', g: 'Getting around', k: 'done tick finished todo to do queue work progress checklist review mark',
+    s: ['Every card has a Done tick, and every item page a "Mark done" button.', 'Select several items → "Add to work queue". The Work… menu next to the filter has "Finish my queue", "Empty my queue" and "Reset: clear all done marks".', 'Filter → Work shows Not done yet, Done, Done in the last 7 days or My work queue.'], go: '#/keyboards' },
+  { id: 'bulk', t: 'Select several items and change them together', g: 'Getting around', k: 'select bulk many several multiple all at once edit fields favorite location delete batch',
+    s: ['On a list press Select, then tick cards or rows (or "Select all shown").', 'Choose Favorite / Unfavorite, Set location, "Edit fields…" (one or more general fields, e.g. maker or profile), QR labels, "Add to work queue", or Delete.', 'Changes and deletes can be undone for 10 seconds.'], go: '#/keyboards' },
+  { id: 'phone', t: 'Using the app on your phone', g: 'Getting around', k: 'phone mobile iphone android install home screen share menu camera',
+    s: ['The bottom bar has Dashboard, Keyboards, Keycaps, Switches and More (the full menu).', 'Save / Discard appear above the bottom bar only when there is something to save.', 'Every photo card has "Take a photo". From your phone\'s browser you can Share a shop page to Keyboard Collection to read it.'], go: '' },
+  { id: 'offline', t: 'Using the app without signal', g: 'Getting around', k: 'offline no internet airplane signal sync waiting connection',
+    s: ['Items you have opened on this device stay readable without a connection.', 'Changes made offline say "Saved on this device" and sync by themselves later; the menu shows "Offline · N changes waiting".', 'Settings → Offline shows what is ready. Sign-in, backup and reading pages or receipts need a connection.'], go: '#/settings' },
+  { id: 'theme', t: 'Change the look (themes)', g: 'Getting around', k: 'theme color colour dark light look appearance font size corners style',
+    s: ['Settings → Appearance: pick a preset (Midnight, Light, Olivia, Botanical, Laser, 9009, Terminal).', 'Custom: accent color, background, corners, borders, font and size on top of any preset. It follows you to your other devices.', 'A keycap set\'s Colors tab has "Use this set\'s saved colors as the app theme".'], go: '#/settings' },
+
+  // ---------- Adding entries ----------
+  { id: 'add', t: 'Add an item by hand', g: 'Adding and reading', k: 'add new create item entry manual keyboard switch keycap accessory', ctx: ['keyboards', 'switches', 'keycaps', 'accessories', 'pcbs', 'deskmats', 'artisans', 'switchparts'],
+    s: ['Open the list and press the Add button (or N).', 'Fill Overview, then the other tabs (Build, Purchase, Notes; keycap sets have Kits and Colors). Brand, maker and name suggest what you already own after 2 letters.', 'Press Save. An unfinished keyboard is kept as a draft on this device.'], go: '#/keyboards/new' },
+  { id: 'readpage', t: 'Read a product page (shop link)', g: 'Adding and reading', ctx: ['import'], k: 'read page link url website webpage shop product import from a link paste details specs retail picture',
+    s: ['Import → "Read a product page" (or the "From a link" button on a list), paste the shop link, press Read page.', 'Pick the options you bought. Each line can be a New entry, "Add to an entry I have" (fills empty fields; tick Replace to refresh) or Wishlist.', 'Check the lines and press Save. Specs, the shop\'s text, retail price, the webpage link and every picture (as links) are saved.', 'Only shops listed in Settings → Product page reader can be read.'], go: '#/import/link' },
+  { id: 'readpageinto', t: 'Read a webpage into one entry', g: 'Adding and reading', ctx: ['item'], k: 'read webpage into this entry link page shop details update refresh pull from entry main section keyboard switch keycap set accessory item existing',
+    s: ['Open the entry and find the "From the shop" card (side column).', 'Press "🔗 Read a webpage into this entry" (or "Read the page again" if it has one) and paste the link.', 'The banner "Reading into …" means the option you pick fills this entry only. Tick Replace to refresh price and pictures.', 'Save takes you back to the entry. "Stop reading into it" turns it into a normal read.'], go: '' },
+  { id: 'receipt', t: 'Read a receipt', g: 'Adding and reading', ctx: ['import'], k: 'receipt pdf invoice order paypal ebay drop price tax shipping read import purchase',
+    s: ['Save the order page as a PDF (Print → Save as PDF; a photo or scan can\'t be read).', 'Import → drop the PDF on "Read a receipt". It is read on this device only and never uploaded or kept.', 'Each line is matched to an entry you have (or a new one, or Skip). Tax is spread as a rate, shipping and discounts split across the lines, to the cent.', 'Save approved lines: price, tax, shipping, discounts, date, seller and order number are filled; existing prices stay unless you tick replace.'], go: '#/import' },
+  { id: 'receiptinto', t: 'Read a receipt into one entry', g: 'Adding and reading', ctx: ['item'], k: 'receipt into this entry pdf purchase tab price paid order pull keyboard switch keycap set accessory pcb item existing',
+    s: ['Open the entry → Purchase tab (keycap sets: Kits tab).', 'Press "📄 Read a receipt into this entry" and choose the PDF.', 'The receipt line that matches is pointed at this entry; the other lines start as Skip (change any of them if you want them too).', 'Save takes you back to the entry with its price, tax, shipping, date, seller and order number filled.'], go: '' },
+  { id: 'shops', t: 'Add a shop to the product page reader', g: 'Adding and reading', ctx: ['settings'], k: 'approved shops add website domain reader helper cloudflare not allowed settings',
+    s: ['Settings → Product page reader.', 'Type the shop\'s address (e.g. cannonkeys.com) under Approved shops → Add → Save.', 'If a shop reads badly, send Claude the link: each shop gets its own fixes.'], go: '#/settings' },
+  { id: 'duplicate', t: 'Duplicate an entry', g: 'Adding and reading', ctx: ['item'], k: 'duplicate copy clone same again another one twice',
+    s: ['On the entry press Duplicate….', 'Tick what to copy (purchase details, notes, colors, product page, summary rows; photos and market values are off by default).', 'Name the copy and confirm.'], go: '' },
+  { id: 'merge', t: 'Merge two entries (duplicates)', g: 'Adding and reading', ctx: ['item'], k: 'merge combine duplicate same twice two entries join keeper sacrifice',
+    s: ['On the entry you want to get rid of press Merge… (or Select → tick it first, then the keeper → "Merge 2…"). ⇄ swaps which one is kept.', 'For fields both have, choose which value to keep; empty fields are filled from the other; photos, values, kits, installs move over.', 'The other entry is deleted; Undo works for 10 seconds.', 'Check my data lists entries with the same name.'], go: '' },
+  { id: 'move', t: 'Move an entry to another list', g: 'Adding and reading', ctx: ['item'], k: 'move list category wrong place accessories pcbs deskmats switch parts relocate',
+    s: ['On an Accessories, PCBs & Components, Deskmats or Switch parts entry press "Move to…".', 'Pick the list. The entry keeps its photos, prices, values and the board it is installed on.'], go: '' },
+  { id: 'split', t: 'Split a keyboard into parts', g: 'Adding and reading', ctx: ['keyboards'], k: 'split parts pcb plate came with included kit stock switches keycaps prebuilt price share',
+    s: ['On the keyboard press "Split into parts…". Lines start from its "Included with the kit" list.', 'Choose the page (PCBs, Accessories, Switches, Keycaps…), category, name and part of the price for each, and whether it is installed.', 'A price typed on a part moves out of the keyboard\'s price. Undo for 10 seconds.'], go: '#/keyboards' },
+  { id: 'bundle', t: 'Split a bundle into separate items', g: 'Adding and reading', k: 'bundle split add-on pack set several things one entry separate',
+    s: ['On an Accessories / PCBs / Deskmats / Switch parts entry whose name lists several things press "Split bundle…".', 'Each thing becomes a line with its list and category guessed; set prices or "Share the price equally".', 'The bundle is deleted when its whole price has moved.'], go: '#/accessories' },
+  { id: 'delete', t: 'Delete an entry (and undo)', g: 'Adding and reading', ctx: ['item'], k: 'delete remove erase trash undo get rid',
+    s: ['Press Delete on the entry (or Select → Delete on a list).', '"Undo" shows for 10 seconds and puts everything back (photos, recordings, installs). After that use a backup.'], go: '' },
+
+  // ---------- Item pages ----------
+  { id: 'summary', t: 'The Summary tab', g: 'Item pages', ctx: ['item'], k: 'summary face card overview edit row hide unhide your details label description name',
+    s: ['The Summary is the first tab of every entry: everything filled in, the prices, links and pictures.', '✎ edits a row (Save at the top keeps it); Hide / "Show hidden rows" tidy it; "Your details" adds rows of your own (Lube, Films…).', '✎ next to the name or "+ Add a description" saves at once.'], go: '' },
+  { id: 'boxes', t: 'Rearrange the boxes on a page', g: 'Item pages', ctx: ['item'], k: 'arrange boxes order side column move up down layout',
+    s: ['"Arrange these boxes" at the top of the side column.', '▲ ▼ per box, then Done. The order is used for every entry of that kind, on all your devices.'], go: '' },
+  { id: 'qr', t: 'QR labels', g: 'Item pages', ctx: ['item'], k: 'qr code label print sticker bag box scan',
+    s: ['On an entry press "QR label" to print or save it as a picture.', 'For many: Select → QR labels (a print sheet, 4 across). The code opens the entry in the app.'], go: '' },
+
+  // ---------- Pictures ----------
+  { id: 'photos', t: 'Add, crop or delete your own photos', g: 'Pictures', ctx: ['item'], k: 'photo picture image upload add camera take crop own delete remove',
+    s: ['On an entry, the Photos card: drop pictures or choose files; on a phone "Take a photo".', 'Each is cropped to 4:3 and saved small (WebP). The first photo is the display picture; "Set as default" on another photo changes it. Crop and Delete are under each photo.', 'HEIC from an iPhone must be JPG (iPhone Settings → Camera → Formats → Most Compatible).'], go: '' },
+  { id: 'mainpic', t: 'Choose and frame the main picture', g: 'Pictures', ctx: ['item'], k: 'main picture display cover stock adjust frame zoom crop card picture whole',
+    s: ['Your default photo is the card picture. "Use as stock picture" on a photo makes it the Summary picture.', 'Summary picture → Adjust: drag, zoom, or "Show the whole picture".', 'Keycap sets: Kit gallery → kit → "Use as main picture"; the Keycaps page "Main picture" menu switches all cards to Base / Novelties / Spacebars / Numpads.'], go: '' },
+  { id: 'shoppics', t: 'Shop pictures: download, keep, use or hide', g: 'Pictures', ctx: ['item'], k: 'shop pictures carousel download keep copy remove delete star main link pictures from the shop',
+    s: ['From the shop card → "Pictures from the shop": every picture of the page, saved as links (no storage).', '⬇ downloads one to your device · Keep copies it into your photos · ★ makes it the shop picture · ✕ removes it.', 'Read the page again with Replace to get them all back.'], go: '' },
+  { id: 'viewer', t: 'Zoom into pictures', g: 'Pictures', ctx: ['item'], k: 'zoom viewer full screen carousel enlarge bigger look closer',
+    s: ['Click the Summary picture: arrows go through all pictures; click opens the full-screen viewer.', 'Wheel, pinch or +/− zooms up to 8×; drag moves; double-click zooms; Esc closes.'], go: '' },
+
+  // ---------- Prices and value ----------
+  { id: 'purchase', t: 'Purchase details', g: 'Prices and value', ctx: ['item'], k: 'purchase price tax shipping discount total paid seller date order receipt link webpage',
+    s: ['Purchase tab: date, seller, price before tax, tax rate (quick buttons NJ 6.625%, KBDfans, PayPal 0%), shipping, discounts.', 'Total paid = price + tax + shipping − discounts.', 'Receipt (order number or link) and "Link to webpage" are clickable on the Summary.', 'Keycap sets keep purchases per kit on the Kits tab.'], go: '' },
+  { id: 'paidretail', t: 'Paid vs retail (red / green)', g: 'Prices and value', ctx: ['item'], k: 'paid retail difference overpaid underpaid profit savings red green compare price cost more less',
+    s: ['Purchase tab: under Total paid, "Retail … · you paid … · $X less than retail" — green = you paid less, red = more. It updates while you type.', 'Summary → "Paid and retail" (keyboards: "Build cost") lists each item with a Difference column and the total.', 'Retail comes from reading the product page; GMK kits without one use the group-buy price.'], go: '' },
+  { id: 'pack', t: 'Switch packs and price per switch', g: 'Prices and value', ctx: ['switches'], k: 'pack per switch count 35 10 retail each how many switches change price per switch',
+    s: ['The shop price covers a pack (10, 35, 36…). Summary → Paid and retail → Shop price shows "$12.25 for 35 switches" and the option chosen.', '"change" sets how many switches the shop price covers if it is wrong.', 'Purchase tab: "Price per switch" next to Price works both ways.'], go: '#/switches' },
+  { id: 'value', t: 'Track market value', g: 'Prices and value', k: 'market value worth resale sell price history value page',
+    s: ['On an entry, the Market value card: value, date, source (e.g. eBay sold listings) → Add value. Newest date = current value.', 'Tools → Value lists everything valued with what you paid; the Dashboard has a Market value tile.'], go: '#/value' },
+  { id: 'stats', t: 'Spending and stats', g: 'Prices and value', k: 'spending stats total spent year month chart dashboard category seller',
+    s: ['Dashboard: spending by category and period (the eye hides amounts).', 'Tools → Stats: spend by year and month, paid vs value by category, top sellers, sizes, most-used switches; "Show as table" under charts.'], go: '#/stats' },
+
+  // ---------- Keyboards ----------
+  { id: 'install', t: 'Put switches, keycaps and parts on a keyboard', g: 'Keyboards', ctx: ['keyboards', 'switches', 'keycaps'], k: 'install installed build on board switches keycaps pcb plate case parts loose allocate mount',
+    s: ['Keyboard → "Installed on this board" card: Installed switches (with counts), Installed keycaps (one kit at a time per board), Other parts.', 'Build tab: PCB, Plate and (Drop CSTM) Decorative case pickers; Excel suggestions come first.', 'A switch page shows how many are on each board and how many are loose.'], go: '#/keyboards' },
+  { id: 'layout', t: 'Layout, standard, bottom row and spacebar', g: 'Keyboards', ctx: ['keyboards'], k: 'layout ansi iso jis wk wkl tsangan hhkb spacebar 6.25u 7u bottom row standard',
+    s: ['Overview has four fields: Layout (Standard, Alice, Ortholinear, Split…), Standard (ANSI / ISO / JIS), Bottom row (WK, WKL, Tsangan, HHKB…), Spacebar (6.25u, 7u…).', 'Hover an option (or choose it) to read what it means.'], go: '#/keyboards' },
+  { id: 'colorway', t: 'Keyboard colorway and materials', g: 'Keyboards', ctx: ['keyboards'], k: 'colorway color case material weight bottom brass copper pvd mirror badge accents',
+    s: ['Overview: Case material, Bottom case material, Weight material, Accents.', 'The Colorway card shows the colors; a Weight / Bottom case row follows its material\'s stock color. "Pick from picture" takes a color (and a texture) from a photo.'], go: '#/keyboards' },
+  { id: 'serial', t: 'Scan a serial number', g: 'Keyboards', ctx: ['keyboards'], k: 'serial number scan barcode camera qr code label',
+    s: ['Overview → More details → "📷 Scan" next to Serial number.', 'Where the browser reads barcodes the camera fills it; otherwise take a photo and type the number (you can keep the photo).'], go: '#/keyboards' },
+  { id: 'timeline', t: 'Build timeline', g: 'Keyboards', ctx: ['keyboards'], k: 'timeline history log changes build when installed notes',
+    s: ['Keyboard → Build timeline: switch, keycap and part changes are logged by themselves; add your own notes; remove lines you don\'t want.'], go: '#/keyboards' },
+  { id: 'share', t: 'Share a picture of a build or a list', g: 'Keyboards', k: 'share image picture png build card instagram post grid',
+    s: ['Keyboard → "Share build card": photo, colorway, switches, keycaps and parts (what you paid only if ticked).', 'Every list has Share: the cards on screen as one picture.'], go: '#/keyboards' },
+  { id: 'pick', t: 'Pick my build (shuffle)', g: 'Keyboards', k: 'pick my build random shuffle suggest which keyboard today',
+    s: ['Dashboard → "Pick my build": a random keyboard, a free keycap kit and switches with enough loose ones; "Keep this one", Shuffle.'], go: '#/dashboard' },
+
+  // ---------- Switches ----------
+  { id: 'sounds', t: 'Record and compare switch sounds', g: 'Switches', ctx: ['switches', 'sounds'], k: 'sound test record recording audio typing compare listen play',
+    s: ['Switch page → Sound tests → record up to 30 s; the board and keycaps are noted.', 'Tools → Sound compare: tick recordings in the order to play, then "Play selected in turn".'], go: '#/sounds' },
+  { id: 'swparts', t: 'Switch parts (films, springs, stems)', g: 'Switches', ctx: ['switchparts'], k: 'switch parts films springs stems housings collapse menu',
+    s: ['Menu → ▸ next to Switches shows "Switch parts" (films, springs, stems, housings).', 'Switch pads are Foam (Accessories), lube is Lube & Tools.'], go: '#/switchparts' },
+
+  // ---------- Keycaps ----------
+  { id: 'kits', t: 'Keycap kits (add, not owned, types)', g: 'Keycaps', ctx: ['keycaps'], k: 'kit kits base novelties spacebars alphas not owned own add kit type quantity',
+    s: ['Keycap set → Kits tab: + Add kit, name, kit type, quantity and its own purchase details.', 'Untick "I own this kit" to keep a kit you don\'t have yet (greyed in the Kit gallery, not counted as owned).', 'Kit gallery shows every kit as a picture; click one for details.'], go: '#/keycaps' },
+  { id: 'completion', t: 'Completion and missing kits', g: 'Keycaps', ctx: ['keycaps'], k: 'completion complete missing kits percent bar wishlist gmk',
+    s: ['Sets linked to the GMK catalog (or with a kit marked not owned) show "2/4 kits · 50%".', 'GMK reference card: missing kits with "+ Wishlist"; Filter → Missing kits.'], go: '#/keycaps' },
+  { id: 'gmk', t: 'GMK catalog and Matrix pages', g: 'Keycaps', ctx: ['keycaps', 'catalog'], k: 'gmk catalog matrix link fill from catalog reference group buy colors codes',
+    s: ['Keycap set → GMK reference card: suggested catalog sets, or search; link it.', '"Fill from catalog" fills empty fields and the catalog colors.', 'A Matrix page link in the reader builds the set from the private catalog.'], go: '#/catalog' },
+  { id: 'colors', t: 'Colors: palette, color wheel, textures', g: 'Keycaps', ctx: ['keycaps'], k: 'colors colour palette wheel hex pick from picture texture gmk code ral pantone eyedropper',
+    s: ['Keycap set → Colors tab: + Add color, roles (Alpha, Modifier…), hex, GMK code, RAL, Pantone.', '"Pick from a picture" takes a color from any of its pictures, with an optional texture sample.', 'A GMK set fills the nearest GMK code; names are filled automatically until you type one.'], go: '#/keycaps' },
+
+  // ---------- Other lists ----------
+  { id: 'categories', t: 'Accessory categories and sub-categories', g: 'Other lists', ctx: ['accessories', 'pcbs', 'deskmats'], k: 'category sub-category foam case cstm alt weights plate cable deskmat pcb components daughterboard',
+    s: ['Accessories have Category and Sub-category (e.g. Case › CSTM top cases, Foam › Case foam) and a Material for foam.', 'Deskmats, PCBs & Components and Switch parts have their own lists; Filter on Accessories lists every category and sub-category.', 'Check my data → Categories to sort suggests the right place.'], go: '#/accessories' },
+  { id: 'wishlist', t: 'Wishlist', g: 'Other lists', ctx: ['wishlist'], k: 'wishlist want buy later wanted bought todo',
+    s: ['Wishlist → Add, or "+ Wishlist" from a missing kit or a product page line.', 'Bought keeps the row with a date; wishlist items never count in totals.'], go: '#/wishlist' },
+
+  // ---------- Data and tools ----------
+  { id: 'check', t: 'Check my data (fix mistakes)', g: 'Data and tools', ctx: ['check'], k: 'check my data fix errors spelling duplicates categories keyboard type cleanup tidy',
+    s: ['Tools → Check my data: fixes waiting (tick, then "Apply ticked fixes"; a copy is saved first) and checks that update every time: spellings, keyboards with no type, accessories with no category, same names, categories to sort.'], go: '#/check' },
+  { id: 'backup', t: 'Back up and restore', g: 'Data and tools', ctx: ['settings'], k: 'backup restore save my data download json safe copy',
+    s: ['Settings → Backup and restore: "Back up my records" (JSON) or "Back up everything" (with photos and recordings). Keep it on your PC, not online.', 'Restore previews the file, then replaces those records; it never deletes others.'], go: '#/settings' },
+  { id: 'excel', t: 'Export to Excel', g: 'Data and tools', ctx: ['import'], k: 'excel export workbook spreadsheet xlsx v19 download',
+    s: ['Import and export → "Export to Excel": Keyboard_Hobby_List_v<N>.xlsx in the v18 layout with formulas. The number goes up by one each time.', 'The app is the source of truth; the workbook is an export.'], go: '#/import' },
+  { id: 'storage', t: 'Storage used', g: 'Data and tools', ctx: ['settings'], k: 'storage space full limit firebase photos size',
+    s: ['Settings → Storage: photos, recordings and records, with "Recount". Pictures from shops are links and use no storage unless you press Keep.'], go: '#/settings' },
+  { id: 'privacy', t: 'Where my receipts and files go', g: 'Data and tools', k: 'privacy receipt file uploaded stored safe online public repo',
+    s: ['Receipts are read on your device only; the file is never uploaded or kept, only the numbers you approve.', 'Your records live in your own Firebase database, locked to your Google sign-in. Backups and import files belong on your PC, never in the public website repo.'], go: '' },
+  { id: 'signin', t: 'Sign in and out', g: 'Data and tools', ctx: ['settings'], k: 'sign in sign out login logout account google',
+    s: ['Sign out is next to your email at the bottom of the menu (also Settings → Account and security). "Keep me signed in on this device" is on the sign-in screen.'], go: '#/settings' },
+  { id: 'askclaude', t: 'Something isn\'t covered here', g: 'Data and tools', k: 'help bug problem broken wrong question claude new feature request',
+    s: ['Tell Claude in the Keyboard Hobby project chat: what you did, what you expected and a screenshot. New features and shop fixes arrive as a new index.html to upload.'], go: '' }
+];
+const HELP_SYN = { photo: 'picture', photos: 'picture', image: 'picture', images: 'picture', pic: 'picture', pics: 'picture', pictures: 'picture', carousel: 'picture',
+  delete: 'remove', erase: 'remove', trash: 'remove', pdf: 'receipt', invoice: 'receipt', order: 'receipt', url: 'link', website: 'webpage', site: 'webpage', page: 'webpage', link: 'webpage',
+  combine: 'merge', join: 'merge', clone: 'duplicate', copy: 'duplicate', restore: 'backup', workbook: 'excel', spreadsheet: 'excel', xlsx: 'excel', worth: 'value', resale: 'value',
+  colour: 'color', colours: 'color', colors: 'color', palette: 'color', board: 'keyboard', keyboards: 'keyboard', keycap: 'keycaps', kit: 'kits', switch: 'switches',
+  cost: 'price', paid: 'price', overpay: 'retail', overpaying: 'retail', underpay: 'retail', cheaper: 'retail', cheap: 'retail', expensive: 'retail', deal: 'retail', saving: 'retail', savings: 'retail', saved: 'retail', pricing: 'price', prices: 'price', money: 'price', overpaid: 'retail', underpaid: 'retail', profit: 'retail', recording: 'sound', audio: 'sound', record: 'sound',
+  login: 'sign', logout: 'sign', look: 'theme', dark: 'theme', appearance: 'theme', shop: 'webpage', store: 'webpage', mobile: 'phone', iphone: 'phone', android: 'phone', duplicates: 'merge' };
+const HELP_STOP = new Set('a an the to of in on for and or is it i my me do how can where what which with this that from into be are you your there at as by get make want need does did will would should about'.split(' '));
+const helpStem = w => w.replace(/(ings|ing|ies|es|ed|s)$/, '') || w;
+const helpToks = t => String(t || '').toLowerCase().replace(/[^a-z0-9.#]+/g, ' ').split(' ').filter(w => w && !HELP_STOP.has(w)).map(w => helpStem(HELP_SYN[w] || w));
+const HELP_WEAK = new Set(['add', 'read', 'put', 'pull', 'use', 'find', 'set', 'show', 'see', 'open', 'go', 'new', 'entry', 'item', 'app']);
+const helpIdx = HELP.map(a => ({ a, t: new Set(helpToks(a.t)), k: new Set(helpToks(a.k + ' ' + a.g)), b: new Set(helpToks(a.s.join(' '))) }));
+function helpSearch(q) {   // best articles for a question: title words 3, keywords 2, body 1; a phrase in the title counts extra
+  const qt = helpToks(q); if (!qt.length) return [];
+  const strong = qt.filter(w => !HELP_WEAK.has(w)).length, c = typeof helpCtx === 'function' ? helpCtx() : { page: '', item: false };
+  return helpIdx.map(x => { let sc = 0; qt.forEach(w => { const f = strong && HELP_WEAK.has(w) ? 0.3 : 1; if (x.t.has(w)) sc += 3 * f; else if (x.k.has(w)) sc += 2 * f; else if (x.b.has(w)) sc += 1 * f; });
+      if (x.a.t.toLowerCase().includes(String(q).toLowerCase().trim())) sc += 4; if (sc && ((x.a.ctx || []).includes(c.page) || (c.item && (x.a.ctx || []).includes('item')))) sc += 0.6;   // the page you came from tips a tie
+      return { a: x.a, sc: sc / Math.sqrt(qt.length) }; })
+    .filter(r => r.sc > 0).sort((a, b) => b.sc - a.sc);
+}
+function helpCtx() {   // which page the help was opened from
+  const p = String(sessionStorage.getItem('kbc_help_from') || '').replace(/^#\/?/, '').split('/'); return { page: p[0] || 'dashboard', item: !!p[1] && p[1] !== 'new' && !['link', 'receipt', 'match'].includes(p[1]) };
+}
+function helpArticleHtml(a, open) {
+  return `<details class="help-a" id="help-${a.id}"${open ? ' open' : ''}><summary><b>${esc(a.t)}</b><span class="sub">${esc(a.g)}</span></summary><ol>${a.s.map(x => `<li>${esc(x)}</li>`).join('')}</ol>${a.go ? `<a class="btn" href="${a.go}">Take me there →</a>` : ''}</details>`;
+}
+let helpChat = [];
+function renderHelp() {
+  const view = document.getElementById('view'), c = helpCtx(), from = sessionStorage.getItem('kbc_help_from') || '';
+  const here = HELP.filter(a => (a.ctx || []).includes(c.page)).concat(c.item ? HELP.filter(a => (a.ctx || []).includes('item') && !(a.ctx || []).includes(c.page)) : []).slice(0, 8), groups = [...new Set(HELP.map(a => a.g))];
+  view.innerHTML = `<div class="pagehead"><div><h1>Help</h1><p>How to do things in this app. Ask in your own words, or search and browse the articles.</p></div></div>
+    <div class="card help-bot"><h3>Help me</h3><div id="helpChat" class="help-chat">${helpChat.length ? '' : '<p class="sub" style="margin:0">Try: “how do I add a receipt to a keyboard?”, “remove a shop picture”, “where is paid vs retail?”, “merge two entries”.</p>'}</div>
+      <form id="helpAsk" class="rd-urlrow"><input class="input" id="helpQ" placeholder="Ask how to do something…" autocomplete="off"><button class="btn primary" type="submit">Ask</button></form></div>
+    ${here.length && from ? `<div class="card"><h3>For the page you came from <a class="lnk" href="${esc(from)}" style="font-size:12px;font-weight:500;margin-left:6px">back ↩</a></h3>${here.map(a => helpArticleHtml(a, false)).join('')}</div>` : ''}
+    <div class="card"><div class="sec-title"><h3>All articles (${HELP.length})</h3><input class="input" id="helpFilter" placeholder="Filter articles…" style="max-width:260px"></div><div id="helpList">${groups.map(g => `<div class="help-g" data-g="${esc(g)}"><h4>${esc(g)}</h4>${HELP.filter(a => a.g === g).map(a => helpArticleHtml(a, false)).join('')}</div>`).join('')}</div><p class="sub" id="helpNone" hidden>No article matches. Try other words, or ask Claude in the project chat.</p></div>`;
+  const chatBox = document.getElementById('helpChat');
+  const drawChat = () => { if (!helpChat.length) return; chatBox.innerHTML = helpChat.map(m => m.q ? `<div class="help-q">${esc(m.q)}</div>` : `<div class="help-r">${m.html}</div>`).join(''); chatBox.scrollTop = chatBox.scrollHeight; };
+  drawChat();
+  document.getElementById('helpAsk').onsubmit = e => { e.preventDefault(); const q = document.getElementById('helpQ').value.trim(); if (!q) return;
+    const r = helpSearch(q); helpChat.push({ q });
+    if (!r.length || r[0].sc < 1.2) helpChat.push({ html: `<p style="margin:0">I couldn't find that in the help articles.${r.length ? ' These might be close:' : ''}</p>${r.slice(0, 3).map(x => `<button class="lnk" type="button" data-hopen="${x.a.id}">${esc(x.a.t)}</button>`).join(' · ')}<p class="sub" style="margin:6px 0 0">Try other words, or ask Claude in the project chat.</p>` });
+    else { const a = r[0].a, more = r.slice(1, 4).filter(x => x.sc >= r[0].sc * 0.5);
+      helpChat.push({ html: `<b>${esc(a.t)}</b><ol>${a.s.map(x => `<li>${esc(x)}</li>`).join('')}</ol>${a.go ? `<a class="btn" href="${a.go}">Take me there →</a>` : ''}${more.length ? `<p class="sub" style="margin:8px 0 0">Also: ${more.map(x => `<button class="lnk" type="button" data-hopen="${x.a.id}">${esc(x.a.t)}</button>`).join(' · ')}</p>` : ''}` }); }
+    document.getElementById('helpQ').value = ''; drawChat(); };
+  view.addEventListener('click', e => { const b = e.target.closest('[data-hopen]'); if (!b) return; const d = document.getElementById('help-' + b.dataset.hopen); if (d) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'center' }); } });
+  document.getElementById('helpFilter').oninput = e => { const q = e.target.value.trim(); const hits = q ? new Set(helpSearch(q).map(x => x.a.id)) : null; let n = 0;
+    view.querySelectorAll('#helpList .help-a').forEach(d => { const on = !hits || hits.has(d.id.slice(5)); d.hidden = !on; if (on) n++; if (hits) d.open = on && hits.size <= 3; });
+    view.querySelectorAll('#helpList .help-g').forEach(g => g.hidden = ![...g.querySelectorAll('.help-a')].some(d => !d.hidden)); document.getElementById('helpNone').hidden = n > 0; };
+  setTimeout(() => document.getElementById('helpQ')?.focus(), 50);
+}
+function openHelp() { if (!/^#\/help/.test(location.hash)) sessionStorage.setItem('kbc_help_from', location.hash || '#/dashboard'); location.hash = '#/help'; }
+
 function route() {
   if (!listPrefsReady) restoreListPrefs();
   stopTestListener(); stopPhotoListener(); stopMetaListener(); stopKbSounds(); stopKbTimeline(); stopSoundsPage(); hideTip(); stopSoundListener(!(soundRec && location.hash.includes(soundRec.itemId)));
@@ -1953,6 +2149,7 @@ function route() {
   document.documentElement.style.setProperty('--accent', sec.color.startsWith('var(--text') ? 'var(--kb)' : sec.color);
   renderNav(sec.id); renderMobileBar(sec.id); document.getElementById('mTitle').dataset.page = sec.title; setMenu(false); updateMobileTop();
   document.title = sec.title + ' · Keyboard Collection';
+  { const fab = document.getElementById('helpFab'); if (fab) { fab.hidden = sec.id === 'help'; fab.onclick = openHelp; } }
   const view = document.getElementById('view');
   if (sec.id === 'dashboard') view.innerHTML = dashboardHtml(), wireDashboard();
   else if (sec.id === 'keyboards' && parts[1] === 'new') renderKeyboardForm();
@@ -1981,6 +2178,7 @@ function route() {
   else if (sec.id === 'check') renderCheck();
   else if (sec.id === 'sounds') renderSounds();
   else if (sec.id === 'wishlist') renderWishlist();
+  else if (sec.id === 'help') renderHelp();
   else view.innerHTML = comingLaterHtml(sec);
   if (currentView !== location.hash) window.scrollTo(0, 0);
   currentView = location.hash;
@@ -2550,6 +2748,21 @@ function updateCalc() {
   box.innerHTML = `Retail <b>${money(ret)}</b>${how ? ` <span class="sub">(${esc(how)})</span>` : ''}${x.retailSource ? ` <span class="sub">· ${esc(x.retailSource)}</span>` : ''} · you paid <b>${money(paid)}</b> · <span class="${d.cls}">${esc(d.txt)}</span>`;
 }
 let calcCtx = null;
+/* v0.96.0: read a receipt or a webpage straight into one entry. The entry travels in sessionStorage (kbc_target) to the reader, which then fills only that entry. */
+function readTarget(kind) { try { const t = JSON.parse(sessionStorage.getItem('kbc_target') || 'null'); return t && t.id && (!kind || t.kind === kind) ? t : null; } catch (e) { return null; } }
+function setReadTarget(t) { try { if (t) sessionStorage.setItem('kbc_target', JSON.stringify(t)); else sessionStorage.removeItem('kbc_target'); } catch (e) {} }
+function targetBannerHtml(t) { return `<div class="card tgtbar" id="tgtBar"><span>Reading into <a class="lnk" href="#/${t.type}/${esc(t.id)}"><b>${esc(t.label)}</b></a></span><span class="sub" style="margin:0">${t.kind === 'receipt' ? 'The matching line fills this entry; the other lines start as Skip (change any of them if you want them too).' : 'The option you pick fills this entry (empty fields only; tick Replace to refresh). Nothing new is created unless you change the line.'}</span><button class="btn" type="button" id="tgtStop">Stop reading into it</button></div>`; }
+function wireTargetBanner(redraw) { const b = document.getElementById('tgtStop'); if (b) b.onclick = () => { setReadTarget(null); toast('Back to the normal reader: lines go wherever you choose'); redraw(); }; }
+function addReadIntoButtons(view, x, type) {   // Purchase tab (Kits tab for keycap sets): "Read a receipt into this entry"
+  if (!x || !x.id || view.querySelector('#readIntoRc')) return;
+  const host = type === 'keycaps' ? view.querySelector('#kitList') : (view.querySelector('[name="receipt"]') || {}).closest?.('.fld'); if (!host) return;
+  const box = document.createElement('div'); box.className = 'readinto' + (type === 'keycaps' ? '' : ' full'); if (type !== 'keycaps') box.style.gridColumn = '1 / -1';
+  box.innerHTML = `<button class="btn" type="button" id="readIntoRc" title="Read a receipt PDF on this device and put its price, tax, shipping, date, seller and order number into ${type === 'keycaps' ? 'a kit of this set' : 'this entry'}">📄 Read a receipt into this ${type === 'keycaps' ? 'set' : 'entry'}</button><input type="file" id="readIntoRcFile" accept=".pdf,application/pdf" hidden><span class="sub" id="readIntoRcMsg">PDF saved from the order page (Print → Save as PDF). Read on this device only.</span>`;
+  if (type === 'keycaps') host.parentNode.insertBefore(box, host); else host.after(box);
+  const f = box.querySelector('#readIntoRcFile');
+  box.querySelector('#readIntoRc').onclick = () => { if (typeof formDirty !== 'undefined' && formDirty) { toast('Save or discard your changes first'); return; } f.value = ''; f.click(); };
+  f.onchange = () => { const file = f.files && f.files[0]; if (!file) return; setReadTarget({ kind: 'receipt', type, id: x.id, label: rcLabel(type, x) || x.name || 'this entry' }); rcReadFile(file, box.querySelector('#readIntoRcMsg')); };
+}
 function paidVsRetail(paid, retail) {   // v0.95.0: difference = paid − retail; over retail (red) or under (green)
   const d = Math.round((Number(paid) - Number(retail)) * 100) / 100, pc = Number(retail) ? Math.round(Math.abs(d) / Number(retail) * 100) : 0;
   if (Math.abs(d) < 0.005) return { cls: 'pr-eq', txt: 'same as retail', short: '$0.00', d: 0 };
@@ -5133,10 +5346,10 @@ function refCardHtml(t, x) {
     <p class="sub" style="margin:8px 0 0">${has ? `Stock picture and details from ${esc(x.refSource || 'the product page')}${x.refUrl ? ` · <a class="lnk" href="${esc(x.refUrl)}" target="_blank" rel="noopener">open page ↗</a>` : ''}. Your own photos replace this picture on the card.` : 'No product page yet. Add a link to the maker’s or shop’s page and its picture.'}</p>
     ${x.retailPrice != null ? '<p class="refret sub">Retail price: see Paid and retail on the Summary.</p>' : ''}
     ${(() => { const pics = shopPicsOf(x); if (!x.id || !pics.length) return '';   // v0.95.0: every picture from the shop page, each kept as a link; download, keep a copy, use as the shop picture, or remove
-      return `<details class="shoppicbox"${pics.length > 1 ? ' open' : ''}><summary>Pictures from the shop (${pics.length})</summary><div class="shoppics">${pics.map(u => `<div class="shoppic${u === x.refImage ? ' main' : ''}" data-u="${esc(u)}"><a class="pv" href="${esc(u)}" target="_blank" rel="noopener" title="Open the picture"><img src="${esc(u)}" alt="" loading="lazy" referrerpolicy="no-referrer"></a><div class="acts"><button class="btn" type="button" data-pact="dl" title="Download this picture to your device">⬇</button><button class="btn" type="button" data-pact="copy" title="Keep a copy with your photos (uses storage)">Keep</button>${u === x.refImage ? '' : '<button class="btn" type="button" data-pact="main" title="Use as the shop picture">★</button>'}<button class="btn danger" type="button" data-pact="del" title="Remove this picture from the entry">✕</button></div></div>`).join('')}</div>
+      return `<details class="shoppicbox"${pics.length > 1 ? ' open' : ''}><summary>Pictures from the shop (${pics.length})</summary><div class="shoppics">${pics.map(u => `<div class="shoppic${u === x.refImage ? ' main' : ''}" data-u="${esc(u)}"><a class="pv" href="${esc(u)}" target="_blank" rel="noopener" title="Open the picture"><img src="${esc(u)}" alt="" loading="lazy" referrerpolicy="no-referrer"></a><div class="acts"><button class="btn" type="button" data-spact="dl" title="Download this picture to your device">⬇</button><button class="btn" type="button" data-spact="copy" title="Keep a copy with your photos (uses storage)">Keep</button>${u === x.refImage ? '' : '<button class="btn" type="button" data-spact="main" title="Use as the shop picture">★</button>'}<button class="btn danger" type="button" data-spact="del" title="Remove this picture from the entry">✕</button></div></div>`).join('')}</div>
         <p class="sub" style="margin:6px 0 0;font-size:11.5px">Saved as links (no storage). ⬇ downloads one to your device · Keep copies it into your photos · ★ makes it the shop picture (outlined) · ✕ removes it. Read the page again with Replace to get them all back.</p></details>`; })()}
     ${x.id ? `<details class="shopopts"${av ? ' open' : ''}><summary>${av ? 'Options the shop sells' : 'Options'}${sibs ? ` · ${sibs + 1} in your collection` : ''}</summary><div id="availBox">${availHtml(x, t)}</div></details>` : ''}
-    <div class="btnrow" style="margin-top:10px"><button class="btn" id="refEditBtn">${has ? 'Edit link & picture' : '+ Add product page'}</button>${x.refUrl && /^https?:/.test(x.refUrl) ? '<button class="btn" id="refReread" title="Read the shop page again into this entry (fills what is empty; tick Replace there to refresh prices and pictures)">Read the page again</button>' : ''}</div>
+    <div class="btnrow" style="margin-top:10px"><button class="btn" id="refEditBtn">${has ? 'Edit link & picture' : '+ Add product page'}</button>${x.id ? (x.refUrl && /^https?:/.test(x.refUrl) ? '<button class="btn" id="refReread" title="Read the shop page again into this entry (fills what is empty; tick Replace there to refresh prices and pictures). You can also paste a different page there.">Read the page again</button>' : '<button class="btn primary" id="refReread" title="Paste a product page link: its details, specs, retail price and pictures go into this entry">🔗 Read a webpage into this entry</button>') : ''}</div>
     <div id="refForm" hidden><div style="margin-top:10px;display:grid;gap:8px">
       <div class="fld"><label for="refUrlIn">Product page link</label><input class="input" id="refUrlIn" type="url" placeholder="https://…" value="${esc(x.refUrl || '')}"></div>
       <div class="fld"><label for="refImgIn">Picture link</label><input class="input" id="refImgIn" type="url" placeholder="https://… (.jpg, .png, .webp)" value="${esc(x.refImage || '')}"><div class="hint">Right-click the picture on the shop page → Copy image address.</div></div>
@@ -5172,9 +5385,9 @@ async function shopPicAct(t, x, act, u) {
   catch (e) { toast('Could not save: ' + explain(e)); }
 }
 function wireRefCard(t, x) {
-  const rr = document.getElementById('refReread'); if (rr) rr.onclick = () => { if (formDirty) { toast('Save or discard your changes first'); return; } sessionStorage.setItem('kbc_link', x.refUrl); location.hash = '#/import/link'; };
+  const rr = document.getElementById('refReread'); if (rr) rr.onclick = () => { if (formDirty) { toast('Save or discard your changes first'); return; } setReadTarget({ kind: 'page', type: t, id: x.id, label: rcLabel(t, x) || x.name || 'this entry' }); if (x.refUrl && /^https?:/.test(x.refUrl)) sessionStorage.setItem('kbc_link', x.refUrl); location.hash = '#/import/link'; };
   const card = document.getElementById('refCard'); if (!card) return;
-  card.querySelectorAll('[data-pact]').forEach(b => b.onclick = e => { e.preventDefault(); const box = b.closest('.shoppic'); shopPicAct(t, x, b.dataset.pact, box.dataset.u); });
+  card.querySelectorAll('[data-spact]').forEach(b => b.onclick = e => { e.preventDefault(); const box = b.closest('.shoppic'); shopPicAct(t, x, b.dataset.spact, box.dataset.u); });
   const $ = id => document.getElementById(id), form = $('refForm');
   const prev = () => { const u = $('refImgIn').value.trim(); $('refPrev').innerHTML = /^https?:\/\//.test(u) ? `<img class="refimg" src="${esc(u)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<p class=&quot;sub&quot; style=&quot;margin:0;color:var(--danger)&quot;>That picture link did not load. Check it is a direct image link.</p>'">` : ''; };
   $('refEditBtn').onclick = () => { form.hidden = false; $('refEditBtn').hidden = true; prev(); $('refUrlIn').focus(); };
@@ -5260,6 +5473,7 @@ async function summaryAction(view, x, type, e) {
 function restoreTab(view, x, type) {
   addSummaryTab(view, x, type);
   calcCtx = { type, x }; if (document.getElementById('cVsRet')) updateCalc();
+  addReadIntoButtons(view, x, type);
   const t = lastTab.id === x.id ? lastTab.tab : 'summary';
   if (t !== 'overview') view.querySelector(`.tabs [data-tab="${t}"]`)?.click();
 }
@@ -5995,6 +6209,10 @@ function rcOpen(r, fileName) {
   rcDone = null;
   rcpt = { fileName, kind: r.kind, seller: r.seller || '', orderNumber: r.orderNumber || '', date: r.date || '', dateNote: r.dateNote || '', shipping: r.shipping || 0, tax: r.tax || 0, discount: r.discount || 0,
     subtotal: r.subtotal, total: r.total, warnings: r.warnings || [], rows: r.lines.map(rcSuggest) };
+  const tg = readTarget('receipt'), tx = tg && itemsOfType(tg.type).find(y => y.id === tg.id);   // v0.96.0: reading into one entry: its best line fills it, the rest start as Skip
+  if (tx) { const it = rcTok(rcLabel(tg.type, tx)).filter(w => !/^r\d+$/.test(w)); let bi = 0, bs = -1;
+    r.lines.forEach((l, i) => { const src = rcTok(l.name + ' ' + (l.option || '')), sc = it.filter(w => src.includes(w)).length / Math.max(1, it.length) + (rcpt.rows[i].itemId === tx.id ? 1 : 0); if (sc > bs) { bs = sc; bi = i; } });
+    rcpt.rows.forEach((row, i) => { if (i === bi) { row.mode = 'existing'; row.type = tg.type; row.itemId = tx.id; if (tg.type === 'keycaps') row.kitId = rcKitGuess(tx, row); } else row.mode = 'skip'; }); rcpt.target = tg; }
   if (location.hash === '#/import/receipt') renderReceipt(); else location.hash = '#/import/receipt';
 }
 async function rcReadFile(file, msg) {
@@ -6019,8 +6237,8 @@ function wireReceiptCard() {
   zone.onclick = () => inp.click(); zone.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inp.click(); } };
   ['dragenter', 'dragover'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.add('over'); }));
   ['dragleave', 'drop'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.remove('over'); }));
-  zone.addEventListener('drop', e => { const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) rcReadFile(f, msg); });
-  inp.onchange = () => { const f = inp.files[0]; inp.value = ''; if (f) rcReadFile(f, msg); };
+  zone.addEventListener('drop', e => { const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) { setReadTarget(null); rcReadFile(f, msg); } });
+  inp.onchange = () => { const f = inp.files[0]; inp.value = ''; if (f) { setReadTarget(null); rcReadFile(f, msg); } };
   document.getElementById('rcPasteGo').onclick = () => { const t = document.getElementById('rcPaste').value; if (!t.trim()) { msg.textContent = 'Paste the text first.'; return; } try { rcOpen(parseReceipt([t]), 'pasted text'); } catch (e) { msg.textContent = 'Could not read the text: ' + (e.message || e); } };
 }
 function rcCalc() {   // per-line shares: tax rate = tax / subtotal; shipping and discount split by price, to the cent
@@ -6075,6 +6293,7 @@ function renderReceipt() {
   const m = (id, label, v) => `<label class="rc-f"><span>${label}</span><div class="money-in"><span>$</span><input class="input" id="${id}" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(v)}"></div></label>`;
   view.innerHTML = `<a class="crumb" href="#/import">${I.back}Import</a>
     <div class="pagehead"><div><h1>Review receipt</h1><p>Read from <b>${esc(rcpt.fileName)}</b> on this device. Nothing is saved until you press Save, and the file itself is never kept.</p></div></div>
+    ${rcpt.target && readTarget('receipt') ? targetBannerHtml(rcpt.target) : ''}
     ${rcpt.warnings.length ? `<div class="card" style="border-color:var(--warn,var(--bad))">${rcpt.warnings.map(w => `<p class="sub" style="margin:0 0 4px">⚠ ${esc(w)}</p>`).join('')}</div>` : ''}
     <div class="card"${rcpt.warnings.length ? ' style="margin-top:16px"' : ''}><h3>Order</h3><div class="rc-head">
       <label class="rc-f"><span>Seller</span><input class="input" id="rcSeller" value="${esc(rcpt.seller)}"></label>
@@ -6138,7 +6357,9 @@ async function rcSave() {
         const ref = colOfType(t).doc(); await withTimeout(ref.set(Object.assign(data, { createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app', addedFrom: 'receipt' })));
         done.push({ type: t, id: ref.id, label: name, what: 'new ' + (SEC[t].singular || 'entry') });
       } }
-    rcDone = { title: `${act.length} line${act.length === 1 ? '' : 's'} saved from ${rcpt.seller || 'the receipt'}${rcpt.orderNumber ? ' (' + rcpt.orderNumber + ')' : ''}`, items: done }; rcpt = null; toast('Receipt saved'); renderReceipt();
+    rcDone = { title: `${act.length} line${act.length === 1 ? '' : 's'} saved from ${rcpt.seller || 'the receipt'}${rcpt.orderNumber ? ' (' + rcpt.orderNumber + ')' : ''}`, items: done }; const tg = rcpt.target && readTarget('receipt'); rcpt = null; toast('Receipt saved'); setReadTarget(null);
+    if (tg && done.length && done.every(d => d.type === tg.type && d.id === tg.id)) { rcDone = null; location.hash = `#/${tg.type}/${tg.id}`; return; }   // v0.96.0: back to the entry
+    renderReceipt();
   } catch (e) { btn.disabled = false; btn.textContent = 'Save approved lines'; err.textContent = `Could not save everything: ${explain(e)} ${done.length ? done.length + ' entr' + (done.length === 1 ? 'y was' : 'ies were') + ' saved before the problem (' + done.map(d => d.label).join(', ') + '); set those lines to Skip before trying again.' : 'Nothing was saved; try again.'}`; }
 }
 
@@ -6817,6 +7038,7 @@ function rdNewRow(p, v, type) {
   const name = type === 'keycaps' ? f.name : (f.name || p.title), setName = f.name;
   const foreign = p.currency && p.currency !== 'USD', row0 = { vid: v ? v.id : '', vtitle: rdVariantLabel(v), type, name, setName, kitName: rdVariantLabel(v) || 'Base', shopPrice: v && v.price != null ? v.price : null, price: foreign ? null : v && v.price != null ? v.price : null, qty: packs, pack, img, copy: false, mode: 'new', itemId: '', replace: false };
   const row = row0; if (type === 'keycaps' && setName) { const words = String(setName).split(/\s+/).filter(w => w.length > 2); for (const w of words) { const re = new RegExp('^' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s+', 'i'); if (re.test(row.kitName) && row.kitName.replace(re, '').trim()) { row.kitName = row.kitName.replace(re, '').trim(); break; } } }   // "Illusion Base-Random" in set "Domikey Illusion" → "Base-Random"
+  const tg = readTarget('page'); if (tg && itemsOfType(tg.type).some(y => y.id === tg.id)) { row.type = tg.type; row.mode = 'existing'; row.itemId = tg.id; return row; }   // v0.96.0: reading into one entry
   const ex = rdSuggest(type, type === 'keycaps' ? setName : rdMatchLabel(type, Object.assign({}, f, { name })), type === 'keycaps' ? '' : rdPageUrl(p, v ? v.id : ''), type !== 'keycaps' && p.variants.length > 1, type === 'keyboards' ? f.color : ''); if (ex) { row.mode = 'existing'; row.itemId = ex; }
   return row;
 }
@@ -6855,6 +7077,7 @@ function renderLinkReader() {
   if (rdDone) { const d = rdDone; rdDone = null; view.innerHTML = `<a class="crumb" href="#/import">${I.back}Import</a><div class="card"><h3>Saved from ${esc(d.source)}</h3><ul class="rc-done">${d.items.map(x => `<li>${x.href ? `<a class="lnk" href="${x.href}">${esc(x.label)}</a>` : esc(x.label)} <span class="chip">${esc(x.what)}</span></li>`).join('')}</ul><div class="btnrow"><a class="btn primary" href="#/import/link">Read another page</a></div></div>`; return; }
   view.innerHTML = `<a class="crumb" href="#/import">${I.back}Import</a>
     <div class="pagehead"><div><h1>Read a product page</h1><p>Paste a link from an approved shop, or share a page to this app from your phone's browser. Nothing is saved until you press Save.</p></div></div>
+    ${readTarget('page') ? targetBannerHtml(readTarget('page')) : ''}
     <div class="card"><div class="rd-urlrow"><input class="input" id="rdUrl" type="url" inputmode="url" placeholder="https://divinikey.com/products/…" value="${esc(pending || (rdState && rdState.p ? rdState.p.url : ''))}"><button class="btn primary" id="rdGo">Read page</button></div><p class="sub" id="rdMsg" style="margin:8px 0 0"></p></div>
     <div id="rdBody"></div>`;
   const go = async () => { const u = document.getElementById('rdUrl').value.trim(), msg = document.getElementById('rdMsg'), btn = document.getElementById('rdGo'); if (!u) { msg.textContent = 'Paste a link first.'; return; }
@@ -6864,6 +7087,7 @@ function renderLinkReader() {
     } catch (e) { msg.innerHTML = `<span style="color:var(--bad-text)">${esc(e.message || String(e))}</span>`; }
     btn.disabled = false; };
   document.getElementById('rdGo').onclick = go; document.getElementById('rdUrl').onkeydown = e => { if (e.key === 'Enter') go(); };
+  wireTargetBanner(() => { document.getElementById('tgtBar')?.remove(); });
   if (pending) go(); else if (rdState && rdState.p) rdDrawBody();
 }
 function rdDrawBody() {
@@ -6964,7 +7188,9 @@ async function rdSave() {
       for (const { r } of rows) if (r.copy && r.img) await rdKeepCopy('keycaps', ref.id, r.img, 'From ' + p.source + ' · ' + r.kitName).catch(() => copyFails.push(r.kitName));
       done.push({ label: data.name + ' (' + rows.map(x => x.kit.name).join(', ') + ')', what: 'new keycap set', href: '#/keycaps/' + ref.id });
     }
-    rdDone = { source: p.source, items: done }; rdState = null; toast(copyFails.length ? `Saved. ${copyFails.length} picture cop${copyFails.length === 1 ? 'y' : 'ies'} could not be made; the links are kept.` : 'Saved from ' + p.source); renderLinkReader();
+    rdDone = { source: p.source, items: done }; rdState = null; toast(copyFails.length ? `Saved. ${copyFails.length} picture cop${copyFails.length === 1 ? 'y' : 'ies'} could not be made; the links are kept.` : 'Saved from ' + p.source);
+    const tg = readTarget('page'); setReadTarget(null); if (tg && done.length && done.every(d => d.href === `#/${tg.type}/${tg.id}`)) { rdDone = null; location.hash = `#/${tg.type}/${tg.id}`; return; }   // v0.96.0: back to the entry
+    renderLinkReader();
   } catch (e) { btn.disabled = false; btn.textContent = 'Save'; err.textContent = `Could not save everything: ${explain(e)}${done.length ? ' Already saved: ' + done.map(d => d.label).join(', ') + '. Remove those lines before trying again.' : ' Nothing was saved.'}`; }
 }
 /* ---- Import page card and Settings card ---- */
@@ -7103,7 +7329,7 @@ function linkCardHtml() {
     <div class="rd-urlrow"><input class="input" id="rdQuick" type="url" inputmode="url" placeholder="https://divinikey.com/products/…"><button class="btn primary" id="rdQuickGo">Read page</button></div>
     <p class="sub" style="margin:8px 0 0">Approved shops and the helper are set in <a class="lnk" href="#/settings">Settings → Product page reader</a>.</p></div>`;
 }
-function wireLinkCard() { const b = document.getElementById('rdQuickGo'); if (!b) return; const go = () => { const u = document.getElementById('rdQuick').value.trim(); if (!u) return; sessionStorage.setItem('kbc_link', u); location.hash = '#/import/link'; }; b.onclick = go; document.getElementById('rdQuick').onkeydown = e => { if (e.key === 'Enter') go(); }; }
+function wireLinkCard() { const b = document.getElementById('rdQuickGo'); if (!b) return; const go = () => { const u = document.getElementById('rdQuick').value.trim(); if (!u) return; setReadTarget(null); sessionStorage.setItem('kbc_link', u); location.hash = '#/import/link'; }; b.onclick = go; document.getElementById('rdQuick').onkeydown = e => { if (e.key === 'Enter') go(); }; }
 function readerCardHtml() {
   return `<h2 style="font-size:17px;margin:26px 0 12px">Product page reader</h2>
     <div class="card" id="readerCard"><h3>Read product pages from approved shops</h3><p class="sub">The app reads a shop's page through a small helper of your own on Cloudflare (free). It only reads shops listed here, only for your sign-in, and stores nothing. See the setup steps Claude gave you.</p>
