@@ -220,6 +220,15 @@
   .calc { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px 14px; border-radius: var(--radius-s); background: var(--bg-2); border: var(--bw) var(--bs) var(--line); }
   .calc div { font-size: 12px; color: var(--text-3); } .calc b { display: block; font-size: 17px; color: var(--text); font-variant-numeric: tabular-nums; margin-top: 2px; }
   .calc .tot b { font-size: 22px; color: var(--accent); }
+  .pr-up { color: var(--bad-text); font-weight: 650; } .pr-dn { color: var(--ok-text); font-weight: 650; } .pr-eq { color: var(--text-2); }
+  .vsret { grid-column: 1 / -1; padding: 10px 14px; border-radius: var(--radius-s); background: var(--bg-2); border: var(--bw) var(--bs) var(--line); font-size: 13px; color: var(--text-2); }
+  .vsret b { color: var(--text); font-variant-numeric: tabular-nums; }
+  .costtbl td.pr-up, .costtbl td.pr-dn { font-variant-numeric: tabular-nums; }
+  .shoppics { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin-top: 8px; }
+  .shoppic { border: var(--bw) var(--bs) var(--line); border-radius: var(--radius-s); background: #fff; overflow: hidden; display: flex; flex-direction: column; }
+  .shoppic.main { outline: 2px solid var(--accent); }
+  .shoppic a.pv { display: block; aspect-ratio: 4 / 3; } .shoppic img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .shoppic .acts { display: flex; flex-wrap: wrap; gap: 2px; padding: 4px; background: var(--bg-2); } .shoppic .acts button { font-size: 11px; padding: 2px 5px; }
   .checks { display: flex; gap: 18px; flex-wrap: wrap; padding-top: 4px; }
   .draftbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; padding: 10px 14px; border-radius: var(--radius-s);
     border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
@@ -641,7 +650,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.94.0';
+const APP_VERSION = 'v0.95.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -889,7 +898,7 @@ const MG_TEXT = new Set(['notes', 'mods', 'reviewText', 'review', 'currentBuildT
 const MG_ADD = { switches: new Set(['totalCount', 'price', 'shipping', 'discounts']) };
 const MG_MONEY = new Set(['price', 'shipping', 'discounts', 'retailPrice', 'estPrice']);
 const MG_LABELS = { name: 'Name', brand: 'Brand', manufacturer: 'Maker', price: 'Price paid', taxRate: 'Tax', shipping: 'Shipping', discounts: 'Discounts', datePurchased: 'Date purchased', dateReceived: 'Date received',
-  purchasedFrom: 'Purchased from', receipt: 'Receipt', pictureLink: 'Pictures link', orderNumber: 'Order number', acquisition: 'Acquisition', notes: 'Notes', mods: 'Mods', reviewText: 'Review', ratings: 'Ratings',
+  purchasedFrom: 'Purchased from', receipt: 'Receipt', pictureLink: 'Link to webpage', orderNumber: 'Order number', acquisition: 'Acquisition', notes: 'Notes', mods: 'Mods', reviewText: 'Review', ratings: 'Ratings',
   refUrl: 'Product page', shopText: "Shop's description", retailPrice: 'Retail price', alsoAvailable: 'Also available in', included: 'Included with the kit', description: 'Description', descriptors: 'Descriptors',
   installedOn: 'Installed on', installedOnText: 'Installed on (Excel)', belongsToText: 'Belongs to (Excel)', gmkRef: 'GMK catalog link', totalCount: 'Count', specsText: 'Specs (text)', currentBuildText: 'Current build',
   category: 'Category', style: 'Style / series', location: 'Location', color: 'Color', size: 'Size', layout: 'Layout', weightsAccents: 'Accents', keyboardType: 'Keyboard type', descriptionOwn: 'Description' };
@@ -2451,10 +2460,10 @@ function purchasePanelHtml(items) {
             ${fld('Tax rate', '<div class="money-in pct-in"><input class="input" type="number" min="0" max="30" step="0.001" inputmode="decimal" name="taxRatePct" id="f_taxRatePct" placeholder="6.625"><span>%</span></div><div class="quick" id="taxQuick">' + TAX_QUICK.map(([v, t]) => `<button type="button" data-tax="${v}">${t}</button>`).join('') + '</div>', { name: 'taxRatePct' })}
             ${fld('Shipping', '<div class="money-in"><span>$</span><input class="input" type="number" min="0" step="0.01" inputmode="decimal" name="shipping" id="f_shipping" placeholder="0.00"></div>', { name: 'shipping' })}
             ${fld('Discounts', '<div class="money-in"><span>$</span><input class="input" type="number" min="0" step="0.01" inputmode="decimal" name="discounts" id="f_discounts" placeholder="0.00"></div>', { name: 'discounts', hint: 'Coupons, refunds or credits, as a positive amount.' })}
-            <div class="calc"><div>Price + tax<b id="cPriceTax">$0.00</b></div><div>Shipping − discounts<b id="cShipDisc">$0.00</b></div><div class="tot">Total paid<b id="cTotal">$0.00</b></div></div>
+            <div class="calc"><div>Price + tax<b id="cPriceTax">$0.00</b></div><div>Shipping − discounts<b id="cShipDisc">$0.00</b></div><div class="tot">Total paid<b id="cTotal">$0.00</b></div></div><div class="vsret" id="cVsRet" hidden></div>
             <div class="fld full"><label>Acquisition type</label><div class="checks">${ACQUISITION.map(([v, t]) => `<label class="check"><input type="checkbox" name="acq" value="${v}"> ${t}</label>`).join('')}</div></div>
             ${fld('Receipt', inputHtml('receipt', 'Order number or link to the receipt'), { name: 'receipt', full: true, hint: 'A web link opens in a new tab; anything else is kept as text.' })}
-            ${fld('Pictures link', inputHtml('pictureLink', 'https://…'), { name: 'pictureLink', full: true, hint: 'Optional link to a product page or photo album.' })}
+            ${fld('Link to webpage', inputHtml('pictureLink', 'https://…'), { name: 'pictureLink', full: true, hint: 'The product’s webpage (or a photo album). Reading a product page fills it when it is empty.' })}
           </div>
           <datalist id="dlSellers">${uniq(PRELOADED_SELLERS.concat(items.map(k => k.purchasedFrom))).map(o => `<option value="${esc(o)}">`).join('')}</datalist>
         </div>`;
@@ -2529,6 +2538,22 @@ function updateCalc() {
   document.getElementById('cPriceTax').textContent = money(k.price * (1 + k.taxRate));
   document.getElementById('cShipDisc').textContent = money(k.shipping - k.discounts);
   document.getElementById('cTotal').textContent = money(kbTotal(k));
+  const box = document.getElementById('cVsRet'); if (!box) return;   // v0.95.0: paid vs retail, red = paid more, green = paid less
+  const c = calcCtx && calcCtx.x && calcCtx.x.id && location.hash.includes(calcCtx.x.id) ? calcCtx : null;
+  if (!c || calcCtx.type === 'keycaps') { box.hidden = true; return; }
+  const x = itemsOfType(c.type).find(y => y.id === c.x.id) || c.x; let ret = null, how = '';
+  if (c.type === 'switches') { const cnt = num('f_totalCount') || Number(x.totalCount) || 0, sr = x.retailPrice != null && x.retailPrice !== '' ? switchRetail(x) : null; if (sr && sr.each != null && cnt) { ret = sr.each * cnt; how = `${cnt} switches at ${money3(sr.each)} each`; } }
+  else if (x.retailPrice != null && x.retailPrice !== '') ret = Number(x.retailPrice);
+  const paid = kbTotal(k); box.hidden = false;
+  if (ret == null) { box.innerHTML = 'No retail price yet. Read the product page (From the shop → Read the page again) to compare what you paid with retail.'; return; }
+  const d = paidVsRetail(paid, ret);
+  box.innerHTML = `Retail <b>${money(ret)}</b>${how ? ` <span class="sub">(${esc(how)})</span>` : ''}${x.retailSource ? ` <span class="sub">· ${esc(x.retailSource)}</span>` : ''} · you paid <b>${money(paid)}</b> · <span class="${d.cls}">${esc(d.txt)}</span>`;
+}
+let calcCtx = null;
+function paidVsRetail(paid, retail) {   // v0.95.0: difference = paid − retail; over retail (red) or under (green)
+  const d = Math.round((Number(paid) - Number(retail)) * 100) / 100, pc = Number(retail) ? Math.round(Math.abs(d) / Number(retail) * 100) : 0;
+  if (Math.abs(d) < 0.005) return { cls: 'pr-eq', txt: 'same as retail', short: '$0.00', d: 0 };
+  return d > 0 ? { cls: 'pr-up', txt: `${money(d)} more than retail (${pc}%)`, short: '+' + money(d), d } : { cls: 'pr-dn', txt: `${money(-d)} less than retail (${pc}%)`, short: '−' + money(-d), d };
 }
 function tabOf(name) { return ['datePurchased', 'dateReceived', 'purchasedFrom', 'price', 'taxRatePct', 'shipping', 'discounts', 'receipt', 'pictureLink'].includes(name) ? 'purchase' : 'overview'; }
 function clearFieldError(name) {
@@ -5107,6 +5132,9 @@ function refCardHtml(t, x) {
     ${x.stockThumb ? `<img class="refimg" src="${x.stockThumb}" alt=""><p class="sub" style="margin:6px 0 0">Stock picture: your own photo. It is also the picture on the Summary; the list card shows your default photo. <button class="btn" id="refStockOff" style="padding:2px 8px">Use the shop picture</button></p>` : x.refImage ? `<a href="${esc(x.refUrl || x.refImage)}" target="_blank" rel="noopener"><img class="refimg" src="${esc(x.refImage)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></a>` : ''}
     <p class="sub" style="margin:8px 0 0">${has ? `Stock picture and details from ${esc(x.refSource || 'the product page')}${x.refUrl ? ` · <a class="lnk" href="${esc(x.refUrl)}" target="_blank" rel="noopener">open page ↗</a>` : ''}. Your own photos replace this picture on the card.` : 'No product page yet. Add a link to the maker’s or shop’s page and its picture.'}</p>
     ${x.retailPrice != null ? '<p class="refret sub">Retail price: see Paid and retail on the Summary.</p>' : ''}
+    ${(() => { const pics = shopPicsOf(x); if (!x.id || !pics.length) return '';   // v0.95.0: every picture from the shop page, each kept as a link; download, keep a copy, use as the shop picture, or remove
+      return `<details class="shoppicbox"${pics.length > 1 ? ' open' : ''}><summary>Pictures from the shop (${pics.length})</summary><div class="shoppics">${pics.map(u => `<div class="shoppic${u === x.refImage ? ' main' : ''}" data-u="${esc(u)}"><a class="pv" href="${esc(u)}" target="_blank" rel="noopener" title="Open the picture"><img src="${esc(u)}" alt="" loading="lazy" referrerpolicy="no-referrer"></a><div class="acts"><button class="btn" type="button" data-pact="dl" title="Download this picture to your device">⬇</button><button class="btn" type="button" data-pact="copy" title="Keep a copy with your photos (uses storage)">Keep</button>${u === x.refImage ? '' : '<button class="btn" type="button" data-pact="main" title="Use as the shop picture">★</button>'}<button class="btn danger" type="button" data-pact="del" title="Remove this picture from the entry">✕</button></div></div>`).join('')}</div>
+        <p class="sub" style="margin:6px 0 0;font-size:11.5px">Saved as links (no storage). ⬇ downloads one to your device · Keep copies it into your photos · ★ makes it the shop picture (outlined) · ✕ removes it. Read the page again with Replace to get them all back.</p></details>`; })()}
     ${x.id ? `<details class="shopopts"${av ? ' open' : ''}><summary>${av ? 'Options the shop sells' : 'Options'}${sibs ? ` · ${sibs + 1} in your collection` : ''}</summary><div id="availBox">${availHtml(x, t)}</div></details>` : ''}
     <div class="btnrow" style="margin-top:10px"><button class="btn" id="refEditBtn">${has ? 'Edit link & picture' : '+ Add product page'}</button>${x.refUrl && /^https?:/.test(x.refUrl) ? '<button class="btn" id="refReread" title="Read the shop page again into this entry (fills what is empty; tick Replace there to refresh prices and pictures)">Read the page again</button>' : ''}</div>
     <div id="refForm" hidden><div style="margin-top:10px;display:grid;gap:8px">
@@ -5129,9 +5157,24 @@ function sumWorkbookCovered(type, x) {
     if (!left.length) out.push('notes|Additional specifications'); }
   return out;
 }
+function shopPicsOf(x) { const r = x.refImages || []; return [...new Set((r.includes(x.refImage) ? r : [x.refImage, ...r]).filter(u => /^https?:\/\//.test(String(u || ''))))]; }
+async function shopPicAct(t, x, act, u) {
+  const cur = itemsOfType(t).find(y => y.id === x.id) || x, upd = {}, del = firebase.firestore.FieldValue.delete();
+  if (act === 'dl') { try { const r = await fetch(u, { mode: 'cors', referrerPolicy: 'no-referrer' }); if (!r.ok) throw new Error(r.status); const b = await r.blob(), a = document.createElement('a'), ext = (/\.(jpe?g|png|webp|gif|avif)(?:\?|$)/i.exec(u) || [, (b.type.split('/')[1] || 'jpg')])[1];
+      a.href = URL.createObjectURL(b); a.download = `${[cur.manufacturer || cur.brand, cur.name].filter(Boolean).join(' ').replace(/[^\w .-]+/g, '').trim() || 'picture'} ${shopPicsOf(cur).indexOf(u) + 1}.${ext}`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); toast('Picture downloaded'); }
+    catch (e) { window.open(u, '_blank', 'noopener'); toast('This shop doesn’t allow a direct download: the picture opened in a new tab; right-click it → Save image as…'); } return; }
+  if (act === 'copy') { toast('Keeping a copy…'); try { await rdKeepCopy(t, x.id, u, 'From ' + (cur.refSource || 'the shop')); toast('Copy kept with your photos'); } catch (e) { toast('This shop’s website doesn’t allow copying its pictures. Use ⬇ (download) and add it as your own photo.'); } return; }
+  if (act === 'main') upd.refImage = u;
+  if (act === 'del') { const left = (cur.refImages || []).filter(v => v !== u); upd.refImages = left.length ? left : del; if (cur.refImage === u) upd.refImage = left[0] || del; }
+  try { await withTimeout(colOfType(t).doc(x.id).update(Object.assign(upd, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() })));
+    const now = itemsOfType(t).find(y => y.id === x.id) || Object.assign({}, cur, { refImage: upd.refImage === del ? undefined : upd.refImage || cur.refImage, refImages: upd.refImages === del ? [] : upd.refImages || cur.refImages });
+    const c2 = document.getElementById('refCard'); if (c2) { c2.outerHTML = refCardHtml(t, now); wireRefCard(t, now); } toast(act === 'del' ? 'Picture removed' : 'Shop picture changed'); }
+  catch (e) { toast('Could not save: ' + explain(e)); }
+}
 function wireRefCard(t, x) {
   const rr = document.getElementById('refReread'); if (rr) rr.onclick = () => { if (formDirty) { toast('Save or discard your changes first'); return; } sessionStorage.setItem('kbc_link', x.refUrl); location.hash = '#/import/link'; };
   const card = document.getElementById('refCard'); if (!card) return;
+  card.querySelectorAll('[data-pact]').forEach(b => b.onclick = e => { e.preventDefault(); const box = b.closest('.shoppic'); shopPicAct(t, x, b.dataset.pact, box.dataset.u); });
   const $ = id => document.getElementById(id), form = $('refForm');
   const prev = () => { const u = $('refImgIn').value.trim(); $('refPrev').innerHTML = /^https?:\/\//.test(u) ? `<img class="refimg" src="${esc(u)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<p class=&quot;sub&quot; style=&quot;margin:0;color:var(--danger)&quot;>That picture link did not load. Check it is a direct image link.</p>'">` : ''; };
   $('refEditBtn').onclick = () => { form.hidden = false; $('refEditBtn').hidden = true; prev(); $('refUrlIn').focus(); };
@@ -5216,6 +5259,7 @@ async function summaryAction(view, x, type, e) {
 }
 function restoreTab(view, x, type) {
   addSummaryTab(view, x, type);
+  calcCtx = { type, x }; if (document.getElementById('cVsRet')) updateCalc();
   const t = lastTab.id === x.id ? lastTab.tab : 'summary';
   if (t !== 'overview') view.querySelector(`.tabs [data-tab="${t}"]`)?.click();
 }
@@ -5278,11 +5322,12 @@ function drawSummary(view, x, type) {
   if (vals.length) links.push(['Market value', `${money(vals[0].value)} (${fmtDate(vals[0].date)}${vals[0].source ? ', ' + vals[0].source : ''})`, '']);
   const linkedHtml = (() => { const rows = links.map(([k, v, h]) => { const key = 'linked|' + k + '|' + v, hid = hidden.includes(key); if (hid) nHidden++; return { k, v, h, key, hid }; }).filter(r => !r.hid || sumShowHidden);
       return rows.length ? `<div class="sumsec"><h4>Linked</h4><dl class="sumdl">${rows.map(r => `<dt class="${r.hid ? 'sumhid' : ''}">${esc(r.k)}</dt><dd class="sumrow${r.hid ? ' sumhid' : ''}" data-sk="${esc(r.key)}"><span class="sumv">${r.h ? `<a class="lnk" href="${r.h}">${esc(r.v)}</a>` : esc(r.v)}</span><span class="sumacts"><button class="lnk" data-sumhide title="${r.hid ? 'Show on the Summary' : 'Hide from the Summary'}">${r.hid ? 'Unhide' : 'Hide'}</button></span></dd>`).join('')}</dl></div>` : ''; })();
-  { let rdl = ''; if (type === 'switches' && live.retailPrice != null) { const sr = switchRetail(live); rdl = `<dl class="sumdl"><dt>Shop price</dt><dd><span class="sumv">${money(live.retailPrice)}${sr.count ? ` for ${sr.count} switches` : ' <span class="sub">(how many switches is that?)</span>'} <span class="sub">(${esc(live.retailSource || 'shop')}${live.retailPriceAt ? ', ' + esc(fmtDate(live.retailPriceAt)) : ''})</span> <button class="lnk" type="button" id="retCountEdit" title="How many switches the shop's price is for">change</button><span id="retCountBox" hidden> <input class="input" id="retCountIn" type="number" min="1" step="1" style="width:90px;display:inline-block" value="${sr.count || ''}"> <button class="btn" type="button" id="retCountSave">Save</button></span></span></dd></dl>`; }
+  { let rdl = ''; if (type === 'switches' && live.retailPrice != null) { const sr = switchRetail(live); rdl = `<dl class="sumdl"><dt>Shop price</dt><dd><span class="sumv">${money(live.retailPrice)}${sr.count ? ` for ${sr.count} switches` : ' <span class="sub">(how many switches is that?)</span>'}${(() => { const ch = ((live.alsoAvailable || {}).groups || []).filter(g => g.chosen).map(g => g.chosen); return ch.length ? ` · ${esc(ch.join(', '))}` : ''; })()} <span class="sub">(${esc(live.retailSource || 'shop')}${live.retailPriceAt ? ', ' + esc(fmtDate(live.retailPriceAt)) : ''})</span> <button class="lnk" type="button" id="retCountEdit" title="How many switches the shop's price is for">change</button><span id="retCountBox" hidden> <input class="input" id="retCountIn" type="number" min="1" step="1" style="width:90px;display:inline-block" value="${sr.count || ''}"> <button class="btn" type="button" id="retCountSave">Save</button></span></span></dd></dl>`; }
     const cs = paidRetailHtml(type, live, rdl); if (cs) secs.splice(Math.min(1, secs.length), 0, cs); }
   if ((live.alsoAvailable && ((live.alsoAvailable.groups || []).length || (live.alsoAvailable.layouts || []).length)) || avSiblings(type, live).length) secs.push(`<div class="sumsec" id="sumAvail"><div class="sec-title"><h4>Also available in</h4></div>${availHtml(live, type)}</div>`);
   if (type !== 'keyboards' && live.included) secs.push(`<div class="sumsec" id="sumIncluded"><h4>Included with the kit</h4><ul class="incl">${String(live.included).split('\n').filter(Boolean).map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>`);
-  if (live.shopText) secs.push(`<div class="sumsec" id="sumShop"><h4>From the shop</h4><details class="shoptext"><summary>Shop's description</summary><div class="rd-shoptext">${esc(live.shopText).replace(/\n/g, '<br>')}</div></details><p class="sub" style="margin:6px 0 0;font-size:11.5px">Text and pictures from ${live.shopTextUrl ? `<a class="lnk" href="${esc(live.shopTextUrl)}" target="_blank" rel="noopener">${esc(live.shopTextSource || 'the shop')}</a>` : esc(live.shopTextSource || 'the shop')}${live.shopTextAt ? ', read ' + esc(fmtDate(live.shopTextAt)) : ''}. Prices are under ${type === 'keyboards' ? 'Build cost' : 'Paid and retail'}.</p></div>`);   // prices moved to Paid and retail (v0.86.0)
+  if (!live.shopText && live.refUrl && /^https?:/.test(live.refUrl)) secs.push(`<div class="sumsec" id="sumShop"><h4>From the shop</h4><p class="sub" style="margin:0">Webpage: <a class="lnk" href="${esc(live.refUrl)}" target="_blank" rel="noopener">${esc(live.refUrl.replace(/^https?:\/\/(www\.)?/, '').replace(/\?.*$/, ''))} ↗</a></p></div>`);   // v0.95.0
+  if (live.shopText) secs.push(`<div class="sumsec" id="sumShop"><h4>From the shop</h4>${live.refUrl && /^https?:/.test(live.refUrl) ? `<p class="sub" style="margin:0 0 6px">Webpage: <a class="lnk" href="${esc(live.refUrl)}" target="_blank" rel="noopener">${esc(live.refUrl.replace(/^https?:\/\/(www\.)?/, '').replace(/\?.*$/, ''))} ↗</a></p>` : ''}<details class="shoptext"><summary>Shop's description</summary><div class="rd-shoptext">${esc(live.shopText).replace(/\n/g, '<br>')}</div></details><p class="sub" style="margin:6px 0 0;font-size:11.5px">Text and pictures from ${live.shopTextUrl ? `<a class="lnk" href="${esc(live.shopTextUrl)}" target="_blank" rel="noopener">${esc(live.shopTextSource || 'the shop')}</a>` : esc(live.shopTextSource || 'the shop')}${live.shopTextAt ? ', read ' + esc(fmtDate(live.shopTextAt)) : ''}. Prices are under ${type === 'keyboards' ? 'Build cost' : 'Paid and retail'}.</p></div>`);   // prices moved to Paid and retail (v0.86.0)
   const ext = live.summaryExtra || [];
   secs.push(`<div class="sumsec" id="sumExtra"><h4>Your details</h4>
     ${ext.length ? `<dl class="sumdl">${ext.map(e => `<dt>${esc(e.label)}</dt><dd class="sumrow"><span class="sumv">${sumDd(e.value || '', '')}</span><span class="sumacts"><button class="lnk" data-sumxdel="${esc(e.id)}" title="Remove this row">Remove</button></span></dd>`).join('')}</dl>` : '<p class="sub" style="margin:0 0 6px">Add any detail that has no field, e.g. Lube, Film, Mods, Serial number.</p>'}
@@ -6607,7 +6652,7 @@ function rdGuessType(p, v) {
   if (/desk ?mat|mouse ?pad|keyboard mat/i.test(p.title) && !/keycap/i.test(p.title)) return 'deskmats';
   if (partGuess(p.title)[0] === 'switchparts' && !/\bswitches\b(?!.*(films?|springs?|stems?|pads?))/i.test(p.title)) return 'switchparts';
   const tBare = p.title.replace(/\s*\([^)]*\)\s*$/, '');   // "… Linear Switches (10PCS)"
-  if (/^switch(es)?$/i.test(p.productType) || ((rdHas(tags, /\bswitch\b/i) || /\b(linear|tactile|clicky|silent|magnetic|hall effect)?\s*switch(es)?$/i.test(tBare)) && !/tester|opener|puller|film|spring|station|sampler|keyboard/i.test(all) && !/\blube\b/i.test(p.title))) return 'switches';   // a "Hand Lubed" option is still a switch
+  if (/^switch(es)?$/i.test(p.productType) || ((rdHas(tags, /\bswitch\b/i) || /\b(linear|tactile|clicky|silent|magnetic|hall effect)?\s*switch(es)?$/i.test(tBare)) && !/tester|opener|puller|film|spring|station|sampler|keyboard/i.test(p.title) && !/tester|opener|puller|station|sampler/i.test(vt) && !/\blube\b/i.test(p.title))) return 'switches';   // v0.95.0: option words like "35 in Film Packaging" / "Hand Lubed and Filmed" don't make it a film   // a "Hand Lubed" option is still a switch
   if (/keycap/i.test(p.productType) || /keycaps?\b/i.test(p.title)) return 'keycaps';
   if (/keyboard|barebone/i.test(p.title) && !/accessor|parts|plates?|cable|deskmat|desk mat|case only|carrying|pcb/i.test(p.title)) return 'keyboards';   // a keyboard's options may mention its PCB
   if (/^keyboards?( kits?)?$|keyboard kit/i.test(p.productType) && !/\b(pcbs?|plates?|case only|parts|accessor)/i.test(p.title)) return 'keyboards';   // KeebsForAll "Top Case & PCB" option
@@ -6649,7 +6694,8 @@ const rdStrip = (title, vendor, re) => { let t = String(title || ''); if (vendor
 const rdUnit = (s, u) => { const m = /(\d+(?:\.\d+)?)(?:\s*[±+-]\s*(\d+(?:\.\d+)?))?\s*(mm|g|gf)?/i.exec(String(s || '')); return m ? `${m[1]}${m[2] ? '±' + m[2] : ''} ${u}` : ''; };
 const rdVariantLabel = v => v && v.title && v.title !== 'Default Title' ? v.title : '';
 function rdPackCount(p, v) {
-  const qi = p.options.findIndex(o => /^(qty|quantity|count|pack|pack size|amount)$/i.test(o.name)); if (v && qi >= 0 && /^\s*\d{1,4}\s*(pcs|switches|x)?\s*$/i.test(v.opts[qi] || '')) return Number(/\d{1,4}/.exec(v.opts[qi])[0]);   // Mode: "Qty: 70 | 90 | 110"
+  const qi = p.options.findIndex(o => /^(qty|quantity|count|pack|pack size|packaging|amount|size)$/i.test(o.name) && o.values.every(x => /^\s*\d{1,4}\b/.test(x)));   // Mode "70"; Lume "35 in Film Packaging" (v0.95.0: the option beats "sold in packs of 10" in the text)
+  if (v && qi >= 0 && /^\s*\d{1,4}\b/.test(v.opts[qi] || '')) return Number(/\d{1,4}/.exec(v.opts[qi])[0]);   // Mode: "Qty: 70 | 90 | 110"
   if (v && /^\s*(\d{1,4})\s*(?:\||\/|x\b|pcs\b|switches\b)/i.test(v.title || '')) return Number(/\d{1,4}/.exec(v.title)[0]);   // v0.94.0 CannonKeys: "36 | Dry"
   const t = p.text + ' ' + (v ? v.title : ''), m = /(\d{1,4})\s+(?:included in each pack|switches? (?:per|in each) pack)/i.exec(t) || /(?:available in|sold in)\s+(?:quantities|packs|sets) of\s*(\d{1,4})/i.exec(t) || /(\d{1,4})\s*(?:-|\s)?\s*(?:set|pack|pcs|pieces|count|ct)\b/i.exec(v ? v.title : '') || /\((\d{1,4})\s*(?:pcs|pieces|pack|ct)\)/i.exec(p.title) || /(?:pack of|set of)\s*(\d{1,4})/i.exec(t) || /pack size:\s*(\d{1,4})/i.exec(t);
   return m ? Number(m[1]) : null;
@@ -6692,6 +6738,7 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
     const pm = plateMaterialFrom(vl); if (pm && /plate/i.test(vl)) f.plateMaterial = pm;
   } else if (type === 'switches') {
     f.manufacturer = p.vendor || pick('manufacturer', 'brand', 'maker'); f.name = rdStrip(p.title, p.vendor, /\s+(silent\s+)?(linear|tactile|clicky|magnetic|hall effect)?\s*switch(es)?(\s*\(\s*\d+\s*(pcs|pc|pieces|x)\s*\))?$/i);
+    f.name = f.name.replace(/^(?:x|×)\s+/i, '');   // v0.95.0: "HMX x 80Retros KD200" → "80Retros KD200"
     const tt = (p.title + ' ' + p.tags.join(' ') + ' ' + bare.join(' ')).toLowerCase();
     f.switchType = /silent/.test(tt) && /tactile/.test(tt) ? 'Silent tactile' : /silent/.test(tt) ? 'Silent linear' : /hall effect|magnetic/.test(tt) ? 'Hall effect (magnetic)' : /tactile/.test(tt) ? 'Tactile' : /clicky/.test(tt) ? 'Clicky' : /linear/.test(tt) ? 'Linear' : '';
     const map = [['top housing', 'topMaterial'], ['bottom housing', 'bottomMaterial'], ['stem', 'stemMaterial']]; map.forEach(([k, n]) => { const x = pick(k); if (x) f[n] = x; });
@@ -6704,7 +6751,7 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
     const pins = /([35])[- ]?pin/i.exec(bare.join(' ') + ' ' + p.text); if (pins) f.pins = pins[1] + '-pin';
     if (bare.some(b => /^(factory )?(lubed|pre-?lubed|lubed from factory)$/i.test(b.trim()))) f.preLubed = true;
     if (/^(yes|factory|lubed|true)\b/i.test(pick('factory lube', 'factory lubed', 'factory lubrication', 'pre-lubed', 'prelubed', 'lubed'))) f.preLubed = true;   // v0.94.0: "Factory Lube: Yes"
-    if (/\b(dry|unlubed|no lube|not lubed|stock)\b/i.test(vl)) delete f.preLubed; else if (/\blubed\b/i.test(vl) && !/hand[- ]?lubed/i.test(vl)) f.preLubed = true;   // the option chosen wins ("36 | Dry" / "36 | Lubed")
+    if (/\b(dry|unlubed|no lube|not lubed)\b/i.test(vl)) delete f.preLubed; else if (/\blubed\b/i.test(vl) && !/hand[- ]?lubed/i.test(vl)) f.preLubed = true;   // the option chosen wins ("36 | Dry" / "36 | Lubed")
     { const fs = [pick('spring weight', 'spring force', 'force', 'spring'), p.text || ''].join(' ');   // "50g actuation, 65g bottom out"
       if (!f.actuationForce) { const m = /(\d+(?:\.\d+)?)\s*(?:g|gf|grams?)\s*(?:actuation|operating)/i.exec(fs) || /(?:actuation|operating)(?: force)?\s*(?:of|:|-)?\s*(\d+(?:\.\d+)?)\s*(?:g|gf|grams?)\b/i.exec(fs); if (m) f.actuationForce = m[1] + ' gf'; }
       if (!f.bottomOutForce) { const m = /(\d+(?:\.\d+)?)\s*(?:g|gf|grams?)\s*(?:bottom[- ]?out|end)/i.exec(fs) || /bottom[- ]?out(?: force)?\s*(?:of|:|-)?\s*(\d+(?:\.\d+)?)\s*(?:g|gf|grams?)\b/i.exec(fs); if (m) f.bottomOutForce = m[1] + ' gf'; } }
@@ -6880,7 +6927,7 @@ async function rdSave() {
   const now = firebase.firestore.FieldValue.serverTimestamp(), today = todayIso(), done = [], copyFails = [];
   const pageUrl = v => rdPageUrl(p, v);
   const shopBits = r => { const v = p.variants.find(x => x.id === r.vid) || null, av = avNorm(rdAvailable(p, v));
-    return { refUrl: pageUrl(r.vid), refSource: p.source, refImage: r.img || (p.images[0] || {}).src || '', refImages: p.images.map(x => x.src).slice(0, 16), shopText: p.text || '', shopTextSource: p.source, shopTextUrl: pageUrl(''), shopTextAt: today,
+    return { refUrl: pageUrl(r.vid), refSource: p.source, refImage: r.img || (p.images[0] || {}).src || '', refImages: p.images.map(x => x.src).slice(0, 40), pictureLink: pageUrl(r.vid), shopText: p.text || '', shopTextSource: p.source, shopTextUrl: pageUrl(''), shopTextAt: today,
       included: (p.includes || []).join('\n'), alsoAvailable: av.groups.length || av.layouts.length ? av : null }; };
   const retailBits = r => r.price == null ? {} : Object.assign({ retailPrice: rcRound(r.price * (r.type === 'switches' ? (r.qty || 1) : 1)), retailPriceAt: today, retailSource: p.source }, r.type === 'switches' && r.pack ? { retailCount: r.pack * (r.qty || 1) } : {});   // switches: how many switches that price buys
   const clean = o => { Object.keys(o).forEach(k => (o[k] === '' || o[k] == null || (Array.isArray(o[k]) && !o[k].length)) && delete o[k]); return o; };
@@ -6892,7 +6939,7 @@ async function rdSave() {
         const d = clean({ category: cat, name: r.type === 'keycaps' ? r.setName : r.name, version: r.type === 'keycaps' ? r.kitName : r.vtitle, platform: p.vendor, estPrice: r.price == null ? null : rcRound(r.price * (r.type === 'switches' ? r.qty || 1 : 1)), link: pageUrl(r.vid), status: 'wanted', notes: 'From ' + p.source, createdAt: now, updatedAt: now, source: 'app', addedFrom: 'product page' });
         await withTimeout(wishCol().add(d)); done.push({ label: d.name + (d.version ? ' — ' + d.version : ''), what: 'wishlist', href: '#/wishlist' }); continue; }
       if (r.type === 'keycaps') {
-        const kt = rdKitType(r.kitName), kit = clean({ id: newKitId(), name: String(r.kitName).trim(), kitType: kt === 'Other' && /\b(extension|add-?on)s?\b/i.test(p.title) ? 'Extensions' : kt, quantity: 1, refImage: r.img || '', notOwned: r.notOwned || undefined, ...retailBits(r) });
+        const kt = rdKitType(r.kitName), kit = clean({ id: newKitId(), name: String(r.kitName).trim(), kitType: kt === 'Other' && /\b(extension|add-?on)s?\b/i.test(p.title) ? 'Extensions' : kt, quantity: 1, refImage: r.img || '', pictureLink: pageUrl(r.vid), notOwned: r.notOwned || undefined, ...retailBits(r) });
         if (r.mode === 'existing') { const s = savedKeycaps.find(x => x.id === r.itemId), kits = (kcKits.get(s.id) || kitsOf(s)).map(k => Object.assign({}, k)), hit = kits.find(k => kitKey(k.name) === kitKey(kit.name));
           if (hit) { if (hit.retailPrice == null || r.replace) Object.assign(hit, retailBits(r)); if (!hit.refImage && kit.refImage) hit.refImage = kit.refImage; } else kits.push(kit); kcKits.set(s.id, kits);
           const upd = { kits }; Object.entries(Object.assign({}, base, shopBits(r))).forEach(([k, val]) => { if (k === 'name') return; if (k === 'alsoAvailable' && s.alsoAvailable && val) { upd[k] = typeof avMerge === 'function' ? avMerge(s.alsoAvailable, val) : val; return; } if (blank(s[k]) || (r.replace && /^(ref|shopText|alsoAvailable|included)/.test(k))) upd[k] = val; });
@@ -6952,10 +6999,10 @@ function paidRetailHtml(type, x, retailDl) {
   const has = v => v != null && !isNaN(v), sumP = rows.reduce((a, r) => a + (has(r.paid) ? r.paid : 0), 0), withR = rows.filter(r => has(r.retail)), sumR = withR.reduce((a, r) => a + r.retail, 0), miss = rows.length - withR.length;
   const many = rows.length > 1, diff = sumR - sumP;
   return `<div class="sumsec" id="sumCost"><h4>${type === 'keyboards' ? 'Build cost: paid and retail' : 'Paid and retail'}</h4>${retailDl || ''}
-    <table class="costtbl"><thead><tr>${many ? '<th></th>' : ''}<th>Item</th><th class="num">Paid</th><th class="num">Retail</th></tr></thead><tbody>
-    ${rows.map(r => `<tr>${many ? `<td class="sub">${esc(r.k)}</td>` : ''}<td>${r.href ? `<a class="lnk" href="${r.href}">${esc(r.label)}</a>` : esc(r.label)}${r.note ? `<span class="sub"> · ${esc(r.note)}</span>` : ''}</td><td class="num">${has(r.paid) ? money(r.paid) : '—'}</td><td class="num">${has(r.retail) ? money(r.retail) + (r.src ? `<span class="sub"> ${esc(r.src)}</span>` : '') : '—'}</td></tr>`).join('')}</tbody>
-    ${many ? `<tfoot><tr><td></td><td><b>Total</b></td><td class="num"><b>${money(sumP)}</b></td><td class="num"><b>${withR.length ? money(sumR) : '—'}</b></td></tr></tfoot>` : ''}</table>
-    <p class="sub" style="margin:6px 0 0;font-size:11.5px">Paid = price + tax + shipping − discounts.${withR.length && !miss ? ` Retail is ${money(Math.abs(diff))} ${diff >= 0 ? 'more' : 'less'} than you paid.` : ''}${miss ? ` ${miss} item${miss === 1 ? ' has' : 's have'} no retail price yet (read the product page to add it)${withR.length ? ', so the retail total is only for the rest' : ''}.` : ''}${type === 'keycaps' || type === 'keyboards' ? ' GMK kits without a shop price use the group-buy price.' : ''}</p></div>`;
+    <table class="costtbl"><thead><tr>${many ? '<th></th>' : ''}<th>Item</th><th class="num">Paid</th><th class="num">Retail</th><th class="num" title="Paid − retail: red = you paid more than retail, green = less">Difference</th></tr></thead><tbody>
+    ${rows.map(r => { const dv = has(r.paid) && has(r.retail) ? paidVsRetail(r.paid, r.retail) : null; return `<tr>${many ? `<td class="sub">${esc(r.k)}</td>` : ''}<td>${r.href ? `<a class="lnk" href="${r.href}">${esc(r.label)}</a>` : esc(r.label)}${r.note ? `<span class="sub"> · ${esc(r.note)}</span>` : ''}</td><td class="num">${has(r.paid) ? money(r.paid) : '—'}</td><td class="num">${has(r.retail) ? money(r.retail) + (r.src ? `<span class="sub"> ${esc(r.src)}</span>` : '') : '—'}</td><td class="num ${dv ? dv.cls : ''}" ${dv ? `title="${esc(dv.txt)}"` : ''}>${dv ? dv.short : '—'}</td></tr>`; }).join('')}</tbody>
+    ${many ? (() => { const pw = withR.filter(r => has(r.paid)).reduce((a, r) => a + r.paid, 0), dt = withR.some(r => has(r.paid)) ? paidVsRetail(pw, withR.filter(r => has(r.paid)).reduce((a, r) => a + r.retail, 0)) : null; return `<tfoot><tr><td></td><td><b>Total</b></td><td class="num"><b>${money(sumP)}</b></td><td class="num"><b>${withR.length ? money(sumR) : '—'}</b></td><td class="num ${dt ? dt.cls : ''}"><b>${dt ? dt.short : '—'}</b></td></tr></tfoot>`; })() : ''}</table>
+    <p class="sub" style="margin:6px 0 0;font-size:11.5px">Paid = price + tax + shipping − discounts. Difference = paid − retail: <span class="pr-up">red</span> = you paid more than retail, <span class="pr-dn">green</span> = you paid less.${withR.length && !miss ? (() => { const dd = paidVsRetail(sumP, sumR); return ` In all you paid <span class="${dd.cls}">${esc(dd.txt)}</span>.`; })() : ''}${miss ? ` ${miss} item${miss === 1 ? ' has' : 's have'} no retail price yet (read the product page to add it)${withR.length ? ', so the retail total is only for the rest' : ''}.` : ''}${type === 'keycaps' || type === 'keyboards' ? ' GMK kits without a shop price use the group-buy price.' : ''}</p></div>`;
 }
 function switchRetail(x) {   // the shop's price is for a pack (or several): how many switches it covers, and how that compares with what you paid
   let count = Number(x.retailCount) || 0, from = 'saved';
