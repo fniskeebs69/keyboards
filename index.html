@@ -641,7 +641,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.90.0';
+const APP_VERSION = 'v0.91.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -6574,6 +6574,7 @@ function rdGuessType(p, v) {
   const tags = p.tags, vt = v && v.title !== 'Default Title' ? v.title : '', all = p.title + ' ' + vt;
   if ((rdHas(tags, /artisan/i) || /artisan/i.test(p.title)) && !/keycaps? set|key ?set/i.test(p.title)) return 'artisans';   // KBDfans tags full keycap sets "Artisan keycaps"
   if (/desk ?mat|mouse ?pad/i.test(vt)) return 'deskmats';   // a deskmat option on a keycap page (v0.88.0)
+  if (/\bartisans?\b/i.test(vt) && /keycap/i.test(p.productType + ' ' + p.title) && !p.gmkRef) return 'artisans';   // not on Matrix pages: GMK's catalog counts an artisan as one of the set's kits   // an artisan option on a keycap page (v0.91.0)
   if (/wrist ?rest/i.test(vt)) return 'accessories';
   if (/desk ?mat|mouse ?pad|keyboard mat/i.test(p.title) && !/keycap/i.test(p.title)) return 'deskmats';
   if (partGuess(p.title)[0] === 'switchparts' && !/\bswitches\b(?!.*(films?|springs?|stems?|pads?))/i.test(p.title)) return 'switchparts';
@@ -6679,11 +6680,12 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
     f.name = rdStrip(p.title, '', /\s+(extension|add-?on)s?(\s+kits?)?$|\s+keycaps?(\s+set)?$|\s+kits?$/i);
     const mk = pick('manufacturer', 'maker', 'made by'), pre = PRELOADED_KC_MAKERS.find(x => new RegExp('^' + x.replace(/[()]/g, '\\$&') + '\\b', 'i').test(p.title));
     f.manufacturer = mk || (/^(gmk|cyl)\b/i.test(p.title) ? 'GMK' : pre) || p.vendor;
+    { const ct = kcCleanTitle(p.title, f.manufacturer); if (/^\s*\[|\s(keycaps?|keycap set)\s+\S/i.test(p.title) || ct.designer) { f.name = ct.name; if (ct.designer && !designer) f.designer = ct.designer; } }
     if (p.gmkRef) { f.gmkRef = p.gmkRef; if (p.gmkSet && typeof gmkPaletteFrom === 'function') { const pal = gmkPaletteFrom(p.gmkSet); if (pal.length) f.palette = pal; } }   // read from a Matrix page: linked to the catalog set, colors from its color table
     if (designer) f.designer = designer;
     const prof = KC_PROFILES.find(x => new RegExp('\\b' + x + '\\b', 'i').test(bare.join(' ') + ' ' + pick('profile') + ' ' + p.tags.filter(t => /profile/i.test(t)).join(' '))); if (prof) f.profile = prof; else if (f.manufacturer === 'GMK') f.profile = 'Cherry';
     const mat = KC_MATERIALS.find(x => new RegExp('\\b' + x + '\\b').test(bare.join(' ') + ' ' + pick('material') + ' ' + p.tags.join(' '))); if (mat) f.material = mat;
-    const leg = bare.join(' ') + ' ' + ['legends', 'legend', 'manufacturing method', 'production method', 'printing method', 'printing', 'legend method'].map(k => pick(k)).join(' ') + ' ' + p.tags.join(' ') + ' ' + p.productType; f.legends = /double[- ]?shot/i.test(leg) ? 'Doubleshot' : /dye-?sub/i.test(leg) ? 'Dye-sub' : /uv print/i.test(leg) ? 'UV printed' : /laser/i.test(leg) ? 'Lasered' : ''; if (!f.legends) delete f.legends;
+    const leg = bare.join(' ') + ' ' + ['legends', 'legend', 'manufacturing method', 'production method', 'printing method', 'printing', 'legend method', 'material', 'process'].map(k => pick(k)).join(' ') + ' ' + p.tags.join(' ') + ' ' + p.productType; f.legends = /(double|triple)[- ]?shot/i.test(leg) ? 'Doubleshot' : /dye-?sub/i.test(leg) ? 'Dye-sub' : /uv print/i.test(leg) ? 'UV printed' : /laser/i.test(leg) ? 'Lasered' : ''; if (!f.legends) delete f.legends;
     if (/mx compatible|mx stem|compatible with mx|mx[- ]style/i.test(bare.join(' ')) || /\bmx\b/i.test(pick('switch stem', 'stem', 'compatib'))) f.stemMount = 'MX';
     const col = pick('colors', 'colours', 'color codes'); if (col) f.colorsText = col;
   } else if (type === 'pcbs') {
@@ -6694,6 +6696,7 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
     if (/tri-?mode|wireless|bluetooth/.test(s)) f.notes = 'Tri-mode (wireless) PCB.';
   } else if (type === 'artisans') {
     f.manufacturer = madeBy || p.vendor; f.name = rdStrip(p.title, p.vendor, /\s+artisan(\s+keycaps?)?$/i); if (vl) f.colorway = vl;
+    if (vl && /artisan/i.test(vl) && /keycap/i.test(p.productType + ' ' + p.title)) { const mk2 = (/manufacturer\s*:\s*([^\n<]+)/i.exec(p.text || '') || [])[1], ct = kcCleanTitle(p.title, (mk2 || '').trim()); f.name = /artisan/i.test(ct.name) ? ct.name : `${ct.name} ${vl.replace(new RegExp('^' + ct.name.split(' ').pop() + '\\s+', 'i'), '')}`; if (mk2) f.manufacturer = mk2.trim(); if (ct.designer) f.notes = 'Designed by ' + ct.designer + '.'; delete f.colorway; }
     if (/resin/i.test(bare.join(' '))) f.material = 'Resin'; if (/mx compatible/i.test(bare.join(' '))) f.stem = 'MX';
   } else {
     f.manufacturer = p.vendor; f.name = vl ? `${rdStrip(p.title, '', /$/)} - ${vl}` : p.title; f.category = rdAccCategory(p, v); foamFill(f, p.title + ' ' + vl); if (vl) f.style = vl;
@@ -6701,7 +6704,14 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
   Object.keys(f).forEach(k => (f[k] === '' || f[k] == null) && delete f[k]);
   return f;
 }
-function rdKitType(n) { const s = String(n).toLowerCase(); return /base|core/.test(s) ? 'Base' : /novel/.test(s) ? 'Novelties' : /space|bars/.test(s) ? 'Spacebars' : /num/.test(s) ? 'Numpad' : /alpha/.test(s) ? 'Alphas' : /mod/.test(s) ? 'Modifiers' : /international|iso|intl/.test(s) ? 'International' : /extension|addon|add-on/.test(s) ? 'Extensions' : 'Other'; }
+function kcCleanTitle(title, maker) {   // v0.91.0 (KPrepublic): "[GBEXTERAS] GLOVE x Domikey Illusion Keycaps Cherry Profile ABS…" → { name: 'Domikey Illusion', designer: 'GLOVE' }
+  let t = String(title || '').replace(/^\s*(\[[^\]]*\]\s*)+/, '').replace(/\s+/g, ' ').trim(), designer = '';
+  t = t.replace(/\s+(keycaps?|keycap set|key ?caps?)\b.*$/i, '').replace(/\s+(extension|add-?on)s?(\s+kits?)?$|\s+kits?$/i, '').trim() || t;
+  const m = /^(.+?)\s+[x×]\s+(.+)$/i.exec(t);
+  if (m && maker && m[2].toLowerCase().startsWith(String(maker).toLowerCase() + ' ')) { designer = m[1].trim(); t = m[2].trim(); }
+  return { name: t, designer };
+}
+function rdKitType(n) { const s = String(n).toLowerCase(); return /base|core/.test(s) ? 'Base' : /novel|\bnov\b/.test(s) ? 'Novelties' : /space|bars/.test(s) ? 'Spacebars' : /num/.test(s) ? 'Numpad' : /alpha/.test(s) ? 'Alphas' : /mod/.test(s) ? 'Modifiers' : /international|iso|intl/.test(s) ? 'International' : /extension|addon|add-on/.test(s) ? 'Extensions' : 'Other'; }
 function rdImageOf(p, v) { if (v && v.imageSrc) return v.imageSrc; const i = v && v.imageId && p.images.find(x => String(x.id) === String(v.imageId)); return (i || p.images[0] || {}).src || ''; }
 function rdNorm(s) { return String(s || '').toLowerCase().replace(/\bcyl\b|\bkeycaps?\b|\bset\b|\bkeyboard\b|\bswitch(es)?\b|[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim(); }
 const rdJoin = (maker, name) => maker && name && String(name).toLowerCase().startsWith(String(maker).toLowerCase()) ? name : [maker, name].filter(Boolean).join(' ');
@@ -6724,7 +6734,8 @@ function rdSuggest(type, name, url, strict, color) {   // the saved entry this m
 function rdNewRow(p, v, type) {
   type = type || rdGuessType(p, v); const f = rdFields(p, v, type), img = rdImageOf(p, v), packs = 1, pack = type === 'switches' ? rdPackCount(p, v) : null;
   const name = type === 'keycaps' ? f.name : (f.name || p.title), setName = f.name;
-  const foreign = p.currency && p.currency !== 'USD', row = { vid: v ? v.id : '', vtitle: rdVariantLabel(v), type, name, setName, kitName: rdVariantLabel(v) || 'Base', shopPrice: v && v.price != null ? v.price : null, price: foreign ? null : v && v.price != null ? v.price : null, qty: packs, pack, img, copy: false, mode: 'new', itemId: '', replace: false };
+  const foreign = p.currency && p.currency !== 'USD', row0 = { vid: v ? v.id : '', vtitle: rdVariantLabel(v), type, name, setName, kitName: rdVariantLabel(v) || 'Base', shopPrice: v && v.price != null ? v.price : null, price: foreign ? null : v && v.price != null ? v.price : null, qty: packs, pack, img, copy: false, mode: 'new', itemId: '', replace: false };
+  const row = row0; if (type === 'keycaps' && setName) { const words = String(setName).split(/\s+/).filter(w => w.length > 2); for (const w of words) { const re = new RegExp('^' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s+', 'i'); if (re.test(row.kitName) && row.kitName.replace(re, '').trim()) { row.kitName = row.kitName.replace(re, '').trim(); break; } } }   // "Illusion Base-Random" in set "Domikey Illusion" → "Base-Random"
   const ex = rdSuggest(type, type === 'keycaps' ? setName : rdMatchLabel(type, Object.assign({}, f, { name })), type === 'keycaps' ? '' : rdPageUrl(p, v ? v.id : ''), type !== 'keycaps' && p.variants.length > 1, type === 'keyboards' ? f.color : ''); if (ex) { row.mode = 'existing'; row.itemId = ex; }
   return row;
 }
