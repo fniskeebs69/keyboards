@@ -671,7 +671,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.102.0';
+const APP_VERSION = 'v0.104.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -2033,7 +2033,7 @@ const HELP = [
   { id: 'readpageinto', t: 'Read a webpage into one entry', g: 'Adding and reading', ctx: ['item'], k: 'read webpage into this entry link page shop details update refresh pull from entry main section keyboard switch keycap set accessory item existing',
     s: ['Open the entry and find the "From the shop" card (side column).', 'Press "🔗 Read a webpage into this entry" (or "Read the page again" if it has one) and paste the link.', 'The banner "Reading into …" means the option you pick fills this entry only. Tick Replace to refresh price and pictures.', 'Save takes you back to the entry. "Stop reading into it" turns it into a normal read.'], go: '' },
   { id: 'receipt', t: 'Read a receipt', g: 'Adding and reading', ctx: ['import'], k: 'receipt pdf invoice order paypal ebay drop price tax shipping read import purchase phone android paste text could not read no text',
-    s: ['Save the order page as a PDF (Print → Save as PDF; a photo or scan can\'t be read). On an Android phone: Chrome ⋮ → Share → Print → Save as PDF works too.', 'If a PDF can\'t be read: "Paste the text of an order page instead" (it opens by itself after the error). Open the order page, long-press a word → Select all → Copy, paste, Read pasted text.', 'Import → drop the PDF on "Read a receipt". It is read on this device only and never uploaded or kept.', 'Each line is matched to an entry you have (or a new one, or Skip). Tax is spread as a rate, shipping and discounts split across the lines, to the cent.', 'Save approved lines: price, tax, shipping, discounts, date, seller and order number are filled; existing prices stay unless you tick replace.'], go: '#/import' },
+    s: ['Save the order page as a PDF (Print → Save as PDF; a photo or scan can\'t be read). On an Android phone: Chrome ⋮ → Share → Print → Save as PDF works too.', 'A price that was only the shop\'s retail price standing in (its note says so) is replaced by the receipt automatically, and the note is removed.', 'If a PDF can\'t be read: "Paste the text of an order page instead" (it opens by itself after the error). Open the order page, long-press a word → Select all → Copy, paste, Read pasted text.', 'Import → drop the PDF on "Read a receipt". It is read on this device only and never uploaded or kept.', 'Each line is matched to an entry you have (or a new one, or Skip). Tax is spread as a rate, shipping and discounts split across the lines, to the cent.', 'Save approved lines: price, tax, shipping, discounts, date, seller and order number are filled; existing prices stay unless you tick replace.'], go: '#/import' },
   { id: 'receiptinto', t: 'Read a receipt into one entry', g: 'Adding and reading', ctx: ['item'], k: 'receipt into this entry pdf purchase tab price paid order pull keyboard switch keycap set accessory pcb item existing',
     s: ['Open the entry → Purchase tab (keycap sets: Kits tab).', 'Press "📄 Read a receipt into this entry" and choose the PDF.', 'The receipt line that matches is pointed at this entry; the other lines start as Skip (change any of them if you want them too).', 'Save takes you back to the entry with its price, tax, shipping, date, seller and order number filled.'], go: '' },
   { id: 'shops', t: 'Add a shop to the product page reader', g: 'Adding and reading', ctx: ['settings'], k: 'approved shops add website domain reader helper cloudflare not allowed settings',
@@ -2114,6 +2114,8 @@ const HELP = [
     s: ['Sets linked to the GMK catalog (or with a kit marked not owned) show "2/4 kits · 50%".', 'GMK reference card: missing kits with "+ Wishlist"; Filter → Missing kits.'], go: '#/keycaps' },
   { id: 'kitmatch', t: 'Match a kit to the catalog (novelties with their own names)', g: 'Keycaps', ctx: ['keycaps'], k: 'novelty novelties name rename kit type match catalog kit picture different name overwrite main picture nishi rama link my kit',
     s: ['Keycap set → Kit gallery → click your kit (or the catalog kit) → "Your kit … is this catalog kit": pick the catalog kit (e.g. Nishi). Saved at once; the picture and price follow.', 'In the same window: "Kit type" (e.g. Novelties) and "Rename my kit to …" (uses the catalog name); both go to the Kits tab, then Save. Purchase details, pictures and where it is installed stay with the kit.', '"Use this picture for this kit" shows the picture you are looking at for that kit everywhere; "stop using" goes back.', 'Keycaps → Main picture: Novelties (or Base, Spacebars, Numpads) also uses the kit type, so a novelty named "Nishi" still shows.'], go: '#/keycaps' },
+  { id: 'gmkshop', t: 'Add GMK sets from a shop (Oblotzky)', g: 'Keycaps', ctx: ['catalog', 'keycaps'], k: 'oblotzky shop gmk sets add catalog reference vendor missing set not in catalog euro eur',
+    s: ['Catalog → GMK reference (private) → "Add GMK sets from a shop…" → shop address (oblotzky.industries is filled in) → Read the shop.', 'Sets not in your catalog yet are ticked; sets Matrix already has can be ticked to add the shop\'s link, prices and the kit pictures Matrix lacks. Add ticked sets.', 'They are saved only in your private Firebase catalog, marked "shop". Oblotzky prices stay in € and are not used as US retail prices. Link your sets to them on the GMK reference card as usual. Read the shop again later to refresh.', 'The shop must be on your approved list (Settings → Product page reader).'], go: '#/catalog/shop' },
   { id: 'gmk', t: 'GMK catalog and Matrix pages', g: 'Keycaps', ctx: ['keycaps', 'catalog'], k: 'gmk catalog matrix link fill from catalog reference group buy colors codes pictures old photos',
     s: ['Keycap set → GMK reference card: suggested catalog sets, or search; link it, then Save.', 'Linking a set that has old Keycap Collection photos switches "Kit pictures" (on the card) to "GMK catalog pictures first"; your old photos stay as extra pictures on each kit. Switch it back on the card if you prefer them.', '"Fill from catalog" fills empty fields and the catalog colors.', 'A Matrix page link in the reader builds the set from the private catalog.'], go: '#/catalog' },
   { id: 'colors', t: 'Colors: palette, color wheel, textures', g: 'Keycaps', ctx: ['keycaps'], k: 'colors colour palette wheel hex pick from picture texture gmk code ral classic design pantone eyedropper color name purple blue wrong',
@@ -2226,6 +2228,7 @@ function route() {
   else if (sec.id === 'import' && parts[1] === 'link') renderLinkReader();
   else if (sec.id === 'import') renderImport();
   else if (sec.id === 'catalog' && parts[1] === 'match') renderGmkMatch();
+  else if (sec.id === 'catalog' && parts[1] === 'shop') renderGmkShop();
   else if (sec.id === 'catalog') renderCatalog();
   else if (sec.id === 'value') renderValue();
   else if (sec.id === 'stats') renderStats();
@@ -4948,7 +4951,7 @@ function gmkCodeLabel(c, withAlt = false) {
   if (!c) return ''; const [code, alt0] = String(c.code).split(/\s+or\s+/i).map(x => x.trim()); const alt = c.alt || alt0;
   return (c.sys === 'GMK' || c.sys === 'Hex' ? code : c.sys + ' ' + code) + (withAlt && alt ? ` (or ${alt})` : '');
 }
-function gmkKitPrice(k) { if (k.priceUsd != null) return money(k.priceUsd); const e = Object.entries(k.prices || {})[0]; return e ? `${money(e[1])} (${esc(e[0])})` : ''; }
+function gmkKitPrice(k) { if (k.priceUsd != null) return money(k.priceUsd); const e = Object.entries(k.prices || {})[0]; return e ? `${/EUR/.test(e[0]) ? '€' + Number(e[1]).toFixed(2) : money(e[1])} (${esc(e[0].replace(/ \(EUR\)$/, ''))})` : ''; }   // v0.103.0: shop prices in euros keep their €
 function gmkStripHtml(set) {
   const seen = new Set(), sw = [];
   (set.colors || []).flatMap(r => [r.base, r.legend]).forEach(c => { const h = gmkHex(c); if (h && !seen.has(h)) { seen.add(h); sw.push([gmkCodeLabel(c), h]); } });
@@ -4996,10 +4999,10 @@ function drawGmkTab(box) {
     const q = catQuery.trim().toLowerCase();
     const hit = s => !q || q.split(/\s+/).every(w => [s.title, s.titleCn, s.designer, s.profile, s.colorCodes].join(' ').toLowerCase().includes(w));
     const list = sets.filter(hit), el = document.getElementById('catN_gmk'); if (el) el.textContent = sets.length;
-    box.innerHTML = `<div class="btnrow" style="margin:0 0 10px"><a class="btn primary" href="#/catalog/match">Match your GMK sets…</a></div><p class="sub" style="margin:0 0 10px">${esc(gmkMeta?.credit || GMK_CREDIT)}</p>
+    box.innerHTML = `<div class="btnrow" style="margin:0 0 10px"><a class="btn primary" href="#/catalog/match">Match your GMK sets…</a><a class="btn" href="#/catalog/shop">Add GMK sets from a shop…</a></div><p class="sub" style="margin:0 0 10px">${esc(gmkMeta?.credit || GMK_CREDIT)}${sets.some(x => x.source) ? ` Sets marked “shop” come from that shop's own pages (${esc([...new Set(sets.filter(x => x.source).map(x => x.source))].join(', '))}).` : ''}</p>
       ${list.length ? `<table class="list"><thead><tr><th>Set</th><th>Designer</th><th>Group buy</th><th>Kits</th><th>Colors</th><th>You own</th></tr></thead><tbody>${list.slice(0, 300).map(s => {
         const own = savedKeycaps.find(k => gmkMatchScore(k.name, s) === 3);
-        return `<tr class="row" data-gmk="${esc(s.id)}"><td><b>GMK ${esc(s.title)}</b>${s.titleCn ? ` <span class="sub" style="margin:0">${esc(s.titleCn)}</span>` : ''}</td><td>${esc(s.designer || '')}</td><td>${esc([s.gbStart, s.gbEnd].filter(Boolean).join(' → '))}</td>
+        return `<tr class="row" data-gmk="${esc(s.id)}"><td><b>GMK ${esc(s.title)}</b>${s.source ? ` <span class="chip" title="From ${esc(s.source)}">shop</span>` : ''}${s.titleCn ? ` <span class="sub" style="margin:0">${esc(s.titleCn)}</span>` : ''}</td><td>${esc(s.designer || '')}</td><td>${esc([s.gbStart, s.gbEnd].filter(Boolean).join(' → '))}</td>
           <td>${(s.kits || []).length}</td><td>${gmkStripHtml(s) || '<span style="color:var(--text-3)">—</span>'}</td><td>${own ? `<a class="chip" href="#/keycaps/${esc(own.id)}">Yes</a>` : ''}</td></tr>`; }).join('')}</tbody></table>${list.length > 300 ? `<p class="sub">Showing 300 of ${list.length}; search to narrow it down.</p>` : ''}`
         : '<div class="card empty"><h2>No matches</h2></div>'}
       <div id="gmkDetail"></div>`;
@@ -5014,7 +5017,8 @@ function gmkDetailHtml(s) {
     ${(s.kits || []).length ? `<h4 style="margin:12px 0 6px">Kits</h4>${s.kits.some(k => k.img) ? `<div class="kgrid sm">${s.kits.map(k => `<div class="kg own"><span class="kgimg">${k.img ? `<img src="${esc(k.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</span><span class="kgname">${esc(k.name)}</span><span class="kgsub">${gmkKitPrice(k) || '&nbsp;'}</span></div>`).join('')}</div>` : `<div class="chips">${s.kits.map(k => `<span class="chip">${esc(k.name)}${gmkKitPrice(k) ? ' · ' + gmkKitPrice(k) : ''}</span>`).join(' ')}</div>`}` : ''}
     ${(s.colors || []).length ? `<h4 style="margin:12px 0 6px">Colors</h4><table class="list"><thead><tr><th>Group</th><th>Base</th><th>Legend</th></tr></thead><tbody>${s.colors.map(r => `<tr><td>${esc(r.group || '')}</td><td>${sw(r.base)}</td><td>${sw(r.legend)}</td></tr>`).join('')}</tbody></table>` : '<p class="sub">No color table for this set.</p>'}
     ${(s.links || []).length ? `<details class="more" style="margin-top:10px"><summary>Original group-buy links (often closed now)</summary><p class="sub" style="margin:6px 0 0">${s.links.map(l => `<a class="lnk" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join(' · ')}</p></details>` : ''}
-    <p class="sub" style="margin:8px 0 0">${esc(GMK_CREDIT)}</p></div>`;
+    ${(s.shopLinks || []).length ? `<p style="margin:10px 0 0">${s.shopLinks.map(l => `<a class="lnk" href="${esc(l.url)}" target="_blank" rel="noopener">Open on ${esc(l.label)} ↗</a>`).join(' · ')}</p>` : ''}
+    <p class="sub" style="margin:8px 0 0">${s.source ? `From ${esc(s.source)}'s product page (read ${esc(s.readAt || '')}), private use only.` : esc(GMK_CREDIT)}</p></div>`;
 }
 function showGmkDetail(s) { const d = document.getElementById('gmkDetail'); if (!d || !s) return; d.innerHTML = `<div class="card" style="margin-top:16px">${gmkDetailHtml(s)}</div>`; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 /* name matching between your set names and catalog titles (suggestions only) */
@@ -5372,6 +5376,66 @@ function wireMergeCard(s) {
 /* ===================== Step 9.5: kit gallery + Matrix pages =====================
    Pictures are not copied: catalog kits hold links to the pictures on Matrix's site (matrixzj.github.io),
    and the browser shows them from there. The links live only in Firebase (private catalog), never in this file. */
+/* ===================== v0.103.0: GMK sets from a shop (Faraz Nov 24: Oblotzky Industries) =====================
+   Reads the shop's whole product list through your helper (Shopify /products.json), keeps GMK keycap sets and adds them
+   to your private GMK catalog in Firebase (never in this file): title, designer, kits with the shop's price (EUR at Oblotzky)
+   and each kit's picture, the shop link. Sets already in the catalog are offered as "add the shop's link and missing kit pictures". */
+let gmkShop = null;
+function shopKitName(v, p) { const t = String(v.title || '').trim(); return /^default title$/i.test(t) ? 'Base' : t.split(' / ')[0]; }
+function shopSetFromProduct(p, host, label) {
+  const title = String(p.title || '').replace(/^\s*GMK\s+/i, '').replace(/\s+keycaps?( set)?$/i, '').trim();
+  const body = [].concat(rdHtmlToText(p.body_html || '')).join('\n'), des = (/designed by\s+([^\n.,;]+)/i.exec(body) || [])[1] || '';
+  const imgs = p.images || [], imgFor = v => { if (v.featured_image && v.featured_image.src) return v.featured_image.src; const n = kitKey(shopKitName(v)), file = i => kitKey(String(i.src || '').split('/').pop().split('?')[0].replace(/\.\w+$/, '').replace(/[_-]+/g, ' ')); const im = (v.image_id && imgs.find(i => i.id === v.image_id)) || imgs.find(i => (i.variant_ids || []).includes(v.id)) || imgs.find(i => i.alt && kitKey(i.alt).includes(n)) || (n.length >= 3 && imgs.find(i => file(i).endsWith(n))); return im ? im.src : (p.variants.length === 1 && imgs[0] ? imgs[0].src : ''); };
+  const pk = label + (/oblotzky/i.test(host) ? ' (EUR)' : ''), kits = (p.variants || []).filter(v => !/desk ?mat|mouse ?pad|wrist ?rest/i.test(v.title || '')).map(v => ({ name: shopKitName(v, p), prices: { [pk]: Number(v.price) }, img: imgFor(v) || '' }));
+  const url = 'https://' + host + '/products/' + p.handle;
+  return { id: 'shop-' + host.split('.')[0] + '-' + p.handle.replace(/[^a-z0-9-]/gi, '').slice(0, 80), title, designer: des.trim().slice(0, 60), profile: /\bCYL\b/.test(p.title) ? 'Cherry (CYL)' : 'Cherry', kits,
+    colors: [], links: [], shopLinks: [{ url, label }], source: label, sourceUrl: url, readAt: new Date().toISOString().slice(0, 10), cover: imgs[0] ? imgs[0].src : '' };
+}
+function isGmkProduct(p) { return /^\s*GMK\b/i.test(p.title || '') || /^gmk$/i.test(p.vendor || '') && /key ?caps?|keycap set/i.test((p.product_type || '') + ' ' + (p.tags || []).join(' ')); }
+function renderGmkShop() {
+  const v = document.getElementById('view');
+  v.innerHTML = `<div class="pagehead"><div><h1>Add GMK sets from a shop</h1><p>Reads a shop's GMK keycap sets and adds them to your private GMK catalog, so you can link your sets to them (kit pictures, completion, Kit gallery). Nothing goes into the app file or the repo.</p></div><div class="actions"><a class="btn" href="#/catalog">Back to the catalog</a></div></div>
+    <div class="card"><div class="aadd" style="grid-template-columns:1fr auto"><input class="input" id="gsHost" value="oblotzky.industries" aria-label="Shop address"><button class="btn primary" id="gsRead">Read the shop</button></div>
+      <p class="sub" style="margin:8px 0 0">Works with Shopify shops on your approved list (Settings → Product page reader). Oblotzky Industries sells in euros, so its prices are kept in € (shown as such; not used as US prices).</p><div id="gsMsg" class="sub"></div></div><div id="gsList"></div>`;
+  const msg = document.getElementById('gsMsg');
+  document.getElementById('gsRead').onclick = async () => {
+    const host = document.getElementById('gsHost').value.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '').toLowerCase(); if (!host) return;
+    const label = RD_SHOPS[host] || host; msg.textContent = 'Reading ' + host + '…'; let all = [];
+    try { await loadGmk(true);
+      for (let page = 1; page <= 20; page++) { const r = await rdFetch(`https://${host}/products.json?limit=250&page=${page}`, 'application/json'); const ps = (JSON.parse(r.text).products || []); all = all.concat(ps); msg.textContent = `Reading ${host}… ${all.length} products`; if (ps.length < 250) break; }
+    } catch (e) { msg.innerHTML = `<span style="color:var(--bad-text)">${esc(explain(e))}</span>`; return; }
+    const found = all.filter(isGmkProduct).map(p => shopSetFromProduct(p, host, label)).filter(x => x.kits.length);
+    const cat = gmkSets || [], rows = found.map(x => { const same = cat.find(c => !c.source && gmkMatchScore('GMK ' + x.title, c) === 3), mine = cat.find(c => c.id === x.id); return { x, same, mine, on: !same }; });
+    gmkShop = { host, label, rows }; msg.textContent = `${all.length} products read, ${found.length} GMK sets.`; drawGmkShop();
+  };
+}
+function drawGmkShop() {
+  const box = document.getElementById('gsList'); if (!box || !gmkShop) return; const R = gmkShop.rows, cur = k => /EUR/.test(Object.keys(k.prices)[0]) ? '€' : '$';
+  const nNew = R.filter(r => !r.same).length, nSame = R.length - nNew;
+  box.innerHTML = `<div class="card"><div class="btnrow" style="margin:0 0 10px"><button class="btn" id="gsAll">Tick all</button><button class="btn" id="gsNone">Untick all</button><button class="btn primary" id="gsGo">Add ticked sets</button></div>
+    <p class="sub" style="margin:0 0 8px">${nNew} not in your catalog yet (ticked) · ${nSame} already there from Matrix (tick to add ${esc(gmkShop.label)}'s link, prices and the kit pictures Matrix doesn't have).</p>
+    <table class="list"><thead><tr><th></th><th>Set</th><th>Kits</th><th>Designer</th><th>In your catalog</th></tr></thead><tbody>${R.map((r, i) => `<tr><td><input type="checkbox" data-gsi="${i}"${r.on ? ' checked' : ''} aria-label="Add GMK ${esc(r.x.title)}"></td>
+      <td>${r.x.cover ? `<img src="${esc(r.x.cover)}" alt="" style="width:56px;height:42px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-right:8px" referrerpolicy="no-referrer" loading="lazy">` : ''}<b>GMK ${esc(r.x.title)}</b></td>
+      <td>${r.x.kits.map(k => `${esc(k.name)} ${cur(k)}${Number(Object.values(k.prices)[0]).toFixed(0)}`).join(', ')}</td><td>${esc(r.x.designer)}</td>
+      <td>${r.same ? `Yes: GMK ${esc(r.same.title)} (Matrix)` : r.mine ? 'Yes (added before; adding again refreshes it)' : '—'}</td></tr>`).join('')}</tbody></table></div>`;
+  box.onchange = e => { const c = e.target.closest('[data-gsi]'); if (c) R[+c.dataset.gsi].on = c.checked; };
+  document.getElementById('gsAll').onclick = () => { R.forEach(r => r.on = true); drawGmkShop(); };
+  document.getElementById('gsNone').onclick = () => { R.forEach(r => r.on = false); drawGmkShop(); };
+  document.getElementById('gsGo').onclick = async () => {
+    const todo = R.filter(r => r.on); if (!todo.length) { toast('Nothing ticked'); return; }
+    if (!await askConfirm(`Add ${todo.filter(r => !r.same).length} new sets and update ${todo.filter(r => r.same).length} existing ones in your private GMK catalog?`, { ok: 'Add' })) return;
+    let n = 0; const b = document.getElementById('gsGo'); b.disabled = true;
+    try { for (const r of todo) {
+        if (!r.same) await withTimeout(gmkCol().doc(r.x.id).set(r.x));
+        else { const c = r.same, kits = (c.kits || []).map(k => Object.assign({}, k)), used = new Set();
+          r.x.kits.forEach(sk => { const m = kits.find(k => !used.has(k) && (kitKey(k.name) === kitKey(sk.name) || kitMatch(k.name, sk.name))); if (m) { used.add(m); if (!m.img && sk.img) m.img = sk.img; m.prices = Object.assign({}, m.prices || {}, sk.prices); } });
+          const links = (c.shopLinks || []).filter(l => l.label !== gmkShop.label).concat(r.x.shopLinks);
+          await withTimeout(gmkCol().doc(c.id).update({ kits, shopLinks: links })); }
+        n++; b.textContent = `Adding… ${n}/${todo.length}`; }
+      await loadGmk(true); toast(`${n} sets added or updated in your GMK catalog`); location.hash = '#/catalog';
+    } catch (e) { b.disabled = false; b.textContent = 'Add ticked sets'; toast(`Stopped after ${n}: ${explain(e)}`); }
+  };
+}
 function matrixUrlOf(ref) {
   if (!ref) return ''; if (ref.matrixUrl) return ref.matrixUrl;
   const slug = String(ref.sourcePage || '').replace(/\.md$/, ''); return slug ? 'https://matrixzj.github.io/docs/gmk-keycaps/' + encodeURIComponent(slug) + '/' : '';
@@ -6271,32 +6335,39 @@ async function pdfText(bytes) {
     text = text.normalize('NFKC');   // v0.102.0: ligatures (ﬁ → fi) so words like Confirmed match
     out.push(text.split('\n').map(l => l.replace(/[ \t ]+/g, ' ').trim()).filter(Boolean).join('\n'));
   }
-  return { pages: out };
+  // v0.104.0: the PDF's own title and date (Chrome writes the page title, e.g. "Order NK_535933 - NovelKeys LLC - Account", and the save date)
+  const info = (() => { const ir = /\/Info\s+(\d+) \d+ R/.exec(raw.slice(-4096)) || /\/Info\s+(\d+) \d+ R/.exec(raw); const o = ir && objs.get(+ir[1]); return o ? o.dict : (/\/Title\s*\(/.exec(raw.slice(0, 4096)) ? raw.slice(0, 4096) : ''); })();
+  const lit = k => { const m = new RegExp('/' + k + '\\s*\\(((?:\\\\.|[^\\\\)])*)\\)').exec(info); if (m) { const v = m[1].replace(/\\([()\\])/g, '$1'); return /^\xfe\xff/.test(v) ? Array.from({ length: (v.length - 2) >> 1 }, (_, i) => String.fromCharCode((v.charCodeAt(2 + 2 * i) << 8) | v.charCodeAt(3 + 2 * i))).join('') : v; }
+    const h = new RegExp('/' + k + '\\s*<([0-9A-Fa-f]+)>').exec(info); if (!h) return ''; const x = h[1]; if (/^feff/i.test(x)) { let s = ''; for (let i = 4; i + 4 <= x.length; i += 4) s += String.fromCharCode(parseInt(x.slice(i, i + 4), 16)); return s; } let s = ''; for (let i = 0; i + 2 <= x.length; i += 2) s += String.fromCharCode(parseInt(x.slice(i, i + 2), 16)); return s; };
+  const cd = /D:(\d{4})(\d{2})(\d{2})/.exec(lit('CreationDate') || '');
+  return { pages: out, title: lit('Title').normalize('NFKC').trim(), created: cd ? `${cd[1]}-${cd[2]}-${cd[3]}` : '' };
 }
 /* Reads the text of an order page saved as PDF and returns what was bought. Runs on the device; nothing is uploaded.
    Known layouts: Drop, eBay, PayPal invoice, Shopify order pages (new account pages such as MechanicalKeyboards.com and
    NovelKeys; classic order pages such as Divinikey). Anything else gets a best-effort read of the totals. */
-function parseReceipt(pages) {
+function parseReceipt(pages, meta = {}) {   // meta: { title, created } from the PDF itself (v0.104.0)
   const MON = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
   const num = s => { const m = /-?\$?\s*([\d,]+(?:\.\d+)?)/.exec(String(s)); return m ? parseFloat(m[1].replace(/,/g, '')) : null; };
   const iso = (y, m, d) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
   const fullDate = s => { const m = /\b([A-Za-z]{3})[a-z]*\.? (\d{1,2}),? (\d{4})\b/.exec(s || ''); return m && MON[m[1].toLowerCase()] ? iso(+m[3], MON[m[1].toLowerCase()], +m[2]) : ''; };
-  const all = pages.join('\n'), rawLines = all.split('\n').map(l => l.trim()).filter(Boolean);
+  const all = pages.join('\n').replace(/\r\n?/g, '\n').split('\n').map(l => l.replace(/[ \t\u00a0]+/g, ' ').trim()).join('\n'), rawLines = all.split('\n').filter(Boolean);   // v0.104.0: pasted text may have \r and indents
   const head = rawLines.find(l => /^\d{1,2}\/\d{1,2}\/\d{2,4}, \d{1,2}:\d{2} ?(AM|PM)/i.test(l)) || '', url = (rawLines.find(l => /^https?:\/\//.test(l)) || '').split(' ')[0];
-  const printed = (() => { const m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/.exec(head); return m ? iso(m[3].length === 2 ? 2000 + +m[3] : +m[3], +m[1], +m[2]) : ''; })();
+  const printed = (() => { const m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/.exec(head); return m ? iso(m[3].length === 2 ? 2000 + +m[3] : +m[3], +m[1], +m[2]) : (meta.created || ''); })();   // phone PDFs: the date the PDF was saved
   const L = rawLines.filter(l => !/^\d{1,2}\/\d{1,2}\/\d{2,4}, \d{1,2}:\d{2} ?(AM|PM)/i.test(l) && !/^https?:\/\/\S+( \d+\/\d+)?$/.test(l) && !/^\d+\/\d+$/.test(l));
   const host = (/^https?:\/\/([^/]+)/.exec(url) || [])[1] || '';
   const SELLERS = { 'mechanicalkeyboards.com': 'MechanicalKeyboards.com', 'novelkeys.com': 'NovelKeys', 'divinikey.com': 'Divinikey', 'drop.com': 'Drop', 'kbdfans.com': 'KBDfans', 'cannonkeys.com': 'CannonKeys', 'keychron.com': 'Keychron', 'omnitype.com': 'Omnitype', 'milktooth.com': 'Milktooth', 'ebay.com': 'eBay', 'amazon.com': 'Amazon' };
   const sellerFromHost = () => { const h = host.replace(/^(www|account|shop|store|checkout)\./, ''); return SELLERS[h] || (h ? h.replace(/\.(com|net|co|store|shop|io)$/, '').replace(/^./, c => c.toUpperCase()) : ''); };
   const sellerFromText = () => {   // v0.102.0: PDFs saved on a phone have no printed web address; use "Orders sold by NovelKeys LLC" or the page title
     const m = /(?:^|\n)(?:Orders )?sold by (.+)/i.exec(all) || /(?:^|\n)Thank you for (?:shopping|your order) (?:at|with) (.+)/i.exec(all); if (!m) return '';
-    const n = m[1].replace(/\s+(Terms and policies|United States).*$/i, '').replace(/,?\s+(LLC|Inc\.?|Ltd\.?|Co\.)$/i, '').replace(/[.!]$/, '').trim(), k = n.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const hit = Object.entries(SELLERS).find(([h, v]) => h.replace(/\..*$/, '') === k || v.toLowerCase().replace(/[^a-z0-9]/g, '') === k); return hit ? hit[1] : n.slice(0, 40); };
-  const r = { kind: 'generic', seller: sellerFromHost() || sellerFromText(), orderNumber: '', date: '', dateNote: '', lines: [], subtotal: null, shipping: 0, tax: 0, discount: 0, total: null, warnings: [] };
+    return cleanSeller(m[1]); };
+  function cleanSeller(x) { const n = String(x || '').replace(/\s+(Terms and policies|United States).*$/i, '').replace(/,?\s+(LLC|Inc\.?|Ltd\.?|GmbH|Co\.)$/i, '').replace(/[.!]$/, '').trim(), k = n.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const hit = Object.entries(SELLERS).find(([h, v]) => h.replace(/\..*$/, '') === k || v.toLowerCase().replace(/[^a-z0-9]/g, '') === k); return hit ? hit[1] : n.slice(0, 40); }
+  const r = { kind: 'generic', seller: sellerFromHost() || sellerFromText() || (/^Order NK_\d+$/m.test(all) ? 'NovelKeys' : '') || ((/ - (.+?) - Account$/.exec(meta.title || '') || [])[1] ? cleanSeller(/ - (.+?) - Account$/.exec(meta.title)[1]) : ''), orderNumber: '', date: '', dateNote: '', lines: [], subtotal: null, shipping: 0, tax: 0, discount: 0, total: null, warnings: [] };
   const after = (re, n = 1) => { const i = L.findIndex(l => re.test(l)); return i >= 0 ? L[i + n] || '' : ''; };
   const findNum = re => { for (const l of L) { const m = re.exec(l); if (m) return num(m[1]); } return null; };
   const freeOr = s => /free/i.test(s) ? 0 : num(s);
-  if (/Transaction Receipt \| Drop|drop\.com\/transactions/i.test(all)) {
+  const headT = head || meta.title || '';   // v0.104.0: phone PDFs print no header line; the PDF title has the same text
+  if (/Transaction Receipt \| Drop|drop\.com\/transactions/i.test(all + '\n' + headT)) {
     r.kind = 'drop'; r.seller = 'Drop'; r.date = fullDate(after(/^DATE PURCHASED$/)); r.orderNumber = after(/^ORDER #$/);
     r.subtotal = findNum(/^SUBTOTAL (.+)$/); r.shipping = freeOr((L.find(l => /^SHIPPING & HANDLING /.test(l)) || '').replace('SHIPPING & HANDLING', '')) || 0; r.discount = Math.abs(findNum(/^DISCOUNT -?(.+)$/) || 0); r.tax = findNum(/^TAX (.+)$/) || 0; r.total = findNum(/^TOTAL (.+)$/);
     let start = L.findIndex(l => /^TOTAL \$/.test(l)) + 1, name = [];
@@ -6324,21 +6395,27 @@ function parseReceipt(pages) {
       else if (/^\d+$/.test(l) && !name.length) { /* line number */ } else if (/^https?:\/\/|^[\w_]+\/$/.test(l)) { /* a link under the item */ } else name.push(l); }
     r.subtotal = b >= 0 ? num(L[b].replace('Subtotal', '') || L[b + 1]) : null; if (r.subtotal == null && b >= 0) r.subtotal = num(L[b + 1]);
     r.shipping = findNum(/^Shipping \$?([\d,.]+)/) || 0; r.tax = findNum(/^Tax(?: \([^)]*\))? \$?([\d,.]+)/) || 0; r.discount = Math.abs(findNum(/^Discount -?\$?([\d,.]+)/) || 0); r.total = findNum(/^Total \$?([\d,.]+)/);
-  } else if (/^Subtotal · \d+ items?/m.test(all)) {
-    r.kind = 'shopify'; const t = /Order ([\w#-]+) - (.+?) - Account/.exec(head); r.orderNumber = (t ? t[1] : (L.find(l => /^Order [\w#-]+$/.test(l)) || '').replace('Order ', '')); if (!r.seller && t) r.seller = t[2];
+  } else if (/^Subtotal · \d+ items?/m.test(all) || (/^Subtotal( \$[\d,.]+)?$/m.test(all) && /^Order [\w#-]+$/m.test(all) && /^Confirmed [A-Za-z]{3}/m.test(all))) {   // v0.104.0: a one-item order says just "Subtotal $80.00"
+    r.kind = 'shopify'; const t = /Order ([\w#-]+) - (.+?) - Account/.exec(head) || /Order ([\w#-]+) - (.+?) - Account/.exec(meta.title || ''); r.orderNumber = (t ? t[1] : (L.find(l => /^Order [\w#-]+$/.test(l)) || '').replace('Order ', '')); if (!r.seller && t) r.seller = cleanSeller(t[2]);
     const c = /^Confirmed ([A-Za-z]{3})[a-z]* (\d{1,2})(?:, (\d{4}))?/.exec(L.find(l => /^Confirmed [A-Za-z]{3}/.test(l)) || '');
-    if (c) { let y = c[3] ? +c[3] : (printed ? +printed.slice(0, 4) : new Date().getFullYear()); if (!c[3] && printed && iso(y, MON[c[1].toLowerCase()], +c[2]) > printed) y--; r.date = iso(y, MON[c[1].toLowerCase()], +c[2]); if (!c[3]) r.dateNote = 'The page shows no year; ' + y + ' was assumed.'; }
-    const end = L.findIndex(l => /^Subtotal · /.test(l)); let chunk = [];
+    if (c) { let y = c[3] ? +c[3] : (printed ? +printed.slice(0, 4) : new Date().getFullYear()); if (!c[3] && printed && iso(y, MON[c[1].toLowerCase()], +c[2]) > printed) y--; r.date = iso(y, MON[c[1].toLowerCase()], +c[2]); if (!c[3]) r.dateNote = 'The page shows no year; ' + y + (printed && !/^\d{1,2}\//.test(head) && meta.created ? ' was taken from when the PDF was saved.' : ' was assumed.'); }
+    const end = L.findIndex(l => /^Subtotal( · \d+ items?)?( \$[\d,.]+)?$/.test(l)); let chunk = [], first = true;
     for (let i = 0; i < end; i++) { const l = L[i];
       if (/^\$[\d,.]+$/.test(l)) { let q = -1; for (let j = chunk.length - 1; j >= 1; j--) if (/^\d+$/.test(chunk[j])) { q = j; break; }
-        if (q >= 1) { const opts = chunk.slice(q + 1).filter(x => !/^(Product Type|Work Station|Vendor|SKU)\b/i.test(x)), qty = +chunk[q]; r.lines.push({ name: chunk[q - 1], option: opts.join(' / '), qty, unit: Math.round(num(l) / qty * 100) / 100, total: num(l) }); }
+        if (q >= 1) { const opts = chunk.slice(q + 1).filter(x => !/^(Product Type|Work Station|Vendor|SKU)\b/i.test(x)), qty = +chunk[q];
+          // v0.104.0: a long name can wrap onto two lines. After the first item, everything before the quantity is the name; for the first, only lines after the page's "news and offers" box
+          let nm = [chunk[q - 1]]; const mk = first ? chunk.findIndex(x => /^Email me with news and offers$/i.test(x)) : -1, lo = first ? (mk >= 0 ? mk + 1 : q - 1) : 0;
+          for (let j = q - 2; j >= lo && j >= q - 3; j--) { const w = chunk[j]; if (w.length >= 26 && !/^(=+|\d+|\$.*|Buy again|Product Type|Work Station|Delivered|Confirmed|On its way|Track|Shipped|Order\b).*$/i.test(w) && !/[.:]$/.test(w)) nm.unshift(w); else break; }   // a long name that wrapped: the line before is long and not page text
+          first = false;
+          r.lines.push({ name: nm.join(' ').replace(/\s+/g, ' ').trim(), option: opts.join(' / '), qty, unit: Math.round(num(l) / qty * 100) / 100, total: num(l) }); }
         else r.warnings.push('A price of ' + l + ' could not be matched to an item.'); chunk = []; }
       else chunk.push(l); }
-    r.subtotal = num(L[end].replace(/^Subtotal · \d+ items?/, '')); r.shipping = freeOr((L.find((l, i) => i > end && /^Shipping /.test(l)) || '').replace('Shipping', '')) || 0; r.tax = findNum(/^Taxes? (.+)$/) || 0;
-    r.discount = Math.abs(num((L.find((l, i) => i > end && /^(Discount|Savings)/i.test(l)) || '').replace(/^\D+/, '')) || 0); r.total = findNum(/^Total(?: [A-Z]{3})? (.+)$/);
+    r.subtotal = num(L[end].replace(/^Subtotal( · \d+ items?)?/, '') || L[end + 1]); r.shipping = freeOr((L.find((l, i) => i > end && /^Shipping /.test(l)) || '').replace('Shipping', '')) || 0; r.tax = findNum(/^Taxes? (.+)$/) || 0;
+    { const di = L.findIndex((l, i) => i > end && /^(Order )?(Discount|Savings)/i.test(l)); if (di >= 0) { const here = /\$([\d,.]+)/.exec(L[di]), nx = /^\S*\s*[-−–]?\$([\d,.]+)$/.exec(L[di + 1] || ''); r.discount = Math.abs(num(here ? here[1] : nx ? nx[1] : '') || 0); } }   // v0.104.0: "Order discount" with the code and amount on the next line
+    r.total = findNum(/^Total(?: [A-Z]{3})? (.+)$/);
   } else if (/Product Quantity Total/.test(all) && /^Subtotal:/m.test(all)) {
     r.kind = 'shopify-classic'; r.orderNumber = ((L.find(l => /^Order #/.test(l)) || '').replace('Order ', '')); r.date = fullDate(L.find(l => /^Placed on /.test(l)));
-    if (!r.seller) r.seller = ((/– (.+)$/.exec(head) || [])[1] || '').trim();
+    if (!r.seller) r.seller = ((/– (.+)$/.exec(headT) || [])[1] || '').trim();
     const a = L.findIndex(l => l === 'Order details'), b = L.findIndex(l => /^Subtotal:/.test(l)); let name = [];
     for (let i = a + 1; i < b; i++) { const l = L[i], m = /^(\d+) \$([\d,.]+)$/.exec(l);
       if (m) { const qty = +m[1], tot = num(m[2]); r.lines.push({ name: name.join(' ').replace(/\s+-\s*$/, ''), option: '', qty, unit: Math.round(tot / qty * 100) / 100, total: tot }); name = []; }
@@ -6389,9 +6466,12 @@ function rcSuggest(line) {   // the saved entry this line most likely belongs to
   }));
   const row = { name: line.name, option: line.option || '', qty: line.qty || 1, total: rcRound(line.total), mode: 'new', type: guess, itemId: '', kitId: '', replace: false,
     newName: guess === 'keycaps' ? line.name.replace(/^Drop (\+ \S+ )?/, '').replace(/ (Custom )?Keycap Sets?.*$/i, '').trim() : line.name + (line.option ? ' - ' + line.option : ''), kitName: line.option || 'Base' };
-  if (best && best.score >= 0.6) { row.mode = 'existing'; row.type = best.type; row.itemId = best.id; if (best.type === 'keycaps') row.kitId = rcKitGuess(best.item, row); }
+  if (best && best.score >= 0.6) { row.mode = 'existing'; row.type = best.type; row.itemId = best.id; if (best.type === 'keycaps') row.kitId = rcKitGuess(best.item, row);
+    const tgt = best.type === 'keycaps' ? kitsOf(best.item).find(k => k.id === row.kitId) : best.item; if (rcIsPH(tgt)) row.replace = true; }   // v0.104.0: a stand-in retail price is replaced by the receipt
   return row;
 }
+const RC_PH = /\n?Price is the shop's retail price for now[^\n]*/i;   // the note written when a retail price stood in for the price paid (Nov 22)
+function rcIsPH(o) { return !!o && (RC_PH.test(o.kitNotes || '') || RC_PH.test(o.notes || '')); }
 function rcKitGuess(s, row) {
   const kits = kitsOf(s), o = rcTok(row.option || 'base'); let best = '', bs = 0;
   kits.forEach(k => { const kt = rcTok(k.name || ''); const hit = kt.filter(w => o.includes(w)).length, sc = kt.length ? hit / Math.max(kt.length, o.length) : 0; if (sc > bs) { bs = sc; best = k.id; } });
@@ -6413,7 +6493,7 @@ async function rcReadFile(file, msg) {
     if (/^image\//.test(file.type) || /\.(png|jpe?g|heic|webp)$/i.test(file.name)) throw new Error('This is a picture. The reader needs the order page saved as a PDF (Print → Save as PDF), because a picture has no text to read.');
     const t = await pdfText(new Uint8Array(await file.arrayBuffer()));
     if (!t.pages.join('').trim()) throw new Error('No text was found in this PDF. It may be a scan or a photo; save the order page with Print → Save as PDF instead.');
-    rcOpen(parseReceipt(t.pages), file.name);
+    rcOpen(parseReceipt(t.pages, t), file.name);
   } catch (e) { msg.innerHTML = `<span style="color:var(--bad-text)">Could not read ${esc(file.name)}: ${esc(e && e.message || String(e))}</span>${rcPasteHelp()}`;
     const det = document.getElementById('rcPasteBox'); if (det) { det.open = true; } }   // v0.102.0: the paste box opens as the way round
 }
@@ -6530,7 +6610,7 @@ async function rcSave() {
   if (rcpt.date && !/^\d{4}-\d{2}-\d{2}$/.test(rcpt.date)) bad.push('The date is not valid.');
   if (bad.length) { err.innerHTML = bad.map(esc).join('<br>'); return; }
   const T = {}; if (rcpt.date) T.datePurchased = rcpt.date; if (rcpt.seller) T.purchasedFrom = rcpt.seller; if (rcpt.orderNumber) T.receipt = /^(order|invoice)/i.test(rcpt.orderNumber) ? rcpt.orderNumber : 'Order ' + rcpt.orderNumber;
-  const apply = (o, P, replace) => { const u = {}; if (blank(o.price) || replace) Object.assign(u, P, P.discounts ? {} : { discounts: undefined }); Object.keys(T).forEach(f => { if (blank(o[f])) u[f] = T[f]; }); Object.keys(u).forEach(k => u[k] === undefined && delete u[k]); return u; };
+  const apply = (o, P, replace) => { const u = {}; if (blank(o.price) || replace || rcIsPH(o)) { Object.assign(u, P, P.discounts ? {} : { discounts: undefined }); ['kitNotes', 'notes'].forEach(f => { if (RC_PH.test(o[f] || '')) u[f] = o[f].replace(RC_PH, '').trim(); }); } Object.keys(T).forEach(f => { if (blank(o[f])) u[f] = T[f]; }); Object.keys(u).forEach(k => u[k] === undefined && delete u[k]); return u; };
   const groups = new Map();   // one write per entry, even when several lines go to it
   act.forEach(x => { const r = x.r, key = r.mode === 'existing' ? 'e|' + r.type + '|' + r.itemId : r.type === 'keycaps' ? 'n|keycaps|' + String(r.newName).trim().toLowerCase() : 'n|' + r.type + '|line' + x.i; if (!groups.has(key)) groups.set(key, []); groups.get(key).push(x); });
   const nNew = [...groups.keys()].filter(k => k[0] === 'n').length, nUpd = groups.size - nNew;
@@ -6904,7 +6984,7 @@ function syncWeightField(k, list) {   // Colorway card -> Build tab: the first W
    Pictures are kept as links; tick "Keep a copy" to store one in Firebase. The shop's own description is saved
    word for word as "From the shop", credited to the shop. The shop's price is saved as Retail price, never as the price you paid. */
 let rdCfg = null, rdState = null, rdDone = null;
-const RD_SHOPS = { 'keebfront.com': 'Keebfront', 'divinikey.com': 'Divinikey', 'novelkeys.com': 'NovelKeys', 'cannonkeys.com': 'CannonKeys', 'kbdfans.com': 'KBDfans', 'milktooth.com': 'Milktooth', 'keychron.com': 'Keychron', 'mechanicalkeyboards.com': 'MechanicalKeyboards.com', 'drop.com': 'Drop', 'qwertykeys.com': 'Qwertykeys', 'omnitype.com': 'Omnitype', 'prototypist.net': 'ProtoTypist', 'thockking.com': 'Thockking', 'ebay.com': 'eBay' };
+const RD_SHOPS = { 'oblotzky.industries': 'Oblotzky Industries', 'keebfront.com': 'Keebfront', 'divinikey.com': 'Divinikey', 'novelkeys.com': 'NovelKeys', 'cannonkeys.com': 'CannonKeys', 'kbdfans.com': 'KBDfans', 'milktooth.com': 'Milktooth', 'keychron.com': 'Keychron', 'mechanicalkeyboards.com': 'MechanicalKeyboards.com', 'drop.com': 'Drop', 'qwertykeys.com': 'Qwertykeys', 'omnitype.com': 'Omnitype', 'prototypist.net': 'ProtoTypist', 'thockking.com': 'Thockking', 'ebay.com': 'eBay' };
 const rdHost = u => { try { return new URL(u).hostname.toLowerCase().replace(/^www\./, ''); } catch (e) { return ''; } };
 const rdShopName = (u, ogSite) => { const h = rdHost(u); return RD_SHOPS[h] || (ogSite && ogSite.length < 40 ? ogSite.trim() : '') || h.replace(/\.(com|net|co|store|shop|io)(\.[a-z]{2})?$/, '').replace(/^./, c => c.toUpperCase()); };
 async function rdLoadCfg(force) {
