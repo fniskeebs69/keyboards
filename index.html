@@ -466,7 +466,7 @@
   @media (max-width: 640px) { .slotbox { gap: 6px; padding: 6px; } .rcell b { font-size: 11px; } .slotcol .sub { font-size: 11px; } } .kvimg { border-radius: var(--radius-s); overflow: hidden; background: var(--well); } .kvimg img { width: 100%; max-height: 60vh; object-fit: contain; display: block; }
   .kvthumbs { display: flex; gap: 6px; margin-top: 8px; } .kvthumbs img { width: 96px; aspect-ratio: 16/9; object-fit: cover; border-radius: var(--radius-xs); cursor: pointer; border: var(--bw) var(--bs) var(--line); }
   .chip.kvown { background: var(--ok-bg); color: var(--ok-on); } .kit.flash { outline: 2px solid var(--kc); outline-offset: 2px; border-radius: var(--radius-s); }
-  .sumhead { display: flex; gap: 14px; align-items: center; margin-bottom: 6px; } .sumhead img { width: 120px; aspect-ratio: 4/3; object-fit: cover; border-radius: var(--radius-s); flex: none; }
+  .kcard.baseno .ph img { filter: grayscale(1); opacity: .45; } .kcard.baseno .meta b { color: var(--text-2); } .basenotown { position: absolute; left: 8px; bottom: 8px; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: rgba(0,0,0,.6); color: #fff; } .sumcar { position: relative; } .sumcar .basenotown { top: 8px; bottom: auto; } .seg .baseno { opacity: .65; } .basepick { flex-basis: 100%; } .basepick summary { cursor: pointer; font-size: 13px; color: var(--text-2); } .basepicks { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 6px; } .basebar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin: 0 0 12px; padding: 0 0 10px; border-bottom: 1px solid var(--line, rgba(127,127,127,.2)); } .sumhead { display: flex; gap: 14px; align-items: center; margin-bottom: 6px; } .sumhead img { width: 120px; aspect-ratio: 4/3; object-fit: cover; border-radius: var(--radius-s); flex: none; }
   .sumsec { border-top: var(--bw) var(--bs) var(--line); padding-top: 12px; margin-top: 12px; } .sumsec h4 { margin: 0 0 8px; font-size: 13px; color: var(--text-2); text-transform: uppercase; letter-spacing: .04em; }
   .sumsec .sec-title { margin-bottom: 0; } .sumsec .lnk { background: none; border: 0; cursor: pointer; font: inherit; font-size: 13px; }
   .sumdl { display: grid; grid-template-columns: minmax(120px, 190px) 1fr; gap: 6px 14px; margin: 0; font-size: 14px; } .sumdl dt { color: var(--text-3); } .sumdl dd { margin: 0; overflow-wrap: anywhere; }
@@ -671,7 +671,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.105.0';
+const APP_VERSION = 'v0.107.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -1546,15 +1546,22 @@ function sumCarSlides(t, x) {
   currentPhotos.filter(p => p.itemId === x.id).forEach(p => add(p.thumb, p.full, p.fileName || 'Your photo'));
   if (x.refImage) add(x.refImage, x.refImage, 'Picture from ' + (x.refSource || 'the product page'));
   (x.refImages || []).forEach(u => add(u, u, 'Picture from ' + (x.refSource || 'the product page')));
-  if (t === 'keycaps') (x.kitPhotos || []).forEach(k => add(k.url, k.url, k.name));
-  if (t === 'keycaps') kitsOf(x).forEach(k => add(k.refImage, k.refImage, k.name + (k.notOwned ? ' (not owned)' : '') + (k.refSource ? ' · ' + k.refSource : '')));   // v0.92.0
+  if (t === 'keycaps') (x.kitPhotos || []).forEach(k => { add(k.url, k.url, k.name); if (out.length && out[out.length - 1].src === k.url) out[out.length - 1].kit = k.name; });
+  if (t === 'keycaps') kitsOf(x).forEach(k => { add(k.refImage, k.refImage, k.name + (k.notOwned ? ' (not owned)' : '') + (k.refSource ? ' · ' + k.refSource : '')); if (out.length && out[out.length - 1].src === k.refImage) out[out.length - 1].kit = k.name; });   // v0.92.0
+  const bv = t === 'keycaps' && baseViewOf(x);   // v0.106.0: one base's view: its picture first, your other bases' pictures left out
+  if (bv) { const other = baseOtherNames(x, bv), bp = basePicOf(x, bv), otherSrc = new Set();
+    kitPicsOf(x).forEach(p => { if (other.has(kitKey(p.name))) otherSrc.add(p.url); });
+    const keep = out.filter(o => !(o.kit && other.has(kitKey(o.kit))) && !otherSrc.has(o.src) && (!bp || o.src !== bp.src));
+    const shared = [], have = new Set(keep.map(o => o.src).concat(bp ? [bp.src] : [])), pics = kitPicsOf(x);   // the shared kits' pictures (novelties, spacebars…), also the catalog's
+    const bk = new Set(splitBasesOf(x).map(baseKey)); ownedKits(x).filter(k => !bk.has(kitKey(k.name))).forEach(k => { for (const [p] of pairKits([k], pics, x.kitLinks || {})) if (!have.has(p.url) && !other.has(kitKey(p.name))) { have.add(p.url); shared.push({ src: p.url, full: p.url, cap: p.name + ' (shared)', kit: k.name }); } });
+    return (bp ? [{ src: bp.src, full: bp.src, cap: bp.title + (bv.owned ? ' (this base)' : ' (this base, not owned)'), kit: bv.name, notOwned: !bv.owned }] : []).concat(keep, shared); }
   return out;
 }
 function drawSumCarousel() {
   const box = document.getElementById('sumCar'); if (!box) return; const t = box.dataset.type, x = itemsOfType(t).find(y => y.id === box.dataset.id); if (!x) { box.innerHTML = box.dataset.cover ? `<img src="${box.dataset.cover}" alt="">` : ''; box.hidden = !box.dataset.cover; return; }
   const slides = sumCarSlides(t, x); box.hidden = !slides.length; if (!slides.length) return;
   if (sumCarFor !== x.id) { sumCarFor = x.id; sumCarIdx = 0; } sumCarIdx = Math.max(0, Math.min(slides.length - 1, sumCarIdx)); const sl = slides[sumCarIdx], isCover = sl.src === coverSrcOf(t, x);
-  box.innerHTML = `<button type="button" class="sumcarimg" data-car="open" title="Click to enlarge and zoom"><img src="${sl.src.startsWith('data:') ? sl.src : esc(sl.src)}" alt="" referrerpolicy="no-referrer" style="${isCover && x.coverFit ? fitStyle(x.coverFit) : ''}"></button>
+  box.innerHTML = `<button type="button" class="sumcarimg" data-car="open" title="Click to enlarge and zoom"><img src="${sl.src.startsWith('data:') ? sl.src : esc(sl.src)}" alt="" referrerpolicy="no-referrer" style="${isCover && x.coverFit ? fitStyle(x.coverFit) : ''}${sl.notOwned ? ';filter:grayscale(1);opacity:.5' : ''}"></button>${sl.notOwned ? '<span class="basenotown">Not owned</span>' : ''}
     ${slides.length > 1 ? `<button type="button" class="sumcarnav l" data-car="prev" aria-label="Previous picture">‹</button><button type="button" class="sumcarnav r" data-car="next" aria-label="Next picture">›</button><span class="sumcarn">${sumCarIdx + 1} / ${slides.length}</span>` : ''}
     ${isCover ? '<button type="button" class="sumcarfit" data-car="fit" title="Adjust zoom and position of the display picture">Adjust</button>' : ''}`;
   box.onclick = e => { const b = e.target.closest('[data-car]'); if (!b) return; const a = b.dataset.car;
@@ -2108,14 +2115,16 @@ const HELP = [
     s: ['Menu → ▸ next to Switches shows "Switch parts" (films, springs, stems, housings).', 'Switch pads are Foam (Accessories), lube is Lube & Tools.'], go: '#/switchparts' },
 
   // ---------- Keycaps ----------
-  { id: 'kits', t: 'Keycap kits (add, not owned, types)', g: 'Keycaps', ctx: ['keycaps'], k: 'kit kits base novelties spacebars alphas not owned own add kit type quantity',
-    s: ['Keycap set → Kits tab: + Add kit, name, kit type, quantity and its own purchase details.', 'Untick "I own this kit" to keep a kit you don\'t have yet (greyed in the Kit gallery, not counted as owned).', 'Kit gallery shows every kit as a picture; click one for details.'], go: '#/keycaps' },
+  { id: 'kits', t: 'Keycap kits (add, not owned, types)', g: 'Keycaps', ctx: ['keycaps'], k: 'kit kits base novelties spacebars alphas not owned own add kit type quantity came with keyboard bundle included free',
+    s: ['Keycap set → Kits tab: + Add kit, name, kit type, quantity and its own purchase details.', 'Untick "I own this kit" to keep a kit you don\'t have yet (greyed in the Kit gallery, not counted as owned).', 'A kit that came with a keyboard (its price is in the keyboard\'s): open Purchase details → "Came with keyboard" and pick the keyboard. The set\'s Summary shows "Came with", and the keyboard\'s Summary lists the kit.', 'Kit gallery shows every kit as a picture; click one for details.'], go: '#/keycaps' },
+  { id: 'splitbases', t: 'Show each base as its own card (two bases in one set)', g: 'Keycaps', ctx: ['keycaps'], k: 'split base bases two bases light dark separate card each base analog dreams digital nightmares duplicate shared kits gallery summary not owned grey greyed gray choose',
+    s: ['For a set with two or more bases (a light and a dark base, say), also when you own only one of them. Open the set → Summary → tick "Show each base as its own card". When the set has only one base you own, the Summary shows "Another base in this set? Show each base as its own card…" instead.', 'Under "Choose the bases", tick the kits that are bases: your kits, kits you marked not owned, and the GMK catalog\'s kits you don\'t have (GMK Analog Dreams: tick Analog Dreams next to your Digital Nightmares). At least two, one of them yours. Without a choice, kits of type Base, Alphas or Full set (or "Base" in the name) are the bases.', 'A base you don\'t own shows greyed with "Not owned", on its gallery card and on the Summary.', 'The Keycaps gallery then shows one card per base, named "Set: Base", with that base\'s picture. Your other kits (novelties, spacebars…) are shared by every base card.', 'On the set\'s Summary, the buttons at the top switch between the bases: the name, the pictures and the kit list follow the base you pick. Your other base is greyed in the kit list.', 'Nothing is copied: it is still one set, so cost, count and totals are counted once. The checkbox "Show each base as its own card" on the Keycaps gallery turns it off or on for every set at once.'], go: '#/keycaps' },
   { id: 'completion', t: 'Completion and missing kits', g: 'Keycaps', ctx: ['keycaps'], k: 'completion complete missing kits percent bar wishlist gmk',
     s: ['Sets linked to the GMK catalog (or with a kit marked not owned) show "2/4 kits · 50%".', 'GMK reference card: missing kits with "+ Wishlist"; Filter → Missing kits.'], go: '#/keycaps' },
   { id: 'kitmatch', t: 'Match a kit to the catalog (novelties with their own names)', g: 'Keycaps', ctx: ['keycaps'], k: 'novelty novelties name rename kit type match catalog kit picture different name overwrite main picture nishi rama link my kit',
     s: ['Keycap set → Kit gallery → click your kit (or the catalog kit) → "Your kit … is this catalog kit": pick the catalog kit (e.g. Nishi). Saved at once; the picture and price follow.', 'In the same window: "Kit type" (e.g. Novelties) and "Rename my kit to …" (uses the catalog name); both go to the Kits tab, then Save. Purchase details, pictures and where it is installed stay with the kit.', '"Use this picture for this kit" shows the picture you are looking at for that kit everywhere; "stop using" goes back.', 'Keycaps → Main picture: Novelties (or Base, Spacebars, Numpads) also uses the kit type, so a novelty named "Nishi" still shows.'], go: '#/keycaps' },
   { id: 'gmkshop', t: 'Add GMK sets from a shop (Oblotzky)', g: 'Keycaps', ctx: ['catalog', 'keycaps'], k: 'oblotzky shop gmk sets add catalog reference vendor missing set not in catalog euro eur',
-    s: ['Catalog → GMK reference (private) → "Add GMK sets from a shop…" → shop address (oblotzky.industries is filled in) → Read the shop.', 'Sets not in your catalog yet are ticked; sets Matrix already has can be ticked to add the shop\'s link, prices and the kit pictures Matrix lacks. Add ticked sets.', 'They are saved only in your private Firebase catalog, marked "shop". Oblotzky prices stay in € and are not used as US retail prices. Link your sets to them on the GMK reference card as usual. Read the shop again later to refresh.', 'The shop must be on your approved list (Settings → Product page reader).'], go: '#/catalog/shop' },
+    s: ['Catalog → GMK reference (private) → "Add GMK sets from a shop…" → shop address (oblotzky.industries is filled in) → Read the shop.', 'Sets not in your catalog yet are ticked; sets Matrix already has (also when the shop writes "2" or "II" where Matrix writes "R2") can be ticked to add the shop\'s link, prices and the kit pictures Matrix lacks. Add ticked sets.', 'They are saved only in your private Firebase catalog, marked "shop". Oblotzky prices stay in € and are not used as US retail prices. Link your sets to them on the GMK reference card as usual. Read the shop again later to refresh.', 'The shop must be on your approved list (Settings → Product page reader).'], go: '#/catalog/shop' },
   { id: 'gmk', t: 'GMK catalog and Matrix pages', g: 'Keycaps', ctx: ['keycaps', 'catalog'], k: 'gmk catalog matrix link fill from catalog reference group buy colors codes pictures old photos',
     s: ['Keycap set → GMK reference card: suggested catalog sets, or search; link it, then Save.', 'Linking a set that has old Keycap Collection photos switches "Kit pictures" (on the card) to "GMK catalog pictures first"; your old photos stay as extra pictures on each kit. Switch it back on the card if you prefer them.', '"Fill from catalog" fills empty fields and the catalog colors.', 'A Matrix page link in the reader builds the set from the private catalog.'], go: '#/catalog' },
   { id: 'colors', t: 'Colors: palette, color wheel, textures', g: 'Keycaps', ctx: ['keycaps'], k: 'colors colour palette wheel hex pick from picture texture gmk code ral classic design pantone eyedropper color name purple blue wrong',
@@ -2215,7 +2224,7 @@ function route() {
   else if (sec.id === 'switches' && parts[1]) { const sw = savedSwitches.find(x => x.id === parts[1]); if (sw) renderSwitchForm(sw); else view.innerHTML = `<a class="crumb" href="#/switches">${I.back}Switches</a><div class="card empty" id="swDetailFor"><h2>${db && !isFile && !swLoaded ? 'Loading…' : 'Switches not found'}</h2><p>${db && !isFile && !swLoaded ? 'Fetching from Firebase.' : 'They may have been deleted.'}</p></div>`; }
   else if (sec.id === 'switches') renderSwitches();
   else if (sec.id === 'keycaps' && parts[1] === 'new') renderKeycapForm();
-  else if (sec.id === 'keycaps' && parts[1]) { const ks = savedKeycaps.find(x => x.id === parts[1]); if (ks) renderKeycapForm(ks); else view.innerHTML = `<a class="crumb" href="#/keycaps">${I.back}Keycaps</a><div class="card empty" id="kcDetailFor"><h2>${db && !isFile && !kcLoaded ? 'Loading…' : 'Keycap set not found'}</h2><p>${db && !isFile && !kcLoaded ? 'Fetching from Firebase.' : 'It may have been deleted.'}</p></div>`; }
+  else if (sec.id === 'keycaps' && parts[1]) { kcBaseView = parts[2] === 'base' && parts[3] ? { id: parts[1], key: decodeURIComponent(parts[3]) } : null; const ks = savedKeycaps.find(x => x.id === parts[1]); if (ks) renderKeycapForm(ks); else view.innerHTML = `<a class="crumb" href="#/keycaps">${I.back}Keycaps</a><div class="card empty" id="kcDetailFor"><h2>${db && !isFile && !kcLoaded ? 'Loading…' : 'Keycap set not found'}</h2><p>${db && !isFile && !kcLoaded ? 'Fetching from Firebase.' : 'It may have been deleted.'}</p></div>`; }
   else if (sec.id === 'keycaps' || sec.id === 'kcgmk') { kcMaker = sec.maker || ''; renderKeycaps(); }
   else if (PART_TYPES[sec.id] && sec.built) {
     const t = sec.id;
@@ -3557,17 +3566,22 @@ function drawKeycapResults() {
   if (!all.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.keycaps}</div><h2>No keycap sets yet</h2><p>Add a set with its kits, or import your Excel Keycaps tab on the Import page.</p><p style="margin-top:14px"><a class="btn primary" href="#/keycaps/new">${I.plus}Add keycap set</a></p></div>`; return; }
   if (!list.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.search}</div><h2>No matches</h2><p>${kcQuery.trim() ? `Nothing matches "${esc(kcQuery)}".` : 'No sets with this filter.'}</p></div>`; return; }
   const sub = s => { const lp = setsLinkedTo(s.id), na = lp.filter(p => p.t === 'artisans').length, nd = lp.length - na; return [s.manufacturer, `${kitsOf(s).length} kit${kitsOf(s).length === 1 ? '' : 's'}`, na ? `${na} artisan${na === 1 ? '' : 's'}` : '', nd ? `${nd} deskmat${nd === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · '); };
+  const anySplit = savedKeycaps.some(x => splitBasesOf(x, true).length);   // v0.106.0
   if (kcView === 'gallery') {
-    box.innerHTML = `<div class="gallery">${list.map(s => `
-      <a class="kcard" href="#/keycaps/${esc(s.id)}">
-        <div class="ph">${kcCardImg(s) || (I.keycaps.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>')}
-          ${s.profile ? `<span class="badge chip">${esc(s.profile)}</span>` : ''}
+    const cards = list.flatMap(s => { const bs = splitBasesOf(s); return bs.length ? bs.map((k, i) => ({ s, k, i, n: bs.length })) : [{ s }]; });
+    const nCards = cards.length;
+    if (nCards !== list.length) document.getElementById('kcCount').textContent += ` · shown as ${nCards} cards (each base on its own)`;
+    box.innerHTML = `${anySplit ? `<label class="check" style="display:inline-flex;gap:8px;align-items:center;margin:0 0 10px" title="Sets you ticked &quot;Show each base as its own card&quot; on show one card per base kit. Untick to show every set as one card."><input type="checkbox" id="kcSplit"${kcSplitOn ? ' checked' : ''}> Show each base as its own card</label>` : ''}<div class="gallery">${cards.map(({ s, k, i, n }) => `
+      <a class="kcard${k && !k.owned ? ' baseno' : ''}" href="#/keycaps/${esc(s.id)}${k ? '/base/' + encodeURIComponent(baseKey(k)) : ''}">
+        <div class="ph">${kcCardImg(s, k) || (I.keycaps.replace('<svg', '<svg class="big"') + '<span class="nophoto">No photo yet</span>')}
+          ${s.profile ? `<span class="badge chip">${esc(s.profile)}</span>` : ''}${k && !k.owned ? '<span class="basenotown">Not owned</span>' : ''}
           <button class="fav${s.isFavorite ? ' on' : ''}" data-fav="${esc(s.id)}" aria-label="${s.isFavorite ? 'Remove from' : 'Add to'} favorites">${s.isFavorite ? I.starFill : I.star}</button></div>
-        <div class="meta"><b>${esc(s.name)}</b><span>${esc(sub(s))}</span>${completionHtml(s)}${paletteStripHtml(s)}</div></a>`).join('')}</div>`;
+        <div class="meta"><b>${esc(s.name)}${k ? `: ${esc(baseLabel(k))}` : ''}</b><span>${k ? esc([s.manufacturer, `Base ${i + 1} of ${n}${k.owned ? '' : ' · not owned'}`, (() => { const bk = new Set(splitBasesOf(s).map(baseKey)), sh = ownedKits(s).filter(x => !bk.has(kitKey(x.name))).length; return sh ? `+ ${sh} shared kit${sh === 1 ? '' : 's'}` : ''; })()].filter(Boolean).join(' · ')) : esc(sub(s))}</span>${completionHtml(s)}${paletteStripHtml(s)}</div></a>`).join('')}</div>`;
+    const sp = document.getElementById('kcSplit'); if (sp) sp.onchange = () => { kcSplitOn = sp.checked; lsSet('kbc_kc_splitbases', kcSplitOn ? '1' : '0'); drawKeycapResults(); };
   } else {
     box.innerHTML = `<table class="list"><thead><tr><th style="width:44px"></th><th>Set</th><th>Maker</th><th>Profile</th><th style="text-align:right">Kits</th><th>Completion</th><th>Latest purchase</th></tr></thead><tbody>${list.map(s => `
       <tr class="row" data-href="#/keycaps/${esc(s.id)}"><td><button class="fav${s.isFavorite ? ' on' : ''}" style="position:static;width:28px;height:28px" data-fav="${esc(s.id)}" aria-label="Favorite">${s.isFavorite ? I.starFill : I.star}</button></td>
-      <td><b>${esc(s.name)}</b></td><td>${esc(s.manufacturer || '')}</td><td>${esc(s.profile || '')}</td><td style="text-align:right">${kitsOf(s).length}</td><td>${completionHtml(s) || '<span style="color:var(--text-3)">—</span>'}</td><td>${esc(fmtDate(s._date)) || '<span style="color:var(--text-3)">—</span>'}</td></tr>`).join('')}</tbody></table>`;
+      <td><b>${esc(s.name)}</b>${splitBasesOf(s).length ? `<div class="sub" style="font-size:12px">Bases: ${esc(splitBasesOf(s).map(b => baseLabel(b) + (b.owned ? '' : ' (not owned)')).join(' · '))}</div>` : ''}</td><td>${esc(s.manufacturer || '')}</td><td>${esc(s.profile || '')}</td><td style="text-align:right">${kitsOf(s).length}</td><td>${completionHtml(s) || '<span style="color:var(--text-3)">—</span>'}</td><td>${esc(fmtDate(s._date)) || '<span style="color:var(--text-3)">—</span>'}</td></tr>`).join('')}</tbody></table>`;
   }
   box.onclick = async e => {
     const f = e.target.closest('[data-fav]');
@@ -3598,6 +3612,7 @@ function kitRowHtml(k, i) {
         <label>Discounts ($)<input class="input k-disc k-num" type="number" min="0" step="0.01" value="${val(k.discounts)}"></label>
         <label>Date received<input class="input k-recv" type="date" value="${val(k.dateReceived)}"></label>
         <label>Key count<input class="input k-keys" type="number" min="0" step="1" placeholder="e.g. 140" value="${val(k.keyCount)}"></label>
+        <label title="v0.106.0: for a kit that came with a keyboard (its price is in the keyboard's)">Came with keyboard<select class="select k-came"><option value="">—</option>${savedKeyboards.slice().sort((p, q) => String(p.name).localeCompare(String(q.name))).map(b => `<option value="${esc(b.id)}"${b.id === k.cameWith ? ' selected' : ''}>${esc(b.name)}</option>`).join('')}${k.cameWith && !savedKeyboards.some(b => b.id === k.cameWith) ? `<option value="${esc(k.cameWith)}" selected>(keyboard not found)</option>` : ''}</select></label>
         <div class="kacq"><span>Acquisition</span>${ACQUISITION.map(([v, t]) => `<label class="check"><input type="checkbox" class="k-acq" value="${v}"${(k.acquisition || []).includes(v) ? ' checked' : ''}> ${t}</label>`).join('')}</div>
         <label class="wide">Receipt<input class="input k-receipt" placeholder="Order number or link" value="${val(k.receipt)}"></label>
         <label class="wide">Kit notes<input class="input k-notes" placeholder="e.g. Sealed, extra keys, sold the spares" value="${val(k.kitNotes)}"></label>
@@ -3775,7 +3790,7 @@ function readKitRow(row) {
   const q = c => row.querySelector(c).value.trim(), n = c => { const v = q(c); return v === '' ? null : Number(v); };
   return { id: row.dataset.kit, name: q('.k-name'), kitType: q('.k-type'), quantity: n('.k-qty'), datePurchased: q('.k-date'), purchasedFrom: q('.k-from'),
     price: n('.k-price'), taxRate: n('.k-tax') == null ? null : n('.k-tax') / 100, shipping: n('.k-ship'), discounts: n('.k-disc'), receipt: q('.k-receipt'),
-    dateReceived: q('.k-recv'), keyCount: n('.k-keys'), kitNotes: q('.k-notes'), acquisition: [...row.querySelectorAll('.k-acq:checked')].map(c => c.value), ...(row.querySelector('.k-owned') && !row.querySelector('.k-owned').checked ? { notOwned: true } : {}) };
+    dateReceived: q('.k-recv'), keyCount: n('.k-keys'), kitNotes: q('.k-notes'), cameWith: row.querySelector('.k-came') ? row.querySelector('.k-came').value : '', acquisition: [...row.querySelectorAll('.k-acq:checked')].map(c => c.value), ...(row.querySelector('.k-owned') && !row.querySelector('.k-owned').checked ? { notOwned: true } : {}) };
 }
 const ownedKits = s => kitsOf(s).filter(k => !k.notOwned);
 function updateSetTotal() { const t = [...document.querySelectorAll('#kitList .kit')].reduce((s, r) => s + kbTotal(readKitRow(r)), 0); const el = document.getElementById('setTotal'); if (el) el.textContent = money(t); }
@@ -3804,7 +3819,7 @@ async function saveKeycapSet() {
     if (k.keyCount != null) merged.keyCount = k.keyCount; else delete merged.keyCount;
     if (k.acquisition.length) merged.acquisition = k.acquisition; else delete merged.acquisition;
     if (k.notOwned) merged.notOwned = true; else delete merged.notOwned;
-    [['kitType', k.kitType], ['datePurchased', k.datePurchased], ['dateReceived', k.dateReceived], ['purchasedFrom', k.purchasedFrom], ['receipt', k.receipt], ['kitNotes', k.kitNotes]].forEach(([f, x]) => { if (x) merged[f] = x; else delete merged[f]; });
+    [['kitType', k.kitType], ['datePurchased', k.datePurchased], ['dateReceived', k.dateReceived], ['purchasedFrom', k.purchasedFrom], ['receipt', k.receipt], ['kitNotes', k.kitNotes], ['cameWith', k.cameWith]].forEach(([f, x]) => { if (x) merged[f] = x; else delete merged[f]; });
     [['price', k.price, 100], ['taxRate', k.taxRate, 1e8], ['shipping', k.shipping, 100], ['discounts', k.discounts, 100]].forEach(([f, x, r]) => {
       const o = old.get(k.id);
       if (x == null) delete merged[f];
@@ -5024,7 +5039,7 @@ function showGmkDetail(s) { const d = document.getElementById('gmkDetail'); if (
 /* name matching between your set names and catalog titles (suggestions only) */
 function gmkNorm(t) {
   t = String(t || '').toLowerCase(); const m = t.search(/[^\x00-\x7f]/); if (m > 0) t = t.slice(0, m);
-  return t.replace(/^gmk\s+/, '').replace(/^cyl\s+/, '').replace(/\br1\b/g, '').replace(/\biii\b/g, '3').replace(/\bii\b/g, '2').replace(/[^a-z0-9]/g, '');
+  return t.replace(/^gmk\s+/, '').replace(/^cyl\s+/, '').replace(/\br1\b/g, '').replace(/\biii\b/g, '3').replace(/\bii\b/g, '2').replace(/\br(\d)$/, '$1').replace(/[^a-z0-9]/g, '');   // v0.106.0: "Serika R2" and "Serika 2" are the same set
 }
 function gmkMatchScore(name, s) {   // 3 exact, 2 exact ignoring round/R-number differences, 1 close, 0 none
   const a = gmkNorm(name), b = gmkNorm(s.title); if (!a || !b) return 0;
@@ -5383,7 +5398,7 @@ function wireMergeCard(s) {
 let gmkShop = null;
 function shopKitName(v, p) { const t = String(v.title || '').trim(); return /^default title$/i.test(t) ? 'Base' : t.split(' / ')[0]; }
 function shopSetFromProduct(p, host, label) {
-  const title = String(p.title || '').replace(/^\s*GMK\s+/i, '').replace(/\s+keycaps?( set)?$/i, '').trim();
+  const title = String(p.title || '').replace(/^\s*GMK\s+/i, '').replace(/^CYL\s+/i, '').replace(/\s+keycaps?( set)?$/i, '').trim();   // v0.106.0: "GMK CYL Zooted" → "Zooted" (the profile keeps CYL)
   const body = [].concat(rdHtmlToText(p.body_html || '')).join('\n'), des = (/designed by\s+([^\n.,;]+)/i.exec(body) || [])[1] || '';
   const imgs = p.images || [], imgFor = v => { if (v.featured_image && v.featured_image.src) return v.featured_image.src; const n = kitKey(shopKitName(v)), file = i => kitKey(String(i.src || '').split('/').pop().split('?')[0].replace(/\.\w+$/, '').replace(/[_-]+/g, ' ')); const im = (v.image_id && imgs.find(i => i.id === v.image_id)) || imgs.find(i => (i.variant_ids || []).includes(v.id)) || imgs.find(i => i.alt && kitKey(i.alt).includes(n)) || (n.length >= 3 && imgs.find(i => file(i).endsWith(n))); return im ? im.src : (p.variants.length === 1 && imgs[0] ? imgs[0].src : ''); };
   const pk = label + (/oblotzky/i.test(host) ? ' (EUR)' : ''), kits = (p.variants || []).filter(v => !/desk ?mat|mouse ?pad|wrist ?rest/i.test(v.title || '')).map(v => ({ name: shopKitName(v, p), prices: { [pk]: Number(v.price) }, img: imgFor(v) || '' }));
@@ -5660,6 +5675,13 @@ async function summaryAction(view, x, type, e) {
   const latest = () => itemsOfType(type).find(y => y.id === x.id) || x;
   const write = async data => { try { await withTimeout(colOfType(type).doc(x.id).update(Object.assign(data, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() }))); return true; } catch (err) { toast('Could not save: ' + explain(err)); return false; } };
   const redraw = data => drawSummary(view, Object.assign({}, latest(), data), type);
+  const bvb = e.target.closest('[data-basev]');   // v0.106.0: switch base without reloading the page
+  if (bvb) { kcBaseView = { id: x.id, key: bvb.dataset.basev }; history.replaceState(null, '', '#/keycaps/' + x.id + '/base/' + encodeURIComponent(bvb.dataset.basev)); currentView = location.hash; sumCarFor = ''; redraw({}); return; }
+  if (e.target.id === 'sumSplitAsk') { if (await write({ splitBases: true })) { sumCarFor = ''; redraw({ splitBases: true }); } return; }
+  const bpk = e.target.closest('[data-basepick]');   // v0.107.0: which kits are bases
+  if (bpk) { const keys = [...e.target.closest('.basepicks').querySelectorAll('[data-basepick]:checked')].map(c => c.dataset.basepick);
+    if (await write({ splitBaseKits: keys })) { sumCarFor = ''; redraw({ splitBaseKits: keys }); setTimeout(() => { const d = document.querySelector('.basepick'); if (d) d.open = true; }, 0); } return; }
+  if (e.target.id === 'sumSplit') { const on = e.target.checked; if (await write({ splitBases: on || firebase.firestore.FieldValue.delete() })) { sumCarFor = ''; redraw({ splitBases: on || undefined }); toast(on ? 'Each base now shows as its own card' : 'Shown as one card again'); } else e.target.checked = !on; return; }
   const row = e.target.closest('.sumrow');
   const he = e.target.closest('[data-sumheadedit]');
   if (he && row) {   // header: name edits the Name field (Save keeps it); description saves straight away
@@ -5745,6 +5767,14 @@ function summaryRows(panel) {
   const tot = panel.querySelector('#cTotal'); if (tot && rows.some(r => /price/i.test(r[0]))) rows.push(['Total paid', tot.textContent]);
   return rows;
 }
+function baseBarHtml(live) {   // v0.106.0 / v0.107.0: the tick for "Show each base", which kits are bases, and a switch between the bases
+  const cands = baseCandidates(live), list = setBaseList(live); if (!cands.some(c => c.owned && candIsBase(c)) && !list.some(c => c.owned)) return '';
+  if (!live.splitBases && list.length < 2) return cands.length >= 2 && cands.some(c => !c.owned) ? `<div class="basebar"><button class="lnk" type="button" id="sumSplitAsk" title="For a set with a base you don't own (a light and a dark base, say): show each base as its own card, the one you don't own greyed">Another base in this set? Show each base as its own card…</button></div>` : '';
+  const on = splitBasesOf(live), cur = baseViewOf(live), keys = new Set(list.map(baseKey));
+  return `<div class="basebar"><label class="check" style="display:inline-flex;gap:8px;align-items:center" title="Shows one card per base in the Keycaps gallery and here; a base you don't own is greyed. Your other kits are shared by every base. Nothing is copied: cost and count stay counted once."><input type="checkbox" id="sumSplit"${live.splitBases ? ' checked' : ''}> Show each base as its own card</label>
+    ${on.length ? `<div class="seg" role="group" aria-label="Which base">${on.map(k => `<button type="button" data-basev="${esc(baseKey(k))}" class="${cur && baseKey(k) === baseKey(cur) ? 'on' : ''}${k.owned ? '' : ' baseno'}" title="${k.owned ? 'Your base' : 'You don\'t own this base'}">${esc(baseLabel(k))}${k.owned ? '' : ' <small>(not owned)</small>'}</button>`).join('')}</div>`
+      : live.splitBases && !kcSplitOn && list.length >= 2 ? '<span class="sub">Turned off for every set by the checkbox on the Keycaps gallery.</span>' : ''}
+    ${live.splitBases ? `<details class="basepick"${list.length < 2 ? ' open' : ''}><summary>Choose the bases (${list.length})</summary>${list.length < 2 ? '<p class="sub" style="margin:6px 0">Tick at least two kits that are bases (one of them yours).</p>' : ''}<div class="basepicks">${cands.map(c => `<label class="check"><input type="checkbox" data-basepick="${esc(kitKey(c.name))}"${keys.has(kitKey(c.name)) ? ' checked' : ''}> ${esc(c.name)} <span class="sub">${c.owned ? 'yours' : c.kit ? 'not owned' : 'catalog, not owned'}</span></label>`).join('')}</div></details>` : ''}</div>`; }
 let sumShowHidden = false, sumShowFor = '';
 const sumDd = (v, kind) => kind === 'chips' ? v.split(',').map(x => x.trim()).filter(Boolean).map(x => `<span class="chip">${esc(x)}</span>`).join(' ') : /^https?:\/\//.test(v) ? `<a class="lnk" href="${esc(v)}" target="_blank" rel="noopener">${esc(v.replace(/^https?:\/\/(www\.)?/, '').slice(0, 48))}</a>` : esc(v).replace(/\n/g, '<br>');
 function drawSummary(view, x, type) {
@@ -5758,7 +5788,9 @@ function drawSummary(view, x, type) {
     const bc = b.cloneNode(true); bc.querySelectorAll('.err').forEach(e => e.remove()); const title = bc.textContent.replace(/\s+/g, ' ').trim() || t;
     let rows = summaryRows(panel), extra = '';
     if (t === 'kits') { const kits = [...panel.querySelectorAll('#kitList .kit')].map(readKitRow).filter(k => k.name);
-      if (kits.length) extra = `<div class="sumkits">${kits.map(k => `<div${k.notOwned ? ' class="kno"' : ''}><b>${esc(k.name)}</b><span>${esc([k.notOwned ? 'Not owned yet' : '', k.kitType, k.datePurchased ? fmtDate(k.datePurchased) : '', k.purchasedFrom, Number(k.price) ? money(kbTotal(k)) : ''].filter(Boolean).join(' · '))}</span></div>`).join('')}</div>`; }
+      const bv = type === 'keycaps' && baseViewOf(live), bks = new Set(bv ? splitBasesOf(live).map(baseKey) : []), isOther = k => bv && !k.notOwned && bks.has(kitKey(k.name)) && kitKey(k.name) !== baseKey(bv), isBaseRow = k => bks.has(kitKey(k.name));   // v0.106.0 / v0.107.0
+      const cw = k => { const kb = k.cameWith && savedKeyboards.find(b => b.id === k.cameWith); return kb ? 'Came with ' + kb.name : ''; };
+      if (kits.length) extra = `<div class="sumkits">${bv && bv.cat ? `<div class="kno"><b>${esc(bv.name)}</b><span>This base · Not owned · from the GMK catalog</span></div>` : ''}${kits.map(k => `<div${k.notOwned || isOther(k) ? ' class="kno"' : ''}><b>${esc(k.name)}</b><span>${esc([k.notOwned ? 'Not owned yet' : '', isOther(k) ? 'Your other base (on its own card)' : '', bv && kitKey(k.name) === baseKey(bv) ? 'This base' : bv && !isBaseRow(k) && !k.notOwned ? 'Shared by your bases' : '', k.kitType, k.datePurchased ? fmtDate(k.datePurchased) : '', k.purchasedFrom, Number(k.price) ? money(kbTotal(k)) : '', cw(Object.assign({}, kitsOf(live).find(o => o.id === k.id) || {}, k))].filter(Boolean).join(' · '))}</span></div>`).join('')}</div>`; }
     if (t === 'colors') { const pal = paletteOf(live); if (pal.length) extra = `<div class="sumsw">${pal.map(c => `<span title="${esc([c.name, c.gmk, c.ral, c.pantone, c.hex].filter(Boolean).join(' · '))}"><i style="background:${swBg(c) || esc(c.hex || '#000')}"></i>${esc(c.name || c.hex || '')}</span>`).join('')}</div>`; rows = []; }
     if (t === 'review') { rows = [...panel.querySelectorAll('.rate')].map(r => [r.querySelector('label')?.textContent.trim(), r.querySelector('.val')?.textContent.trim()]).filter(([, v]) => v && v !== 'Not rated'); const rt = fieldValue(panel.querySelector('textarea')); if (rt) rows.push(['Review', rt]); }
     rows = rows.map(r => { const key = t + '|' + r[0], hid = hidden.includes(key); if (hid) nHidden++; return { k: r[0], v: r[1], kind: r[2] || '', cid: r[3] || '', key, hid }; }).filter(r => !r.hid || sumShowHidden);
@@ -5769,9 +5801,11 @@ function drawSummary(view, x, type) {
   if (type === 'keyboards') {
     switchesOn(live.id).forEach(({ w, a }) => links.push(['Switches', `${[w.manufacturer, w.name].filter(Boolean).join(' ')} × ${a.count}`, '#/switches/' + w.id]));
     kitsOn(live.id).forEach(({ s, k }) => links.push(['Keycaps', `${s.name} — ${k.name}`, '#/keycaps/' + s.id]));
+    savedKeycaps.forEach(s => kitsOf(s).filter(k => k.cameWith === live.id).forEach(k => links.push(['Came with it', `${s.name} — ${k.name}`, '#/keycaps/' + s.id])));   // v0.106.0
     partsOn(live.id).forEach(({ t, x: p }) => links.push([partRole(t, p), p.name, `#/${t}/${p.id}`]));
   } else if (type === 'switches') allocsOf(live).forEach(a => { const kb = savedKeyboards.find(b => b.id === a.keyboardId); if (kb) links.push(['Installed on', `${kb.name} × ${a.count}`, '#/keyboards/' + kb.id]); });
   else if (type === 'keycaps') { kitsOf(live).forEach(k => { const kb = k.installedOn && savedKeyboards.find(b => b.id === k.installedOn); if (kb) links.push(['Installed on', `${k.name} → ${kb.name}`, '#/keyboards/' + kb.id]); });
+    kitsOf(live).forEach(k => { const kb = k.cameWith && savedKeyboards.find(b => b.id === k.cameWith); if (kb) links.push(['Came with', `${k.name} ← ${kb.name}`, '#/keyboards/' + kb.id]); });   // v0.106.0
     const ref = live.gmkRef && gmkSets && gmkSets.find(r => r.id === live.gmkRef), c = completionOf(live); if (ref) links.push(['GMK catalog', `GMK ${ref.title}${c ? ` · ${c.have}/${c.total} kits` : ''}`, '']); }
   else if (live.installedOn) { const kb = savedKeyboards.find(b => b.id === live.installedOn); if (kb) links.push(['Installed on', kb.name, '#/keyboards/' + kb.id]); }
   const vals = (live.values || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
@@ -5790,7 +5824,8 @@ function drawSummary(view, x, type) {
     <div class="sumadd"><input class="input" id="sumxLabel" placeholder="Label, e.g. Lube"><input class="input" id="sumxValue" placeholder="Value, e.g. Krytox 205g0"><button class="btn" id="sumxAdd">+ Add row</button></div>
     ${nHidden ? `<p class="sub" style="margin:10px 0 0">${nHidden} row${nHidden === 1 ? '' : 's'} hidden. <button class="lnk" id="sumToggleHidden">${sumShowHidden ? 'Hide them again' : 'Show hidden rows'}</button></p>` : ''}</div>`);
   const cover = type === 'keycaps' ? (live.coverThumb || setPhotoCoverOf(live)) : (live.stockThumb || live.coverThumb || live.refImage || '');
-  box.innerHTML = `<div class="sumhead"><div class="sumcar" id="sumCar" data-type="${type}" data-id="${esc(live.id || '')}" data-cover="${esc(cover)}"></div><div class="sumheadtxt"><div class="sumrow" data-sumhead="name"><h3 style="margin:0" class="sumv">${esc((view.querySelector('#f_name')?.value ?? live.name ?? '').trim())}${live.isFavorite ? ' <span style="color:var(--warn)">★</span>' : ''}</h3>${view.querySelector('#f_name') ? '<span class="sumacts"><button class="lnk" data-sumheadedit="name" title="Change the name">✎</button></span>' : ''}</div>
+  const bvh = type === 'keycaps' && baseViewOf(live);   // v0.106.0
+  box.innerHTML = `${type === 'keycaps' ? baseBarHtml(live) : ''}<div class="sumhead"><div class="sumcar" id="sumCar" data-type="${type}" data-id="${esc(live.id || '')}" data-cover="${esc(cover)}"></div><div class="sumheadtxt"><div class="sumrow" data-sumhead="name"><h3 style="margin:0" class="sumv">${esc((view.querySelector('#f_name')?.value ?? live.name ?? '').trim())}${bvh ? `<span style="color:var(--text-2)">: ${esc(baseLabel(bvh))}</span>${bvh.owned ? '' : ' <span class="chip" style="font-size:11px;vertical-align:middle">Not owned</span>'}` : ''}${live.isFavorite ? ' <span style="color:var(--warn)">★</span>' : ''}</h3>${view.querySelector('#f_name') ? '<span class="sumacts"><button class="lnk" data-sumheadedit="name" title="Change the name">✎</button></span>' : ''}</div>
       ${(() => { const d = (view.querySelector('#f_description')?.value ?? live.description ?? '').trim();
         return d ? `<div class="sumrow" data-sumhead="desc"><p class="sumdesc sumv">${esc(d).replace(/\n/g, '<br>')}</p><span class="sumacts"><button class="lnk" data-sumheadedit="desc" title="Change the description">✎</button></span></div>${live.refSource && !live.descriptionOwn ? `<p class="sub" style="margin:2px 0 0;font-size:11.5px">Description from ${live.refUrl ? `<a class="lnk" href="${esc(live.refUrl)}" target="_blank" rel="noopener">${esc(live.refSource)}</a>` : esc(live.refSource)}</p>` : ''}`
           : '<div class="sumrow" data-sumhead="desc"><p class="sub sumv" style="margin:4px 0 0">No description yet. <button class="lnk" data-sumheadedit="desc">+ Add a description</button></p></div>'; })()}</div></div>
@@ -6952,7 +6987,39 @@ function kcMainSrc(s, mode = 'default') {
   if (s.coverThumb) return { src: s.coverThumb, title: 'Your photo' };
   return { src: setPhotoCoverOf(s) || '', title: (s.kitPhotos || []).length ? 'Picture from your Keycap Collection app' : 'Picture from the GMK catalog (Matrix)' };
 }
-function kcCardImg(s) { const r = kcMainSrc(s, kcMainPic); return r.src ? `<img src="${r.src.startsWith('data:') ? r.src : esc(r.src)}" alt="" loading="lazy" referrerpolicy="no-referrer"${r.kit ? ' data-nofit="1"' : ''} title="${esc(r.title || '')}" onerror="this.remove()">` : ''; }
+function kcImgTag(r) { return r && r.src ? `<img src="${r.src.startsWith('data:') ? r.src : esc(r.src)}" alt="" loading="lazy" referrerpolicy="no-referrer"${r.kit ? ' data-nofit="1"' : ''} title="${esc(r.title || '')}" onerror="this.remove()">` : ''; }
+function kcCardImg(s, base) { return kcImgTag(base && (kcMainPic === 'default' || kcMainPic === 'base') ? (basePicOf(s, base) || kcMainSrc(s, kcMainPic)) : kcMainSrc(s, kcMainPic)); }
+/* v0.106.0 (Faraz Nov 24): "Show each base". A set with two or more base kits you own (light and dark bases, say) can show one card per base,
+   in the gallery and on the set's Summary. Each base card has that base's picture and lists the shared kits (novelties, spacebars…) too.
+   Nothing is copied: it is still one set, so cost, count and totals are counted once. Per set: splitBases: true. The gallery checkbox
+   (kbc_kc_splitbases, on unless you untick it) turns it on or off for every set at once. */
+let kcSplitOn = lsGet('kbc_kc_splitbases') !== '0';
+const BASE_TYPES = ['Base', 'Alphas', 'Full set'];
+const isBaseKit = k => { const t = k.kitType || ''; return t && t !== 'Other' ? BASE_TYPES.includes(t) : /\bbase\b|\bcore\b|\balphas?\b/i.test(k.name || ''); };
+/* v0.107.0 (Faraz Nov 24): a base you don't own (GMK Analog Dreams: you have Digital Nightmares, not Analog Dreams) can be one of the cards too, greyed.
+   A base is one of your kits (owned or marked not owned) or a catalog kit none of your kits is matched to. Which ones are bases: splitBaseKits [kitKey…]
+   when you chose them ("Choose the bases"), else your kits of type Base / Alphas / Full set and catalog kits with base / core / alphas in the name.
+   Each base is { name, owned, kit (your kit) | cat (catalog kit) }. Splitting needs 2+ bases, at least one of them yours. */
+function baseCandidates(s) {
+  const own = kitsOf(s).map(k => ({ name: k.name, kit: k, owned: !k.notOwned })), ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef);
+  if (!ref) return own; const pr = pairKits(kitsOf(s), ref.kits || [], s.kitLinks || {});
+  return own.concat((ref.kits || []).filter(c => !pr.has(c)).map(c => ({ name: c.name, cat: c, owned: false }))); }
+const candIsBase = c => c.kit ? isBaseKit(c.kit) : /\bbase\b|\bcore\b|\balphas?\b/i.test(c.name || '');
+function setBaseList(s) { const cands = baseCandidates(s), pick = Array.isArray(s.splitBaseKits) ? s.splitBaseKits : null; return pick ? cands.filter(c => pick.includes(kitKey(c.name))) : cands.filter(candIsBase); }
+const setBases = s => setBaseList(s).filter(c => c.owned);
+const baseKey = k => kitKey(k.name || '');
+function splitBasesOf(s, ignoreSwitch) { if (!s || !s.splitBases || (!kcSplitOn && !ignoreSwitch)) return []; const b = setBaseList(s); return b.length >= 2 && b.some(c => c.owned) ? b : []; }
+const baseLabel = k => String(k.name || '').replace(/\s+kit$/i, '').trim() || 'Base';
+function basePicOf(s, k) {   // the picture of one base: your chosen picture, kit stock, old-app photo, shop or catalog picture of that kit
+  const pics = kitPicsOf(s); for (const [p] of pairKits([k.kit || k], pics, s.kitLinks || {})) return { src: p.url, kit: true, title: p.name };
+  if (k.cat && k.cat.img) return { src: k.cat.img, kit: true, title: k.name };
+  return null; }
+function baseOtherNames(s, k) {   // picture names that belong to your other bases (left out of this base's view)
+  const pics = kitPicsOf(s), out = new Set(), others = splitBasesOf(s, true).filter(b => baseKey(b) !== baseKey(k)), ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef);
+  others.forEach(b => { out.add(baseKey(b)); for (const [p] of pairKits([b.kit || b], pics, s.kitLinks || {})) out.add(kitKey(p.name)); if (ref && b.kit) for (const [c] of pairKits([b.kit], ref.kits || [], s.kitLinks || {})) out.add(kitKey(c.name)); });
+  return out; }
+let kcBaseView = null;   // { id, key }: which base the set's page shows (from #/keycaps/<id>/base/<key>)
+function baseViewOf(s) { const b = splitBasesOf(s); if (!b.length) return null; const want = kcBaseView && kcBaseView.id === s.id ? kcBaseView.key : ''; return b.find(k => baseKey(k) === want) || b[0]; }
 document.addEventListener('change', e => { if (e.target.id !== 'kcMainPic') return; kcMainPic = e.target.value; lsSet('kbc_kc_mainpic', kcMainPic); drawKeycapResults(); if (kcMainPic !== 'default' && !gmkSets) loadGmk().then(() => { if (document.getElementById('kcResults')) drawKeycapResults(); }).catch(() => {}); });
 /* v0.67.0 (18): case material, weight material (kept in step with the Weight color on the Colorway card), accents */
 const CASE_MATS = ['Aluminum', 'Polycarbonate (PC)', 'ABS plastic', 'Acrylic', 'Brass', 'Copper', 'Stainless steel', 'Titanium', 'Magnesium alloy', 'Zinc alloy', 'Carbon fiber', 'POM', 'Wood', 'Resin', 'Other'];
