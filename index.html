@@ -671,7 +671,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.101.0';
+const APP_VERSION = 'v0.102.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -2032,8 +2032,8 @@ const HELP = [
     s: ['Import → "Read a product page" (or the "From a link" button on a list), paste the shop link, press Read page.', 'Pick the options you bought. Each line can be a New entry, "Add to an entry I have" (fills empty fields; tick Replace to refresh) or Wishlist.', 'Check the lines and press Save. Specs, the shop\'s text, retail price, the webpage link and every picture (as links) are saved.', 'Only shops listed in Settings → Product page reader can be read.'], go: '#/import/link' },
   { id: 'readpageinto', t: 'Read a webpage into one entry', g: 'Adding and reading', ctx: ['item'], k: 'read webpage into this entry link page shop details update refresh pull from entry main section keyboard switch keycap set accessory item existing',
     s: ['Open the entry and find the "From the shop" card (side column).', 'Press "🔗 Read a webpage into this entry" (or "Read the page again" if it has one) and paste the link.', 'The banner "Reading into …" means the option you pick fills this entry only. Tick Replace to refresh price and pictures.', 'Save takes you back to the entry. "Stop reading into it" turns it into a normal read.'], go: '' },
-  { id: 'receipt', t: 'Read a receipt', g: 'Adding and reading', ctx: ['import'], k: 'receipt pdf invoice order paypal ebay drop price tax shipping read import purchase',
-    s: ['Save the order page as a PDF (Print → Save as PDF; a photo or scan can\'t be read).', 'Import → drop the PDF on "Read a receipt". It is read on this device only and never uploaded or kept.', 'Each line is matched to an entry you have (or a new one, or Skip). Tax is spread as a rate, shipping and discounts split across the lines, to the cent.', 'Save approved lines: price, tax, shipping, discounts, date, seller and order number are filled; existing prices stay unless you tick replace.'], go: '#/import' },
+  { id: 'receipt', t: 'Read a receipt', g: 'Adding and reading', ctx: ['import'], k: 'receipt pdf invoice order paypal ebay drop price tax shipping read import purchase phone android paste text could not read no text',
+    s: ['Save the order page as a PDF (Print → Save as PDF; a photo or scan can\'t be read). On an Android phone: Chrome ⋮ → Share → Print → Save as PDF works too.', 'If a PDF can\'t be read: "Paste the text of an order page instead" (it opens by itself after the error). Open the order page, long-press a word → Select all → Copy, paste, Read pasted text.', 'Import → drop the PDF on "Read a receipt". It is read on this device only and never uploaded or kept.', 'Each line is matched to an entry you have (or a new one, or Skip). Tax is spread as a rate, shipping and discounts split across the lines, to the cent.', 'Save approved lines: price, tax, shipping, discounts, date, seller and order number are filled; existing prices stay unless you tick replace.'], go: '#/import' },
   { id: 'receiptinto', t: 'Read a receipt into one entry', g: 'Adding and reading', ctx: ['item'], k: 'receipt into this entry pdf purchase tab price paid order pull keyboard switch keycap set accessory pcb item existing',
     s: ['Open the entry → Purchase tab (keycap sets: Kits tab).', 'Press "📄 Read a receipt into this entry" and choose the PDF.', 'The receipt line that matches is pointed at this entry; the other lines start as Skip (change any of them if you want them too).', 'Save takes you back to the entry with its price, tax, shipping, date, seller and order number filled.'], go: '' },
   { id: 'shops', t: 'Add a shop to the product page reader', g: 'Adding and reading', ctx: ['settings'], k: 'approved shops add website domain reader helper cloudflare not allowed settings',
@@ -6239,6 +6239,7 @@ async function pdfText(bytes) {
     let fontDict = ''; const fi = resDict.indexOf('/Font'); if (fi >= 0) { const after = resDict.slice(fi + 5).trimStart(); if (after.startsWith('<<')) fontDict = after.slice(2, after.indexOf('>>')); else { const fr = /^(\d+) \d+ R/.exec(after); if (fr && objs.get(+fr[1])) fontDict = objs.get(+fr[1]).dict; } }
     const fonts = {}; for (const f of fontDict.matchAll(/\/([^\s/<>\[\]]+)\s+(\d+) \d+ R/g)) fonts[f[1]] = +f[2];
     let cref = /\/Contents\s*\[([^\]]*)\]/.exec(pg.dict), cnums = cref ? (cref[1].match(/\d+ \d+ R/g) || []).map(r => +r.split(' ')[0]) : [ref(pg.dict, 'Contents')].filter(Boolean), content = '';
+    cnums = cnums.flatMap(c => { const o = objs.get(c); return o && o.s0 == null && /^\s*\[/.test(o.dict) ? (o.dict.match(/\d+ \d+ R/g) || []).map(r => +r.split(' ')[0]) : [c]; });   // v0.102.0 Android Chrome: /Contents points at an array object
     for (const c of cnums) { const o = objs.get(c); if (o && o.s0 != null) content += await inflate(o) + '\n'; }
     for (const name of Object.keys(fonts)) await cmapOf(fonts[name]);
     // walk the text operators
@@ -6267,6 +6268,7 @@ async function pdfText(bytes) {
       else stack.push(v); }
     // lines: a new line when the vertical position changes; a space between runs on one line
     let text = '', last = null; for (const r of runs) { if (!last) text += r.s; else if (Math.abs(r.y - last.y) > 1.5) text += '\n' + r.s; else text += (!r.gap || /\s$/.test(text) || /^\s/.test(r.s) ? '' : ' ') + r.s; last = r; }
+    text = text.normalize('NFKC');   // v0.102.0: ligatures (ﬁ → fi) so words like Confirmed match
     out.push(text.split('\n').map(l => l.replace(/[ \t ]+/g, ' ').trim()).filter(Boolean).join('\n'));
   }
   return { pages: out };
@@ -6286,7 +6288,11 @@ function parseReceipt(pages) {
   const host = (/^https?:\/\/([^/]+)/.exec(url) || [])[1] || '';
   const SELLERS = { 'mechanicalkeyboards.com': 'MechanicalKeyboards.com', 'novelkeys.com': 'NovelKeys', 'divinikey.com': 'Divinikey', 'drop.com': 'Drop', 'kbdfans.com': 'KBDfans', 'cannonkeys.com': 'CannonKeys', 'keychron.com': 'Keychron', 'omnitype.com': 'Omnitype', 'milktooth.com': 'Milktooth', 'ebay.com': 'eBay', 'amazon.com': 'Amazon' };
   const sellerFromHost = () => { const h = host.replace(/^(www|account|shop|store|checkout)\./, ''); return SELLERS[h] || (h ? h.replace(/\.(com|net|co|store|shop|io)$/, '').replace(/^./, c => c.toUpperCase()) : ''); };
-  const r = { kind: 'generic', seller: sellerFromHost(), orderNumber: '', date: '', dateNote: '', lines: [], subtotal: null, shipping: 0, tax: 0, discount: 0, total: null, warnings: [] };
+  const sellerFromText = () => {   // v0.102.0: PDFs saved on a phone have no printed web address; use "Orders sold by NovelKeys LLC" or the page title
+    const m = /(?:^|\n)(?:Orders )?sold by (.+)/i.exec(all) || /(?:^|\n)Thank you for (?:shopping|your order) (?:at|with) (.+)/i.exec(all); if (!m) return '';
+    const n = m[1].replace(/\s+(Terms and policies|United States).*$/i, '').replace(/,?\s+(LLC|Inc\.?|Ltd\.?|Co\.)$/i, '').replace(/[.!]$/, '').trim(), k = n.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const hit = Object.entries(SELLERS).find(([h, v]) => h.replace(/\..*$/, '') === k || v.toLowerCase().replace(/[^a-z0-9]/g, '') === k); return hit ? hit[1] : n.slice(0, 40); };
+  const r = { kind: 'generic', seller: sellerFromHost() || sellerFromText(), orderNumber: '', date: '', dateNote: '', lines: [], subtotal: null, shipping: 0, tax: 0, discount: 0, total: null, warnings: [] };
   const after = (re, n = 1) => { const i = L.findIndex(l => re.test(l)); return i >= 0 ? L[i + n] || '' : ''; };
   const findNum = re => { for (const l of L) { const m = re.exec(l); if (m) return num(m[1]); } return null; };
   const freeOr = s => /free/i.test(s) ? 0 : num(s);
@@ -6408,13 +6414,17 @@ async function rcReadFile(file, msg) {
     const t = await pdfText(new Uint8Array(await file.arrayBuffer()));
     if (!t.pages.join('').trim()) throw new Error('No text was found in this PDF. It may be a scan or a photo; save the order page with Print → Save as PDF instead.');
     rcOpen(parseReceipt(t.pages), file.name);
-  } catch (e) { msg.innerHTML = `<span style="color:var(--bad-text)">Could not read ${esc(file.name)}: ${esc(e && e.message || String(e))}</span>`; }
+  } catch (e) { msg.innerHTML = `<span style="color:var(--bad-text)">Could not read ${esc(file.name)}: ${esc(e && e.message || String(e))}</span>${rcPasteHelp()}`;
+    const det = document.getElementById('rcPasteBox'); if (det) { det.open = true; } }   // v0.102.0: the paste box opens as the way round
 }
+function rcPasteHelp() { return document.getElementById('rcPasteBox')
+  ? '<br><span>Another way: open the order page in your browser, select all its text (phone: long-press a word → Select all → Copy; computer: Ctrl+A, Ctrl+C), paste it in the box below and press Read pasted text.</span>'
+  : '<br><span>Another way: Import → Read a receipt → "Paste the text of an order page instead" (select all the text on the order page, copy, paste).</span>'; }
 function receiptCardHtml() {
   return `<div class="card" id="rcCard"><h3>Read a receipt</h3>
       <p class="sub">Drop an order page saved as a PDF (Print → Save as PDF). It is read <b>on this device only</b>: the file is never uploaded, stored or put online. You review every line, and only the prices, date, seller and order number you approve are saved. Known layouts: Drop, eBay, PayPal invoices, MechanicalKeyboards.com, NovelKeys, Divinikey and other Shopify stores.</p>
       <div class="drop" id="rcDrop" tabindex="0" role="button"><b>Drop a receipt PDF here</b><span>or click to choose a file</span></div><input type="file" id="rcFile" accept=".pdf,application/pdf" hidden>
-      <details style="margin-top:10px"><summary class="sub" style="cursor:pointer;margin:0">Paste the text of an order page instead</summary>
+      <details id="rcPasteBox" style="margin-top:10px"><summary class="sub" style="cursor:pointer;margin:0">Paste the text of an order page instead</summary>
         <textarea class="input" id="rcPaste" rows="4" style="width:100%;box-sizing:border-box;margin-top:8px" placeholder="Paste the order page text here"></textarea><button class="btn" id="rcPasteGo" style="margin-top:8px">Read pasted text</button></details>
       <div id="rcMsg" class="sub" style="margin:10px 0 0">${rcpt ? `<a class="lnk" href="#/import/receipt">Continue reviewing ${esc(rcpt.fileName)}</a>` : ''}</div></div>`;
 }
