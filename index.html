@@ -671,7 +671,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.98.0';
+const APP_VERSION = 'v0.101.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -807,6 +807,7 @@ function renderNav(active) {
 const SAMPLE_KEYBOARDS = [{"id": "sample-row3", "isSample": true, "excelRow": 3, "brand": "Keychron", "name": "Q6 Max", "color": "Space Grey", "size": "Full Size", "connectivity": "Wireless (3-Mode)", "purchasedFrom": "Amazon", "datePurchased": "2024-07-26", "mods": "", "receiptText": "C:\\Users\\17327\\OneDrive\\Documents\\Keyboards\\All Receipts\\Keyboards\\Keychron Q6 Max Order Details.pdf", "receiptUrl": null, "pictureLabel": "View Keychron Q6 Max", "pictureUrl": "https://www.keychron.com/products/keychron-q6-max-qmk-via-wireless-custom-mechanical-keyboard", "currentBuildText": "MT3 Jasmine — Base Kit + Gateron Oil King V2", "price": 239.99, "taxRate": 0.06625, "shipping": 0, "discounts": 0, "excelTotal": 255.88933749999998}, {"id": "sample-row6", "isSample": true, "excelRow": 6, "brand": "Drop", "name": "CSTM80 Barebones", "color": "Black", "size": "TKL 80%", "connectivity": "Wired", "purchasedFrom": "Ebay", "datePurchased": "2025-08-10", "mods": "Overgrowth Decorative Case, Rocky Bird Decorative Case, Neighbors Decorative Case, Aluminum Decorative Case (Black), Switch Plates (Aluminum), Switch Plates (Carbon Fiber), Base Weight (Brass), ZX Decorative Case, Base Weight (Stainless Steel Chroma Mirror PVD), Aluminum Decorative Case (Silver), Decorative Case (Laser Bright White), Decorative Case (Shinai Green), Switch Plate (Brass)", "receiptText": "C:\\Users\\17327\\OneDrive\\Documents\\Keyboards\\All Receipts\\Keyboards\\Drop CSTM80 Barebones Order details _ eBay.pdf", "receiptUrl": null, "pictureLabel": "View Drop CSTM80 Barebones", "pictureUrl": "https://drop.com/buy/drop-cstm80-mechanical-keyboard", "currentBuildText": "", "price": 79.99, "taxRate": 0.077, "shipping": 13, "discounts": 5, "excelTotal": 94.14922999999999}, {"id": "sample-row7", "isSample": true, "excelRow": 7, "brand": "Drop × Keydous", "name": "NJ-80", "color": "White", "size": "75%", "connectivity": "Wireless (3-Mode)", "purchasedFrom": "Ebay", "datePurchased": "2025-08-21", "mods": "", "receiptText": "https://d.docs.live.net/af523fed51b777c6/Documents/Keyboards/All%20Receipts/Keyboards/Keydous%20NJ80%20Order%20details%20_%20eBay.pdf", "receiptUrl": "https://d.docs.live.net/af523fed51b777c6/Documents/Keyboards/All%20Receipts/Keyboards/Keydous%20NJ80%20Order%20details%20_%20eBay.pdf", "pictureLabel": "View Drop X Keydous NJ-80", "pictureUrl": "https://drop.com/buy/drop-x-keydous-nj-80-wireless-keyboard", "currentBuildText": "", "price": 38, "taxRate": 0.0663, "shipping": 0, "discounts": 40.52, "excelTotal": -0.0005999999999986017}, {"id": "sample-row30", "isSample": true, "excelRow": 30, "brand": "Qwertykeys", "name": "Neo65 Cu", "color": "Red Anodized", "size": "65%", "connectivity": "Wired", "purchasedFrom": "PayPal", "datePurchased": "2026-01-11", "mods": "Brass + Dusk Mirror PVD Weight (Included), Aluminum Plate (Included), Solder PCB (Included)", "receiptText": "🔗 View Receipt", "receiptUrl": "https://www.paypal.com/myaccount/activities/print-details/9EJ097615K518790U", "pictureLabel": "🔗 View Receipt", "pictureUrl": "https://www.paypal.com/myaccount/activities/print-details/9EJ097615K518790U", "currentBuildText": "", "price": 170, "taxRate": 0, "shipping": 0, "discounts": 0, "excelTotal": 170}, {"id": "sample-row46", "isSample": true, "excelRow": 46, "brand": "Omnitype", "name": "Float65", "color": "Caution Orange", "size": "65%", "connectivity": "Wired", "purchasedFrom": "Omnitype", "datePurchased": "2026-02-26", "mods": "", "receiptText": "Receipt OT128828", "receiptUrl": null, "pictureLabel": "", "pictureUrl": null, "currentBuildText": "", "price": 119.99, "taxRate": 0.0663, "shipping": 14.86, "discounts": 0, "excelTotal": 142.805337}];
 const favs = new Set(); // favorite stars on samples: in memory only until saving arrives
 
+function paidPreTax(k) { return (Number(k.price) || 0) + (Number(k.shipping) || 0) - (Number(k.discounts) || 0); }   // v0.99.0: what you paid without tax, for comparing with the shop's price
 function kbTotal(k) { // Excel formula: Price x (1 + Tax Rate) + Shipping - Discounts
   return (Number(k.price) || 0) * (1 + (Number(k.taxRate) || 0)) + (Number(k.shipping) || 0) - (Number(k.discounts) || 0);
 }
@@ -917,7 +918,7 @@ function undoToast(msg, list) {
 const MG_ONE = { keyboards: 'keyboard', switches: 'switch entry', keycaps: 'keycap set', pcbs: 'PCB', artisans: 'artisan', accessories: 'accessory' };
 const MG_SKIP = new Set(['id', 'createdAt', 'updatedAt', 'appVersion', 'source', 'addedFrom', 'isSample', 'doneAt', 'inQueue', 'values', 'isFavorite', 'colorway', 'palette', 'summaryExtra', 'summaryHidden', 'refImages', 'kits', 'allocations',
   'importKey', 'importAliases', 'excelRow', 'excelRows', 'excelTotal', 'excelTab', 'importNotes', 'importedTotal', 'formFactorExcel', 'kitsPurchasedExcel', 'coverPhotoId', 'coverThumb', 'coverFit', 'stockPhotoId', 'stockThumb',
-  'kitStock', 'kitStockCover', 'kitPhotos', 'kitLinks', 'coverKit', 'descriptionOwn', 'shopTextSource', 'shopTextUrl', 'shopTextAt', 'retailPriceAt', 'retailSource', 'retailCount', 'refImage', 'refSource', 'countApprox']);
+  'kitStock', 'kitStockCover', 'kitPhotos', 'kitLinks', 'kitPicPick', 'kitPicFrom', 'coverKit', 'descriptionOwn', 'shopTextSource', 'shopTextUrl', 'shopTextAt', 'retailPriceAt', 'retailSource', 'retailCount', 'refImage', 'refSource', 'countApprox']);
 const MG_FOLLOW = { description: ['descriptionOwn'], shopText: ['shopTextSource', 'shopTextUrl', 'shopTextAt'], retailPrice: ['retailPriceAt', 'retailSource', 'retailCount'], refUrl: ['refImage', 'refSource'], totalCount: ['countApprox'] };
 const MG_ID = ['importKey', 'excelRow', 'excelTotal', 'excelTab', 'importNotes', 'importedTotal', 'formFactorExcel', 'kitsPurchasedExcel', 'source'];   // where the entry came from in the workbook: travels with importKey
 const MG_TEXT = new Set(['notes', 'mods', 'reviewText', 'review', 'currentBuildText', 'included', 'specsText', 'installedOnText', 'belongsToText', 'colorsText', 'shopText', 'description']);
@@ -991,6 +992,7 @@ function mgBuild(type, keep, sac, choice) {   // the keeper's new fields; FieldV
   if (!keep.kitStockCover && sac.kitStockCover) upd.kitStockCover = sac.kitStockCover;
   if ((sac.kitPhotos || []).length) upd.kitPhotos = mgUnion(keep.kitPhotos, sac.kitPhotos, x => (x.name || '') + '|' + (x.url || ''));
   if (sac.kitLinks && Object.keys(sac.kitLinks).length) upd.kitLinks = Object.assign({}, sac.kitLinks, keep.kitLinks || {});
+  if (sac.kitPicPick && Object.keys(sac.kitPicPick).length) upd.kitPicPick = Object.assign({}, sac.kitPicPick, keep.kitPicPick || {});   // v0.101.0
   // keycap kits: all of them, ids kept unique
   const kitIdMap = {};
   if (type === 'keycaps' && kitsOf(sac).length) { const ids = new Set(kitsOf(keep).map(x => x.id)); upd.kits = kitsOf(keep).concat(kitsOf(sac).map(x => { if (!ids.has(x.id)) return x; const n = newKitId(); kitIdMap[x.id] = n; return Object.assign({}, x, { id: n }); })); }
@@ -1716,6 +1718,9 @@ function ckFixes() {   // the Nov 21 fixes still to do, worked out from the data
         return out.join('; '); } }); }
   // v0.86.0: OEM is now Pre-built; one old Layout value goes to Standard or Bottom row
   const now0 = () => firebase.firestore.FieldValue.serverTimestamp(), oem = savedKeyboards.filter(k => k.keyboardType === 'oem');
+  const wantShops = ['keebfront.com', 'omnitype.com', 'qwertykeys.com'], haveShops = rdCfg && rdCfg.sites, missShops = rdCfg ? wantShops.filter(w => !(haveShops || ['divinikey.com']).includes(w)) : [];   // v0.99.0, Faraz Nov 23
+  if (missShops.length) F.push({ id: 'shops', group: 'Product page reader', title: `Add ${missShops.join(', ')} to the approved shops`, detail: 'Settings → Product page reader → Approved shops gets these added; the others stay.', recs: [],
+    run: async () => { const c = await rdLoadCfg(true), list = (c.sites || ['divinikey.com']).slice(); missShops.forEach(w => { if (!list.includes(w)) list.push(w); }); await settingsRef().set({ readerSites: list }, { merge: true }); rdCfg = Object.assign({}, c, { sites: list }); return missShops.length + ' added'; } });
   if (oem.length) F.push({ id: 'oem', group: 'Keyboard type and layout', title: `${oem.length} keyboard${oem.length === 1 ? '' : 's'}: OEM → Pre-built`, detail: oem.map(k => [k.brand, k.name].filter(Boolean).join(' ')).join(', '), recs: oem.map(k => ['keyboards', k.id]), run: async () => { for (const k of oem) await kbCol().doc(k.id).update({ keyboardType: 'prebuilt', updatedAt: now0() }); return oem.length + ' changed'; } });
   const lay = savedKeyboards.map(k => [k, kbLayoutSplit(k)]).filter(([k, o]) => o.layout !== (k.layout || '') || o.layoutStandard !== (k.layoutStandard || '') || o.bottomRow !== (k.bottomRow || ''));
   if (lay.length) F.push({ id: 'layout', group: 'Keyboard type and layout', title: `${lay.length} keyboard${lay.length === 1 ? '' : 's'}: move the old Layout value to its own field`, detail: lay.map(([k, o]) => `${[k.brand, k.name].filter(Boolean).join(' ')}: ${k.layout} → ${o.layoutStandard && o.layoutStandard !== (k.layoutStandard || '') ? 'Standard ' + o.layoutStandard : 'Bottom row ' + o.bottomRow}`).join(' · '),
@@ -1755,6 +1760,7 @@ function ckSameNames() {
   const out = []; LIST_TYPES.forEach(t => { const m = new Map(); itemsOfType(t).forEach(x => { const k = ckNk([x.brand || x.manufacturer, x.name, x.color].join(' ')); if (!m.has(k)) m.set(k, []); m.get(k).push(x); }); m.forEach(xs => { if (xs.length > 1) out.push({ t, xs }); }); }); return out;
 }
 function renderCheck() {
+  if (!rdCfg) rdLoadCfg().then(() => { if (location.hash.startsWith('#/check')) renderCheck(); }).catch(() => {});   // the approved-shop fix needs the reader settings
   const view = document.getElementById('view'), F = ckFixes(), sortCats = ckCatsToSort(), sp = ckSpellings(), noType = savedKeyboards.filter(k => !k.keyboardType), noCat = (savedParts.accessories || []).filter(x => !x.category), same = ckSameNames();
   const cats = PART_TYPES.accessories.fields.find(f => f[0] === 'category')[4];
   const groups = [...new Set(F.map(f => f.group))];
@@ -1766,7 +1772,7 @@ function renderCheck() {
   const fixRow = f => f.bundleRows ? bundleHtml(f) : `<div class="ck-row"><label class="ck-tick"><input type="checkbox" data-ckfix="${esc(f.id)}" ${f.listing ? '' : 'checked'}><span><b>${f.href ? `<a href="${esc(f.href)}">${esc(f.title)}</a>` : esc(f.title)}</b>${f.detail ? `<span class="sub">${esc(f.detail)}</span>` : ''}${f.why ? `<span class="sub ck-why">${esc(f.why)}</span>` : ''}</span></label>
       ${f.listing ? `<select class="select ck-pick" data-ckpick="${esc(f.id)}"><option value="skip">Skip</option>${f.cands.length ? `<optgroup label="Matching names">${f.cands.map(w => `<option value="${esc(w.id)}"${w.id === f.pick ? ' selected' : ''}>${esc([w.manufacturer, w.name].filter(Boolean).join(' '))}${w.totalCount != null ? ' · ' + w.totalCount + ' pcs' : ''}${w.datePurchased ? ' · ' + w.datePurchased : ''}${w.purchasedFrom ? ' · ' + w.purchasedFrom : ''}</option>`).join('')}</optgroup>` : ''}<option value="new">Add as a new switch entry</option><optgroup label="All switch entries">${f.swOpts().filter(w => !f.cands.includes(w)).map(w => `<option value="${esc(w.id)}">${esc([w.manufacturer, w.name].filter(Boolean).join(' '))}${w.totalCount != null ? ' · ' + w.totalCount : ''}</option>`).join('')}</optgroup></select>` : ''}</div>`;
   view.innerHTML = `<div class="pagehead"><div><h1>Check my data</h1><p>Things to tidy, found in your records. Nothing changes until you press a button.</p></div></div>
-    ${F.length ? `<div class="card ck-card"><h3>Fixes waiting for you <span class="sub">(from our chat, Nov 21)</span></h3>
+    ${F.length ? `<div class="card ck-card"><h3>Fixes waiting for you <span class="sub">(from our chat)</span></h3>
       ${groups.map(g => `<h4 class="ck-h">${esc(g)}</h4>${F.filter(f => f.group === g).map(fixRow).join('')}`).join('')}
       <div class="btnrow" style="margin-top:14px"><button class="btn primary" id="ckApply">Apply ticked fixes</button><span class="sub" id="ckMsg"></span></div></div>` : `<div class="card"><h3>Fixes waiting for you</h3><p class="sub">None — everything from our chat is done.</p></div>`}
     <div class="card ck-card"><h3>Spellings <span class="sub">${sp.length ? sp.length + ' to choose' : 'all consistent'}</span></h3>
@@ -2058,16 +2064,16 @@ const HELP = [
     s: ['On an entry, the Photos card: drop pictures or choose files; on a phone "Take a photo".', 'Each is cropped to 4:3 and saved small (WebP). The first photo is the display picture; "Set as default" on another photo changes it. Crop and Delete are under each photo.', 'HEIC from an iPhone must be JPG (iPhone Settings → Camera → Formats → Most Compatible).'], go: '' },
   { id: 'mainpic', t: 'Choose and frame the main picture', g: 'Pictures', ctx: ['item'], k: 'main picture display cover stock adjust frame zoom crop card picture whole',
     s: ['Your default photo is the card picture. "Use as stock picture" on a photo makes it the Summary picture.', 'Summary picture → Adjust: drag, zoom, or "Show the whole picture".', 'Keycap sets: Kit gallery → kit → "Use as main picture"; the Keycaps page "Main picture" menu switches all cards to Base / Novelties / Spacebars / Numpads.'], go: '' },
-  { id: 'shoppics', t: 'Shop pictures: download, keep, use or hide', g: 'Pictures', ctx: ['item'], k: 'shop pictures carousel download keep copy remove delete star main link pictures from the shop',
-    s: ['From the shop card → "Pictures from the shop": every picture of the page, saved as links (no storage).', '⬇ downloads one to your device · Keep copies it into your photos · ★ makes it the shop picture · ✕ removes it.', 'Read the page again with Replace to get them all back.'], go: '' },
+  { id: 'shoppics', t: 'Shop pictures: download, keep, use or hide', g: 'Pictures', ctx: ['item'], k: 'shop pictures carousel download downloaded keep kept copy already duplicate remove delete star main link pictures from the shop',
+    s: ['From the shop card → "Pictures from the shop": every picture of the page, saved as links (no storage).', '⬇ downloads one to your device · Keep copies it into your photos · ★ makes it the shop picture · ✕ removes it.', 'A picture already in your photos shows "✓ Kept" (also when you ticked Keep a copy while reading the page); Keep then does nothing, so there are no double copies. ⬇✓ = downloaded on this device before. Delete the copy from your photos and it shows Keep again.', 'Read the page again with Replace to get them all back.'], go: '' },
   { id: 'viewer', t: 'Zoom into pictures', g: 'Pictures', ctx: ['item'], k: 'zoom viewer full screen carousel enlarge bigger look closer',
     s: ['Click the Summary picture: arrows go through all pictures; click opens the full-screen viewer.', 'Wheel, pinch or +/− zooms up to 8×; drag moves; double-click zooms; Esc closes.'], go: '' },
 
   // ---------- Prices and value ----------
   { id: 'purchase', t: 'Purchase details', g: 'Prices and value', ctx: ['item'], k: 'purchase price tax shipping discount total paid seller date order receipt link webpage',
     s: ['Purchase tab: date, seller, price before tax, tax rate (quick buttons NJ 6.625%, KBDfans, PayPal 0%), shipping, discounts.', 'Total paid = price + tax + shipping − discounts.', 'Receipt (order number or link) and "Link to webpage" are clickable on the Summary.', 'Keycap sets keep purchases per kit on the Kits tab.'], go: '' },
-  { id: 'paidretail', t: 'Paid vs retail (red / green)', g: 'Prices and value', ctx: ['item'], k: 'paid retail difference overpaid underpaid profit savings red green compare price cost more less',
-    s: ['Purchase tab: under Total paid, "Retail … · you paid … · $X less than retail" — green = you paid less, red = more. It updates while you type.', 'Summary → "Paid and retail" (keyboards: "Build cost") lists each item with a Difference column and the total.', 'Retail comes from reading the product page; GMK kits without one use the group-buy price.'], go: '' },
+  { id: 'paidretail', t: 'Paid vs retail (red / green)', g: 'Prices and value', ctx: ['item'], k: 'paid retail difference overpaid underpaid profit savings red green compare price cost more less tax before tax',
+    s: ['Purchase tab: under Total paid, "Retail … · you paid … before tax · $X less than retail" — green = you paid less, red = more. It updates while you type.', 'Tax is left out of the comparison (price + shipping − discounts vs the shop\'s price), so it is like for like; Total paid still includes tax.', 'Summary → "Paid and retail" (keyboards: "Build cost") lists each item with a Difference column and the total.', 'Retail comes from reading the product page; GMK kits without one use the group-buy price.'], go: '' },
   { id: 'pack', t: 'Switch packs and price per switch', g: 'Prices and value', ctx: ['switches'], k: 'pack per switch count 35 10 retail each how many switches change price per switch',
     s: ['The shop price covers a pack (10, 35, 36…). Summary → Paid and retail → Shop price shows "$12.25 for 35 switches" and the option chosen.', '"change" sets how many switches the shop price covers if it is wrong.', 'Purchase tab: "Price per switch" next to Price works both ways.'], go: '#/switches' },
   { id: 'value', t: 'Track market value', g: 'Prices and value', k: 'market value worth resale sell price history value page',
@@ -2106,8 +2112,10 @@ const HELP = [
     s: ['Keycap set → Kits tab: + Add kit, name, kit type, quantity and its own purchase details.', 'Untick "I own this kit" to keep a kit you don\'t have yet (greyed in the Kit gallery, not counted as owned).', 'Kit gallery shows every kit as a picture; click one for details.'], go: '#/keycaps' },
   { id: 'completion', t: 'Completion and missing kits', g: 'Keycaps', ctx: ['keycaps'], k: 'completion complete missing kits percent bar wishlist gmk',
     s: ['Sets linked to the GMK catalog (or with a kit marked not owned) show "2/4 kits · 50%".', 'GMK reference card: missing kits with "+ Wishlist"; Filter → Missing kits.'], go: '#/keycaps' },
-  { id: 'gmk', t: 'GMK catalog and Matrix pages', g: 'Keycaps', ctx: ['keycaps', 'catalog'], k: 'gmk catalog matrix link fill from catalog reference group buy colors codes',
-    s: ['Keycap set → GMK reference card: suggested catalog sets, or search; link it.', '"Fill from catalog" fills empty fields and the catalog colors.', 'A Matrix page link in the reader builds the set from the private catalog.'], go: '#/catalog' },
+  { id: 'kitmatch', t: 'Match a kit to the catalog (novelties with their own names)', g: 'Keycaps', ctx: ['keycaps'], k: 'novelty novelties name rename kit type match catalog kit picture different name overwrite main picture nishi rama link my kit',
+    s: ['Keycap set → Kit gallery → click your kit (or the catalog kit) → "Your kit … is this catalog kit": pick the catalog kit (e.g. Nishi). Saved at once; the picture and price follow.', 'In the same window: "Kit type" (e.g. Novelties) and "Rename my kit to …" (uses the catalog name); both go to the Kits tab, then Save. Purchase details, pictures and where it is installed stay with the kit.', '"Use this picture for this kit" shows the picture you are looking at for that kit everywhere; "stop using" goes back.', 'Keycaps → Main picture: Novelties (or Base, Spacebars, Numpads) also uses the kit type, so a novelty named "Nishi" still shows.'], go: '#/keycaps' },
+  { id: 'gmk', t: 'GMK catalog and Matrix pages', g: 'Keycaps', ctx: ['keycaps', 'catalog'], k: 'gmk catalog matrix link fill from catalog reference group buy colors codes pictures old photos',
+    s: ['Keycap set → GMK reference card: suggested catalog sets, or search; link it, then Save.', 'Linking a set that has old Keycap Collection photos switches "Kit pictures" (on the card) to "GMK catalog pictures first"; your old photos stay as extra pictures on each kit. Switch it back on the card if you prefer them.', '"Fill from catalog" fills empty fields and the catalog colors.', 'A Matrix page link in the reader builds the set from the private catalog.'], go: '#/catalog' },
   { id: 'colors', t: 'Colors: palette, color wheel, textures', g: 'Keycaps', ctx: ['keycaps'], k: 'colors colour palette wheel hex pick from picture texture gmk code ral classic design pantone eyedropper color name purple blue wrong',
     s: ['Keycap set → Colors tab: + Add color, roles (Alpha, Modifier…), hex, GMK code, RAL, Pantone.', 'Type a GMK, RAL (Design like 240 50 25 or Classic like 9001) or Pantone code into an empty color and its hex fills in. A Pantone code with no known hex says so: use "Pick from a picture" or type the hex, and the app remembers it for that code.', '"Pick from a picture" takes a color from any of its pictures, with an optional texture sample.', 'A GMK set fills the nearest GMK code; names (now with more purples) are filled automatically until you type one.'], go: '#/keycaps' },
 
@@ -2788,10 +2796,10 @@ function updateCalc() {
   const x = itemsOfType(c.type).find(y => y.id === c.x.id) || c.x; let ret = null, how = '';
   if (c.type === 'switches') { const cnt = num('f_totalCount') || Number(x.totalCount) || 0, sr = x.retailPrice != null && x.retailPrice !== '' ? switchRetail(x) : null; if (sr && sr.each != null && cnt) { ret = sr.each * cnt; how = `${cnt} switches at ${money3(sr.each)} each`; } }
   else if (x.retailPrice != null && x.retailPrice !== '') ret = Number(x.retailPrice);
-  const paid = kbTotal(k); box.hidden = false;
+  const paid = paidPreTax(k); box.hidden = false;   // v0.99.0: tax left out so it compares like for like
   if (ret == null) { box.innerHTML = 'No retail price yet. Read the product page (From the shop → Read the page again) to compare what you paid with retail.'; return; }
   const d = paidVsRetail(paid, ret);
-  box.innerHTML = `Retail <b>${money(ret)}</b>${how ? ` <span class="sub">(${esc(how)})</span>` : ''}${x.retailSource ? ` <span class="sub">· ${esc(x.retailSource)}</span>` : ''} · you paid <b>${money(paid)}</b> · <span class="${d.cls}">${esc(d.txt)}</span>`;
+  box.innerHTML = `Retail <b>${money(ret)}</b>${how ? ` <span class="sub">(${esc(how)})</span>` : ''}${x.retailSource ? ` <span class="sub">· ${esc(x.retailSource)}</span>` : ''} · you paid <b>${money(paid)}</b> before tax · <span class="${d.cls}">${esc(d.txt)}</span>`;
 }
 let calcCtx = null;
 /* v0.96.0: read a receipt or a webpage straight into one entry. The entry travels in sessionStorage (kbc_target) to the reader, which then fills only that entry. */
@@ -2956,7 +2964,7 @@ function wirePhotos(k, type = 'keyboards') {
   photoUnsub = photoCol().where('itemId', '==', k.id).onSnapshot(snap => {
     currentPhotos = snap.docs.map(d => Object.assign({ id: d.id }, d.data()))
       .sort((a, b) => ((a.createdAt && a.createdAt.toDate ? a.createdAt.toDate() : 0) - (b.createdAt && b.createdAt.toDate ? b.createdAt.toDate() : 0)));
-    drawPhotoGrid(k); drawSumCarousel();
+    drawPhotoGrid(k); drawSumCarousel(); markShopPics();   // v0.100.0: ✓ Kept on shop pictures follows your photos
     if (type === 'keycaps') { const gp = document.querySelector('[data-panel="gallery"]'); if (gp && !gp.hidden) drawKitGallery(k); migrateKitStock(k); }
   }, err => { document.getElementById('photoGrid').innerHTML = `<span class="sub">Could not load photos: ${esc(explain(err))}</span>`; });
 }
@@ -3657,7 +3665,7 @@ function renderKeycapForm(s = null) {
           <h3 style="margin-bottom:14px">Notes</h3>
           <div class="frm">${fld('Notes', '<textarea class="input" name="notes" id="f_notes" rows="6" placeholder="Anything else worth remembering"></textarea>', { name: 'notes', full: true })}</div>
         </div>
-        <input type="hidden" id="f_gmkRef" value="${esc(s?.gmkRef || '')}"><div class="gmkmid">${gmkCardHtml(s)}</div>
+        <input type="hidden" id="f_gmkRef" value="${esc(s?.gmkRef || '')}"><input type="hidden" id="f_kitPicFrom" value="${esc(s?.kitPicFrom || '')}"><div class="gmkmid">${gmkCardHtml(s)}</div>
       </div>
       <div>
         <div class="card side-card"><h3>Flags</h3><label class="check" style="margin-top:10px"><input type="checkbox" id="f_isFavorite"> Favorite</label></div>
@@ -3683,7 +3691,7 @@ function renderKeycapForm(s = null) {
     view.querySelectorAll('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== b.dataset.tab);
     if (b.dataset.tab === 'gallery') drawKitGallery(s);
   };
-  document.getElementById('f_gmkRef').addEventListener('change', () => { if (!document.querySelector('[data-panel="gallery"]').hidden) drawKitGallery(s); });
+  ['f_gmkRef', 'f_kitPicFrom'].forEach(id => document.getElementById(id).addEventListener('change', () => { if (!document.querySelector('[data-panel="gallery"]').hidden) drawKitGallery(s); }));
   const formEl = view.querySelector('.form-grid');
   const markDirty = () => { if (s) { formDirty = location.hash; setEditState(true); } };
   formEl.addEventListener('input', e => {
@@ -3773,7 +3781,7 @@ async function saveKeycapSet() {
   errBox.style.display = 'none';
   const v = n => (document.getElementById('f_' + n)?.value || '').trim();
   const data = {};
-  ['manufacturer', 'name', 'profile', 'location', 'designer', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText', 'notes', 'gmkRef'].forEach(n => { const x = v(n); if (x) data[n] = x; });
+  ['manufacturer', 'name', 'profile', 'location', 'designer', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText', 'notes', 'gmkRef', 'kitPicFrom'].forEach(n => { const x = v(n); if (x) data[n] = x; });
   data.isFavorite = document.getElementById('f_isFavorite').checked;
   const problems = []; let kitBad = null;
   if (!data.name) problems.push(['name', 'Name is required']);
@@ -3824,8 +3832,9 @@ async function saveKeycapSet() {
   const now = firebase.firestore.FieldValue.serverTimestamp();
   if (editing) {
     const s = editing, del = firebase.firestore.FieldValue.delete(), upd = {};
-    ['manufacturer', 'name', 'profile', 'location', 'designer', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText', 'notes', 'gmkRef', 'isFavorite', 'kits', 'palette']
+    ['manufacturer', 'name', 'profile', 'location', 'designer', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText', 'notes', 'gmkRef', 'kitPicFrom', 'isFavorite', 'kits', 'palette']
       .forEach(n => { if (data[n] !== undefined) upd[n] = data[n]; else if (s[n] !== undefined) upd[n] = del; });
+    Object.assign(upd, kitRenameMoves(savedKeycaps.find(x => x.id === s.id) || s, old, kits, data.gmkRef || ''));   // v0.101.0: renamed kits keep their catalog match, main picture and picture choice
     Object.assign(upd, { updatedAt: now, appVersion: APP_VERSION });
     const hash = location.hash; formDirty = false;
     try { await withTimeout(kcCol().doc(s.id).update(upd)); toast('Changes saved'); const b2 = document.getElementById('btnSave'); if (b2) b2.textContent = 'Save changes'; }
@@ -5371,13 +5380,13 @@ function matrixLinkHtml(ref, label = 'Open on Matrix ↗') { const u = matrixUrl
 function setPhotoCoverOf(s) {   // picture for a keycap card with no photo of your own: your kit stock pictures, your kit photos from the old app, then the catalog
   if (s.kitStockCover && s.kitStockCover.thumb) return s.kitStockCover.thumb;
   if ((s.kitStock || []).length) { const b = s.kitStock.find(e => /base/i.test(e.name)) || s.kitStock[0]; if (b.thumb) return b.thumb; }   // records from v0.52–v0.53
-  const ph = s.kitPhotos || [];
-  if (ph.length) { const pr = pairKits(ownedKits(s), ph), own = ph.find(p => pr.has(p)); return (own || ph[0]).url || ''; }
+  const ph = s.kitPhotos || [], catFirst = s.kitPicFrom === 'catalog' && s.gmkRef && gmkSets && gmkSets.some(x => x.id === s.gmkRef && (x.kits || []).some(k => k.img));
+  if (ph.length && !catFirst) { const pr = pairKits(ownedKits(s), ph), own = ph.find(p => pr.has(p)); return (own || ph[0]).url || ''; }
   const shopKits = ownedKits(s).filter(k => k.refImage);   // v0.92.0: the shop's picture of a kit you own (product page reader, or added by hand)
   if (shopKits.length) return (shopKits.find(k => /\bbase\b|\bcore\b|\balphas?\b/i.test((k.kitType || '') + ' ' + k.name)) || shopKits[0]).refImage;
   const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef); if (!ref) return '';
   const ks = (ref.kits || []).filter(k => k.img), pairs = pairKits(ownedKits(s), ref.kits || []), own = ks.find(ck => pairs.has(ck));
-  return (own || ks[0] || {}).img || '';
+  return (own || ks[0] || {}).img || (ph.length ? ((ph.find(p => pairKits(ownedKits(s), ph).has(p)) || ph[0]).url || '') : '');
 }
 let kgFilter = 'all';
 function formKits() { return [...document.querySelectorAll('#kitList .kit')].map(readKitRow).filter(k => k.name); }
@@ -5392,7 +5401,8 @@ function kitGalleryTiles(s) {
   if (ref) { kind = 'catalog'; base = (ref.kits || []).map(ck => ({ name: ck.name, img: ck.img, more: ck.moreImgs || [], price: gmkKitPrice(ck), qty: ck.quantity, ck, cat: true })); }
   else if (photos.length) { kind = 'photos'; base = photos.map(p => ({ name: p.name, img: p.url, more: [], ck: { name: p.name }, yours: true })); }
   let spare = photos;
-  if (kind === 'catalog' && photos.length) { const pp = pairKits(photos, base); pp.forEach((p, b) => { b.more = [b.img, ...b.more].filter(Boolean); b.img = p.url; b.yours = true; }); spare = photos.filter(p => ![...pp.values()].includes(p)); }
+  const catFirst = (document.getElementById('f_kitPicFrom')?.value || (live && live.kitPicFrom) || '') === 'catalog';
+  if (kind === 'catalog' && photos.length) { const pp = pairKits(photos, base); pp.forEach((p, b) => { if (catFirst && b.img) { b.more = [...b.more, p.url]; return; } b.more = [b.img, ...b.more].filter(Boolean); b.img = p.url; b.yours = true; }); spare = photos.filter(p => ![...pp.values()].includes(p)); }   // v0.101.0: catalog first keeps the old-app photo as an extra picture
   const pairs = pairKits(mine, base, (live && live.kitLinks) || {});
   base.forEach(b => { const own = pairs.get(b); tiles.push(Object.assign({}, b, { inList: true, owned: !!own, kit: own, on: own ? where(own) : '' })); });
   const extras = mine.filter(k => !tiles.some(t => t.kit === k)), ep = kind === 'catalog' ? pairKits(spare, extras.map(k => ({ name: k.name, k }))) : new Map();
@@ -5402,6 +5412,8 @@ function kitGalleryTiles(s) {
   tiles.forEach(t => { const sk = t.kit && saved.find(x => x.id === t.kit.id); if (!t.img && sk && sk.refImage) t.img = sk.refImage; });   // the shop's picture of that kit, saved by the product page reader
   const ks = (live && live.kitStock) || [];
   if (ks.length) tiles.forEach(t => { const e0 = ks.find(x => x.key === kitKey(t.name)), e = e0 && { thumb: kitStockThumb(e0) }; if (e && e.thumb) { t.more = [t.img, ...(t.more || [])].filter(Boolean); t.img = e.thumb; t.yours = true; t.stock = true; } });
+  const picks = (live && live.kitPicPick) || {};   // v0.101.0: the picture you chose for a kit wins
+  tiles.forEach(t => { const pk = picks[kitKey(t.name)] || (t.kit && picks[kitKey(t.kit.name)]); if (pk && pk.url && pk.url !== t.img) { t.more = [t.img, ...(t.more || [])].filter(u => u && u !== pk.url); t.img = pk.url; t.picked = true; } else if (pk && pk.url === t.img) t.picked = true; });
   return { ref, tiles, refId, kind };
 }
 function drawKitGallery(s) {
@@ -5445,12 +5457,18 @@ function openKitView(s, t) {
       const live = savedKeycaps.find(x => x.id === s.id) || s, cur = (live.kitLinks || {})[kitKey(t.kit.name)] || '';
       return `<div class="fld" style="margin-top:12px"><label for="kvLink">Your kit “${esc(t.kit.name)}” is this catalog kit</label><select class="input" id="kvLink" data-kitname="${esc(t.kit.name)}"><option value="">Match by name (automatic)</option>${ref.kits.map(ck => `<option value="${esc(ck.name)}"${cur === ck.name ? ' selected' : ''}>${esc(ck.name)}</option>`).join('')}<option value="-"${cur === '-' ? ' selected' : ''}>Not in the catalog (counts as an extra kit)</option></select>
         <p class="sub" style="margin:4px 0 0">${t.extra && cur !== '-' ? 'No catalog kit has this name. Pick the right one, or confirm it is not in the catalog.' : 'Change this only if the automatic match is wrong.'} Saved straight away.</p></div>`; })()}
+    ${(() => { if (!t.owned || !t.kit || !s || !s.id) return ''; const row = [...document.querySelectorAll('#kitList .kit')].find(r => r.dataset.kit === t.kit.id); if (!row) return '';   // v0.101.0: kit type and name from here
+      const ct = row.querySelector('.k-type').value, diff = t.inList && kitKey(t.kit.name) !== kitKey(t.name);
+      return `<div class="kvedit" style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-top:10px"><div class="fld" style="min-width:180px"><label for="kvType">Kit type of “${esc(t.kit.name)}”</label><select class="select" id="kvType">${['', ...KIT_TYPES].map(v => `<option value="${esc(v)}"${v === ct ? ' selected' : ''}>${v || '—'}</option>`).join('')}</select></div>${diff ? `<button class="btn" id="kvRename" title="Your kit keeps its type, purchase details, pictures and where it is installed">Rename my kit to “${esc(t.name)}”</button>` : ''}
+        <p class="sub" style="margin:0;flex-basis:100%">Kit type decides which picture "Main picture: Novelties" (Base, Spacebars, Numpads) uses. These go to the Kits tab: Save the set to keep them.</p></div>`; })()}
     <div class="btnrow" style="margin-top:12px">
       ${t.owned ? '<button class="btn" id="kvShow">Show in Kits tab</button><button class="btn" id="kvUnown" title="Marks this kit as not owned; click Save to keep it">I don’t own this kit</button>' : `<button class="btn primary" id="kvOwn" title="Adds this kit to the Kits tab; click Save to keep it">I own this kit</button>${s ? (onWish ? '<span class="chip">On wishlist</span>' : '<button class="btn" id="kvWish">+ Wishlist</button>') : ''}`}
+      ${s && s.id && imgs.length > 1 ? `<button class="btn" id="kvPick" title="Show the picture you are looking at for this kit everywhere (card, Summary, gallery)">Use this picture for this kit</button>` : ''}${s && s.id && t.picked ? '<button class="btn" id="kvPickOff" title="Go back to the automatic picture for this kit">★ Chosen picture · stop using</button>' : ''}
       ${t.img && s && s.id ? (kitKey((savedKeycaps.find(x => x.id === s.id) || s).coverKit || '') === kitKey(t.name) ? '<button class="btn" id="kvMainOff" title="Go back to the set\'s usual picture">★ Main picture · stop using</button>' : '<button class="btn" id="kvMainOn" title="Show this kit\'s picture for the set in the Keycaps gallery and on the Summary">Use as main picture</button>') : ''}
       <span style="margin-left:auto">${matrixLinkHtml(t.cat ? gmkSets.find(x => x.id === document.getElementById('f_gmkRef').value) : null)}</span></div></div>`;
   document.body.appendChild(d);
   const toKits = () => { d.remove(); document.querySelector('.tabs [data-tab="kits"]').click(); };
+  const kt = d.querySelector('#kvType'); if (kt) kt.onchange = () => { const row = [...document.querySelectorAll('#kitList .kit')].find(r => r.dataset.kit === t.kit.id); if (!row) return; const sel = row.querySelector('.k-type'); sel.value = kt.value; sel.dispatchEvent(new Event('change', { bubbles: true })); toast(`Kit type ${kt.value || 'cleared'} on the Kits tab. Save the set to keep it.`); };
   const kl = d.querySelector('#kvLink'); if (kl) kl.onchange = async () => { const live = savedKeycaps.find(x => x.id === s.id) || s, links = Object.assign({}, live.kitLinks || {}), key = kitKey(kl.dataset.kitname);
     if (kl.value) links[key] = kl.value; else delete links[key];
     try { await withTimeout(kcCol().doc(s.id).update({ kitLinks: Object.keys(links).length ? links : firebase.firestore.FieldValue.delete(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); toast('Kit match saved'); d.remove(); }
@@ -5459,6 +5477,11 @@ function openKitView(s, t) {
     if (e.target === d || e.target.closest('[data-x]')) { d.remove(); return; }
     const th = e.target.closest('[data-kvi]'); if (th) { document.getElementById('kvMain').src = imgs[+th.dataset.kvi]; d.dataset.cur = th.dataset.kvi; return; }
     if (e.target.id === 'kvMain') { openLightbox(imgs.map(u => ({ src: u, full: u, cap: t.name })), +(d.dataset.cur || 0), i => { d.dataset.cur = i; const m = document.getElementById('kvMain'); if (m) m.src = imgs[i]; }); return; }
+    if (e.target.id === 'kvType' ) return;
+    if (e.target.id === 'kvRename') { const row = [...document.querySelectorAll('#kitList .kit')].find(r => r.dataset.kit === t.kit.id); if (!row) return; const inp = row.querySelector('.k-name'); inp.value = t.name; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); toast(`Renamed to “${t.name}” on the Kits tab. Save the set to keep it.`); d.remove(); drawKitGallery(s); return; }
+    if (e.target.id === 'kvPick' || e.target.id === 'kvPickOff') { const u = imgs[+(d.dataset.cur || 0)], live = savedKeycaps.find(x => x.id === s.id) || s, P = Object.assign({}, live.kitPicPick || {}), key = kitKey(t.name);
+      if (e.target.id === 'kvPick') { if (!/^https?:/i.test(u || '')) { toast('That one is already your own picture for this kit'); return; } P[key] = { name: t.name, url: u }; } else delete P[key];
+      try { await withTimeout(kcCol().doc(s.id).update({ kitPicPick: Object.keys(P).length ? P : firebase.firestore.FieldValue.delete(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); toast(e.target.id === 'kvPick' ? `This picture now shows for ${t.name}` : 'Back to the automatic picture'); d.remove(); setTimeout(() => drawKitGallery(savedKeycaps.find(x => x.id === s.id) || s), 300); } catch (er) { toast('Not saved: ' + explain(er)); } return; }
     if (e.target.id === 'kvMainOn' || e.target.id === 'kvMainOff') { const on = e.target.id === 'kvMainOn';
       try { await withTimeout(kcCol().doc(s.id).update({ coverKit: on ? t.name : firebase.firestore.FieldValue.delete(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); toast(on ? `${t.name} is now the main picture of this set` : 'Back to the usual picture'); d.remove(); } catch (er) { toast('Not saved: ' + explain(er)); } return; }
     if (e.target.id === 'kvShow') { toKits(); const row = [...document.querySelectorAll('#kitList .kit')].find(r => r.dataset.kit === t.kit.id); if (row) { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); row.classList.add('flash'); setTimeout(() => row.classList.remove('flash'), 1600); } }
@@ -5484,7 +5507,7 @@ function refCardHtml(t, x) {
     ${x.retailPrice != null ? '<p class="refret sub">Retail price: see Paid and retail on the Summary.</p>' : ''}
     ${(() => { const pics = shopPicsOf(x); if (!x.id || !pics.length) return '';   // v0.95.0: every picture from the shop page, each kept as a link; download, keep a copy, use as the shop picture, or remove
       return `<details class="shoppicbox"${pics.length > 1 ? ' open' : ''}><summary>Pictures from the shop (${pics.length})</summary><div class="shoppics">${pics.map(u => `<div class="shoppic${u === x.refImage ? ' main' : ''}" data-u="${esc(u)}"><a class="pv" href="${esc(u)}" target="_blank" rel="noopener" title="Open the picture"><img src="${esc(u)}" alt="" loading="lazy" referrerpolicy="no-referrer"></a><div class="acts"><button class="btn" type="button" data-spact="dl" title="Download this picture to your device">⬇</button><button class="btn" type="button" data-spact="copy" title="Keep a copy with your photos (uses storage)">Keep</button>${u === x.refImage ? '' : '<button class="btn" type="button" data-spact="main" title="Use as the shop picture">★</button>'}<button class="btn danger" type="button" data-spact="del" title="Remove this picture from the entry">✕</button></div></div>`).join('')}</div>
-        <p class="sub" style="margin:6px 0 0;font-size:11.5px">Saved as links (no storage). ⬇ downloads one to your device · Keep copies it into your photos · ★ makes it the shop picture (outlined) · ✕ removes it. Read the page again with Replace to get them all back.</p></details>`; })()}
+        <p class="sub" style="margin:6px 0 0;font-size:11.5px">Saved as links (no storage). ⬇ downloads one to your device (⬇✓ = done on this device) · Keep copies it into your photos (✓ Kept = already there) · ★ makes it the shop picture (outlined) · ✕ removes it. Read the page again with Replace to get them all back.</p></details>`; })()}
     ${x.id ? `<details class="shopopts"${av ? ' open' : ''}><summary>${av ? 'Options the shop sells' : 'Options'}${sibs ? ` · ${sibs + 1} in your collection` : ''}</summary><div id="availBox">${availHtml(x, t)}</div></details>` : ''}
     <div class="btnrow" style="margin-top:10px"><button class="btn" id="refEditBtn">${has ? 'Edit link & picture' : '+ Add product page'}</button>${x.id ? (x.refUrl && /^https?:/.test(x.refUrl) ? '<button class="btn" id="refReread" title="Read the shop page again into this entry (fills what is empty; tick Replace there to refresh prices and pictures). You can also paste a different page there.">Read the page again</button>' : '<button class="btn primary" id="refReread" title="Paste a product page link: its details, specs, retail price and pictures go into this entry">🔗 Read a webpage into this entry</button>') : ''}</div>
     <div id="refForm" hidden><div style="margin-top:10px;display:grid;gap:8px">
@@ -5507,13 +5530,30 @@ function sumWorkbookCovered(type, x) {
     if (!left.length) out.push('notes|Additional specifications'); }
   return out;
 }
+/* v0.100.0 (Faraz Nov 23): each shop picture shows whether a copy is already in your photos ("✓ Kept", from the photo's sourceUrl)
+   and whether it was downloaded on this device ("⬇✓"), so nothing is copied twice. Keep on a kept picture does nothing. */
+const picKey = u => String(u || '').replace(/^https?:/i, '').split('?')[0].toLowerCase();
+function shopDlSet() { try { return new Set(JSON.parse(localStorage.getItem('kbc_shop_dl') || '[]')); } catch (e) { return new Set(); } }
+function shopDlAdd(u) { try { const a = [...shopDlSet()]; const k = picKey(u); if (!a.includes(k)) { a.push(k); localStorage.setItem('kbc_shop_dl', JSON.stringify(a.slice(-3000))); } } catch (e) {} }
+function shopPicKept(u, photos = currentPhotos) { const k = picKey(u); return (photos || []).some(p => p.sourceUrl && picKey(p.sourceUrl) === k); }
+function markShopPics() {
+  const card = document.getElementById('refCard'); if (!card) return; const dl = shopDlSet();
+  card.querySelectorAll('.shoppic').forEach(box => { const u = box.dataset.u, k = picKey(u), c = box.querySelector('[data-spact="copy"]'), d = box.querySelector('[data-spact="dl"]');
+    if (c && !c.dataset.busy) { const on = shopPicKept(u); c.textContent = on ? '✓ Kept' : 'Keep'; c.classList.toggle('primary', on); c.setAttribute('aria-pressed', on); c.title = on ? 'A copy is already in your photos (delete it there to keep it again)' : 'Keep a copy with your photos (uses storage)'; }
+    if (d) { const on = dl.has(k); d.textContent = on ? '⬇✓' : '⬇'; d.title = on ? 'Downloaded to this device before; tap to download again' : 'Download this picture to your device'; }
+    box.classList.toggle('kept', shopPicKept(u)); });
+  const n = card.querySelectorAll('.shoppic.kept').length, sm = card.querySelector('.shoppicbox > summary'); if (sm) sm.textContent = sm.textContent.replace(/ · \d+ kept$/, '') + (n ? ` · ${n} kept` : '');
+}
 function shopPicsOf(x) { const r = x.refImages || []; return [...new Set((r.includes(x.refImage) ? r : [x.refImage, ...r]).filter(u => /^https?:\/\//.test(String(u || ''))))]; }
 async function shopPicAct(t, x, act, u) {
   const cur = itemsOfType(t).find(y => y.id === x.id) || x, upd = {}, del = firebase.firestore.FieldValue.delete();
   if (act === 'dl') { try { const r = await fetch(u, { mode: 'cors', referrerPolicy: 'no-referrer' }); if (!r.ok) throw new Error(r.status); const b = await r.blob(), a = document.createElement('a'), ext = (/\.(jpe?g|png|webp|gif|avif)(?:\?|$)/i.exec(u) || [, (b.type.split('/')[1] || 'jpg')])[1];
-      a.href = URL.createObjectURL(b); a.download = `${[cur.manufacturer || cur.brand, cur.name].filter(Boolean).join(' ').replace(/[^\w .-]+/g, '').trim() || 'picture'} ${shopPicsOf(cur).indexOf(u) + 1}.${ext}`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); toast('Picture downloaded'); }
+      a.href = URL.createObjectURL(b); a.download = `${[cur.manufacturer || cur.brand, cur.name].filter(Boolean).join(' ').replace(/[^\w .-]+/g, '').trim() || 'picture'} ${shopPicsOf(cur).indexOf(u) + 1}.${ext}`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); shopDlAdd(u); markShopPics(); toast('Picture downloaded'); }
     catch (e) { window.open(u, '_blank', 'noopener'); toast('This shop doesn’t allow a direct download: the picture opened in a new tab; right-click it → Save image as…'); } return; }
-  if (act === 'copy') { toast('Keeping a copy…'); try { await rdKeepCopy(t, x.id, u, 'From ' + (cur.refSource || 'the shop')); toast('Copy kept with your photos'); } catch (e) { toast('This shop’s website doesn’t allow copying its pictures. Use ⬇ (download) and add it as your own photo.'); } return; }
+  if (act === 'copy') { if (shopPicKept(u)) { toast('Already kept: this picture is in your photos'); return; }
+    const b = document.querySelector(`#refCard .shoppic[data-u="${CSS.escape(u)}"] [data-spact="copy"]`); if (b) { if (b.dataset.busy) return; b.dataset.busy = '1'; b.textContent = 'Keeping…'; b.disabled = true; }
+    toast('Keeping a copy…'); try { const r = await rdKeepCopy(t, x.id, u, 'From ' + (cur.refSource || 'the shop')); toast(r === 'already' ? 'Already kept: this picture is in your photos' : 'Copy kept with your photos'); } catch (e) { toast('This shop’s website doesn’t allow copying its pictures. Use ⬇ (download) and add it as your own photo.'); }
+    finally { if (b) { delete b.dataset.busy; b.disabled = false; } markShopPics(); } return; }
   if (act === 'main') upd.refImage = u;
   if (act === 'del') { const left = (cur.refImages || []).filter(v => v !== u); upd.refImages = left.length ? left : del; if (cur.refImage === u) upd.refImage = left[0] || del; }
   try { await withTimeout(colOfType(t).doc(x.id).update(Object.assign(upd, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() })));
@@ -5525,6 +5565,7 @@ function wireRefCard(t, x) {
   const rr = document.getElementById('refReread'); if (rr) rr.onclick = () => { if (formDirty) { toast('Save or discard your changes first'); return; } setReadTarget({ kind: 'page', type: t, id: x.id, label: rcLabel(t, x) || x.name || 'this entry' }); if (x.refUrl && /^https?:/.test(x.refUrl)) sessionStorage.setItem('kbc_link', x.refUrl); location.hash = '#/import/link'; };
   const card = document.getElementById('refCard'); if (!card) return;
   card.querySelectorAll('[data-spact]').forEach(b => b.onclick = e => { e.preventDefault(); const box = b.closest('.shoppic'); shopPicAct(t, x, b.dataset.spact, box.dataset.u); });
+  markShopPics();
   const $ = id => document.getElementById(id), form = $('refForm');
   const prev = () => { const u = $('refImgIn').value.trim(); $('refPrev').innerHTML = /^https?:\/\//.test(u) ? `<img class="refimg" src="${esc(u)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<p class=&quot;sub&quot; style=&quot;margin:0;color:var(--danger)&quot;>That picture link did not load. Check it is a direct image link.</p>'">` : ''; };
   $('refEditBtn').onclick = () => { form.hidden = false; $('refEditBtn').hidden = true; prev(); $('refUrlIn').focus(); };
@@ -5887,7 +5928,7 @@ function wireShareList(page, title, toItem) { const b = document.getElementById(
    Kit names are compared loosely ("Novelty Kit" = "Novelties", "Neo-Tokyo Base Kit" = "Neo Tokyo"). */
 let kcChip = '';   // '' | 'fav' | 'incomplete' | 'profile:<name>'
 function kitKey(t) { return gmkNorm(t).replace(/kits?$/, '').replace(/ies$/, 'y').replace(/s$/, ''); }
-function kitMatch(a, b) { const x = kitKey(a), y = kitKey(b); return !!x && !!y && (x === y || (Math.min(x.length, y.length) >= 3 && (x.includes(y) || y.includes(x)))); }
+function kitMatch(a, b) { const x = kitKey(a), y = kitKey(b); return !!x && !!y && (x === y || (Math.min(x.length, y.length) >= 3 && (x.includes(y) || y.includes(x))) || (/^\d{2}$/.test(y) && x.startsWith(y)) || (/^\d{2}$/.test(x) && y.startsWith(x))); }   // v0.101.0: a 2-digit layout kit ("65%") matches "65% Base Kit"
 /* One owned kit counts for one catalog kit: exact names first, then loose matches, closest length first.
    So "Base Kit" is Olivia R3's "Base", not also its "Dark Base". Returns Map(catalog kit -> owned kit). */
 /* v0.62.0: (1) your own choice wins: links = { kitKey(your kit name): catalog kit name, or '-' for "not in the catalog" };
@@ -5980,8 +6021,11 @@ function gmkCardHtml(s, live = false) {   // live = read the link and name from 
     return `<div class="card side-card" id="gmkCard"><h3>GMK reference</h3>
       <p style="margin:6px 0 2px"><b>GMK ${esc(ref.title)}</b> ${gmkStripHtml(ref)}</p>
       <p class="sub" style="margin:0">${esc([ref.designer, [ref.gbStart, ref.gbEnd].filter(Boolean).join(' → ')].filter(Boolean).join(' · '))}</p>
-      ${(ref.kits || []).length ? (() => { const mine = s ? ownedKits(s) : [], pr = pairKits(mine, ref.kits); const hv = ref.kits.filter(k => pr.has(k)); return `<p class="sub" style="margin:8px 0 4px">${hv.length} of ${ref.kits.length} kits · ${Math.round(hv.length / ref.kits.length * 100)}%</p><span class="cbar wide"><span class="cfill" style="width:${hv.length / ref.kits.length * 100}%"></span></span>
+      ${(ref.kits || []).length ? (() => { const mine = s ? ownedKits(s) : [], pr = pairKits(mine, ref.kits, (s && (savedKeycaps.find(x => x.id === s.id) || s).kitLinks) || {}); const hv = ref.kits.filter(k => pr.has(k)); return `<p class="sub" style="margin:8px 0 4px">${hv.length} of ${ref.kits.length} kits · ${Math.round(hv.length / ref.kits.length * 100)}%</p><span class="cbar wide"><span class="cfill" style="width:${hv.length / ref.kits.length * 100}%"></span></span>
         <div class="kitlist">${ref.kits.map(k => { const have = hv.includes(k); return `<div class="kitrow${have ? ' have' : ''}"><span>${have ? '✓' : '○'} ${esc(k.name)}</span>${!have && s ? (wishHas(s.name, k.name) ? '<span class="chip">On wishlist</span>' : `<button class="btn" data-wishkit="${esc(k.name)}">+ Wishlist</button>`) : ''}</div>`; }).join('')}</div>`; })() : ''}
+      ${(() => { const live = s && (savedKeycaps.find(x => x.id === s.id) || s), n = ((live && live.kitPhotos) || []).length; if (!n || !(ref.kits || []).some(k => k.img)) return '';   // v0.101.0
+        const cur = document.getElementById('f_kitPicFrom')?.value ?? (live.kitPicFrom || '');
+        return `<div class="fld" style="margin-top:10px"><label for="gmkPicFrom">Kit pictures</label><select class="select" id="gmkPicFrom"><option value="catalog"${cur === 'catalog' ? ' selected' : ''}>GMK catalog pictures first</option><option value=""${cur !== 'catalog' ? ' selected' : ''}>My Keycap Collection photos first (${n})</option></select><div class="hint">For the card, the Summary and the Kit gallery. The other pictures stay as extra pictures on each kit. Save to keep.</div></div>`; })()}
       <div class="btnrow" style="margin-top:10px"><button class="btn primary" id="gmkFill">Fill from catalog</button><button class="btn" id="gmkView">Details</button><button class="btn" id="gmkUnlink">Unlink</button></div>
       <p style="margin:8px 0 0">${matrixLinkHtml(ref, 'Matrix page for this set ↗')}</p>
       <p class="sub" style="margin:8px 0 0;font-size:11px">${esc(GMK_CREDIT)}</p></div>`;
@@ -5995,7 +6039,11 @@ function gmkCardHtml(s, live = false) {   // live = read the link and name from 
 function wireGmkCard(s) {
   const card = document.getElementById('gmkCard'); if (!card) return;
   const redraw = () => { document.getElementById('gmkCard').outerHTML = gmkCardHtml(s, true); wireGmkCard(s); };
-  const setRef = id => { const f = document.getElementById('f_gmkRef'); f.value = id; f.dispatchEvent(new Event('change', { bubbles: true })); redraw(); };
+  const setRef = id => { const f = document.getElementById('f_gmkRef'), was = f.value; f.value = id; f.dispatchEvent(new Event('change', { bubbles: true }));
+    const live = s && (savedKeycaps.find(x => x.id === s.id) || s), pf = document.getElementById('f_kitPicFrom'), ref = id && gmkSets && gmkSets.find(x => x.id === id);
+    if (id && id !== was && pf && live && (live.kitPhotos || []).length && ref && (ref.kits || []).some(k => k.img)) { pf.value = 'catalog'; pf.dispatchEvent(new Event('change', { bubbles: true })); setTimeout(() => toast(`Kit pictures now come from GMK ${ref.title} first; your ${live.kitPhotos.length} old Keycap Collection photos stay as extra pictures (change it on the GMK reference card). Save to keep.`), 2600); }   // v0.101.0
+    redraw(); };
+  const pfSel = document.getElementById('gmkPicFrom'); if (pfSel) pfSel.onchange = () => { const pf = document.getElementById('f_kitPicFrom'); pf.value = pfSel.value; pf.dispatchEvent(new Event('change', { bubbles: true })); toast('Save the set to keep this'); };
   card.onclick = e => {
     const p = e.target.closest('[data-gref]'); if (p) { setRef(p.dataset.gref); toast('Linked. Save the set to keep the link.'); return; }
     if (e.target.id === 'gmkUnlink') { setRef(''); return; }
@@ -6776,19 +6824,40 @@ document.addEventListener('click', e => { const b = e.target.closest && e.target
 new MutationObserver(() => applyBoxOrder()).observe(document.getElementById('view'), { childList: true, subtree: true });
 
 /* v0.67.0 (16): which kit's picture stands for a keycap set. kcMainPic is a view setting for the whole Keycaps gallery; coverKit is saved per set. */
-const KC_PIC_MODES = { default: { label: 'Main picture: each set\'s own' }, base: { label: 'Main picture: Base kits', re: /\bbase\b|\bcore\b|\balphas?\b/i }, novelties: { label: 'Main picture: Novelties', re: /novelt/i }, spacebars: { label: 'Main picture: Spacebars', re: /space|\bbars?\b/i }, numpad: { label: 'Main picture: Numpads', re: /num/i } };
+const KC_PIC_MODES = { default: { label: 'Main picture: each set\'s own' }, base: { label: 'Main picture: Base kits', re: /\bbase\b|\bcore\b|\balphas?\b/i, types: ['Base', 'Alphas', 'Full set'] }, novelties: { label: 'Main picture: Novelties', re: /novelt/i, types: ['Novelties'] }, spacebars: { label: 'Main picture: Spacebars', re: /space|\bbars?\b/i, types: ['Spacebars'] }, numpad: { label: 'Main picture: Numpads', re: /num/i, types: ['Numpad'] } };
 let kcMainPic = KC_PIC_MODES[lsGet('kbc_kc_mainpic')] ? lsGet('kbc_kc_mainpic') : 'default';
-function kitPicsOf(s) {   // every kit picture known for a set: your kit stock pictures, your old-app kit photos, then the catalog's
-  const out = [], seen = new Set(), add = (name, url) => { const k = kitKey(name || ''); if (!url || seen.has(k)) return; seen.add(k); out.push({ name, url }); };
+/* v0.101.0 (Faraz Nov 23): a kit's type (Novelties, Base…) also counts for a catalog kit it is matched to, so "Main picture: Novelties"
+   finds a novelty kit whose name doesn't say so (Red Samurai "Nishi", Pharaoh "Ankh RAMA"). kitPicFrom 'catalog' puts the GMK catalog's
+   pictures ahead of your old Keycap Collection photos; kitPicPick { kitKey: { name, url } } is the picture you chose for one kit. */
+function kitTypesOf(s) {
+  const m = new Map(), all = [...ownedKits(s), ...kitsOf(s).filter(k => k.notOwned)];
+  all.forEach(k => { if (k.kitType) m.set(kitKey(k.name), k.kitType); });
+  const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef);
+  if (ref) pairKits(all, ref.kits || [], s.kitLinks || {}).forEach((k, ck) => { if (k.kitType) m.set(kitKey(ck.name), k.kitType); });
+  return m;
+}
+function kitTypeGuess(s, name, types = kitTypesOf(s)) { const t = types.get(kitKey(name || '')); if (t) return t; const g = rdKitType(name || ''); return g === 'Other' ? '' : g; }
+function kitPicsOf(s) {   // every kit picture known for a set: your picture choices, kit stock pictures, old-app kit photos, shop pictures and the catalog's (catalog before old-app photos when kitPicFrom = 'catalog')
+  const out = [], seen = new Set(), types = kitTypesOf(s), add = (name, url) => { const k = kitKey(name || ''); if (!url || seen.has(k)) return; seen.add(k); out.push({ name, url, type: kitTypeGuess(s, name, types) }); };
+  Object.values(s.kitPicPick || {}).forEach(p => p && add(p.name, p.url));
   (s.kitStock || []).forEach(e => { const th = kitStockThumb(e) || (s.kitStockCover && s.kitStockCover.photoId === e.photoId ? s.kitStockCover.thumb : ''); add(e.name, th); });
-  (s.kitPhotos || []).forEach(p => add(p.name, p.url));
-  [...ownedKits(s), ...kitsOf(s).filter(k => k.notOwned)].forEach(k => add(k.name, k.refImage));   // v0.92.0: each kit's shop picture
-  const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef); if (ref) (ref.kits || []).forEach(ck => add(ck.name, ck.img));
+  const ref = s.gmkRef && gmkSets && gmkSets.find(x => x.id === s.gmkRef), cat = () => { if (ref) (ref.kits || []).forEach(ck => add(ck.name, ck.img)); }, old = () => (s.kitPhotos || []).forEach(p => add(p.name, p.url));
+  const shop = () => [...ownedKits(s), ...kitsOf(s).filter(k => k.notOwned)].forEach(k => add(k.name, k.refImage));   // v0.92.0: each kit's shop picture
+  if (s.kitPicFrom === 'catalog' && ref) { shop(); cat(); old(); } else { old(); shop(); cat(); }
+  return out;
+}
+function kitRenameMoves(live, old, kits, newRef) {   // fields to update when kits were renamed or the set was linked to another catalog set
+  const out = {}, mv = {}; kits.forEach(k => { const o = old.get(k.id); if (o && kitKey(o.name) !== kitKey(k.name)) mv[kitKey(o.name)] = k.name; });
+  const ref = newRef && gmkSets && gmkSets.find(x => x.id === newRef), okName = n => n === '-' || !ref || (ref.kits || []).some(ck => ck.name === n);
+  if (live.kitLinks && (Object.keys(mv).length || newRef !== (live.gmkRef || ''))) { const L = {}; Object.entries(live.kitLinks).forEach(([k, v]) => { const nk = mv[k] ? kitKey(mv[k]) : k; if (okName(v) && !(mv[k] && kitKey(mv[k]) === kitKey(v))) L[nk] = v; });
+    out.kitLinks = Object.keys(L).length ? L : firebase.firestore.FieldValue.delete(); }
+  if (live.coverKit && mv[kitKey(live.coverKit)]) out.coverKit = mv[kitKey(live.coverKit)];
+  if (live.kitPicPick && Object.keys(mv).length) { const P = {}; Object.entries(live.kitPicPick).forEach(([k, v]) => { P[mv[k] ? kitKey(mv[k]) : k] = mv[k] ? Object.assign({}, v, { name: mv[k] }) : v; }); out.kitPicPick = P; }
   return out;
 }
 function kcMainSrc(s, mode = 'default') {
   const pics = kitPicsOf(s);
-  if (mode !== 'default' && KC_PIC_MODES[mode]) { const hit = pics.filter(p => KC_PIC_MODES[mode].re.test(p.name || '')), best = mode === 'base' ? (hit.find(p => /^base(\s+kit)?$/i.test(String(p.name).trim())) || hit.find(p => /\bbase\b/i.test(p.name)) || hit[0]) : hit[0]; if (best) return { src: best.url, kit: true, title: best.name }; }
+  if (mode !== 'default' && KC_PIC_MODES[mode]) { const M = KC_PIC_MODES[mode], hit = pics.filter(p => M.re.test(p.name || '') || (M.types || []).includes(p.type)), best = mode === 'base' ? (hit.find(p => /^base(\s+kit)?$/i.test(String(p.name).trim())) || hit.find(p => /\bbase\b/i.test(p.name)) || hit[0]) : hit[0]; if (best) return { src: best.url, kit: true, title: best.name }; }
   if (s.coverKit) { const p = pics.find(x => kitKey(x.name) === kitKey(s.coverKit)); if (p) return { src: p.url, title: p.name + ' (chosen as the main picture)' }; }
   if (s.coverThumb) return { src: s.coverThumb, title: 'Your photo' };
   return { src: setPhotoCoverOf(s) || '', title: (s.kitPhotos || []).length ? 'Picture from your Keycap Collection app' : 'Picture from the GMK catalog (Matrix)' };
@@ -6825,7 +6894,7 @@ function syncWeightField(k, list) {   // Colorway card -> Build tab: the first W
    Pictures are kept as links; tick "Keep a copy" to store one in Firebase. The shop's own description is saved
    word for word as "From the shop", credited to the shop. The shop's price is saved as Retail price, never as the price you paid. */
 let rdCfg = null, rdState = null, rdDone = null;
-const RD_SHOPS = { 'divinikey.com': 'Divinikey', 'novelkeys.com': 'NovelKeys', 'cannonkeys.com': 'CannonKeys', 'kbdfans.com': 'KBDfans', 'milktooth.com': 'Milktooth', 'keychron.com': 'Keychron', 'mechanicalkeyboards.com': 'MechanicalKeyboards.com', 'drop.com': 'Drop', 'qwertykeys.com': 'Qwertykeys', 'omnitype.com': 'Omnitype', 'prototypist.net': 'ProtoTypist', 'thockking.com': 'Thockking', 'ebay.com': 'eBay' };
+const RD_SHOPS = { 'keebfront.com': 'Keebfront', 'divinikey.com': 'Divinikey', 'novelkeys.com': 'NovelKeys', 'cannonkeys.com': 'CannonKeys', 'kbdfans.com': 'KBDfans', 'milktooth.com': 'Milktooth', 'keychron.com': 'Keychron', 'mechanicalkeyboards.com': 'MechanicalKeyboards.com', 'drop.com': 'Drop', 'qwertykeys.com': 'Qwertykeys', 'omnitype.com': 'Omnitype', 'prototypist.net': 'ProtoTypist', 'thockking.com': 'Thockking', 'ebay.com': 'eBay' };
 const rdHost = u => { try { return new URL(u).hostname.toLowerCase().replace(/^www\./, ''); } catch (e) { return ''; } };
 const rdShopName = (u, ogSite) => { const h = rdHost(u); return RD_SHOPS[h] || (ogSite && ogSite.length < 40 ? ogSite.trim() : '') || h.replace(/\.(com|net|co|store|shop|io)(\.[a-z]{2})?$/, '').replace(/^./, c => c.toUpperCase()); };
 async function rdLoadCfg(force) {
@@ -7269,6 +7338,7 @@ function rdDrawBody() {
 }
 /* ---- saving ---- */
 async function rdKeepCopy(type, itemId, src, label) {   // the picture, fitted whole into a 4:3 frame, saved like your own photos
+  try { const have = (await withTimeout(photoCol().where('itemId', '==', itemId).get(), 20000)).docs.map(d => d.data()); if (shopPicKept(src, have)) return 'already'; } catch (e) {}   // v0.100.0: never a second copy of the same shop picture
   const blob = await (await fetch(src, { mode: 'cors' })).blob(), url = URL.createObjectURL(blob);
   try { const img = await loadImage(url), W = Math.min(PHOTO_FULL.w, Math.max(320, Math.round(Math.max(img.naturalWidth, img.naturalHeight * 4 / 3)))), H = Math.round(W * 3 / 4);
     const draw = c => { const g = c.getContext('2d'), k = Math.min(c.width / img.naturalWidth, c.height / img.naturalHeight), w = img.naturalWidth * k, h = img.naturalHeight * k; g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, (c.width - w) / 2, (c.height - h) / 2, w, h); };   // whole picture, never cropped
@@ -7337,7 +7407,7 @@ async function rdSave() {
 const money3 = n => { const v = Number(n) || 0; return '$' + (Math.abs(v) < 1 && Math.round(v * 1000) % 10 ? v.toFixed(3) : v.toFixed(2)); };   // $0.243 for per-switch prices, $0.35 otherwise
 /* v0.86.0: "Paid and retail" — the one place for prices, under Overview on every Summary. Keyboards itemize the build:
    the board, its installed switches (your share of each lot by count), installed keycap kits and installed parts.
-   Paid = price + tax + shipping − discounts (as in the workbook). Retail = the shop's price for what you have
+   Paid = price + shipping − discounts, without tax (v0.99.0; the workbook's total with tax stays on the Purchase tab). Retail = the shop's price for what you have
    (switches: per switch × count; GMK kits without a shop price: the group-buy price from the private catalog). */
 function kitRetailOf(s, k) {
   if (k.retailPrice != null && k.retailPrice !== '') return { v: Number(k.retailPrice), src: k.retailSource || 'shop' };
@@ -7345,19 +7415,19 @@ function kitRetailOf(s, k) {
   for (const [c, o] of pairKits(ownedKits(s), ref.kits || [], s.kitLinks)) if (o === k || o.id === k.id) { const v = c.priceUsd != null ? Number(c.priceUsd) : null; return { v, src: v != null ? 'GMK group buy' : '' }; }
   return { v: null, src: '' };
 }
-function paidRetailRows(type, x) {
+function paidRetailRows(type, x) {   // v0.99.0: paid = before tax (price + shipping − discounts)
   const rows = [], name = y => [y.brand || y.manufacturer, y.name].filter(Boolean).join(' ');
   if (type === 'keyboards') {
-    rows.push({ k: 'Keyboard', label: name(x), paid: kbTotal(x), retail: x.retailPrice != null && x.retailPrice !== '' ? Number(x.retailPrice) : null, src: x.retailSource || '' });
+    rows.push({ k: 'Keyboard', label: name(x), paid: paidPreTax(x), retail: x.retailPrice != null && x.retailPrice !== '' ? Number(x.retailPrice) : null, src: x.retailSource || '' });
     if (x.id) {
       switchesOn(x.id).forEach(({ w, a }) => { const n = Number(a.count) || 0, tc = Number(w.totalCount) || 0, sr = w.retailPrice != null ? switchRetail(w) : null;
-        rows.push({ k: 'Switches', label: `${name(w)} × ${n}`, href: '#/switches/' + w.id, paid: tc ? kbTotal(w) / tc * n : null, retail: sr && sr.each != null ? sr.each * n : null, src: w.retailSource || '', note: tc ? '' : 'lot has no count' }); });
-      savedKeycaps.forEach(s2 => kitsOf(s2).filter(k => k.installedOn === x.id && !k.notOwned).forEach(k => { const r = kitRetailOf(s2, k); rows.push({ k: 'Keycaps', label: `${s2.name} — ${k.name}`, href: '#/keycaps/' + s2.id, paid: kbTotal(k), retail: r.v, src: r.src }); }));
-      ['pcbs', 'accessories', 'artisans'].forEach(t => (savedParts[t] || []).filter(p => p.installedOn === x.id).forEach(p => rows.push({ k: t === 'pcbs' ? 'PCB' : t === 'artisans' ? 'Artisan' : p.category || 'Part', label: p.name, href: `#/${t}/${p.id}`, paid: kbTotal(p), retail: p.retailPrice != null && p.retailPrice !== '' ? Number(p.retailPrice) : null, src: p.retailSource || '' })));
+        rows.push({ k: 'Switches', label: `${name(w)} × ${n}`, href: '#/switches/' + w.id, paid: tc ? paidPreTax(w) / tc * n : null, retail: sr && sr.each != null ? sr.each * n : null, src: w.retailSource || '', note: tc ? '' : 'lot has no count' }); });
+      savedKeycaps.forEach(s2 => kitsOf(s2).filter(k => k.installedOn === x.id && !k.notOwned).forEach(k => { const r = kitRetailOf(s2, k); rows.push({ k: 'Keycaps', label: `${s2.name} — ${k.name}`, href: '#/keycaps/' + s2.id, paid: paidPreTax(k), retail: r.v, src: r.src }); }));
+      ['pcbs', 'accessories', 'artisans'].forEach(t => (savedParts[t] || []).filter(p => p.installedOn === x.id).forEach(p => rows.push({ k: t === 'pcbs' ? 'PCB' : t === 'artisans' ? 'Artisan' : p.category || 'Part', label: p.name, href: `#/${t}/${p.id}`, paid: paidPreTax(p), retail: p.retailPrice != null && p.retailPrice !== '' ? Number(p.retailPrice) : null, src: p.retailSource || '' })));
     }
-  } else if (type === 'keycaps') ownedKits(x).forEach(k => { const r = kitRetailOf(x, k); rows.push({ k: k.kitType || 'Kit', label: k.name, paid: kbTotal(k), retail: r.v, src: r.src }); });
-  else if (type === 'switches') { const n = Number(x.totalCount) || 0, sr = x.retailPrice != null && x.retailPrice !== '' ? switchRetail(x) : null; rows.push({ k: 'Switches', label: n ? `Your ${n} switches` : 'This lot', paid: kbTotal(x), retail: sr && sr.each != null && n ? sr.each * n : null, src: x.retailSource || '', note: sr && sr.each != null ? `${money3(sr.each)} each at retail${n ? ' · ' + money3(kbTotal(x) / n) + ' each paid' : ''}` : '' }); }
-  else rows.push({ k: '', label: name(x), paid: kbTotal(x), retail: x.retailPrice != null && x.retailPrice !== '' ? Number(x.retailPrice) : null, src: x.retailSource || '' });
+  } else if (type === 'keycaps') ownedKits(x).forEach(k => { const r = kitRetailOf(x, k); rows.push({ k: k.kitType || 'Kit', label: k.name, paid: paidPreTax(k), retail: r.v, src: r.src }); });
+  else if (type === 'switches') { const n = Number(x.totalCount) || 0, sr = x.retailPrice != null && x.retailPrice !== '' ? switchRetail(x) : null; rows.push({ k: 'Switches', label: n ? `Your ${n} switches` : 'This lot', paid: paidPreTax(x), retail: sr && sr.each != null && n ? sr.each * n : null, src: x.retailSource || '', note: sr && sr.each != null ? `${money3(sr.each)} each at retail${n ? ' · ' + money3(paidPreTax(x) / n) + ' each paid' : ''}` : '' }); }
+  else rows.push({ k: '', label: name(x), paid: paidPreTax(x), retail: x.retailPrice != null && x.retailPrice !== '' ? Number(x.retailPrice) : null, src: x.retailSource || '' });
   return rows;
 }
 function paidRetailHtml(type, x, retailDl) {
@@ -7365,16 +7435,16 @@ function paidRetailHtml(type, x, retailDl) {
   const has = v => v != null && !isNaN(v), sumP = rows.reduce((a, r) => a + (has(r.paid) ? r.paid : 0), 0), withR = rows.filter(r => has(r.retail)), sumR = withR.reduce((a, r) => a + r.retail, 0), miss = rows.length - withR.length;
   const many = rows.length > 1, diff = sumR - sumP;
   return `<div class="sumsec" id="sumCost"><h4>${type === 'keyboards' ? 'Build cost: paid and retail' : 'Paid and retail'}</h4>${retailDl || ''}
-    <table class="costtbl"><thead><tr>${many ? '<th></th>' : ''}<th>Item</th><th class="num">Paid</th><th class="num">Retail</th><th class="num" title="Paid − retail: red = you paid more than retail, green = less">Difference</th></tr></thead><tbody>
+    <table class="costtbl"><thead><tr>${many ? '<th></th>' : ''}<th>Item</th><th class="num" title="Price + shipping − discounts, without tax">Paid before tax</th><th class="num">Retail</th><th class="num" title="Paid − retail: red = you paid more than retail, green = less">Difference</th></tr></thead><tbody>
     ${rows.map(r => { const dv = has(r.paid) && has(r.retail) ? paidVsRetail(r.paid, r.retail) : null; return `<tr>${many ? `<td class="sub">${esc(r.k)}</td>` : ''}<td>${r.href ? `<a class="lnk" href="${r.href}">${esc(r.label)}</a>` : esc(r.label)}${r.note ? `<span class="sub"> · ${esc(r.note)}</span>` : ''}</td><td class="num">${has(r.paid) ? money(r.paid) : '—'}</td><td class="num">${has(r.retail) ? money(r.retail) + (r.src ? `<span class="sub"> ${esc(r.src)}</span>` : '') : '—'}</td><td class="num ${dv ? dv.cls : ''}" ${dv ? `title="${esc(dv.txt)}"` : ''}>${dv ? dv.short : '—'}</td></tr>`; }).join('')}</tbody>
     ${many ? (() => { const pw = withR.filter(r => has(r.paid)).reduce((a, r) => a + r.paid, 0), dt = withR.some(r => has(r.paid)) ? paidVsRetail(pw, withR.filter(r => has(r.paid)).reduce((a, r) => a + r.retail, 0)) : null; return `<tfoot><tr><td></td><td><b>Total</b></td><td class="num"><b>${money(sumP)}</b></td><td class="num"><b>${withR.length ? money(sumR) : '—'}</b></td><td class="num ${dt ? dt.cls : ''}"><b>${dt ? dt.short : '—'}</b></td></tr></tfoot>`; })() : ''}</table>
-    <p class="sub" style="margin:6px 0 0;font-size:11.5px">Paid = price + tax + shipping − discounts. Difference = paid − retail: <span class="pr-up">red</span> = you paid more than retail, <span class="pr-dn">green</span> = you paid less.${withR.length && !miss ? (() => { const dd = paidVsRetail(sumP, sumR); return ` In all you paid <span class="${dd.cls}">${esc(dd.txt)}</span>.`; })() : ''}${miss ? ` ${miss} item${miss === 1 ? ' has' : 's have'} no retail price yet (read the product page to add it)${withR.length ? ', so the retail total is only for the rest' : ''}.` : ''}${type === 'keycaps' || type === 'keyboards' ? ' GMK kits without a shop price use the group-buy price.' : ''}</p></div>`;
+    <p class="sub" style="margin:6px 0 0;font-size:11.5px">Paid here = price + shipping − discounts, without tax, so it compares directly with the shop's price (your total with tax is on the Purchase tab). Difference = paid − retail: <span class="pr-up">red</span> = you paid more than retail, <span class="pr-dn">green</span> = you paid less.${withR.length && !miss ? (() => { const dd = paidVsRetail(sumP, sumR); return ` In all you paid <span class="${dd.cls}">${esc(dd.txt)}</span>.`; })() : ''}${miss ? ` ${miss} item${miss === 1 ? ' has' : 's have'} no retail price yet (read the product page to add it)${withR.length ? ', so the retail total is only for the rest' : ''}.` : ''}${type === 'keycaps' || type === 'keyboards' ? ' GMK kits without a shop price use the group-buy price.' : ''}</p></div>`;
 }
 function switchRetail(x) {   // the shop's price is for a pack (or several): how many switches it covers, and how that compares with what you paid
   let count = Number(x.retailCount) || 0, from = 'saved';
   if (!count) { const t = String(x.shopText || ''), m = /pack size:\s*(\d{1,4})/i.exec(t) || /(\d{1,4})\s+switch(?:es)?\s+(?:per|in each|in every|in a)\s+(?:order|pack|bag)/i.exec(t) || /(?:pack|bag|set) of\s*(\d{1,4})/i.exec(t) || /(\d{1,4})\s*(?:pcs|pieces|switches)\s*(?:\/|per)\s*(?:pack|bag)/i.exec(t) || /\b(\d{1,4})[- ]?(?:pack|pcs)\b/i.exec(t); if (m) { count = Number(m[1]); from = 'text'; } }
   const out = { price: Number(x.retailPrice), count, from, each: count ? Number(x.retailPrice) / count : null, cmp: '' };
-  const n = Number(x.totalCount) || 0, paid = x.price === '' || x.price == null ? null : Number(x.price);
+  const n = Number(x.totalCount) || 0, paid = x.price === '' || x.price == null ? null : paidPreTax(x);
   if (out.each != null && n > 0) { const atRetail = Math.round(out.each * n * 100) / 100; out.cmp = `Your ${n} at retail: ${money(atRetail)}`;
     if (paid != null) { const diff = Math.round((atRetail - paid) * 100) / 100, pc = atRetail ? Math.round(Math.abs(diff) / atRetail * 100) : 0;
       out.cmp += ` · you paid ${money(paid)} (${money3(paid / n)} each, before tax)` + (Math.abs(diff) < 0.01 ? ', the same as retail' : diff > 0 ? `, ${money(diff)} (${pc}%) less than retail` : `, ${money(-diff)} (${pc}%) more than retail`); } }
