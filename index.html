@@ -142,6 +142,15 @@
   .fav svg { width: 16px; height: 16px; }
   .fav.on { color: var(--kb); border-color: color-mix(in srgb, var(--kb) 50%, var(--line)); }
   .badge { position: absolute; top: 12px; left: 12px; }
+  .kfoot { display: flex; align-items: center; gap: 8px; margin-top: 10px; min-height: 30px; } .kfoot .badge { position: static; } .kfoot .fav { position: static; width: 30px; height: 30px; margin-left: auto; flex: none; }
+  .pstrip .pmore { width: auto !important; min-width: 22px; padding: 0 6px; font-style: normal; font-size: 11px; font-weight: 600; display: inline-flex !important; align-items: center; justify-content: center; color: var(--text-2); background: var(--bg-2, rgba(127,127,127,.15)) !important; }
+  .karr { position: absolute; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(0,0,0,.55); color: #fff; font-size: 22px; line-height: 1; display: grid; place-items: center; cursor: pointer; opacity: 0; transition: opacity .15s; z-index: 2; padding: 0 0 3px; }
+  .karr.prev { left: 8px; } .karr.next { right: 8px; } .kcard:hover .karr, .karr:focus-visible { opacity: 1; } .karr:hover { background: rgba(0,0,0,.8); }
+  .kcnt { position: absolute; left: 8px; top: 8px; right: 8px; width: max-content; max-width: calc(100% - 16px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,.6); color: #fff; z-index: 2; }
+  #view[data-gal="xs"] .karr, #view[data-gal="s"] .karr, #view[data-gal="wall"] .karr { display: none; } @media (hover: none) { .karr { display: none; } }
+  .kcard.kflash, tr.row.kflash { outline: 2px solid var(--kc, #2dd4bf); outline-offset: 2px; transition: outline-color 1s; }
+  .sumcols .pstrip { margin: 0; } .sumcols { display: inline-flex; flex: none; max-width: 50%; } .sumheadtxt [data-sumhead="name"] .sumv { flex: 0 1 auto; } .sumheadtxt [data-sumhead="name"] .sumacts { margin-left: auto; }
+  #cardCols { display: inline-block; }
   .kcard .meta { padding: 12px 14px 14px; }
   .kcard .meta b { display: block; font-size: 15px; }
   .kcard .meta span { display: block; color: var(--text-2); font-size: 13px; margin-top: 2px; }
@@ -413,7 +422,7 @@
   .pfoot { display: flex; justify-content: space-between; align-items: center; }
   .pfoot .btn { padding: 4px 10px; font-size: 12px; }
   .pstrip { display: flex !important; flex-wrap: wrap; gap: 5px; margin-top: 8px; } .pstrip i { display: inline-block; flex: none; width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--swatch-line); background-size: cover !important; background-position: center !important; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
-  .list .pstrip i, table .pstrip i { width: 16px; height: 16px; border-radius: 4px; }
+  .list .pstrip i, table .pstrip i { width: 16px; height: 16px; border-radius: 4px; } table.list .pstrip { margin-top: 4px; gap: 3px; }
   .sec-title .pstrip { margin: 0; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .acbox { position: absolute; z-index: 60; background: var(--surface, #181b22); border: var(--bw) var(--bs) var(--line); border-radius: var(--radius-s); box-shadow: 0 12px 30px rgba(0,0,0,.45); padding: 4px; max-height: 320px; overflow: auto; }
@@ -681,7 +690,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.109.0';
+const APP_VERSION = 'v0.110.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -1628,10 +1637,14 @@ function adjustPictureDialog(t, id) {
     <div class="fitbox" id="fitBox"><img id="fitImg" src="${src.startsWith('data:') ? src : esc(src)}" alt="" draggable="false" referrerpolicy="no-referrer"></div>
     <div class="fld" style="margin-top:10px"><label for="fitZoom" style="display:flex;justify-content:space-between"><span>Zoom</span><span id="fitZoomV"></span></label><input type="range" id="fitZoom" min="1" max="4" step="0.05" style="width:100%;accent-color:var(--accent)"></div>
     <label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="fitWhole"> Show the whole picture (no cropping; adds bars at the sides)</label>
+    <div class="fld" style="margin-top:10px"><label>Side bars: the color around a picture that doesn't fill the frame</label><div class="btnrow" style="align-items:center"><button class="btn" type="button" id="bgDef">Default</button><button class="btn" type="button" id="bgAuto" title="Uses the average color of the picture's outer edge">Match picture edge</button><label class="btn" style="display:inline-flex;gap:6px;align-items:center;cursor:pointer">Pick a color <input type="color" id="bgPick" style="width:28px;height:22px;border:0;padding:0;background:none"></label><span class="sub mono" id="bgNow"></span></div></div>
     <div class="btnrow" style="margin-top:14px"><button class="btn primary" id="fitSave">Save</button><button class="btn" id="fitReset">Reset</button></div></div>`;
   document.body.appendChild(d); const img = d.querySelector('#fitImg'), box = d.querySelector('#fitBox'), zo = d.querySelector('#fitZoom'), wh = d.querySelector('#fitWhole');
   const draw = () => { img.style.cssText = fitStyle(wh.checked ? { fit: 'contain' } : f); zo.value = f.z; zo.disabled = wh.checked; d.querySelector('#fitZoomV').textContent = wh.checked ? '—' : Math.round(f.z * 100) + '%'; box.style.cursor = wh.checked ? 'default' : 'grab'; };
-  wh.checked = f.fit === 'contain'; draw();
+  let bg = x.coverBg || ''; const bgShow = () => { box.style.background = bg || ''; d.querySelector('#bgNow').textContent = bg ? bg : 'Default'; if (bg) d.querySelector('#bgPick').value = bg; };   // v0.110.0
+  d.querySelector('#bgDef').onclick = () => { bg = ''; bgShow(); }; d.querySelector('#bgPick').oninput = e => { bg = e.target.value.toUpperCase(); bgShow(); };
+  d.querySelector('#bgAuto').onclick = async () => { const h = await edgeColorOf(src); if (h) { bg = h; bgShow(); } else toast("This picture's website doesn't let apps read its colors; use Pick a color"); };
+  wh.checked = f.fit === 'contain'; draw(); bgShow();
   zo.oninput = () => { f.z = +zo.value; draw(); }; wh.onchange = draw;
   let drag = null; box.onpointerdown = e => { if (wh.checked) return; drag = { x: e.clientX, y: e.clientY, fx: f.x, fy: f.y }; box.setPointerCapture(e.pointerId); };
   box.onpointermove = e => { if (!drag) return; const r = box.getBoundingClientRect(); f.x = Math.max(0, Math.min(100, drag.fx - (e.clientX - drag.x) / r.width * 100 / Math.max(.6, f.z * .8))); f.y = Math.max(0, Math.min(100, drag.fy - (e.clientY - drag.y) / r.height * 100 / Math.max(.6, f.z * .8))); draw(); };
@@ -1640,7 +1653,7 @@ function adjustPictureDialog(t, id) {
   d.onclick = async e => { if (e.target === d || e.target.closest('[data-x]')) { d.remove(); return; }
     if (e.target.id !== 'fitSave' && e.target.id !== 'fitReset') return;
     const val = e.target.id === 'fitReset' ? firebase.firestore.FieldValue.delete() : wh.checked ? { fit: 'contain' } : { z: Math.round(f.z * 100) / 100, x: Math.round(f.x * 10) / 10, y: Math.round(f.y * 10) / 10 };
-    try { await withTimeout(colOfType(t).doc(id).update({ coverFit: val })); toast(e.target.id === 'fitReset' ? 'Picture reset' : 'Picture saved'); d.remove(); setTimeout(drawSumCarousel, 300); } catch (err) { toast('Not saved: ' + explain(err)); } };
+    try { await withTimeout(colOfType(t).doc(id).update({ coverFit: val, coverBg: e.target.id === 'fitReset' || !bg ? firebase.firestore.FieldValue.delete() : bg })); toast(e.target.id === 'fitReset' ? 'Picture reset' : 'Picture saved'); d.remove(); setTimeout(drawSumCarousel, 300); } catch (err) { toast('Not saved: ' + explain(err)); } };
 }
 /* Summary carousel: the display picture first, then your photos, the product picture and (keycaps) kit pictures */
 let sumCarIdx = 0, sumCarFor = '';
@@ -1664,7 +1677,7 @@ function sumCarSlides(t, x) {
 }
 function drawSumCarousel() {
   const box = document.getElementById('sumCar'); if (!box) return; const t = box.dataset.type, x = itemsOfType(t).find(y => y.id === box.dataset.id); if (!x) { box.innerHTML = box.dataset.cover ? `<img src="${box.dataset.cover}" alt="">` : ''; box.hidden = !box.dataset.cover; return; }
-  const slides = sumCarSlides(t, x); box.hidden = !slides.length; if (!slides.length) return;
+  const slides = sumCarSlides(t, x); box.hidden = !slides.length; if (!slides.length) return; box.style.background = x.coverBg || '';   // v0.110.0
   if (sumCarFor !== x.id) { sumCarFor = x.id; sumCarIdx = 0; } sumCarIdx = Math.max(0, Math.min(slides.length - 1, sumCarIdx)); const sl = slides[sumCarIdx], isCover = sl.src === coverSrcOf(t, x);
   box.innerHTML = `<button type="button" class="sumcarimg" data-car="open" title="Click to enlarge and zoom"><img src="${sl.src.startsWith('data:') ? sl.src : esc(sl.src)}" alt="" referrerpolicy="no-referrer" style="${isCover && x.coverFit ? fitStyle(x.coverFit) : ''}"></button>${sl.notOwned ? '<span class="basenotown">Not owned</span>' : ''}
     ${slides.length > 1 ? `<button type="button" class="sumcarnav l" data-car="prev" aria-label="Previous picture">‹</button><button type="button" class="sumcarnav r" data-car="next" aria-label="Next picture">›</button><span class="sumcarn">${sumCarIdx + 1} / ${slides.length}</span>` : ''}
@@ -2124,8 +2137,8 @@ const HELP = [
     s: ['Open a list (Keyboards, Switches, Keycaps…) and type in the search box at the top. Press / anywhere to jump to it.', 'Names come first: it looks at name, maker, designer, profile and kit names. Only when nothing matches does it also look in colors, notes and specs.', 'The Catalog page (Tools → Catalog) lists every keyboard model, switch, keycap set and designer you own; clicking one opens that list already searched.'], go: '#/keyboards' },
   { id: 'shortcuts', t: 'Keyboard shortcuts', g: 'Getting around', k: 'shortcut keys hotkey keyboard ctrl save quick jump',
     s: ['/ jumps to search, N starts a new item on a list page, Ctrl+S saves, Esc closes a box or leaves select mode.', 'G then D / K / S / C jumps to Dashboard, Keyboards, Switches, Keycaps.', 'Press ? (Shift + /) for the full list.'], go: '' },
-  { id: 'filter', t: 'Sort, filter, card size and list view', g: 'Getting around', ctx: ['keyboards', 'switches', 'keycaps', 'accessories', 'pcbs', 'deskmats', 'artisans', 'switchparts'], k: 'sort filter order newest last modified favorites view gallery list card size big small tiny pictures only',
-    s: ['On every list: Sort (newest, name, last modified, longest untouched…) and Filter (favorites, work, last modified; keycaps also missing kits and profiles; accessories also each category › sub-category).', 'The two buttons next to them switch between gallery cards and a list.', 'On a computer the size menu sets the cards: Tiny to Extra large, Wide pictures, or Pictures only. Each list remembers its own settings on this device.'], go: '#/keycaps' },
+  { id: 'filter', t: 'Sort, filter, card size and list view', g: 'Getting around', ctx: ['keyboards', 'switches', 'keycaps', 'accessories', 'pcbs', 'deskmats', 'artisans', 'switchparts'], k: 'sort filter order newest last modified favorites view gallery list card size big small tiny pictures only colors squares how many arrows next picture back scroll where i was star profile',
+    s: ['On every list: Sort (newest, name, last modified, longest untouched…) and Filter (favorites, work, last modified; keycaps also missing kits and profiles; accessories also each category › sub-category).', 'The two buttons next to them switch between gallery cards and a list.', 'On a computer the size menu sets the cards: Tiny to Extra large, Wide pictures, or Pictures only. Each list remembers its own settings on this device.', 'Keycaps and Keyboards: the colors menu (default "3 colors") sets how many color squares each gallery card shows, from none to all; "+N" says how many more. List view and the item\'s page always show every color, the page right beside the name.', 'On Medium cards and bigger, point at a card\'s picture: ‹ › step through its pictures (keycaps: every kit picture, yours first; others: display, stock and shop pictures) without opening it.', 'The profile or type chip and the ★ sit at the bottom of each card, so the picture is clear.', 'Back from an item (the link at the top, or the browser\'s back) returns to the list you came from, Keycaps › GMK too, at the spot where you were; the card you opened is outlined for a moment.'], go: '#/keycaps' },
   { id: 'work', t: 'Done marks and the work queue', g: 'Getting around', k: 'done tick finished todo to do queue work progress checklist review mark',
     s: ['Every card has a Done tick, and every item page a "Mark done" button.', 'Select several items → "Add to work queue". The Work… menu next to the filter has "Finish my queue", "Empty my queue" and "Reset: clear all done marks".', 'Filter → Work shows Not done yet, Done, Done in the last 7 days or My work queue.'], go: '#/keyboards' },
   { id: 'bulk', t: 'Select several items and change them together', g: 'Getting around', k: 'select bulk many several multiple all at once edit fields favorite location delete batch',
@@ -2174,8 +2187,8 @@ const HELP = [
   // ---------- Pictures ----------
   { id: 'photos', t: 'Add, crop or delete your own photos', g: 'Pictures', ctx: ['item'], k: 'photo picture image upload add camera take crop own delete remove',
     s: ['On an entry, the Photos card: drop pictures or choose files; on a phone "Take a photo".', 'Each is cropped to 4:3 and saved small (WebP). The first photo is the display picture; "Set as default" on another photo changes it. Crop and Delete are under each photo.', 'HEIC from an iPhone must be JPG (iPhone Settings → Camera → Formats → Most Compatible).'], go: '' },
-  { id: 'mainpic', t: 'Choose and frame the main picture', g: 'Pictures', ctx: ['item'], k: 'main picture display cover stock adjust frame zoom crop card picture whole',
-    s: ['Your default photo is the card picture. "Use as stock picture" on a photo makes it the Summary picture.', 'Summary picture → Adjust: drag, zoom, or "Show the whole picture".', 'Keycap sets: Kit gallery → kit → "Use as main picture"; the Keycaps page "Main picture" menu switches all cards to Base / Novelties / Spacebars / Numpads.'], go: '' },
+  { id: 'mainpic', t: 'Choose and frame the main picture', g: 'Pictures', ctx: ['item'], k: 'main picture display cover stock adjust frame zoom crop card picture whole side bars background border edge fill color',
+    s: ['Your default photo is the card picture. "Use as stock picture" on a photo makes it the Summary picture.', 'Summary picture → Adjust: drag, zoom, or "Show the whole picture". Side bars sets the color around a picture that doesn\'t fill the frame (card and Summary): Default, "Match picture edge" (the average color of the picture\'s border), or Pick a color; then Save.', 'Keycap sets: Kit gallery → kit → "Use as main picture"; the Keycaps page "Main picture" menu switches all cards to Base / Novelties / Spacebars / Numpads.'], go: '' },
   { id: 'shoppics', t: 'Shop pictures: download, keep, use or hide', g: 'Pictures', ctx: ['item'], k: 'shop pictures carousel download downloaded keep kept copy already duplicate remove delete star main link pictures from the shop',
     s: ['From the shop card → "Pictures from the shop": every picture of the page, saved as links (no storage).', '⬇ downloads one to your device · Keep copies it into your photos · ★ makes it the shop picture · ✕ removes it.', 'A picture already in your photos shows "✓ Kept" (also when you ticked Keep a copy while reading the page); Keep then does nothing, so there are no double copies. ⬇✓ = downloaded on this device before. Delete the copy from your photos and it shows Keep again.', 'Read the page again with Replace to get them all back.'], go: '' },
   { id: 'viewer', t: 'Zoom into pictures', g: 'Pictures', ctx: ['item'], k: 'zoom viewer full screen carousel enlarge bigger look closer',
@@ -2353,7 +2366,8 @@ function route() {
   else if (sec.id === 'wishlist') renderWishlist();
   else if (sec.id === 'help') renderHelp();
   else view.innerHTML = comingLaterHtml(sec);
-  if (currentView !== location.hash) window.scrollTo(0, 0);
+  if (currentView !== location.hash) { const r = kcRet, back = r && r.list === location.hash && currentView && currentView.split('/')[2] === r.id; if (back) restoreListPos(r); else window.scrollTo(0, 0); }   // v0.110.0
+  if (parts[1] && kcRet && kcRet.id === parts[1] && kcRet.list !== '#/' + sec.id) { const cr = view.querySelector('a.crumb'), ls = SECTIONS.find(x => '#/' + x.id === kcRet.list); if (cr && ls) { cr.setAttribute('href', kcRet.list); cr.lastChild.textContent = ls.parent ? (SECTIONS.find(x => x.id === ls.parent) || {}).title + ' › ' + ls.title : ls.title; } }
   currentView = location.hash;
 }
 window.addEventListener('hashchange', () => {
@@ -2557,7 +2571,7 @@ function drawKeyboardResults() {
   } else {
     box.innerHTML = `<table class="list"><thead><tr><th style="width:44px"></th><th style="width:60px">Photo</th><th>Name</th><th>Brand</th><th>Size</th><th>Color</th><th>Purchased</th></tr></thead><tbody>${list.map(k => `
       <tr class="row" data-href="#/keyboards/${esc(k.id)}"><td><button class="fav${isFav(k) ? ' on' : ''}" style="position:static;width:28px;height:28px" data-fav="${esc(k.id)}" aria-label="Favorite">${isFav(k) ? I.starFill : I.star}</button></td>
-      <td>${k.coverThumb ? `<img class="lthumb" src="${k.coverThumb}" alt="">` : '<span class="lthumb"></span>'}</td><td><b>${esc(k.name)}</b></td><td>${esc(k.brand)}</td><td>${esc(k.size)}</td><td>${esc(k.color)}</td><td>${esc(fmtDate(k.datePurchased)) || '<span style="color:var(--text-3)">—</span>'}</td></tr>`).join('')}</tbody></table>`;
+      <td>${k.coverThumb ? `<img class="lthumb" src="${k.coverThumb}" alt="">` : '<span class="lthumb"></span>'}</td><td><b>${esc(k.name)}</b></td><td>${esc(k.brand)}</td><td>${esc(k.size)}</td><td>${esc(k.color)}${colorwayStripHtml(k)}</td><td>${esc(fmtDate(k.datePurchased)) || '<span style="color:var(--text-3)">—</span>'}</td></tr>`).join('')}</tbody></table>`;
   }
   box.onclick = e => {
     const f = e.target.closest('[data-fav]');
@@ -3688,7 +3702,7 @@ function drawKeycapResults() {
   } else {
     box.innerHTML = `<table class="list"><thead><tr><th style="width:44px"></th><th>Set</th><th>Maker</th><th>Profile</th><th style="text-align:right">Kits</th><th>Completion</th><th>Latest purchase</th></tr></thead><tbody>${list.map(s => `
       <tr class="row" data-href="#/keycaps/${esc(s.id)}"><td><button class="fav${s.isFavorite ? ' on' : ''}" style="position:static;width:28px;height:28px" data-fav="${esc(s.id)}" aria-label="Favorite">${s.isFavorite ? I.starFill : I.star}</button></td>
-      <td><b>${esc(s.name)}</b>${splitBasesOf(s).length ? `<div class="sub" style="font-size:12px">Bases: ${esc(splitBasesOf(s).map(b => baseLabel(b) + (b.owned ? '' : ' (not owned)')).join(' · '))}</div>` : ''}</td><td>${esc(s.manufacturer || '')}</td><td>${esc(s.profile || '')}</td><td style="text-align:right">${kitsOf(s).length}</td><td>${completionHtml(s) || '<span style="color:var(--text-3)">—</span>'}</td><td>${esc(fmtDate(s._date)) || '<span style="color:var(--text-3)">—</span>'}</td></tr>`).join('')}</tbody></table>`;
+      <td><b>${esc(s.name)}</b>${splitBasesOf(s).length ? `<div class="sub" style="font-size:12px">Bases: ${esc(splitBasesOf(s).map(b => baseLabel(b) + (b.owned ? '' : ' (not owned)')).join(' · '))}</div>` : ''}${paletteStripHtml(s)}</td><td>${esc(s.manufacturer || '')}</td><td>${esc(s.profile || '')}</td><td style="text-align:right">${kitsOf(s).length}</td><td>${completionHtml(s) || '<span style="color:var(--text-3)">—</span>'}</td><td>${esc(fmtDate(s._date)) || '<span style="color:var(--text-3)">—</span>'}</td></tr>`).join('')}</tbody></table>`;
   }
   box.onclick = async e => {
     const f = e.target.closest('[data-fav]');
@@ -5932,7 +5946,7 @@ function drawSummary(view, x, type) {
     ${nHidden ? `<p class="sub" style="margin:10px 0 0">${nHidden} row${nHidden === 1 ? '' : 's'} hidden. <button class="lnk" id="sumToggleHidden">${sumShowHidden ? 'Hide them again' : 'Show hidden rows'}</button></p>` : ''}</div>`);
   const cover = type === 'keycaps' ? (live.coverThumb || setPhotoCoverOf(live)) : (live.stockThumb || live.coverThumb || live.refImage || '');
   const bvh = type === 'keycaps' && baseViewOf(live);   // v0.106.0
-  box.innerHTML = `${type === 'keycaps' ? baseBarHtml(live) : ''}<div class="sumhead"><div class="sumcar" id="sumCar" data-type="${type}" data-id="${esc(live.id || '')}" data-cover="${esc(cover)}"></div><div class="sumheadtxt"><div class="sumrow" data-sumhead="name"><h3 style="margin:0" class="sumv">${esc((view.querySelector('#f_name')?.value ?? live.name ?? '').trim())}${bvh ? `<span style="color:var(--text-2)">: ${esc(baseLabel(bvh))}</span>${bvh.owned ? '' : ' <span class="chip" style="font-size:11px;vertical-align:middle">Not owned</span>'}` : ''}${live.isFavorite ? ' <span style="color:var(--warn)">★</span>' : ''}</h3>${view.querySelector('#f_name') ? '<span class="sumacts"><button class="lnk" data-sumheadedit="name" title="Change the name">✎</button></span>' : ''}</div>
+  box.innerHTML = `${type === 'keycaps' ? baseBarHtml(live) : ''}<div class="sumhead"><div class="sumcar" id="sumCar" data-type="${type}" data-id="${esc(live.id || '')}" data-cover="${esc(cover)}"></div><div class="sumheadtxt"><div class="sumrow" data-sumhead="name"><h3 style="margin:0" class="sumv">${esc((view.querySelector('#f_name')?.value ?? live.name ?? '').trim())}${bvh ? `<span style="color:var(--text-2)">: ${esc(baseLabel(bvh))}</span>${bvh.owned ? '' : ' <span class="chip" style="font-size:11px;vertical-align:middle">Not owned</span>'}` : ''}${live.isFavorite ? ' <span style="color:var(--warn)">★</span>' : ''}</h3>${(() => { const st = type === 'keycaps' ? paletteStripHtml(live) : type === 'keyboards' ? colorwayStripHtml(live) : ''; return st ? `<span class="sumcols">${st}</span>` : ''; })()}${view.querySelector('#f_name') ? '<span class="sumacts"><button class="lnk" data-sumheadedit="name" title="Change the name">✎</button></span>' : ''}</div>
       ${(() => { const d = (view.querySelector('#f_description')?.value ?? live.description ?? '').trim();
         return d ? `<div class="sumrow" data-sumhead="desc"><p class="sumdesc sumv">${esc(d).replace(/\n/g, '<br>')}</p><span class="sumacts"><button class="lnk" data-sumheadedit="desc" title="Change the description">✎</button></span></div>${live.refSource && !live.descriptionOwn ? `<p class="sub" style="margin:2px 0 0;font-size:11.5px">Description from ${live.refUrl ? `<a class="lnk" href="${esc(live.refUrl)}" target="_blank" rel="noopener">${esc(live.refSource)}</a>` : esc(live.refSource)}</p>` : ''}`
           : '<div class="sumrow" data-sumhead="desc"><p class="sub sumv" style="margin:4px 0 0">No description yet. <button class="lnk" data-sumheadedit="desc">+ Add a description</button></p></div>'; })()}</div></div>
@@ -7021,12 +7035,78 @@ function useCardHtml() {
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-use-tab],[data-use-mode]'); if (!b) return; if (b.dataset.useTab) useState.tab = b.dataset.useTab; else useState.mode = b.dataset.useMode; const c = document.getElementById('useCard'); if (c) c.outerHTML = useCardHtml(); });
 document.addEventListener('input', e => { if (e.target.id !== 'useQ') return; useState.q = e.target.value; const b = document.getElementById('useBody'); if (b) b.innerHTML = useListHtml(); });
 
+/* v0.110.0 (Faraz Nov 25): gallery cards. (1) the profile / type chip and the ★ move from the picture to a row at the bottom of the card;
+   (2) at most N colors on a card (kbc_card_colors on this device, default 3, -1 = all; "+k" for the rest; list view and the Summary show all);
+   (3) ‹ › on the picture (Medium cards and bigger, pointer devices) step through the item's pictures: for keycaps every kit picture,
+   for others the display, stock and shop pictures; (4) the side-bar color (coverBg) behind the picture; (5) back from an item returns to
+   the list you came from (Keycaps › GMK too), scrolled to where you were, with that card briefly outlined. */
+const cardColorsN = () => { const v = lsGet('kbc_card_colors'); return v == null || v === '' ? 3 : +v; };
+function limitStrip(el) {
+  const st = el.querySelector('.meta .pstrip'); if (!st) return; st.querySelectorAll('.pmore').forEach(m => m.remove());
+  const n = cardColorsN(), sw = [...st.querySelectorAll('i')]; st.style.display = n === 0 ? 'none' : '';
+  sw.forEach((i, j) => { i.style.display = n > 0 && j >= n ? 'none' : ''; });
+  if (n > 0 && sw.length > n) st.insertAdjacentHTML('beforeend', `<i class="pmore" title="${sw.length - n} more color${sw.length - n === 1 ? '' : 's'} (open it or use List view to see all)">+${sw.length - n}</i>`);
+}
+function enhanceCards() {
+  const lt = listTypeNow(); if (!lt) return;
+  document.querySelectorAll('#view .gallery a.kcard:not([data-enh])').forEach(el => {
+    el.dataset.enh = '1'; const ph = el.querySelector('.ph'), meta = el.querySelector('.meta'); if (!ph || !meta) return;
+    const mv = [...ph.children].filter(c => c.classList.contains('badge') || c.classList.contains('fav'));
+    if (mv.length) { const f = document.createElement('div'); f.className = 'kfoot'; mv.forEach(m => f.appendChild(m)); meta.appendChild(f); }
+    limitStrip(el);
+    const x = itemsOfType(lt).find(y => y.id === idOfEl(el)); if (x && x.coverBg) ph.style.background = x.coverBg;
+    ph.insertAdjacentHTML('beforeend', '<button type="button" class="karr prev" data-karr="-1" aria-label="Previous picture" title="Previous picture">‹</button><button type="button" class="karr next" data-karr="1" aria-label="Next picture" title="Next picture">›</button>');
+  });
+}
+new MutationObserver(() => enhanceCards()).observe(document.getElementById('view'), { childList: true, subtree: true });
+function cardPics(lt, x, el) {
+  const out = [], seen = new Set(), add = (src, cap) => { if (!src || seen.has(src)) return; seen.add(src); out.push({ src, cap }); };
+  const im = el.querySelector('.ph > img'); if (im) add(im.getAttribute('src'), im.title || 'Card picture');
+  if (lt === 'keycaps') { const own = new Set(ownedKits(x).map(k => kitKey(k.name))), pics = kitPicsOf(x), mine = [], rest = [];
+    pics.forEach(p => { const o = own.has(kitKey(p.name)) || ownedKits(x).some(k => kitMatch(k.name, p.name)); (o ? mine : rest).push(Object.assign({ owned: o }, p)); });
+    mine.concat(rest).forEach(p => add(p.url, p.name + (p.owned ? '' : ' (not owned)'))); }
+  add(x.coverThumb, 'Display picture'); add(x.stockThumb, 'Stock picture'); add(x.refImage, 'Picture from ' + (x.refSource || 'the product page')); (x.refImages || []).forEach(u => add(u, 'Picture from ' + (x.refSource || 'the product page')));
+  return out;
+}
+function stepCard(el, dir) {
+  const lt = listTypeNow(), x = lt && itemsOfType(lt).find(y => y.id === idOfEl(el)); if (!x) return;
+  if (!el._pics) { el._pics = cardPics(lt, x, el); el._pi = 0; const im = el.querySelector('.ph > img'); el._st0 = im ? im.getAttribute('style') || '' : ''; el._nf0 = im ? im.dataset.nofit || '' : ''; }
+  const pics = el._pics; if (pics.length < 2) { el.querySelectorAll('.karr').forEach(a => a.remove()); toast('No other pictures for this one'); return; }
+  el._pi = (el._pi + dir + pics.length) % pics.length; const p = pics[el._pi], ph = el.querySelector('.ph');
+  let img = ph.querySelector(':scope > img'); if (!img) { ph.querySelectorAll(':scope > svg, :scope > .nophoto').forEach(n => n.remove()); img = document.createElement('img'); img.alt = ''; img.referrerPolicy = 'no-referrer'; ph.prepend(img); }
+  if (el._pi === 0) { img.setAttribute('style', el._st0); if (el._nf0) img.dataset.nofit = el._nf0; else delete img.dataset.nofit; } else { img.setAttribute('style', 'object-fit:contain'); img.dataset.nofit = '1'; }
+  img.onerror = () => { pics.splice(el._pi, 1); el._pi -= dir > 0 ? 1 : 0; if (pics.length > 1) stepCard(el, dir); };
+  img.src = p.src; img.title = p.cap;
+  let c = ph.querySelector('.kcnt'); if (!c) { ph.insertAdjacentHTML('beforeend', '<span class="kcnt"></span>'); c = ph.querySelector('.kcnt'); }
+  c.textContent = `${el._pi + 1}/${pics.length} · ${p.cap}`; c.title = p.cap;
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-karr]'); if (!b) return; e.preventDefault(); e.stopPropagation(); stepCard(b.closest('a.kcard'), +b.dataset.karr); }, true);
+var kcRet = (() => { try { return JSON.parse(sessionStorage.getItem('kbc_ret') || 'null'); } catch (e) { return null; } })();
+document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('#view a.kcard, #view tr.row[data-href]'); if (!a || e.target.closest('[data-fav],[data-karr],input,label,.selbox') || !listTypeNow()) return;
+  kcRet = { list: location.hash, y: window.scrollY, id: idOfEl(a) }; try { sessionStorage.setItem('kbc_ret', JSON.stringify(kcRet)); } catch (er) {} }, true);
+function restoreListPos(r) {
+  const go = () => { window.scrollTo(0, r.y); const el = [...document.querySelectorAll('#view a.kcard, #view tr.row[data-href]')].find(a => idOfEl(a) === r.id); if (!el) return;
+    const rc = el.getBoundingClientRect(); if (rc.top < 60 || rc.bottom > window.innerHeight) el.scrollIntoView({ block: 'center' }); el.classList.add('kflash'); setTimeout(() => el.classList.remove('kflash'), 1600); };
+  go(); requestAnimationFrame(go);
+}
+async function edgeColorOf(src) {   // average color of a picture's outer edge (2 px of a 64 px copy); '' when the website doesn't allow reading it
+  const im = new Image(); if (!/^data:/.test(src)) im.crossOrigin = 'anonymous';
+  const ok = await new Promise(res => { im.onload = () => res(true); im.onerror = () => res(false); im.src = src; }); if (!ok) return '';
+  const c = document.createElement('canvas'), W = 64, H = Math.max(8, Math.round(64 * im.naturalHeight / im.naturalWidth)); c.width = W; c.height = H; const x = c.getContext('2d'); x.drawImage(im, 0, 0, W, H);
+  let d; try { d = x.getImageData(0, 0, W, H).data; } catch (e) { return ''; }
+  const sum = [0, 0, 0]; let n = 0; for (let yy = 0; yy < H; yy++) for (let xx = 0; xx < W; xx++) { if (xx > 1 && xx < W - 2 && yy > 1 && yy < H - 2) continue; const i = (yy * W + xx) * 4; sum[0] += d[i]; sum[1] += d[i + 1]; sum[2] += d[i + 2]; n++; }
+  return rgbToHex(sum[0] / n, sum[1] / n, sum[2] / n);
+}
+
 /* B10: gallery card sizes on desktop, remembered per category on this device */
 const GAL_SIZES = [['xs', 'Tiny cards'], ['s', 'Small cards'], ['m', 'Medium cards'], ['l', 'Large cards'], ['xl', 'Extra large cards'], ['wide', 'Wide pictures'], ['wall', 'Pictures only']];
 function ensureGalSize() {
   const view = document.getElementById('view'), lt = listTypeNow(), tools = document.querySelector('#view .pagehead .tools');
   if (!lt || !tools) { if (view.dataset.gal) delete view.dataset.gal; return; }
   const cur = (lsGet('kbc_gal') || {})[lt] || 'm'; if (view.dataset.gal !== cur) view.dataset.gal = cur;
+  if (!document.getElementById('cardCols') && (lt === 'keycaps' || lt === 'keyboards')) {   // v0.110.0: how many colors per gallery card
+    const n = cardColorsN(); tools.insertAdjacentHTML('afterbegin', `<select class="select" id="cardCols" aria-label="Colors on each gallery card" title="How many color squares each card shows in Gallery view (List view and the item's page show all)">${[0, 1, 2, 3, 4, 5, 6, 8, 10, -1].map(v => `<option value="${v}"${v === n ? ' selected' : ''}>${v === -1 ? 'All colors' : v === 0 ? 'No colors' : v + (v === 1 ? ' color' : ' colors')}</option>`).join('')}</select>`);
+    document.getElementById('cardCols').onchange = e => { lsSet('kbc_card_colors', String(e.target.value)); document.querySelectorAll('#view .gallery a.kcard').forEach(limitStrip); }; }
   if (document.getElementById('galSize')) return;
   tools.insertAdjacentHTML('afterbegin', `<select class="select" id="galSize" aria-label="Gallery card size" title="Size of the cards in Gallery view">${GAL_SIZES.map(([v, t]) => `<option value="${v}"${v === cur ? ' selected' : ''}>${t}</option>`).join('')}</select>`);
   document.getElementById('galSize').onchange = e => { const p = lsGet('kbc_gal') || {}; p[lt] = e.target.value; lsSet('kbc_gal', p); view.dataset.gal = e.target.value; };
