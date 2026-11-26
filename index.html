@@ -142,6 +142,8 @@
   .fav svg { width: 16px; height: 16px; }
   .fav.on { color: var(--kb); border-color: color-mix(in srgb, var(--kb) 50%, var(--line)); }
   .badge { position: absolute; top: 12px; left: 12px; }
+  .hmenu { position: relative; display: inline-flex; } .hmenu[hidden] { display: none; } .hpop { position: absolute; top: calc(100% + 6px); left: 0; z-index: 70; min-width: 220px; padding: 6px; display: grid; gap: 4px; background: var(--surface); border: var(--bw) var(--bs) var(--line-2); border-radius: var(--radius-s); box-shadow: 0 12px 32px rgba(0,0,0,.35); } .hpop[hidden] { display: none; }
+  .hpop .hitem { width: 100%; justify-content: flex-start; text-align: left; margin: 0; } .hpop button.hitem:not(.seg) { border-color: transparent; background: transparent; } .hpop button.hitem:not(.seg):hover { background: var(--bg-2); } .hpop select.hitem { width: 100%; } .hpop .seg.hitem { display: flex; }
   .addmenu { position: absolute; z-index: 60; padding: 6px; display: grid; gap: 2px; box-shadow: 0 12px 32px rgba(0,0,0,.35); } .addmenu a { display: grid; gap: 2px; padding: 9px 10px; border-radius: var(--radius-s); color: var(--text); text-decoration: none; } .addmenu a:hover, .addmenu a:focus-visible { background: var(--bg-2); } .addmenu a span { font-size: 12.5px; color: var(--text-2); }
   .k-pic { width: 46px; height: 36px; padding: 0; border-radius: 6px; border: var(--bw) var(--bs) var(--line-2); background: var(--bg); color: var(--text-3); cursor: pointer; overflow: hidden; display: grid; place-items: center; font-size: 15px; } .k-pic img { width: 100%; height: 100%; object-fit: cover; display: block; } .k-pic:hover { border-color: var(--kc); }
   .kpgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; max-height: 52vh; overflow-y: auto; padding: 2px; }
@@ -702,7 +704,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.114.0';
+const APP_VERSION = 'v0.115.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -1562,6 +1564,46 @@ function ensureListTools() {   // adds Select (list pages) and Duplicate (item p
     del.insertAdjacentHTML('beforebegin', '<button class="btn" id="btnQr" type="button" title="A printable label with a code that opens this item on your phone">QR label</button>'); document.getElementById('btnQr').onclick = () => { const x = itemsOfType(m[1]).find(y => y.id === m[2]); if (x) showQrLabels([{ t: m[1], x }]); }; }
 }
 new MutationObserver(() => ensureListTools()).observe(document.getElementById('view'), { childList: true, subtree: true });
+/* ===================== v0.115.0 (Faraz Nov 26): menus instead of rows of buttons =====================
+   Item pages: [Share ▾] [Organize ▾] [Tools ▾] … Delete · Discard · Save. List pages: Add or modify ▾ · View ▾ · Sort · Filter · Select · More ▾.
+   The existing buttons and selects are moved into the menus as they are, so each keeps its own action. */
+function hmenuOf(tools, key, label, title) {
+  let w = tools.querySelector(`.hmenu[data-hm="${key}"]`); if (w) return w;
+  tools.insertAdjacentHTML('beforeend', `<div class="hmenu" data-hm="${key}"><button class="btn hmb" type="button" aria-haspopup="menu" aria-expanded="false" title="${esc(title || '')}">${label} ▾</button><div class="hpop" role="menu" hidden></div></div>`);
+  return tools.querySelector(`.hmenu[data-hm="${key}"]`);
+}
+function hmenuFill(w, nodes) { const pop = w.querySelector('.hpop'); nodes.filter(n => n && !pop.contains(n)).forEach(n => { n.classList.add('hitem'); pop.appendChild(n); }); w.hidden = !pop.children.length; return pop.children.length; }
+function organizeHeader() {
+  const tools = document.querySelector('#view .pagehead .tools'); if (!tools) return;
+  const lt = listTypeNow(), onItem = /^#\/\w+\/[^/]+/.test(location.hash) && !/\/new$/.test(location.hash) && !/^#\/(import|settings|help|check|catalog|stats|value|sounds)/.test(location.hash);
+  const $ = id => document.getElementById(id);
+  if (onItem && tools.querySelector('#btnDelete')) {
+    const share = hmenuOf(tools, 'share', 'Share', 'Build card and QR label'), org = hmenuOf(tools, 'org', 'Organize', 'Merge, duplicate, move or split this entry'), tl = hmenuOf(tools, 'tools', 'Tools', 'Done mark, read a webpage or a receipt into this entry');
+    hmenuFill(share, [$('btnBuildCard'), $('btnQr')]); hmenuFill(org, [$('btnMerge'), $('btnDup'), $('btnMove'), $('btnSplit'), $('btnBundle')]);
+    const pop = tl.querySelector('.hpop');
+    if (!pop.querySelector('[data-hread]')) pop.insertAdjacentHTML('beforeend', `<button class="btn hitem" type="button" data-hread="page" title="Read a shop or catalog page into this entry">Read a webpage into it…</button><button class="btn hitem" type="button" data-hread="rc" title="Read an order receipt (PDF) into this entry">Read a receipt into it…</button>`);
+    hmenuFill(tl, [$('btnDone')].filter(Boolean)); if ($('btnDone') && pop.firstChild !== $('btnDone')) pop.insertBefore($('btnDone'), pop.firstChild);
+    pop.querySelector('[data-hread="page"]').hidden = !$('refReread'); pop.querySelector('[data-hread="rc"]').hidden = !$('readIntoRc');
+    const first = tools.querySelector('#btnCancelTop') || tools.querySelector('#btnDelete'); [share, org, tl].forEach(w => { if (w.nextElementSibling !== first && w.parentNode === tools) tools.insertBefore(w, first); });
+    const del = $('btnDelete'), can = $('btnCancelTop'); if (del && can && del.nextElementSibling !== can) tools.insertBefore(del, can);
+  } else if (lt && !onItem) {
+    const view = hmenuOf(tools, 'view', 'View', 'Gallery or list, card size, colors per card, main picture'), more = hmenuOf(tools, 'more', 'More', 'Share as image, stats, work queue');
+    const seg = tools.querySelector('.seg[aria-label="View"]');
+    hmenuFill(view, [seg, $('galSize'), $('cardCols'), $('kcMainPic')]);
+    hmenuFill(more, [$('shareList'), $('kcStats'), tools.querySelector('[data-workmenu]')]);
+    const add = tools.querySelector('a[data-addmenu]'); if (add && add.nextElementSibling !== view) add.after(view); else if (!add && tools.firstElementChild !== view) tools.prepend(view);
+    if (tools.lastElementChild !== more) tools.appendChild(more);
+  }
+}
+let orgQ = 0; new MutationObserver(() => { cancelAnimationFrame(orgQ); orgQ = requestAnimationFrame(organizeHeader); }).observe(document.getElementById('view'), { childList: true, subtree: true });
+document.addEventListener('click', e => {
+  const hb = e.target.closest && e.target.closest('.hmb'), inPop = e.target.closest && e.target.closest('.hpop');
+  document.querySelectorAll('.hmenu .hpop:not([hidden])').forEach(p => { if (!(hb && hb.nextElementSibling === p) && !(inPop === p && !e.target.closest('button.hitem:not(.seg button), a'))) { p.hidden = true; p.previousElementSibling.setAttribute('aria-expanded', 'false'); } });
+  if (hb) { const p = hb.nextElementSibling; p.hidden = !p.hidden; hb.setAttribute('aria-expanded', String(!p.hidden)); if (!p.hidden) { p.style.left = ''; p.style.right = ''; const r = p.getBoundingClientRect(); if (r.right > window.innerWidth - 8) { p.style.left = 'auto'; p.style.right = '0'; } } return; }
+  const rd = e.target.closest && e.target.closest('[data-hread]'); if (rd) { const b = document.getElementById(rd.dataset.hread === 'page' ? 'refReread' : 'readIntoRc'); if (b) b.click(); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.hmenu .hpop:not([hidden])').forEach(p => { p.hidden = true; p.previousElementSibling.setAttribute('aria-expanded', 'false'); }); });
+
 window.addEventListener('hashchange', () => { if (selMode && listTypeNow() !== selType) setSelMode(false); });
 /* ---------- v0.62.0: Last modified, one Filter drop-down per list, Done marks and a work queue, bulk field edit ---------- */
 const listFilter = { keyboards: '', switches: '', keycaps: '', pcbs: '', artisans: '', accessories: '' };
@@ -2215,9 +2257,9 @@ const HELP = [
   { id: 'shortcuts', t: 'Keyboard shortcuts', g: 'Getting around', k: 'shortcut keys hotkey keyboard ctrl save quick jump',
     s: ['/ jumps to search, N starts a new item on a list page, Ctrl+S saves, Esc closes a box or leaves select mode.', 'G then D / K / S / C jumps to Dashboard, Keyboards, Switches, Keycaps.', 'Press ? (Shift + /) for the full list.'], go: '' },
   { id: 'filter', t: 'Sort, filter, card size and list view', g: 'Getting around', ctx: ['keyboards', 'switches', 'keycaps', 'accessories', 'pcbs', 'deskmats', 'artisans', 'switchparts'], k: 'sort filter order newest last modified favorites view gallery list card size big small tiny pictures only colors squares how many arrows next picture back scroll where i was star profile',
-    s: ['On every list: Sort (newest, name, last modified, longest untouched…) and Filter (favorites, work, last modified; keycaps also missing kits and profiles; accessories also each category › sub-category).', 'The two buttons next to them switch between gallery cards and a list.', 'On a computer the size menu sets the cards: Tiny to Extra large, Wide pictures, or Pictures only. Each list remembers its own settings on this device.', 'Keycaps and Keyboards: the colors menu (default "3 colors") sets how many color squares each gallery card shows, from none to all; "+N" says how many more. List view and the item\'s page always show every color, the page right beside the name.', 'On Medium cards and bigger, point at a card\'s picture: ‹ › step through its pictures (keycaps: every kit picture, yours first; others: display, stock and shop pictures) without opening it.', 'The profile or type chip and the ★ sit at the bottom of each card, so the picture is clear.', 'Back from an item (the link at the top, or the browser\'s back) returns to the list you came from, Keycaps › GMK too, at the spot where you were; the card you opened is outlined for a moment.'], go: '#/keycaps' },
+    s: ['On every list, next to Add or modify: View ▾ (Gallery or List, card size, colors per card; keycaps also Main picture), Sort, Filter, Select, and More ▾ (Share as image, Stats, Work…).', 'Sort (newest, name, last modified, longest untouched…) and Filter (favorites, work, last modified; keycaps also missing kits and profiles; accessories also each category › sub-category).', 'The two buttons next to them switch between gallery cards and a list.', 'On a computer the size menu sets the cards: Tiny to Extra large, Wide pictures, or Pictures only. Each list remembers its own settings on this device.', 'Keycaps and Keyboards: the colors menu (default "3 colors") sets how many color squares each gallery card shows, from none to all; "+N" says how many more. List view and the item\'s page always show every color, the page right beside the name.', 'On Medium cards and bigger, point at a card\'s picture: ‹ › step through its pictures (keycaps: every kit picture, yours first; others: display, stock and shop pictures) without opening it.', 'The profile or type chip and the ★ sit at the bottom of each card, so the picture is clear.', 'Back from an item (the link at the top, or the browser\'s back) returns to the list you came from, Keycaps › GMK too, at the spot where you were; the card you opened is outlined for a moment.'], go: '#/keycaps' },
   { id: 'work', t: 'Done marks and the work queue', g: 'Getting around', k: 'done tick finished todo to do queue work progress checklist review mark',
-    s: ['Every card has a Done tick, and every item page a "Mark done" button.', 'Select several items → "Add to work queue". The Work… menu next to the filter has "Finish my queue", "Empty my queue" and "Reset: clear all done marks".', 'Filter → Work shows Not done yet, Done, Done in the last 7 days or My work queue.'], go: '#/keyboards' },
+    s: ['Every card has a Done tick; on an item page it is Tools ▾ → "Mark done".', 'Select several items → "Add to work queue". More ▾ → Work… on a list has "Finish my queue", "Empty my queue" and "Reset: clear all done marks".', 'Filter → Work shows Not done yet, Done, Done in the last 7 days or My work queue.'], go: '#/keyboards' },
   { id: 'bulk', t: 'Select several items and change them together', g: 'Getting around', k: 'select bulk many several multiple all at once edit fields favorite location delete batch',
     s: ['On a list press Select, then tick cards or rows (or "Select all shown").', 'Choose Favorite / Unfavorite, Set location, "Edit fields…" (one or more general fields, e.g. maker or profile), QR labels, "Add to work queue", or Delete.', 'Changes and deletes can be undone for 10 seconds.'], go: '#/keyboards' },
   { id: 'phone', t: 'Using the app on your phone', g: 'Getting around', k: 'phone mobile iphone android install home screen share menu camera',
@@ -2241,15 +2283,15 @@ const HELP = [
   { id: 'shops', t: 'Add a shop to the product page reader', g: 'Adding and reading', ctx: ['settings'], k: 'approved shops add website domain reader helper cloudflare not allowed settings',
     s: ['Settings → Product page reader.', 'Type the shop\'s address (e.g. cannonkeys.com) under Approved shops → Add → Save.', 'If a shop reads badly, send Claude the link: each shop gets its own fixes.'], go: '#/settings' },
   { id: 'duplicate', t: 'Duplicate an entry', g: 'Adding and reading', ctx: ['item'], k: 'duplicate copy clone same again another one twice',
-    s: ['On the entry press Duplicate….', 'Tick what to copy (purchase details, notes, colors, product page, summary rows; photos and market values are off by default).', 'Name the copy and confirm.'], go: '' },
+    s: ['On the entry: Organize ▾ → Duplicate….', 'Tick what to copy (purchase details, notes, colors, product page, summary rows; photos and market values are off by default).', 'Name the copy and confirm.'], go: '' },
   { id: 'merge', t: 'Merge two entries (duplicates)', g: 'Adding and reading', ctx: ['item'], k: 'merge combine duplicate same twice two entries join keeper sacrifice',
-    s: ['On the entry you want to get rid of press Merge… (or Select → tick it first, then the keeper → "Merge 2…"). ⇄ swaps which one is kept.', 'For fields both have, choose which value to keep; empty fields are filled from the other; photos, values, kits, installs move over.', 'The other entry is deleted; Undo works for 10 seconds.', 'Check my data lists entries with the same name.'], go: '' },
+    s: ['On the entry you want to get rid of: Organize ▾ → Merge… (or Select → tick it first, then the keeper → "Merge 2…"). ⇄ swaps which one is kept.', 'For fields both have, choose which value to keep; empty fields are filled from the other; photos, values, kits, installs move over.', 'The other entry is deleted; Undo works for 10 seconds.', 'Check my data lists entries with the same name.'], go: '' },
   { id: 'move', t: 'Move an entry to another list', g: 'Adding and reading', ctx: ['item'], k: 'move list category wrong place accessories pcbs deskmats switch parts relocate',
-    s: ['On an Accessories, PCBs & Components, Deskmats or Switch parts entry press "Move to…".', 'Pick the list. The entry keeps its photos, prices, values and the board it is installed on.'], go: '' },
+    s: ['On an Accessories, PCBs & Components, Deskmats or Switch parts entry: Organize ▾ → "Move to…".', 'Pick the list. The entry keeps its photos, prices, values and the board it is installed on.'], go: '' },
   { id: 'split', t: 'Split a keyboard into parts', g: 'Adding and reading', ctx: ['keyboards'], k: 'split parts pcb plate came with included kit stock switches keycaps prebuilt price share',
-    s: ['On the keyboard press "Split into parts…". Lines start from its "Included with the kit" list.', 'Choose the page (PCBs, Accessories, Switches, Keycaps…), category, name and part of the price for each, and whether it is installed.', 'A price typed on a part moves out of the keyboard\'s price. Undo for 10 seconds.'], go: '#/keyboards' },
+    s: ['On the keyboard: Organize ▾ → "Split into parts…". Lines start from its "Included with the kit" list.', 'Choose the page (PCBs, Accessories, Switches, Keycaps…), category, name and part of the price for each, and whether it is installed.', 'A price typed on a part moves out of the keyboard\'s price. Undo for 10 seconds.'], go: '#/keyboards' },
   { id: 'bundle', t: 'Split a bundle into separate items', g: 'Adding and reading', k: 'bundle split add-on pack set several things one entry separate',
-    s: ['On an Accessories / PCBs / Deskmats / Switch parts entry whose name lists several things press "Split bundle…".', 'Each thing becomes a line with its list and category guessed; set prices or "Share the price equally".', 'The bundle is deleted when its whole price has moved.'], go: '#/accessories' },
+    s: ['On an Accessories / PCBs / Deskmats / Switch parts entry whose name lists several things: Organize ▾ → "Split bundle…".', 'Each thing becomes a line with its list and category guessed; set prices or "Share the price equally".', 'The bundle is deleted when its whole price has moved.'], go: '#/accessories' },
   { id: 'delete', t: 'Delete an entry (and undo)', g: 'Adding and reading', ctx: ['item'], k: 'delete remove erase trash undo get rid',
     s: ['Press Delete on the entry (or Select → Delete on a list).', '"Undo" shows for 10 seconds and puts everything back (photos, recordings, installs). After that use a backup.'], go: '' },
 
@@ -2259,7 +2301,7 @@ const HELP = [
   { id: 'boxes', t: 'Rearrange the boxes on a page', g: 'Item pages', ctx: ['item'], k: 'arrange boxes order side column move up down layout',
     s: ['"Arrange these boxes" at the top of the side column.', '▲ ▼ per box, then Done. The order is used for every entry of that kind, on all your devices.'], go: '' },
   { id: 'qr', t: 'QR labels', g: 'Item pages', ctx: ['item'], k: 'qr code label print sticker bag box scan',
-    s: ['On an entry press "QR label" to print or save it as a picture.', 'For many: Select → QR labels (a print sheet, 4 across). The code opens the entry in the app.'], go: '' },
+    s: ['On an entry: Share ▾ → "QR label" to print or save it as a picture.', 'For many: Select → QR labels (a print sheet, 4 across). The code opens the entry in the app.'], go: '' },
 
   // ---------- Pictures ----------
   { id: 'photos', t: 'Add, crop or delete your own photos', g: 'Pictures', ctx: ['item'], k: 'photo picture image upload add camera take crop own delete remove',
@@ -2295,7 +2337,7 @@ const HELP = [
   { id: 'timeline', t: 'Build timeline', g: 'Keyboards', ctx: ['keyboards'], k: 'timeline history log changes build when installed notes',
     s: ['Keyboard → Build timeline: switch, keycap and part changes are logged by themselves; add your own notes; remove lines you don\'t want.'], go: '#/keyboards' },
   { id: 'share', t: 'Share a picture of a build or a list', g: 'Keyboards', k: 'share image picture png build card instagram post grid',
-    s: ['Keyboard → "Share build card": photo, colorway, switches, keycaps and parts (what you paid only if ticked).', 'Every list has Share: the cards on screen as one picture.'], go: '#/keyboards' },
+    s: ['Keyboard → Share ▾ → "Share build card…": a 4:5 portrait picture (1080 × 1350) with the keyboard\'s photo, specs and colorway, and a tile with a picture of every installed switch lot, keycap kit and part (what you paid only if ticked). Pictures from websites that don\'t allow it show as a plain tile with the name.', 'Every list: More ▾ → Share as image: the cards on screen as one picture.'], go: '#/keyboards' },
   { id: 'pick', t: 'Pick my build (slot machine)', g: 'Keyboards', k: 'pick my build random shuffle spin slot machine roulette hold reel suggest which keyboard today',
     s: ['Dashboard → "🎰 Pick my build": three reels spin for a keyboard, a keycap kit that is not on a board, and switches with enough loose ones.', 'Press Hold under a reel to keep it, then Spin again for the rest. Hold all three and it tells you to release one.'], go: '#/dashboard' },
 
@@ -2337,7 +2379,7 @@ const HELP = [
   { id: 'check', t: 'Check my data (fix mistakes)', g: 'Data and tools', ctx: ['check'], k: 'check my data fix errors spelling duplicates categories keyboard type cleanup tidy',
     s: ['Tools → Check my data: fixes waiting (tick, then "Apply ticked fixes"; a copy is saved first) and checks that update every time: spellings, keyboards with no type, accessories with no category, same names, categories to sort.'], go: '#/check' },
   { id: 'backup', t: 'Back up and restore', g: 'Data and tools', ctx: ['settings'], k: 'backup restore save my data download json zip safe copy pictures photos folder desktop file',
-    s: ['Settings → Backup and restore → "Make a backup file (.zip, with pictures)…": tick the lists (Keyboards, Keycaps, …, Wishlist, Build timeline, Settings) and what to include: your photos and kept copies, linked pictures (GMK catalog, Keycap Collection app and shop pictures), sound recordings; "Only what I own" leaves out the wishlist and pictures of kits you don\'t own.', 'The .zip downloads to this device. Inside: data (your records), pictures sorted by list and item ("Linked" folders for catalog and shop pictures), recordings, and README.txt listing everything plus any linked picture a website wouldn\'t let the app save. Keep it on your PC, never in the public GitHub repo.', 'Restore: "Choose a backup file…" and pick the .zip: tick per list which records, photos and recordings to put back, then "Restore what is ticked". Each restored record replaces the same record; nothing else is deleted.', 'The older one-file .json backups still work, and you can still make them ("Quick backup: records only").'], go: '#/settings' },
+    s: ['Settings → Backup and restore → "Back up…": choose the kind of file (backup file with pictures .zip, records only .json, or everything in one .json). For the .zip, tick the lists (Keyboards, Keycaps, …, Wishlist, Build timeline, Settings) and what to include: your photos and kept copies, linked pictures (GMK catalog, Keycap Collection app and shop pictures), sound recordings; "Only what I own" leaves out the wishlist and pictures of kits you don\'t own.', 'The .zip downloads to this device. Inside: data (your records), pictures sorted by list and item ("Linked" folders for catalog and shop pictures), recordings, and README.txt listing everything plus any linked picture a website wouldn\'t let the app save. Keep it on your PC, never in the public GitHub repo.', 'Restore: "Choose a backup file…" and pick the .zip: tick per list which records, photos and recordings to put back, then "Restore what is ticked". Each restored record replaces the same record; nothing else is deleted.', 'The older one-file .json backups still work, and "Back up…" can still make them.'], go: '#/settings' },
   { id: 'excel', t: 'Export to Excel', g: 'Data and tools', ctx: ['import'], k: 'excel export workbook spreadsheet xlsx v19 download',
     s: ['Import and export → "Export to Excel": Keyboard_Hobby_List_v<N>.xlsx in the v18 layout with formulas. The number goes up by one each time.', 'The app is the source of truth; the workbook is an export.'], go: '#/import' },
   { id: 'storage', t: 'Storage used', g: 'Data and tools', ctx: ['settings'], k: 'storage space full limit firebase photos size',
@@ -6246,34 +6288,58 @@ async function shareGridCanvas(title, items) {
   ctx.fillStyle = SH.text3; ctx.font = `12px ${SHARE_FONT}`; ctx.fillText('Made with Keyboard Collection', pad, H - 16);
   return cv;
 }
+function loadImgCors(src) { return new Promise(r => { if (!src) return r(null); const i = new Image(); if (!/^data:/.test(src)) i.crossOrigin = 'anonymous'; i.onload = () => r(i); i.onerror = () => r(null); i.referrerPolicy = 'no-referrer'; i.src = src; }); }
+const picOfItem = x => x && (x.coverThumb || x.stockThumb || x.refImage || '');
+/* v0.115.0 (Faraz Nov 26): the build card is a 4:5 portrait (1080 × 1350) with a picture of every installed switch lot, keycap kit and part,
+   not just their names. Pictures come from each item (display photo, stock picture, shop picture; keycap kits: the kit's own picture, else the
+   set's); a picture whose website doesn't allow it is drawn as a plain tile with the name. More than fits: the last tile says "+N more". */
 async function buildCardCanvas(k, withSpend) {
-  const W = 1080, P = 56; let full = null;
+  const W = 1080, H = 1350, P = 48; let full = null;
   if (k.coverPhotoId && db && !isFile) { try { const d = await withTimeout(photoCol().doc(k.coverPhotoId).get()); full = d.exists ? d.data().full : null; } catch (e) { full = null; } }
-  const img = await loadImg(full || k.coverThumb || k.stockThumb);
-  const sw = switchesOn(k.id).map(({ w, a }) => [[w.manufacturer, w.name].filter(Boolean).join(' '), `× ${a.count}`]);
-  const kc = kitsOn(k.id).map(({ s, k: kit }) => [s.name, kit.name]);
-  const pt = partsOn(k.id).map(({ t, x }) => [x.name, partRole(t, x)]);
-  const sections = [['Switches', sw], ['Keycaps', kc], ['Parts', pt]].filter(s => s[1].length);
-  const meas = document.createElement('canvas').getContext('2d'); meas.font = `20px ${SHARE_FONT}`;
-  const photoH = img ? 810 : 0, colors = shareColors(k.colorway);
-  let H = photoH + P + 60 + 34 + (colors.length ? 44 : 0) + 20;
-  sections.forEach(s => { H += 50 + s[1].length * 34; }); if (!sections.length) H += 40; if (withSpend) H += 70; H += 70;
+  const hero = await loadImg(full || k.coverThumb || k.stockThumb) || await loadImgCors(k.refImage);
+  const tiles = [];
+  switchesOn(k.id).forEach(({ w, a }) => tiles.push({ tag: 'Switches', name: [w.manufacturer, w.name].filter(Boolean).join(' '), sub: `× ${a.count}${w.switchType ? ' · ' + w.switchType : ''}`, src: picOfItem(w) }));
+  kitsOn(k.id).forEach(({ s, k: kit }) => { let u = ''; try { u = kitPicNow(s, kit.name); } catch (e) {} tiles.push({ tag: 'Keycaps', name: s.name, sub: kit.name, src: u || picOfItem(s) || (s.kitStockCover && s.kitStockCover.thumb) || '' }); });
+  partsOn(k.id).forEach(({ t, x }) => tiles.push({ tag: partRole(t, x), name: x.name, sub: [x.manufacturer || x.maker, x.material || x.plateMaterial].filter(Boolean).join(' · '), src: picOfItem(x) }));
+  for (const t of tiles) t.img = t.src ? (/^data:/.test(t.src) ? await loadImg(t.src) : await loadImgCors(t.src)) : null;
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
-  ctx.fillStyle = SH.bg; ctx.fillRect(0, 0, W, H); if (img) drawCover(ctx, img, 0, 0, W, photoH);
-  let y = photoH + P + 40;
-  ctx.fillStyle = SH.text; ctx.font = `700 46px ${SHARE_FONT}`; ctx.fillText(fitText(ctx, k.name, W - P * 2), P, y); y += 40;
-  ctx.fillStyle = SH.text2; ctx.font = `22px ${SHARE_FONT}`; ctx.fillText(fitText(ctx, [k.brand, k.size, k.color].filter(Boolean).join(' · '), W - P * 2), P, y); y += 22;
-  if (colors.length) { drawStrip(ctx, colors, P, y + 6, W - P * 2, 26); y += 44; }
-  y += 20;
-  if (!sections.length) { ctx.fillStyle = SH.text3; ctx.font = `20px ${SHARE_FONT}`; ctx.fillText('No switches, keycaps or parts linked yet.', P, y + 20); y += 40; }
-  sections.forEach(([h, rows]) => {
-    ctx.strokeStyle = SH.line; ctx.beginPath(); ctx.moveTo(P, y + .5); ctx.lineTo(W - P, y + .5); ctx.stroke();
-    ctx.fillStyle = SH.accent; ctx.font = `600 15px ${SHARE_FONT}`; ctx.fillText(h.toUpperCase(), P, y + 34); y += 50;
-    rows.forEach(([a, b]) => { ctx.font = `20px ${SHARE_FONT}`; ctx.fillStyle = SH.text3; const bw = ctx.measureText(b).width; ctx.textAlign = 'right'; ctx.fillText(b, W - P, y + 20); ctx.textAlign = 'left';
-      ctx.fillStyle = SH.text; ctx.fillText(fitText(ctx, a, W - P * 2 - bw - 24), P, y + 20); y += 34; });
-  });
-  if (withSpend) { ctx.strokeStyle = SH.line; ctx.beginPath(); ctx.moveTo(P, y + 10.5); ctx.lineTo(W - P, y + 10.5); ctx.stroke(); ctx.fillStyle = SH.text2; ctx.font = `20px ${SHARE_FONT}`; ctx.fillText('Keyboard total paid', P, y + 50); ctx.fillStyle = SH.text; ctx.font = `700 24px ${SHARE_FONT}`; ctx.textAlign = 'right'; ctx.fillText(money(kbTotal(k)), W - P, y + 50); ctx.textAlign = 'left'; y += 70; }
-  ctx.fillStyle = SH.accent; ctx.font = `600 14px ${SHARE_FONT}`; ctx.fillText('FSN · KEYBOARD COLLECTION', P, H - 32);
+  ctx.fillStyle = SH.bg; ctx.fillRect(0, 0, W, H);
+  /* v0.115.0: lay the part tiles out first (largest tiles that fit, last row centred), then give the spare height to the photo */
+  const colors = shareColors(k.colorway), footY = H - 34, gap = 14, HMIN = 440, HMAX = 900;
+  const headH = 56 + 36 + 14 + (colors.length ? 38 : 10) + 18;
+  const tileGeo = c => { const tw = (W - P * 2 - gap * (c - 1)) / c, ih = tw * 0.75, th = ih + 64; return { cols: c, tw, ih, th }; };
+  let L = null, show = tiles, extra = 0;
+  if (tiles.length) {
+    const avail0 = footY - 30 - (HMIN + headH);
+    for (let c = 2; c <= 6; c++) { const g = tileGeo(c), rows = Math.ceil(tiles.length / c), need = rows * g.th + (rows - 1) * gap; const score = g.tw * (tiles.length % c ? 0.7 : 1); if (need <= avail0 && (!L || score > L.score)) L = Object.assign(g, { rows, need, score }); }
+    if (!L) { const g = tileGeo(6), rows = Math.max(1, Math.floor((avail0 + gap) / (g.th + gap))), fit = rows * 6; show = tiles.slice(0, fit - 1); extra = tiles.length - show.length; L = Object.assign(g, { rows, need: rows * g.th + (rows - 1) * gap }); }
+  }
+  const heroH = L ? Math.min(HMAX, HMIN + (footY - 30 - (HMIN + headH) - L.need)) : 980;
+  if (hero) drawCover(ctx, hero, 0, 0, W, heroH); else { ctx.fillStyle = SH.card; ctx.fillRect(0, 0, W, heroH); }
+  let y = heroH + 56; ctx.fillStyle = SH.text; ctx.font = `700 44px ${SHARE_FONT}`; ctx.fillText(fitText(ctx, k.name, W - P * 2), P, y); y += 36;
+  const specs = [k.brand, k.size, k.layout || k.bottomRow, k.color, k.caseMaterial && k.caseMaterial + ' case', k.mounting].filter(Boolean).join(' · ');
+  ctx.fillStyle = SH.text2; ctx.font = `21px ${SHARE_FONT}`; ctx.fillText(fitText(ctx, specs, W - P * 2), P, y); y += 14;
+  if (colors.length) { drawStrip(ctx, colors, P, y + 6, W - P * 2, 24); y += 38; } else y += 10;
+  if (withSpend) { ctx.fillStyle = SH.text2; ctx.font = `20px ${SHARE_FONT}`; ctx.textAlign = 'right'; ctx.fillText(`Keyboard total paid ${money(kbTotal(k))}`, W - P, heroH + 56); ctx.textAlign = 'left'; }
+  const top = y + 18;
+  if (!tiles.length) { ctx.fillStyle = SH.text3; ctx.font = `20px ${SHARE_FONT}`; ctx.fillText('No switches, keycaps or parts linked yet.', P, top + 30); }
+  else {
+    const { cols, tw, ih, th } = L, all = show.concat(extra ? [{ more: extra }] : []);
+    all.forEach((t, i) => {
+      const r = Math.floor(i / cols), inRow = Math.min(cols, all.length - r * cols), x0 = P + (cols - inRow) * (tw + gap) / 2;
+      const cx = x0 + (i % cols) * (tw + gap), cy = top + r * (th + gap);
+      ctx.fillStyle = SH.card; rrect(ctx, cx, cy, tw, th, 12); ctx.fill();
+      if (t.more) { ctx.fillStyle = SH.text2; ctx.font = `600 26px ${SHARE_FONT}`; ctx.textAlign = 'center'; ctx.fillText(`+${t.more} more`, cx + tw / 2, cy + th / 2 + 8); ctx.textAlign = 'left'; return; }
+      ctx.save(); rrect(ctx, cx, cy, tw, ih, 12); ctx.clip();
+      if (t.img) { ctx.fillStyle = '#ffffff'; ctx.fillRect(cx, cy, tw, ih); const s = Math.min(tw / t.img.width, ih / t.img.height), dw = t.img.width * s, dh = t.img.height * s; ctx.drawImage(t.img, cx + (tw - dw) / 2, cy + (ih - dh) / 2, dw, dh); }
+      else { ctx.fillStyle = SH.line; ctx.fillRect(cx, cy, tw, ih); ctx.fillStyle = SH.text3; ctx.font = `600 ${Math.round(Math.min(tw / 9, 34))}px ${SHARE_FONT}`; ctx.textAlign = 'center'; ctx.fillText(t.tag, cx + tw / 2, cy + ih / 2 + 8); ctx.textAlign = 'left'; }
+      ctx.restore();
+      ctx.font = `600 12px ${SHARE_FONT}`; const tg = t.tag.toUpperCase(), tgw = ctx.measureText(tg).width + 14; ctx.fillStyle = 'rgba(15,17,21,.78)'; rrect(ctx, cx + 8, cy + 8, tgw, 22, 11); ctx.fill(); ctx.fillStyle = SH.accent; ctx.fillText(tg, cx + 15, cy + 23);
+      const fs = tw < 190 ? 15 : tw > 300 ? 19 : 17; ctx.fillStyle = SH.text; ctx.font = `600 ${fs}px ${SHARE_FONT}`; ctx.fillText(fitText(ctx, t.name, tw - 20), cx + 10, cy + ih + 26);
+      ctx.fillStyle = SH.text2; ctx.font = `${fs - 2}px ${SHARE_FONT}`; ctx.fillText(fitText(ctx, t.sub || '', tw - 20), cx + 10, cy + ih + 50);
+    });
+  }
+  ctx.fillStyle = SH.accent; ctx.font = `600 14px ${SHARE_FONT}`; ctx.fillText('FSN · KEYBOARD COLLECTION', P, footY);
   return cv;
 }
 function shareFileName(t) { return (t || 'collection').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.png'; }
@@ -8286,7 +8352,7 @@ const rootDoc = () => db.collection(FIRESTORE_COLLECTION).doc(ROOT_DOC);
 function bkEncode(v) { if (v && typeof v.toDate === 'function') return { __ts: v.toDate().getTime() }; if (Array.isArray(v)) return v.map(bkEncode); if (v && typeof v === 'object') { const o = {}; for (const k in v) o[k] = bkEncode(v[k]); return o; } return v; }
 function bkDecode(v) { if (v && typeof v === 'object' && typeof v.__ts === 'number' && Object.keys(v).length === 1) return firebase.firestore.Timestamp.fromMillis(v.__ts); if (Array.isArray(v)) return v.map(bkDecode); if (v && typeof v === 'object') { const o = {}; for (const k in v) o[k] = bkDecode(v[k]); return o; } return v; }
 async function makeBackup(full) {
-  const msg = document.getElementById('backupMsg'), btns = [document.getElementById('btnBackup'), document.getElementById('btnBackupFull')];
+  const msg = document.getElementById('backupMsg'), btns = [document.getElementById('btnBackupZip')].filter(Boolean);
   btns.forEach(b => b.disabled = true);
   try {
     const out = { kind: 'kbc_backup', version: 1, app: APP_VERSION, createdAt: new Date().toISOString(), full: !!full, collections: {} }, counts = [];
@@ -8433,22 +8499,28 @@ async function makeZipBackup(opt, say) {
 function zipBackupDialog() {
   const d = document.createElement('div'); d.className = 'gdlg'; d.id = 'zbkDlg';
   const pre = lsGet('kbc_zbk_opt') || { lists: ZBK_LISTS.map(x => x[0]).concat(['wishlist', 'timeline', 'settings']), photos: true, linked: true, sounds: true, onlyOwned: false };
-  d.innerHTML = `<div class="card kv-card" style="max-width:560px"><div class="sec-title"><h3>Make a backup file</h3><button class="btn" data-x>✕</button></div>
-    <p class="sub">One .zip file to keep on your PC: your records in a <b>data</b> folder, your pictures sorted in a <b>pictures</b> folder by list and item. Settings → Restore can put back whatever you pick from it.</p>
+  d.innerHTML = `<div class="card kv-card" style="max-width:560px"><div class="sec-title"><h3>Back up</h3><button class="btn" data-x>✕</button></div>
+    <div class="fld"><label>Kind of file</label>
+      <label class="check"><input type="radio" name="zbkKind" value="zip" checked> Backup file with pictures (.zip): records in a <b>data</b> folder, pictures sorted by list and item; restore picks what to put back</label>
+      <label class="check"><input type="radio" name="zbkKind" value="json"> Records only (.json): small and quick, no pictures</label>
+      <label class="check"><input type="radio" name="zbkKind" value="jsonfull"> Everything in one .json (the older format, photos inside)</label></div>
+    <div id="zbkZipOpts">
     <div class="fld"><label>Lists</label><div class="zbkgrid">${ZBK_LISTS.concat(ZBK_EXTRA).map(([c, t]) => `<label class="check"><input type="checkbox" data-zl="${c}"${pre.lists.includes(c) ? ' checked' : ''}> ${esc(t)}</label>`).join('')}</div>
       <div class="btnrow" style="margin-top:4px"><button class="lnk" type="button" data-zall="1">Tick all</button><button class="lnk" type="button" data-zall="0">Untick all</button></div></div>
     <div class="fld" style="margin-top:8px"><label>Pictures and sounds</label>
       <label class="check"><input type="checkbox" id="zbkPhotos"${pre.photos ? ' checked' : ''}> My photos and kept copies</label>
       <label class="check"><input type="checkbox" id="zbkLinked"${pre.linked ? ' checked' : ''}> Linked pictures: GMK catalog, Keycap Collection app and shop pictures (slower; bigger file)</label>
       <label class="check"><input type="checkbox" id="zbkSounds"${pre.sounds ? ' checked' : ''}> Switch sound recordings</label>
-      <label class="check"><input type="checkbox" id="zbkOwned"${pre.onlyOwned ? ' checked' : ''}> Only what I own: leave out the wishlist and pictures of kits I don't own (records keep every kit)</label></div>
+      <label class="check"><input type="checkbox" id="zbkOwned"${pre.onlyOwned ? ' checked' : ''}> Only what I own: leave out the wishlist and pictures of kits I don't own (records keep every kit)</label></div></div>
     <p class="sub" id="zbkMsg" style="margin:8px 0 0">It holds prices and receipt links: keep it on your PC, never in the public GitHub repo.</p>
-    <div class="btnrow" style="margin-top:12px"><button class="btn primary" id="zbkGo">Make the backup file</button><button class="btn" id="zbkStop" hidden>Stop</button></div></div>`;
-  document.body.appendChild(d); const $ = s => d.querySelector(s), msg = $('#zbkMsg');
+    <div class="btnrow" style="margin-top:12px"><button class="btn primary" id="zbkGo">Make the backup</button><button class="btn" id="zbkStop" hidden>Stop</button></div></div>`;
+  document.body.appendChild(d); const $ = s => d.querySelector(s), msg = $('#zbkMsg'), kind = () => (d.querySelector('[name=zbkKind]:checked') || {}).value || 'zip';
+  d.addEventListener('change', e => { if (e.target.name === 'zbkKind') $('#zbkZipOpts').hidden = kind() !== 'zip'; });
   d.onclick = async e => { if (e.target === d || e.target.closest('[data-x]')) { zbkCancel = true; d.remove(); return; }
     const al = e.target.closest('[data-zall]'); if (al) { d.querySelectorAll('[data-zl]').forEach(c => c.checked = al.dataset.zall === '1'); return; }
     if (e.target.id === 'zbkStop') { zbkCancel = true; msg.textContent = 'Stopping…'; return; }
     if (e.target.id !== 'zbkGo') return;
+    if (kind() !== 'zip') { d.remove(); makeBackup(kind() === 'jsonfull'); return; }
     const opt = { lists: [...d.querySelectorAll('[data-zl]:checked')].map(c => c.dataset.zl), photos: $('#zbkPhotos').checked, linked: $('#zbkLinked').checked, sounds: $('#zbkSounds').checked, onlyOwned: $('#zbkOwned').checked };
     if (opt.onlyOwned) opt.lists = opt.lists.filter(c => c !== 'wishlist');
     if (!opt.lists.length) { msg.textContent = 'Tick at least one list.'; return; } lsSet('kbc_zbk_opt', opt);
@@ -8496,10 +8568,9 @@ async function runZipRestore() {
   } catch (e) { msg.textContent = `Stopped after ${done} of ${tot}: ${explain(e)} Running it again is safe.`; btn.disabled = false; }
 }
 function wireBackup() {
-  const $ = id => document.getElementById(id); if (!$('btnBackup')) return;
-  if (!db || isFile) { ['btnBackup', 'btnBackupFull', 'btnRestorePick', 'btnRecount'].forEach(i => { if ($(i)) $(i).disabled = true; }); return; }
-  $('btnBackup').onclick = () => makeBackup(false); if ($('btnBackupZip')) $('btnBackupZip').onclick = zipBackupDialog;
-  $('btnBackupFull').onclick = async () => { if (await askConfirm('This reads every photo and recording, so it can take a few minutes and make a large file. Continue?')) makeBackup(true); };
+  const $ = id => document.getElementById(id); if (!$('btnBackupZip')) return;
+  if (!db || isFile) { ['btnBackupZip', 'btnRestorePick', 'btnRecount'].forEach(i => { if ($(i)) $(i).disabled = true; }); return; }
+  if ($('btnBackupZip')) $('btnBackupZip').onclick = zipBackupDialog;
   $('btnRestorePick').onclick = () => $('restoreFile').click();
   $('restoreFile').onchange = async () => { const f = $('restoreFile').files[0]; $('restoreFile').value = ''; if (!f) return; restoreData = null; zrs = null;
     if (/\.zip$/i.test(f.name)) { try { await readZipRestore(f); } catch (e) { drawRestorePreview(/not a Keyboard Collection/.test(e.message || '') ? e.message : 'This file could not be read as a backup. Choose a keyboard_collection_backup_….zip or .json file.'); } return; }
@@ -8530,8 +8601,7 @@ function renderSettings() {
     <h2 style="font-size:17px;margin:26px 0 12px">Backup and restore</h2>
     <div class="two">
       <div class="card" id="backupCard"><h3>Download a backup</h3><p class="sub">Saves a file to this device. It contains prices and receipt links, so keep it on your PC and never put it in the public GitHub repo.</p>
-        <div class="btnrow"><button class="btn primary" id="btnBackupZip" title="One .zip file: your records plus your pictures sorted by list and item; choose what goes in">Make a backup file (.zip, with pictures)…</button></div>
-        <div class="btnrow" style="margin-top:6px"><button class="btn" id="btnBackup" title="Records only, one .json file">Quick backup: records only (.json)</button><button class="btn" id="btnBackupFull" title="The older single-file backup with photos inside">Everything in one .json</button></div>
+        <div class="btnrow"><button class="btn primary" id="btnBackupZip" title="Choose what goes in and the kind of file">Back up…</button></div>
         <p class="sub" id="backupMsg" style="margin:8px 0 0">${(() => { const l = lsGet('kbc_last_backup'); return l ? `Last backup on this device: ${esc(fmtDate(String(l.at).slice(0, 10)))} (${l.full ? 'everything' : 'records'}).` : 'No backup made on this device yet.'; })()}</p>
         <p class="sub" style="margin:6px 0 0">Tip: press <b>?</b> anywhere for the keyboard shortcuts.</p>
         <p class="sub" style="margin:6px 0 0">Records = keyboards, switches, keycaps, PCBs, artisans, accessories and wishlist. The GMK catalog is not included; reload it from its own file.</p></div>
