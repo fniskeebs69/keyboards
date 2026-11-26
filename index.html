@@ -309,12 +309,22 @@
   .pp-stage { position: relative; min-height: 0; overflow: hidden; touch-action: none; display: flex; align-items: center; justify-content: center; cursor: crosshair; }
   .pp-img { max-width: 100%; max-height: 100%; width: 100%; height: 100%; object-fit: contain; user-select: none; -webkit-user-drag: none; pointer-events: none; }
   .pp-mark { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 2px rgba(0,0,0,.6); pointer-events: none; }
-  .pp-loupe { position: absolute; width: 132px; height: 132px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 6px 18px rgba(0,0,0,.6); pointer-events: none; background: #000; }
+  .pp-loupe { position: absolute; width: 176px; height: 176px; z-index: 2; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 6px 18px rgba(0,0,0,.6); pointer-events: none; background: #000; }
   .pp-msg { position: absolute; left: 16px; right: 16px; bottom: 16px; background: rgba(0,0,0,.75); padding: 10px 12px; border-radius: 10px; color: #ddd; }
   .pp-strip { display: flex; gap: 8px; overflow-x: auto; padding: 8px 12px; border-top: 1px solid #222; }
   .pp-th { flex: none; width: 84px; background: none; border: 2px solid transparent; border-radius: 8px; padding: 2px; color: #bbb; font: inherit; font-size: 10.5px; cursor: pointer; text-align: center; }
   .pp-th.on { border-color: var(--kc); } .pp-th img { width: 76px; height: 57px; object-fit: cover; border-radius: 5px; display: block; background: #222; } .pp-th span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
   .pp-bar { display: flex; gap: 10px; align-items: center; padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); border-top: 1px solid #222; flex-wrap: wrap; }
+  .pp-tools { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; padding: 8px 12px; border-bottom: 1px solid #222; } .pp-tools .btn, .pp-tools .seg button { padding: 5px 10px; font-size: 13px; } .pp-zoom { display: inline-flex; gap: 4px; align-items: center; } .pp-zl { min-width: 46px; text-align: center; font-size: 12.5px; } .pp-nudge { display: inline-flex; gap: 4px; } .pp-nudge .btn { padding: 5px 9px; }
+  .pp-img { transform-origin: 0 0; will-change: transform; }
+  .pp-box { position: absolute; border: 2px solid #fff; outline: 1px dashed rgba(0,0,0,.8); background: rgba(255,255,255,.08); pointer-events: none; }
+  .pp-pal { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px 12px; border-top: 1px solid #222; max-height: 132px; overflow-y: auto; } .pp-palh { flex-basis: 100%; margin: 0; font-size: 12px; }
+  .pp-pc { display: inline-flex; gap: 6px; align-items: center; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 3px 8px 3px 3px; color: #ddd; font: inherit; font-size: 12px; cursor: pointer; } .pp-pc span { width: 26px; height: 26px; border-radius: 6px; border: 1px solid rgba(255,255,255,.2); } .pp-pc small { color: #999; } .pp-pc.on { border-color: var(--kc); }
+  .pp-sizes[hidden], .pp-nudge[hidden], .pp-strip[hidden] { display: none; }
+  @media (max-width: 700px) { .pp-tools { flex-wrap: nowrap; overflow-x: auto; gap: 6px; padding: 6px 8px; scrollbar-width: none; } .pp-tools > * { flex: none; } .pp-tools .btn, .pp-tools .seg button { padding: 5px 8px; font-size: 12.5px; }
+    .pp-pal { flex-wrap: nowrap; overflow-x: auto; max-height: none; padding: 6px 8px; } .pp-pal .pp-pc { flex: none; } .pp-palh { flex-basis: auto; flex: none; max-width: 150px; white-space: normal; }
+    .pp-strip { padding: 6px 8px; gap: 6px; } .pp-th { width: 58px; } .pp-th img { width: 52px; height: 39px; } .pp-th span { display: none; }
+    .pp-textip, .pp-tip { display: none; } .pp-texrow { padding: 4px 8px; } .pp-bar { padding: 8px; gap: 8px; flex-wrap: nowrap; } .pp-txt { min-width: 0; } .pp-bar .btn { padding: 8px 10px; } }
   .pp-area { position: absolute; border: 2px dashed #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.6); pointer-events: none; }
   .pp-texrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 6px 14px; border-top: 1px solid #222; } .pp-texrow .check { margin: 0; } .pp-sizes { display: flex; gap: 6px; } .pp-sizes .btn { padding: 4px 10px; font-size: 12.5px; } .pp-sizes .btn.on { border-color: var(--kc); color: var(--kc); } .pp-textip { margin: 0; font-size: 11.5px; flex-basis: 100%; }
   .pp-tile { width: 40px; height: 40px; border-radius: 8px; border: 1px solid #444; flex: none; background-size: cover; background-position: center; }
@@ -671,7 +681,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.108.0';
+const APP_VERSION = 'v0.109.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -1251,31 +1261,111 @@ async function pickerSources(type, id) {
   }
   return out;
 }
+/* v0.109.0 (Faraz Nov 25: thin parts like switch housings, trims and legends were too small to pick): the picture can be zoomed
+   (wheel, pinch, + / −, up to 12×) and moved (Move mode, two fingers, right-drag or space + drag); the magnifier is bigger with a
+   crosshair and sits above your finger; ◀ ▲ ▼ ▶ (or the arrow keys) nudge the spot one pixel; Sample: Exact pixel (1×1), Small (3×3),
+   Medium (7×7) — Small and Medium use a trimmed average (the middle half by brightness), so shine, shadow and edges don't skew it;
+   "Main colors" lists the picture's main colors (or those inside a box you draw in Box mode) as swatches to tap. */
+const PP_LIN = (() => { const t = new Float32Array(256); for (let i = 0; i < 256; i++) { const v = i / 255; t[i] = v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); } return t; })();
+function rgbToOklab(r, g, b) { r = PP_LIN[r | 0]; g = PP_LIN[g | 0]; b = PP_LIN[b | 0];
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b), m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b), s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s, 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s]; }
+function oklabToRgb(L, a, b) { const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3, m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3, s = (L - 0.0894841775 * a - 1.2914855480 * b) ** 3;
+  const g = v => { v = Math.min(1, Math.max(0, v)); return 255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055); };
+  return [g(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s), g(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s), g(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s)]; }
+const oklabOf = h => hexLab(h) || [0, 0, 0];
+function ppPalette(data, maxK) {   // main colors of RGBA pixels: k-means in OKLab, close clusters merged, tiny ones dropped; [{hex, share}]
+  const pts = [], step = Math.max(1, Math.floor(data.length / 4 / 24000));
+  for (let i = 0; i < data.length; i += 4 * step) { if (data[i + 3] < 128) continue; pts.push(rgbToOklab(data[i], data[i + 1], data[i + 2])); }
+  if (!pts.length) return [];
+  const k = Math.min(maxK || 12, pts.length), cen = [pts[Math.floor(pts.length / 2)]], dist = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
+  const dmin = pts.map(p => dist(p, cen[0]));
+  while (cen.length < k) { let bi = 0; for (let i = 1; i < pts.length; i++) if (dmin[i] > dmin[bi]) bi = i; if (dmin[bi] < 1e-5) break; cen.push(pts[bi]); for (let i = 0; i < pts.length; i++) dmin[i] = Math.min(dmin[i], dist(pts[i], pts[bi])); }
+  let lab = new Array(pts.length).fill(0);
+  for (let it = 0; it < 12; it++) {
+    const sum = cen.map(() => [0, 0, 0, 0]);
+    for (let i = 0; i < pts.length; i++) { let b = 0, bd = Infinity; for (let c = 0; c < cen.length; c++) { const dd = dist(pts[i], cen[c]); if (dd < bd) { bd = dd; b = c; } } lab[i] = b; const s = sum[b]; s[0] += pts[i][0]; s[1] += pts[i][1]; s[2] += pts[i][2]; s[3]++; }
+    sum.forEach((s, c) => { if (s[3]) cen[c] = [s[0] / s[3], s[1] / s[3], s[2] / s[3]]; });
+  }
+  let cl = cen.map((c, i) => ({ c, n: lab.filter(l => l === i).length })).filter(x => x.n).sort((a, b) => b.n - a.n);
+  const out = []; cl.forEach(x => { const m = out.find(o => Math.sqrt(dist(o.c, x.c)) < 0.045); if (m) { const t = m.n + x.n; m.c = m.c.map((v, j) => (v * m.n + x.c[j] * x.n) / t); m.n = t; } else out.push({ c: x.c, n: x.n }); });
+  return out.filter(o => o.n / pts.length >= 0.012).sort((a, b) => b.n - a.n).map(o => { const [r, g, b] = oklabToRgb(o.c[0], o.c[1], o.c[2]); return { hex: rgbToHex(r, g, b), share: o.n / pts.length }; });
+}
+function ppTrimmed(dd, exact) {   // average color of a patch; for 3×3 and bigger only the middle half by brightness counts
+  const px = []; for (let i = 0; i < dd.length; i += 4) px.push([dd[i], dd[i + 1], dd[i + 2], 0.2126 * dd[i] + 0.7152 * dd[i + 1] + 0.0722 * dd[i + 2]]);
+  let use = px; if (!exact && px.length >= 9) { px.sort((a, b) => a[3] - b[3]); const q = Math.floor(px.length / 4); use = px.slice(q, px.length - q); }
+  const s = [0, 0, 0]; use.forEach(p => { s[0] += p[0]; s[1] += p[1]; s[2] += p[2]; }); return rgbToHex(s[0] / use.length, s[1] / use.length, s[2] / use.length);
+}
 function openPicturePicker(type, id, onPick, onClose, opts = {}) {
   const d = document.createElement('div'); d.className = 'pickpic'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.setAttribute('aria-label', 'Pick a color from a picture');
   d.innerHTML = `<div class="pp-top"><b>Pick a color from a picture</b><button class="btn" type="button" data-pp="close" aria-label="Close">✕</button></div>
-    <div class="pp-stage"><img class="pp-img" alt=""><span class="pp-mark" hidden></span><span class="pp-area" hidden></span><canvas class="pp-loupe" width="132" height="132" hidden></canvas><p class="sub pp-msg">Loading pictures…</p></div>
+    <div class="pp-tools"><span class="seg pp-modes" role="group" aria-label="What dragging does"><button type="button" class="on" data-ppmode="pick" title="Tap or drag to pick a color">✚ Pick</button><button type="button" data-ppmode="move" title="Drag to move the picture (also: two fingers, right-drag, or hold the space bar)">✋ Move</button><button type="button" data-ppmode="box" title="Draw a box around one part to see its main colors">▭ Box</button></span>
+      <span class="pp-zoom"><button type="button" class="btn" data-ppz="out" aria-label="Zoom out">−</button><b class="pp-zl mono">100%</b><button type="button" class="btn" data-ppz="in" aria-label="Zoom in">+</button><button type="button" class="btn" data-ppz="fit">Fit</button></span>
+      <span class="seg pp-samp" role="group" aria-label="Sample size"><button type="button" data-ppsamp="0" title="Exactly the pixel under the crosshair">Exact</button><button type="button" class="on" data-ppsamp="1" title="3×3 pixels, shine and shadow left out">Small</button><button type="button" data-ppsamp="3" title="7×7 pixels, shine and shadow left out">Medium</button></span>
+      <button type="button" class="btn" data-pp="pal" title="The picture's main colors (or those in your box) as swatches">🎨 Main colors</button>
+      <span class="pp-nudge" hidden><button type="button" class="btn" data-ppn="-1,0" aria-label="Move left one pixel">◀</button><button type="button" class="btn" data-ppn="0,-1" aria-label="Move up one pixel">▲</button><button type="button" class="btn" data-ppn="0,1" aria-label="Move down one pixel">▼</button><button type="button" class="btn" data-ppn="1,0" aria-label="Move right one pixel">▶</button></span></div>
+    <div class="pp-stage"><img class="pp-img" alt=""><span class="pp-mark" hidden></span><span class="pp-area" hidden></span><span class="pp-box" hidden></span><canvas class="pp-loupe" width="176" height="176" hidden></canvas><p class="sub pp-msg">Loading pictures…</p></div>
+    <div class="pp-pal" hidden></div>
     <div class="pp-strip"></div>${opts.texture ? `<div class="pp-texrow"><label class="check"><input type="checkbox" class="pp-tex"> Also save a texture sample</label><span class="pp-sizes" hidden>${[['s', 'Small'], ['m', 'Medium'], ['l', 'Large']].map(([v, l]) => `<button type="button" class="btn${v === 'm' ? ' on' : ''}" data-ppsize="${v}">${l}</button>`).join('')}</span><span class="sub pp-textip">For patterned finishes (brushed, anodized, PVD, marbled): the square on the picture is saved as a small tile and shown instead of the flat color.</span></div>` : ''}
-    <div class="pp-bar"><span class="pp-sw" title="Picked color"></span><span class="pp-tile" hidden title="Texture sample"></span><span class="pp-txt"><b class="mono pp-hex">Tap the picture</b><span class="sub pp-tip">Tap or drag on the color you want. A small area is averaged, so pick a flat, evenly lit spot.</span></span>
+    <div class="pp-bar"><span class="pp-sw" title="Picked color"></span><span class="pp-tile" hidden title="Texture sample"></span><span class="pp-txt"><b class="mono pp-hex">Tap the picture</b><span class="sub pp-tip">Zoom in on small parts (wheel, pinch or +), then tap. ◀ ▲ ▼ ▶ or the arrow keys move the spot one pixel.</span></span>
       <button class="btn" type="button" data-pp="close">Cancel</button><button class="btn primary" type="button" data-pp="use" disabled>Use this color</button></div>`;
   document.body.appendChild(d); document.body.classList.add('pp-open');
-  const img = d.querySelector('.pp-img'), stage = d.querySelector('.pp-stage'), mark = d.querySelector('.pp-mark'), loupe = d.querySelector('.pp-loupe'), lctx = loupe.getContext('2d'), msg = d.querySelector('.pp-msg');
+  const q = s => d.querySelector(s), img = q('.pp-img'), stage = q('.pp-stage'), mark = q('.pp-mark'), loupe = q('.pp-loupe'), lctx = loupe.getContext('2d'), msg = q('.pp-msg'), boxEl = q('.pp-box'), pal = q('.pp-pal');
   const cv = document.createElement('canvas'), cx = cv.getContext('2d', { willReadFrequently: true });
-  let srcs = [], cur = -1, readable = false, hex = '', down = false, tex = '', texOn = false, size = 'm', last = null;
-  const area = d.querySelector('.pp-area'), tile = d.querySelector('.pp-tile'), FRAC = { s: 0.06, m: 0.12, l: 0.24 };
+  let srcs = [], cur = -1, readable = false, hex = '', tex = '', texOn = false, size = 'm', last = null, rad = 1, mode = 'pick', spaceDown = false;
+  let z = 1, tx = 0, ty = 0, sel = null;   // zoom, move (px), box in picture pixels {x0,y0,x1,y1}
+  const ptrs = new Map(); let g = null;   // gesture: {kind:'pick'|'pan'|'pinch'|'box', ...}
+  const area = q('.pp-area'), tile = q('.pp-tile'), FRAC = { s: 0.06, m: 0.12, l: 0.24 }, LS = 176;
   const makeTex = (px, py) => { const side = Math.max(24, Math.round(Math.min(cv.width, cv.height) * FRAC[size])), x0 = Math.min(Math.max(0, px - side / 2), cv.width - side), y0 = Math.min(Math.max(0, py - side / 2), cv.height - side);
     const t = document.createElement('canvas'); t.width = t.height = 160; const tc = t.getContext('2d'); tc.imageSmoothingQuality = 'high'; tc.drawImage(cv, x0, y0, side, side, 0, 0, 160, 160);
     let u = t.toDataURL('image/webp', 0.82); if (!/^data:image\/webp/.test(u)) u = t.toDataURL('image/jpeg', 0.85); return u; };
-  const drawArea = () => { if (!texOn || !last || img.hidden) { area.hidden = true; tile.hidden = true; tex = ''; return; } const b = box(), sr = stage.getBoundingClientRect(), side = Math.max(24, Math.min(cv.width, cv.height) * FRAC[size]) * b.w / cv.width;
-    area.hidden = false; area.style.width = area.style.height = side + 'px'; area.style.left = (last.cx - sr.left - side / 2) + 'px'; area.style.top = (last.cy - sr.top - side / 2) + 'px';
+  const box = () => { const r = img.getBoundingClientRect(), ar = cv.width / cv.height; let w = r.width, h = r.width / ar; if (h > r.height) { h = r.height; w = h * ar; } return { x: r.left + (r.width - w) / 2, y: r.top + (r.height - h) / 2, w, h }; };
+  const toScreen = (px, py) => { const b = box(), sr = stage.getBoundingClientRect(); return { x: b.x - sr.left + (px + 0.5) / cv.width * b.w, y: b.y - sr.top + (py + 0.5) / cv.height * b.h }; };
+  const toPic = (clientX, clientY) => { const b = box(); return { fx: (clientX - b.x) / b.w, fy: (clientY - b.y) / b.h }; };
+  const drawArea = () => { if (!texOn || !last || img.hidden) { area.hidden = true; tile.hidden = true; tex = ''; return; } const b = box(), s = toScreen(last.px, last.py), side = Math.max(24, Math.min(cv.width, cv.height) * FRAC[size]) * b.w / cv.width;
+    area.hidden = false; area.style.width = area.style.height = side + 'px'; area.style.left = (s.x - side / 2) + 'px'; area.style.top = (s.y - side / 2) + 'px';
     if (readable) { tex = makeTex(last.px, last.py); tile.hidden = false; tile.style.backgroundImage = `url('${tex}')`; } };
-  const close = () => { d.remove(); document.body.classList.remove('pp-open'); document.removeEventListener('keydown', onKey, true); if (onClose) onClose(); };
-  const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } }; document.addEventListener('keydown', onKey, true);
+  const drawBox = () => { if (!sel || img.hidden) { boxEl.hidden = true; return; } const a = toScreen(Math.min(sel.x0, sel.x1), Math.min(sel.y0, sel.y1)), b = toScreen(Math.max(sel.x0, sel.x1), Math.max(sel.y0, sel.y1));
+    boxEl.hidden = false; Object.assign(boxEl.style, { left: a.x + 'px', top: a.y + 'px', width: Math.max(2, b.x - a.x) + 'px', height: Math.max(2, b.y - a.y) + 'px' }); };
+  const overlays = () => { if (last) { const s = toScreen(last.px, last.py); mark.hidden = false; mark.style.left = s.x + 'px'; mark.style.top = s.y + 'px'; } drawArea(); drawBox(); };
+  const clampT = () => { const W = stage.clientWidth, H = stage.clientHeight; tx = Math.min(0, Math.max(W - W * z, tx)); ty = Math.min(0, Math.max(H - H * z, ty)); };
+  const applyT = () => { clampT(); img.style.transform = `translate(${tx}px, ${ty}px) scale(${z})`; q('.pp-zl').textContent = Math.round(z * 100) + '%'; overlays(); };
+  const zoomAt = (nz, sx, sy) => { nz = Math.min(12, Math.max(1, nz)); tx = sx - (sx - tx) * (nz / z); ty = sy - (sy - ty) * (nz / z); z = nz; applyT(); };
+  const zoomMid = f => zoomAt(z * f, stage.clientWidth / 2, stage.clientHeight / 2);
+  const close = () => { d.remove(); document.body.classList.remove('pp-open'); document.removeEventListener('keydown', onKey, true); document.removeEventListener('keyup', onKeyUp, true); if (onClose) onClose(); };
+  const setMode = m => { mode = m; d.querySelectorAll('[data-ppmode]').forEach(b => b.classList.toggle('on', b.dataset.ppmode === m)); stage.style.cursor = m === 'move' ? 'grab' : 'crosshair'; };
+  const sampleAt = (px, py, clientPt) => {   // pick the color at picture pixel px, py
+    px = Math.min(cv.width - 1, Math.max(0, px)); py = Math.min(cv.height - 1, Math.max(0, py)); last = { px, py };
+    overlays(); q('.pp-nudge').hidden = false; if (!readable) return;
+    const x0 = Math.max(0, px - rad), y0 = Math.max(0, py - rad), dd = cx.getImageData(x0, y0, Math.min(cv.width - x0, rad * 2 + 1), Math.min(cv.height - y0, rad * 2 + 1)).data;
+    hex = ppTrimmed(dd, rad === 0); setHex(hex);
+    const n = 13, cell = LS / n; lctx.imageSmoothingEnabled = false; lctx.fillStyle = '#000'; lctx.fillRect(0, 0, LS, LS); lctx.drawImage(cv, px - (n >> 1), py - (n >> 1), n, n, 0, 0, LS, LS);
+    const c0 = LS / 2 - cell * (rad + 0.5), w = cell * (rad * 2 + 1); lctx.lineWidth = 2; lctx.strokeStyle = 'rgba(0,0,0,.7)'; lctx.strokeRect(c0 - 1, c0 - 1, w + 2, w + 2); lctx.strokeStyle = '#fff'; lctx.strokeRect(c0, c0, w, w);
+    lctx.beginPath(); lctx.moveTo(LS / 2, 0); lctx.lineTo(LS / 2, c0 - 2); lctx.moveTo(LS / 2, c0 + w + 2); lctx.lineTo(LS / 2, LS); lctx.moveTo(0, LS / 2); lctx.lineTo(c0 - 2, LS / 2); lctx.moveTo(c0 + w + 2, LS / 2); lctx.lineTo(LS, LS / 2); lctx.strokeStyle = 'rgba(255,255,255,.8)'; lctx.lineWidth = 1; lctx.stroke();
+    lctx.fillStyle = hex; lctx.fillRect(0, LS - 22, LS, 22); lctx.fillStyle = oklabOf(hex)[0] > 0.6 ? '#000' : '#fff'; lctx.font = '600 12px ui-monospace, monospace'; lctx.textAlign = 'center'; lctx.fillText(hex, LS / 2, LS - 7);
+    const sr = stage.getBoundingClientRect(), at = clientPt ? { x: clientPt.x - sr.left, y: clientPt.y - sr.top } : toScreen(px, py), touch = clientPt && clientPt.touch;
+    loupe.hidden = false; const lx = Math.min(sr.width - LS - 8, Math.max(4, at.x - LS / 2)), ly = at.y - LS - (touch ? 60 : 30);
+    loupe.style.left = lx + 'px'; loupe.style.top = (ly < 4 ? Math.min(sr.height - LS - 4, at.y + 40) : ly) + 'px';
+  };
+  const setHex = h => { hex = h; q('.pp-sw').style.background = h; q('.pp-hex').textContent = h; q('[data-pp="use"]').disabled = false; };
+  const pickFromEvent = e => { if (img.hidden) return; const p = toPic(e.clientX, e.clientY); if (p.fx < 0 || p.fy < 0 || p.fx > 1 || p.fy > 1) return;
+    sampleAt(Math.floor(p.fx * cv.width), Math.floor(p.fy * cv.height), { x: e.clientX, y: e.clientY, touch: e.pointerType === 'touch' }); if (g && g.kind === 'pick') area.hidden = true; };
+  const showPalette = () => { if (!readable) { pal.hidden = false; pal.innerHTML = '<span class="sub">This picture\'s colors can\'t be read (see the note on the picture).</span>'; return; }
+    let x0 = 0, y0 = 0, w = cv.width, h = cv.height; if (sel) { x0 = Math.max(0, Math.min(sel.x0, sel.x1)); y0 = Math.max(0, Math.min(sel.y0, sel.y1)); w = Math.max(1, Math.min(cv.width, Math.max(sel.x0, sel.x1) + 1) - x0); h = Math.max(1, Math.min(cv.height, Math.max(sel.y0, sel.y1) + 1) - y0); }
+    const cols = ppPalette(cx.getImageData(x0, y0, w, h).data, 12);
+    pal.hidden = false; pal.innerHTML = `<span class="sub pp-palh">${sel ? 'Main colors in your box' : 'Main colors in this picture'}${sel ? ' · <button type="button" class="lnk" data-pp="unbox">whole picture</button>' : ' · draw a box (▭ Box) to see one part'}</span>${cols.map(c => `<button type="button" class="pp-pc" data-pphex="${c.hex}" title="${c.hex} · ${Math.round(c.share * 100)}% of ${sel ? 'the box' : 'the picture'}"><span style="background:${c.hex}"></span><b class="mono">${c.hex}</b><small>${Math.max(1, Math.round(c.share * 100))}%</small></button>`).join('')}`; };
+  const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); return; }
+    if (e.key === ' ' && !/INPUT|TEXTAREA|SELECT|BUTTON/.test(e.target.tagName)) { spaceDown = true; stage.style.cursor = 'grab'; e.preventDefault(); return; }
+    const mv = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key]; if (mv && last && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) { e.preventDefault(); e.stopPropagation(); sampleAt(last.px + mv[0], last.py + mv[1]); }
+    if ((e.key === '+' || e.key === '=') && !/INPUT|TEXTAREA/.test(e.target.tagName)) zoomMid(1.5); if (e.key === '-' && !/INPUT|TEXTAREA/.test(e.target.tagName)) zoomMid(1 / 1.5); };
+  const onKeyUp = e => { if (e.key === ' ') { spaceDown = false; setMode(mode); } };
+  document.addEventListener('keydown', onKey, true); document.addEventListener('keyup', onKeyUp, true);
   const show = i => {
-    cur = i; readable = false; hex = ''; last = null; tex = ''; area.hidden = true; tile.hidden = true; mark.hidden = true; loupe.hidden = true; d.querySelector('[data-pp="use"]').disabled = true; d.querySelector('.pp-hex').textContent = 'Tap the picture'; d.querySelector('.pp-sw').style.background = 'transparent';
+    cur = i; readable = false; hex = ''; last = null; tex = ''; sel = null; z = 1; tx = ty = 0; img.style.transform = ''; q('.pp-zl').textContent = '100%'; pal.hidden = true; boxEl.hidden = true; q('.pp-nudge').hidden = true;
+    area.hidden = true; tile.hidden = true; mark.hidden = true; loupe.hidden = true; q('[data-pp="use"]').disabled = true; q('.pp-hex').textContent = 'Tap the picture'; q('.pp-sw').style.background = 'transparent';
     d.querySelectorAll('.pp-th').forEach((b, j) => b.classList.toggle('on', j === i)); msg.textContent = 'Loading the picture…'; msg.hidden = false; img.hidden = true;
     const s = srcs[i].src, load = cors => { const im = new Image(); if (cors && !/^data:/.test(s)) im.crossOrigin = 'anonymous';
-      im.onload = () => { const sc = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight)); cv.width = Math.round(im.naturalWidth * sc); cv.height = Math.round(im.naturalHeight * sc); cx.drawImage(im, 0, 0, cv.width, cv.height);
+      im.onload = () => { const sc = Math.min(1, 2400 / Math.max(im.naturalWidth, im.naturalHeight)); cv.width = Math.round(im.naturalWidth * sc); cv.height = Math.round(im.naturalHeight * sc); cx.drawImage(im, 0, 0, cv.width, cv.height);
         try { cx.getImageData(0, 0, 1, 1); readable = true; } catch (e) { readable = false; }
         img.src = im.src; if (cors && !/^data:/.test(s)) img.crossOrigin = 'anonymous'; img.hidden = false;
         msg.hidden = readable; if (!readable) msg.textContent = "This picture's website doesn't let apps read its colors. Pick another picture: your own photos always work (or tick “Keep a copy” when reading a product page)."; };
@@ -1283,32 +1373,47 @@ function openPicturePicker(type, id, onPick, onClose, opts = {}) {
       im.src = s; };
     load(true);
   };
-  const box = () => { const r = img.getBoundingClientRect(), ar = cv.width / cv.height; let w = r.width, h = r.width / ar; if (h > r.height) { h = r.height; w = h * ar; } return { x: r.left + (r.width - w) / 2, y: r.top + (r.height - h) / 2, w, h }; };
-  const sample = e => {
-    if (img.hidden) return; const b = box(), fx = (e.clientX - b.x) / b.w, fy = (e.clientY - b.y) / b.h; if (fx < 0 || fy < 0 || fx > 1 || fy > 1) return;
-    const sr = stage.getBoundingClientRect(); mark.hidden = false; mark.style.left = (e.clientX - sr.left) + 'px'; mark.style.top = (e.clientY - sr.top) + 'px';
-    if (!readable) return;
-    const px = Math.round(fx * (cv.width - 1)), py = Math.round(fy * (cv.height - 1)), rad = Math.max(2, Math.round(cv.width / 500));
-    const x0 = Math.max(0, px - rad), y0 = Math.max(0, py - rad), dd = cx.getImageData(x0, y0, Math.min(cv.width - x0, rad * 2 + 1), Math.min(cv.height - y0, rad * 2 + 1)).data; let s = [0, 0, 0], n = 0;
-    for (let i = 0; i < dd.length; i += 4) { s[0] += dd[i]; s[1] += dd[i + 1]; s[2] += dd[i + 2]; n++; }
-    hex = rgbToHex(s[0] / n, s[1] / n, s[2] / n); last = { px, py, cx: e.clientX, cy: e.clientY }; if (!down || e.type === 'pointerup') drawArea(); else area.hidden = true;
-    d.querySelector('.pp-sw').style.background = hex; d.querySelector('.pp-hex').textContent = hex; d.querySelector('[data-pp="use"]').disabled = false;
-    const z = 15; lctx.imageSmoothingEnabled = false; lctx.clearRect(0, 0, 132, 132); lctx.drawImage(cv, px - (z >> 1), py - (z >> 1), z, z, 0, 0, 132, 132);
-    lctx.strokeStyle = '#fff'; lctx.lineWidth = 2; lctx.strokeRect(66 - 132 / z * (rad + .5), 66 - 132 / z * (rad + .5), 132 / z * (rad * 2 + 1), 132 / z * (rad * 2 + 1));
-    loupe.hidden = false; const lx = Math.min(sr.width - 140, Math.max(4, e.clientX - sr.left - 66)), ly = e.clientY - sr.top - 160; loupe.style.left = lx + 'px'; loupe.style.top = (ly < 4 ? e.clientY - sr.top + 30 : ly) + 'px';
-  };
-  stage.addEventListener('pointerdown', e => { if (e.target.closest('.pp-msg')) return; down = true; try { stage.setPointerCapture(e.pointerId); } catch (er) {} sample(e); e.preventDefault(); });
-  stage.addEventListener('pointermove', e => { if (down) sample(e); });
-  stage.addEventListener('pointerup', () => { down = false; drawArea(); setTimeout(() => { loupe.hidden = true; }, 600); });
-  const texBox = d.querySelector('.pp-tex'); if (texBox) texBox.onchange = () => { texOn = texBox.checked; d.querySelector('.pp-sizes').hidden = !texOn; d.querySelector('[data-pp="use"]').textContent = texOn ? 'Use color + texture' : 'Use this color'; drawArea(); };
-  d.addEventListener('click', e => { const a = e.target.closest('[data-pp]'); if (a && a.dataset.pp === 'close') close();
-    else if (a && a.dataset.pp === 'use' && hex) { const h = hex, t = texOn ? tex : ''; close(); onPick(h, t); }
+  const local = e => { const sr = stage.getBoundingClientRect(); return { x: e.clientX - sr.left, y: e.clientY - sr.top }; };
+  stage.addEventListener('contextmenu', e => e.preventDefault());
+  stage.addEventListener('wheel', e => { if (img.hidden) return; e.preventDefault(); const p = local(e); zoomAt(z * Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0018)), p.x, p.y); }, { passive: false });
+  stage.addEventListener('pointerdown', e => { if (e.target.closest('.pp-msg') || img.hidden) return; e.preventDefault(); try { stage.setPointerCapture(e.pointerId); } catch (er) {}
+    ptrs.set(e.pointerId, local(e));
+    if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; loupe.hidden = true; g = { kind: 'pinch', d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, m0: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, z0: z, t0: { x: tx, y: ty } }; return; }
+    if (ptrs.size > 2) return;
+    const p = local(e);
+    if (mode === 'move' || spaceDown || e.button === 1 || e.button === 2) { g = { kind: 'pan', p0: p, t0: { x: tx, y: ty } }; stage.style.cursor = 'grabbing'; return; }
+    if (mode === 'box') { const pp = toPic(e.clientX, e.clientY); const px = Math.round(Math.min(1, Math.max(0, pp.fx)) * cv.width), py = Math.round(Math.min(1, Math.max(0, pp.fy)) * cv.height); sel = { x0: px, y0: py, x1: px, y1: py }; g = { kind: 'box' }; drawBox(); return; }
+    g = { kind: 'pick' }; pickFromEvent(e); });
+  stage.addEventListener('pointermove', e => { if (!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId, local(e)); if (!g) return;
+    if (g.kind === 'pinch' && ptrs.size >= 2) { const [a, b] = [...ptrs.values()], dd = Math.hypot(a.x - b.x, a.y - b.y), m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, nz = Math.min(12, Math.max(1, g.z0 * dd / g.d0));
+      tx = m.x - (g.m0.x - g.t0.x) * (nz / g.z0); ty = m.y - (g.m0.y - g.t0.y) * (nz / g.z0); z = nz; applyT(); return; }
+    if (g.kind === 'pan') { const p = local(e); tx = g.t0.x + p.x - g.p0.x; ty = g.t0.y + p.y - g.p0.y; applyT(); return; }
+    if (g.kind === 'box') { const pp = toPic(e.clientX, e.clientY); sel.x1 = Math.round(Math.min(1, Math.max(0, pp.fx)) * cv.width); sel.y1 = Math.round(Math.min(1, Math.max(0, pp.fy)) * cv.height); drawBox(); return; }
+    if (g.kind === 'pick') pickFromEvent(e); });
+  const endPtr = e => { if (!ptrs.has(e.pointerId)) return; ptrs.delete(e.pointerId); if (!g) return;
+    if (g.kind === 'pinch') { if (!ptrs.size) g = null; return; }
+    if (g.kind === 'box') { if (Math.abs(sel.x1 - sel.x0) < 3 || Math.abs(sel.y1 - sel.y0) < 3) { sel = null; drawBox(); } else showPalette(); }
+    if (g.kind === 'pan') setMode(mode);
+    if (g.kind === 'pick') { drawArea(); setTimeout(() => { if (!g) loupe.hidden = true; }, 900); }
+    g = null; };
+  stage.addEventListener('pointerup', endPtr); stage.addEventListener('pointercancel', endPtr);
+  window.addEventListener('resize', () => { if (d.isConnected) applyT(); });
+  const texBox = q('.pp-tex'); if (texBox) texBox.onchange = () => { texOn = texBox.checked; q('.pp-sizes').hidden = !texOn; q('[data-pp="use"]').textContent = texOn ? 'Use color + texture' : 'Use this color'; drawArea(); };
+  d.addEventListener('click', e => { const a = e.target.closest('[data-pp]'); if (a && a.dataset.pp === 'close') return close();
+    if (a && a.dataset.pp === 'use' && hex) { const h = hex, t = texOn ? tex : ''; close(); onPick(h, t); return; }
+    if (a && a.dataset.pp === 'pal') { pal.hidden && !pal.innerHTML.includes('pp-pc') ? showPalette() : (pal.hidden = !pal.hidden); if (!pal.hidden) showPalette(); return; }
+    if (a && a.dataset.pp === 'unbox') { sel = null; drawBox(); showPalette(); return; }
+    const pc = e.target.closest('[data-pphex]'); if (pc) { setHex(pc.dataset.pphex); d.querySelectorAll('.pp-pc').forEach(b => b.classList.toggle('on', b === pc)); return; }
+    const md = e.target.closest('[data-ppmode]'); if (md) { setMode(md.dataset.ppmode); return; }
+    const zb = e.target.closest('[data-ppz]'); if (zb) { if (zb.dataset.ppz === 'fit') { z = 1; tx = ty = 0; applyT(); } else zoomMid(zb.dataset.ppz === 'in' ? 1.5 : 1 / 1.5); return; }
+    const sp = e.target.closest('[data-ppsamp]'); if (sp) { rad = +sp.dataset.ppsamp; d.querySelectorAll('[data-ppsamp]').forEach(b => b.classList.toggle('on', b === sp)); if (last) sampleAt(last.px, last.py); return; }
+    const nb = e.target.closest('[data-ppn]'); if (nb && last) { const [dx, dy] = nb.dataset.ppn.split(',').map(Number); sampleAt(last.px + dx, last.py + dy); return; }
     const sz = e.target.closest('[data-ppsize]'); if (sz) { size = sz.dataset.ppsize; d.querySelectorAll('[data-ppsize]').forEach(b => b.classList.toggle('on', b === sz)); drawArea(); }
     const th = e.target.closest('.pp-th'); if (th) show(+th.dataset.i); });
-  pickerSources(type, id).then(list => { srcs = list; const strip = d.querySelector('.pp-strip');
+  pickerSources(type, id).then(list => { srcs = list; const strip = q('.pp-strip');
     if (!list.length) { msg.textContent = 'This item has no pictures yet. Add a photo (or read its product page) and try again.'; return; }
     strip.innerHTML = list.map((s, i) => `<button type="button" class="pp-th" data-i="${i}" title="${esc(s.label)}"><img src="${esc(s.thumb)}" alt="" referrerpolicy="no-referrer" loading="lazy"><span>${esc(s.label)}</span></button>`).join('');
-    show(0); });
+    strip.hidden = list.length < 2; show(0); });   // v0.109.0: no strip for a single picture
 }
 function pickerContext() { const m = /^#\/(keyboards|switches|keycaps|pcbs|artisans|accessories)\/([^/?]+)/.exec(location.hash); return m && m[2] !== 'new' ? { type: m[1], id: m[2] } : null; }
 
@@ -2127,8 +2232,10 @@ const HELP = [
     s: ['Catalog → GMK reference (private) → "Add GMK sets from a shop…" → shop address (oblotzky.industries is filled in) → Read the shop.', 'Sets not in your catalog yet are ticked; sets Matrix already has (also when the shop writes "2" or "II" where Matrix writes "R2") can be ticked to add the shop\'s link, prices and the kit pictures Matrix lacks. Add ticked sets.', 'They are saved only in your private Firebase catalog, marked "shop". Oblotzky prices stay in € and are not used as US retail prices. Link your sets to them on the GMK reference card as usual. Read the shop again later to refresh.', 'The shop must be on your approved list (Settings → Product page reader).'], go: '#/catalog/shop' },
   { id: 'gmk', t: 'GMK catalog and Matrix pages', g: 'Keycaps', ctx: ['keycaps', 'catalog'], k: 'gmk catalog matrix link fill from catalog reference group buy colors codes pictures old photos',
     s: ['Keycap set → GMK reference card: suggested catalog sets, or search; link it, then Save.', 'Linking a set that has old Keycap Collection photos switches "Kit pictures" (on the card) to "GMK catalog pictures first"; your old photos stay as extra pictures on each kit. Switch it back on the card if you prefer them.', '"Fill from catalog" fills empty fields and the catalog colors.', 'A Matrix page link in the reader builds the set from the private catalog.'], go: '#/catalog' },
+  { id: 'picpick', t: 'Pick a color from a picture (zoom, magnifier, main colors)', g: 'Pictures', ctx: ['keycaps', 'keyboards', 'switches', 'pcbs', 'artisans', 'accessories'], k: 'pick color picture photo eyedropper zoom magnify magnifier small tiny thin legend housing trim stem precise exact pixel main colors palette swatch box sample size shine shadow',
+    s: ['Open it from a palette color\'s swatch ("Pick from a picture"), a keyboard Colorway row, or the color wheel. Choose a picture in the strip at the bottom.', 'Zoom in on small parts (a legend, a switch housing, a trim): mouse wheel, pinch with two fingers, or the + / − buttons (up to 1200%). Fit goes back. To move the zoomed picture: ✋ Move, two fingers, right-drag, or hold the space bar and drag.', '✚ Pick: tap or drag. The magnifier above your finger shows the pixels with a crosshair and the color. ◀ ▲ ▼ ▶ (or the arrow keys) move the spot one pixel at a time.', 'Sample: Exact = the one pixel; Small (3×3) and Medium (7×7) leave out the brightest and darkest pixels, so shine, shadows and edges don\'t change the color. Small is the default.', '🎨 Main colors lists the picture\'s main colors as swatches; tap one to use it. ▭ Box: draw a box around one part (one keycap, the top housing) to see only its colors.', 'Use this color fills the hex. Pictures from websites that don\'t allow reading colors can\'t be picked from: use your own photo, or Keep a copy of the shop picture.'], go: '#/keycaps' },
   { id: 'colors', t: 'Colors: palette, color wheel, textures', g: 'Keycaps', ctx: ['keycaps'], k: 'colors colour palette wheel hex pick from picture texture gmk code ral classic design pantone eyedropper color name purple blue wrong',
-    s: ['Keycap set → Colors tab: + Add color, roles (Alpha, Modifier…), hex, GMK code, RAL, Pantone.', 'Type a GMK, RAL (Design like 240 50 25 or Classic like 9001) or Pantone code into an empty color and its hex fills in. A Pantone code with no known hex says so: use "Pick from a picture" or type the hex, and the app remembers it for that code.', '"Pick from a picture" takes a color from any of its pictures, with an optional texture sample.', 'A GMK set fills the nearest GMK code; names (now with more purples) are filled automatically until you type one.'], go: '#/keycaps' },
+    s: ['Keycap set → Colors tab: + Add color, roles (Alpha, Modifier…), hex, GMK code, RAL, Pantone.', 'Type a GMK, RAL (Design like 240 50 25 or Classic like 9001) or Pantone code into an empty color and its hex fills in. A Pantone code with no known hex says so: use "Pick from a picture" or type the hex, and the app remembers it for that code.', '"Pick from a picture" takes a color from any of its pictures, with an optional texture sample (zoom, magnifier and main colors: see "Pick a color from a picture").', 'A GMK set fills the nearest GMK code; names (now with more purples) are filled automatically until you type one.'], go: '#/keycaps' },
 
   // ---------- Other lists ----------
   { id: 'categories', t: 'Accessory categories and sub-categories', g: 'Other lists', ctx: ['accessories', 'pcbs', 'deskmats'], k: 'category sub-category foam case cstm alt weights plate cable deskmat pcb components daughterboard',
