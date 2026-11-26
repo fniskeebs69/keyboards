@@ -143,6 +143,10 @@
   .fav.on { color: var(--kb); border-color: color-mix(in srgb, var(--kb) 50%, var(--line)); }
   .badge { position: absolute; top: 12px; left: 12px; }
   .addmenu { position: absolute; z-index: 60; padding: 6px; display: grid; gap: 2px; box-shadow: 0 12px 32px rgba(0,0,0,.35); } .addmenu a { display: grid; gap: 2px; padding: 9px 10px; border-radius: var(--radius-s); color: var(--text); text-decoration: none; } .addmenu a:hover, .addmenu a:focus-visible { background: var(--bg-2); } .addmenu a span { font-size: 12.5px; color: var(--text-2); }
+  .k-pic { width: 46px; height: 36px; padding: 0; border-radius: 6px; border: var(--bw) var(--bs) var(--line-2); background: var(--bg); color: var(--text-3); cursor: pointer; overflow: hidden; display: grid; place-items: center; font-size: 15px; } .k-pic img { width: 100%; height: 100%; object-fit: cover; display: block; } .k-pic:hover { border-color: var(--kc); }
+  .kpgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; max-height: 52vh; overflow-y: auto; padding: 2px; }
+  .kpt { display: grid; gap: 4px; padding: 4px; border-radius: 8px; border: 2px solid transparent; background: var(--bg-2); color: var(--text-2); font: inherit; font-size: 11.5px; text-align: left; cursor: pointer; } .kpt img { width: 100%; aspect-ratio: 4/3; object-fit: contain; background: #fff; border-radius: 5px; } .kpt span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kpt.on { border-color: rgba(34,197,94,.6); } .kpt.sel { border-color: var(--kc); box-shadow: 0 0 0 2px var(--kc); } .kpt.bad { display: none; }
   .kownt { display: inline-flex; align-items: center; flex: none; cursor: pointer; user-select: none; } .kownt input { position: absolute; opacity: 0; pointer-events: none; }
   .kown-on, .kown-off { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; white-space: nowrap; } .kown-on { background: rgba(34,197,94,.16); color: #22c55e; border: 1px solid rgba(34,197,94,.55); } .kown-off { background: rgba(127,127,127,.12); color: var(--text-3); border: 1px dashed var(--line-2); }
   .kownt input:checked ~ .kown-off, .kownt input:not(:checked) ~ .kown-on { display: none; } .kownt input:focus-visible ~ span { outline: 2px solid var(--kc); outline-offset: 2px; }
@@ -398,8 +402,8 @@
   .aadd .select { grid-column: 1 / -1; }
   .aadd .select, .aadd .input { padding: 7px 8px; font-size: 12.5px; min-width: 0; }
   .kit { border: var(--bw) var(--bs) var(--line); border-radius: var(--radius-s); padding: 10px; background: var(--bg-2); margin-bottom: 10px; }
-  .kit-top { display: grid; grid-template-columns: auto 1fr 170px 70px auto; gap: 8px; align-items: center; } .kit-top > * { min-width: 0; }
-  @media (max-width: 700px) { .kit-top { grid-template-columns: auto 1fr 64px auto; } .kit-top .k-name { grid-column: 1 / -1; order: -1; } .kit-grid { grid-template-columns: 1fr 1fr !important; } .kit-grid > * { min-width: 0; } .kit-grid .input, .kit-grid .select { width: 100%; min-width: 0; box-sizing: border-box; } }
+  .kit-top { display: grid; grid-template-columns: auto auto 1fr 170px 70px auto; gap: 8px; align-items: center; } .kit-top > * { min-width: 0; }
+  @media (max-width: 700px) { .kit-top { grid-template-columns: 46px auto 1fr 52px; grid-template-areas: 'name name name del' 'pic own type qty'; } .kit-top .k-name { grid-area: name; } .kit-top .k-del { grid-area: del; justify-self: end; } .kit-top .k-pic { grid-area: pic; } .kit-top .kownt { grid-area: own; } .kit-top .k-type { grid-area: type; } .kit-top .k-qty { grid-area: qty; } .kit-grid { grid-template-columns: 1fr 1fr !important; } .kit-grid > * { min-width: 0; } .kit-grid .input, .kit-grid .select { width: 100%; min-width: 0; box-sizing: border-box; } }
   .kit .bad { border-color: var(--bad) !important; }
   .kit-more summary { cursor: pointer; font-size: 12.5px; color: var(--text-2); margin-top: 8px; }
   .kit-more .k-total { color: var(--text); font-weight: 650; font-variant-numeric: tabular-nums; }
@@ -698,7 +702,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.113.0';
+const APP_VERSION = 'v0.114.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -2306,8 +2310,8 @@ const HELP = [
     s: ['Menu → ▸ next to Switches shows "Switch parts" (films, springs, stems, housings).', 'Switch pads are Foam (Accessories), lube is Lube & Tools.'], go: '#/switchparts' },
 
   // ---------- Keycaps ----------
-  { id: 'kits', t: 'Keycap kits (add, not owned, types)', g: 'Keycaps', ctx: ['keycaps'], k: 'kit kits base novelties spacebars alphas not owned own add kit type quantity came with keyboard bundle included free',
-    s: ['Keycap set → Kits tab: + Add kit, name, kit type, quantity and its own purchase details.', 'Each kit has a switch at the top: green "✓ Owned" or grey "Not owned" (click to change, then Save). Not-owned kits stay in the set, greyed in the Kit gallery and not counted as yours.', '✕ on a kit asks: "Mark as not owned (keep it in the set)" or "Delete it from this set".', 'For a set linked to the GMK catalog, the Kits tab and the Summary also list the catalog\'s kits you have no record of, as not owned; "I own it" adds one. Your kits show in green on the Summary.', 'Reading a keycap page with several kits: each kit line has the same Owned / Not owned switch, and "mark all ✓ Owned / Not owned" above the lines.', 'A kit that came with a keyboard (its price is in the keyboard\'s): open Purchase details → "Came with keyboard" and pick the keyboard. The set\'s Summary shows "Came with", and the keyboard\'s Summary lists the kit.', 'Kit gallery shows every kit as a picture; click one for details.'], go: '#/keycaps' },
+  { id: 'kits', t: 'Keycap kits (add, not owned, types)', g: 'Keycaps', ctx: ['keycaps'], k: 'kit kits base novelties spacebars alphas not owned own add kit type quantity came with keyboard bundle included free wrong picture change picture swap kit picture',
+    s: ['Keycap set → Kits tab: + Add kit, name, kit type, quantity and its own purchase details.', 'Each kit has a switch at the top: green "✓ Owned" or grey "Not owned" (click to change, then Save). Not-owned kits stay in the set, greyed in the Kit gallery and not counted as yours.', '✕ on a kit asks: "Mark as not owned (keep it in the set)" or "Delete it from this set".', 'Wrong picture on a kit (a shop mixed them up)? Click the small picture at the start of the kit on the Kits tab, or Kit gallery → the kit → "Change picture…": pick any picture of the set (other kits\' pictures, shop pictures, your photos, catalog), or paste a picture link, then "Use this picture". When you pick another kit\'s picture, "Swap" gives that kit this one\'s old picture. "No picture" clears it. Saved straight away.', 'For a set linked to the GMK catalog, the Kits tab and the Summary also list the catalog\'s kits you have no record of, as not owned; "I own it" adds one. Your kits show in green on the Summary.', 'Reading a keycap page with several kits: each kit line has the same Owned / Not owned switch, and "mark all ✓ Owned / Not owned" above the lines.', 'A kit that came with a keyboard (its price is in the keyboard\'s): open Purchase details → "Came with keyboard" and pick the keyboard. The set\'s Summary shows "Came with", and the keyboard\'s Summary lists the kit.', 'Kit gallery shows every kit as a picture; click one for details.'], go: '#/keycaps' },
   { id: 'splitbases', t: 'Show each base as its own card (two bases in one set)', g: 'Keycaps', ctx: ['keycaps'], k: 'split base bases two bases light dark separate card each base analog dreams digital nightmares duplicate shared kits gallery summary not owned grey greyed gray choose',
     s: ['For a set with two or more bases (a light and a dark base, say), also when you own only one of them. Open the set → Summary → tick "Show each base as its own card". When the set has only one base you own, the Summary shows "Another base in this set? Show each base as its own card…" instead.', 'Under "Choose the bases", tick the kits that are bases: your kits, kits you marked not owned, and the GMK catalog\'s kits you don\'t have (GMK Analog Dreams: tick Analog Dreams next to your Digital Nightmares). At least two, one of them yours. Without a choice, kits of type Base, Alphas or Full set (or "Base" in the name) are the bases.', 'A base you don\'t own shows greyed with "Not owned" on its gallery card, like kits you don\'t own in the Kit gallery: point at it to see it in color. Once you open it, its pictures are in color, with a "Not owned" tag.', 'The Keycaps gallery then shows one card per base, named "Set: Base", with that base\'s picture. Your other kits (novelties, spacebars…) are shared by every base card.', 'On the set\'s Summary, the buttons at the top switch between the bases: the name, the pictures and the kit list follow the base you pick. Your other base is greyed in the kit list.', 'Nothing is copied: it is still one set, so cost, count and totals are counted once. The checkbox "Show each base as its own card" on the Keycaps gallery turns it off or on for every set at once.'], go: '#/keycaps' },
   { id: 'completion', t: 'Completion and missing kits', g: 'Keycaps', ctx: ['keycaps'], k: 'completion complete missing kits percent bar wishlist gmk',
@@ -3791,6 +3795,7 @@ function kitRowHtml(k, i) {
   const val = v => v != null ? esc(String(v)) : '';
   return `<div class="kit ${k.notOwned ? 'kit-no' : 'kit-own'}" data-kit="${esc(k.id)}">
     <div class="kit-top">
+      <button type="button" class="k-pic" title="Change this kit's picture">📷</button>
       <label class="kownt" title="Owned: you have this kit. Not owned: it stays in the set (greyed in the Kit gallery) but doesn't count as yours. Click Save to keep the change."><input type="checkbox" class="k-owned"${k.notOwned ? '' : ' checked'}><span class="kown-on">✓ Owned</span><span class="kown-off">Not owned</span></label>
       <input class="input k-name" placeholder="Kit name, e.g. Base kit" value="${val(k.name)}" aria-label="Kit name">
       <select class="select k-type" aria-label="Kit type"><option value="">Kit type</option>${KIT_TYPES.concat(k.kitType && !KIT_TYPES.includes(k.kitType) ? [k.kitType] : []).map(t => `<option${t === k.kitType ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select>
@@ -3961,6 +3966,10 @@ function renderKeycapForm(s = null) {
   };
   document.getElementById('kitList').addEventListener('change', e => { const o = e.target.closest('.k-owned'); if (!o) return; const r = o.closest('.kit'); r.classList.toggle('kit-own', o.checked); r.classList.toggle('kit-no', !o.checked); drawOtherKits(); });
   document.getElementById('kitList').addEventListener('click', async e => {
+    const kp = e.target.closest('.k-pic'); if (kp) { const r = kp.closest('.kit'), n = r.querySelector('.k-name').value.trim();   // v0.114.0
+      if (!s || !s.id) { toast('Save the set first, then pick its kit pictures'); return; } if (!n) { toast('Name the kit first'); return; }
+      if (formDirty && !savedKeycaps.find(x => x.id === s.id)?.kits?.some(k => kitKey(k.name) === kitKey(n))) { toast('Save the set first: this kit is not saved yet'); return; }
+      kitPicDialog(s.id, n, () => { kitThumbsRefresh(); drawKitGallery(savedKeycaps.find(x => x.id === s.id) || s); }); return; }
     const d = e.target.closest('.k-del'); if (!d) return;
     const row = d.closest('.kit'), name = row.querySelector('.k-name').value.trim(), own = row.querySelector('.k-owned');
     if (name) {   // v0.113.0: ✕ asks first whether the kit should only be marked not owned (kept in the set) or really deleted
@@ -3970,7 +3979,7 @@ function renderKeycapForm(s = null) {
       if (a === 'notown') { own.checked = false; own.dispatchEvent(new Event('change', { bubbles: true })); markDirty(); toast('Marked as not owned. Click Save to keep it.'); return; } }
     row.remove(); kitCountUpdate(); updateSetTotal(); markDirty(); drawOtherKits();
   });
-  document.getElementById('btnSave').onclick = saveKeycapSet; drawOtherKits();
+  document.getElementById('btnSave').onclick = saveKeycapSet; drawOtherKits(); setTimeout(kitThumbsRefresh, 0);
   document.getElementById('otherKits').addEventListener('click', e => { const b = e.target.closest('[data-okadd]'); if (!b) return;   // v0.113.0
     document.getElementById('addKit').click(); const rows = document.querySelectorAll('#kitList .kit'), row = rows[rows.length - 1], inp = row.querySelector('.k-name'), ck = (catKitsNotListed().find(c => kitKey(c.name) === b.dataset.okadd) || {});
     inp.value = ck.name || b.dataset.okname; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true }));
@@ -5738,6 +5747,58 @@ function drawKitGallery(s) {
     });
   }
 }
+/* v0.114.0 (Faraz Nov 26, Infinikey Musubi: Milktooth shows the wrong pictures on some kits): "Change picture…" for any kit of a set.
+   Shows every picture known for the set (each kit's current picture, the shop's pictures, your photos, Keycap Collection app and catalog
+   pictures) plus a pasted link; the one you pick becomes that kit's picture everywhere (kitPicPick for links, kitStock for your photos;
+   a kit read from a shop also gets it as its shop picture, so the Summary carousel names it right). "Swap" gives the other kit this kit's
+   old picture, for pictures a shop put on the wrong kits. "No picture" clears the kit's chosen and shop pictures. Saved straight away. */
+function kitPicNow(live, name) { const k = kitKey(name); let hit = null; try { const pics = kitPicsOf(live); hit = pics.find(p => kitKey(p.name) === k); if (!hit) for (const [p] of pairKits([{ name }], pics, live.kitLinks || {})) { hit = p; break; } } catch (e) {} return hit ? hit.url : ''; }
+function kitPicDialog(sid, kitName, onDone) {
+  const live = () => savedKeycaps.find(x => x.id === sid) || editing || {}, s0 = live(), key = kitKey(kitName), cur = kitPicNow(s0, kitName);
+  const tiles = [], seen = new Set(), add = (url, label, from) => { if (!url) return; const k = /^data:/.test(url) ? url.slice(-64) : picKey(url); if (seen.has(k)) return; seen.add(k); tiles.push({ url, label, from }); };
+  let names = []; try { names = kitGalleryTiles(s0).tiles.map(t => t.name); } catch (e) {} names = [...new Set(names.concat(kitsOf(s0).map(k => k.name)).filter(Boolean))];
+  names.forEach(n => add(kitPicNow(s0, n), `${n}'s picture now`, { kit: n }));
+  kitsOf(s0).forEach(k => add(k.refImage, `Shop picture saved on ${k.name}`, {}));
+  [s0.refImage, ...(s0.refImages || [])].forEach((u, i) => add(u, `Shop picture ${i + 1}`, {}));
+  (s0.kitPhotos || []).forEach(p => add(p.url, `${p.name} (Keycap Collection app)`, {}));
+  const ref = s0.gmkRef && gmkSets && gmkSets.find(x => x.id === s0.gmkRef); if (ref) (ref.kits || []).forEach(ck => add(ck.img, `${ck.name} (GMK catalog)`, {}));
+  (photoType === 'keycaps' ? currentPhotos.filter(p => p.itemId === sid) : []).forEach(p => add(p.thumb, `Your photo${p.fileName ? ': ' + p.fileName : ''}`, { photoId: p.id }));
+  const d = document.createElement('div'); d.className = 'gdlg'; d.id = 'kitPicDlg';
+  d.innerHTML = `<div class="card kv-card" style="max-width:760px"><div class="sec-title"><h3>Picture for “${esc(kitName)}”</h3><button class="btn" data-x>✕</button></div>
+    <p class="sub" style="margin:0 0 10px">Pick the right picture. It is used for this kit everywhere (Kit gallery, card, Summary, Main picture). Your photos appear here once added in Photos.</p>
+    <div class="kpgrid">${tiles.map((t, i) => `<button type="button" class="kpt${t.url === cur ? ' on' : ''}" data-kpi="${i}" title="${esc(t.label)}"><img src="${t.url.startsWith('data:') ? t.url : esc(t.url)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('.kpt').classList.add('bad')"><span>${t.url === cur ? '✓ Now · ' : ''}${esc(t.label)}</span></button>`).join('') || '<p class="sub">No pictures known for this set yet.</p>'}</div>
+    <div class="fld" style="margin-top:12px"><label for="kpLink">Or paste a picture link</label><div style="display:flex;gap:8px"><input class="input" id="kpLink" placeholder="https://… (right-click a picture on a website → Copy image address)"><button type="button" class="btn" id="kpLinkGo">Use this link</button></div></div>
+    <label class="check" id="kpSwapRow" style="display:none;margin-top:10px"><input type="checkbox" id="kpSwap" checked> <span id="kpSwapTxt"></span></label>
+    <div class="btnrow" style="margin-top:12px"><button class="btn primary" id="kpSave" disabled>Use this picture</button><button class="btn" id="kpNone" title="This kit shows no picture until you pick one">No picture</button><button class="btn" data-x>Cancel</button></div><p class="sub" id="kpMsg" style="margin:6px 0 0"></p></div>`;
+  document.body.appendChild(d); let pick = null;
+  const choose = t => { pick = t; d.querySelectorAll('.kpt').forEach(b => b.classList.toggle('sel', tiles[+b.dataset.kpi] === t)); d.querySelector('#kpSave').disabled = !t;
+    const other = t && t.from.kit && kitKey(t.from.kit) !== key ? t.from.kit : ''; d.querySelector('#kpSwapRow').style.display = other && cur ? 'flex' : 'none';
+    d.querySelector('#kpSwapTxt').textContent = other ? `Swap: give “${other}” this kit's current picture (for pictures a shop put on the wrong kits)` : ''; d.dataset.other = other; };
+  const apply = async (url, photoId, none) => {
+    const s = live(), del = firebase.firestore.FieldValue.delete(), P = Object.assign({}, s.kitPicPick || {}), st = (s.kitStock || []).slice(), kits = kitsOf(s).map(k => Object.assign({}, k));
+    const setFor = (name, u, pid) => { const k = kitKey(name); delete P[k]; for (let i = st.length - 1; i >= 0; i--) if (st[i].key === k) st.splice(i, 1);
+      const kit = kits.find(x => kitKey(x.name) === k);
+      if (pid) st.push({ key: k, name, photoId: pid }); else if (u && /^https?:/i.test(u)) P[k] = { name, url: u };
+      if (kit) { if (u && /^https?:/i.test(u) && !pid) kit.refImage = u; else if (none || pid) delete kit.refImage; } };
+    const other = !none && d.dataset.other && d.querySelector('#kpSwap').checked ? d.dataset.other : '';
+    const oldStock = (s.kitStock || []).find(e => e.key === key);
+    setFor(kitName, url, photoId, none);
+    if (other) { if (oldStock) { setFor(other, '', oldStock.photoId); } else setFor(other, cur, ''); }
+    const slim = st.map(e => ({ key: e.key, name: e.name, photoId: e.photoId })), cover = kitStockCoverOf(st);
+    try { await withTimeout(kcCol().doc(sid).update({ kitPicPick: Object.keys(P).length ? P : del, kitStock: slim.length ? slim : del, kitStockCover: cover || del, kits, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }));
+      toast(none ? `No picture for ${kitName}` : other ? `Pictures swapped: ${kitName} ⇄ ${other}` : `Picture set for ${kitName}`); d.remove(); if (onDone) setTimeout(onDone, 350); }
+    catch (e) { d.querySelector('#kpMsg').textContent = 'Not saved: ' + explain(e); } };
+  d.onclick = async e => { if (e.target === d || e.target.closest('[data-x]')) { d.remove(); return; }
+    const b = e.target.closest('[data-kpi]'); if (b) { choose(tiles[+b.dataset.kpi]); return; }
+    if (e.target.id === 'kpLinkGo') { const u = d.querySelector('#kpLink').value.trim(); if (!/^https?:\/\/\S+$/i.test(u)) { d.querySelector('#kpMsg').textContent = 'Paste a picture link starting with https://'; return; } choose(null); pick = { url: u, from: {} }; d.querySelector('#kpSave').disabled = false; d.querySelector('#kpMsg').textContent = 'Link ready: Use this picture to save it.'; return; }
+    if (e.target.id === 'kpSave' && pick) { apply(pick.url, pick.from.photoId || '', false); return; }
+    if (e.target.id === 'kpNone') { if (await askConfirm(`Show no picture for “${kitName}”? Its chosen and shop pictures are cleared (pictures from the catalog or the Keycap Collection app still show if it has one).`, { ok: 'No picture' })) apply('', '', true); } };
+}
+function kitThumbsRefresh() {   // the small pictures at the start of each kit row on the Kits tab
+  const s = editing && savedKeycaps.find(x => x.id === editing.id); if (!s) return;
+  document.querySelectorAll('#kitList .kit').forEach(r => { const b = r.querySelector('.k-pic'); if (!b) return; const n = r.querySelector('.k-name').value.trim(), u = n ? kitPicNow(s, n) : '';
+    b.innerHTML = u ? `<img src="${u.startsWith('data:') ? u : esc(u)}" alt="" referrerpolicy="no-referrer">` : '📷'; b.title = n ? `Change the picture of ${n}` : 'Name the kit first'; });
+}
 function openKitView(s, t) {
   if (!t) return; const d = document.createElement('div'); d.className = 'gdlg'; d.id = 'kitView';
   const imgs = [t.img, ...(t.more || [])].filter(Boolean);
@@ -5755,7 +5816,7 @@ function openKitView(s, t) {
         <p class="sub" style="margin:0;flex-basis:100%">Kit type decides which picture "Main picture: Novelties" (Base, Spacebars, Numpads) uses. These go to the Kits tab: Save the set to keep them.</p></div>`; })()}
     <div class="btnrow" style="margin-top:12px">
       ${t.owned ? '<button class="btn" id="kvShow">Show in Kits tab</button><button class="btn" id="kvUnown" title="Marks this kit as not owned; click Save to keep it">I don’t own this kit</button>' : `<button class="btn primary" id="kvOwn" title="Adds this kit to the Kits tab; click Save to keep it">I own this kit</button>${s ? (onWish ? '<span class="chip">On wishlist</span>' : '<button class="btn" id="kvWish">+ Wishlist</button>') : ''}`}
-      ${imgs.length ? `<button class="btn" id="kvDl" title="Download the picture you are looking at to this device">⬇ Download</button>` : ''}${s && s.id && imgs.length ? `<button class="btn" id="kvKeep" title="Keep a copy of the picture you are looking at in this set's photos (uses storage)">Keep in my photos</button>` : ''}
+      ${s && s.id ? `<button class="btn" id="kvChange" title="Pick another picture for this kit, paste a link, or swap pictures with another kit">Change picture…</button>` : ''}${imgs.length ? `<button class="btn" id="kvDl" title="Download the picture you are looking at to this device">⬇ Download</button>` : ''}${s && s.id && imgs.length ? `<button class="btn" id="kvKeep" title="Keep a copy of the picture you are looking at in this set's photos (uses storage)">Keep in my photos</button>` : ''}
       ${s && s.id && imgs.length > 1 ? `<button class="btn" id="kvPick" title="Show the picture you are looking at for this kit everywhere (card, Summary, gallery)">Use this picture for this kit</button>` : ''}${s && s.id && t.picked ? '<button class="btn" id="kvPickOff" title="Go back to the automatic picture for this kit">★ Chosen picture · stop using</button>' : ''}
       ${t.img && s && s.id ? (kitKey((savedKeycaps.find(x => x.id === s.id) || s).coverKit || '') === kitKey(t.name) ? '<button class="btn" id="kvMainOff" title="Go back to the set\'s usual picture">★ Main picture · stop using</button>' : '<button class="btn" id="kvMainOn" title="Show this kit\'s picture for the set in the Keycaps gallery and on the Summary">Use as main picture</button>') : ''}
       <span style="margin-left:auto">${matrixLinkHtml(t.cat ? gmkSets.find(x => x.id === document.getElementById('f_gmkRef').value) : null)}</span></div></div>`;
@@ -5770,6 +5831,7 @@ function openKitView(s, t) {
     if (e.target === d || e.target.closest('[data-x]')) { d.remove(); return; }
     const th = e.target.closest('[data-kvi]'); if (th) { document.getElementById('kvMain').src = imgs[+th.dataset.kvi]; d.dataset.cur = th.dataset.kvi; return; }
     if (e.target.id === 'kvMain') { openLightbox(imgs.map(u => ({ src: u, full: u, cap: t.name })), +(d.dataset.cur || 0), i => { d.dataset.cur = i; const m = document.getElementById('kvMain'); if (m) m.src = imgs[i]; }, s && s.id ? { type: 'keycaps', id: s.id, name: s.name } : null); return; }
+    if (e.target.id === 'kvChange') { d.remove(); kitPicDialog(s.id, t.name, () => { drawKitGallery(savedKeycaps.find(x => x.id === s.id) || s); kitThumbsRefresh(); }); return; }   // v0.114.0
     if (e.target.id === 'kvDl') { downloadPicture(imgs[+(d.dataset.cur || 0)], `${s && s.name ? s.name + ' - ' : ''}${t.name}`); return; }   // v0.112.0
     if (e.target.id === 'kvKeep') { const b = e.target; b.disabled = true; if (await keepPicture('keycaps', s.id, imgs[+(d.dataset.cur || 0)], t.name)) { b.textContent = '✓ Kept'; } else b.disabled = false; return; }
     if (e.target.id === 'kvType' ) return;
