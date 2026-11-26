@@ -142,6 +142,13 @@
   .fav svg { width: 16px; height: 16px; }
   .fav.on { color: var(--kb); border-color: color-mix(in srgb, var(--kb) 50%, var(--line)); }
   .badge { position: absolute; top: 12px; left: 12px; }
+  .addmenu { position: absolute; z-index: 60; padding: 6px; display: grid; gap: 2px; box-shadow: 0 12px 32px rgba(0,0,0,.35); } .addmenu a { display: grid; gap: 2px; padding: 9px 10px; border-radius: var(--radius-s); color: var(--text); text-decoration: none; } .addmenu a:hover, .addmenu a:focus-visible { background: var(--bg-2); } .addmenu a span { font-size: 12.5px; color: var(--text-2); }
+  .kownt { display: inline-flex; align-items: center; flex: none; cursor: pointer; user-select: none; } .kownt input { position: absolute; opacity: 0; pointer-events: none; }
+  .kown-on, .kown-off { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; white-space: nowrap; } .kown-on { background: rgba(34,197,94,.16); color: #22c55e; border: 1px solid rgba(34,197,94,.55); } .kown-off { background: rgba(127,127,127,.12); color: var(--text-3); border: 1px dashed var(--line-2); }
+  .kownt input:checked ~ .kown-off, .kownt input:not(:checked) ~ .kown-on { display: none; } .kownt input:focus-visible ~ span { outline: 2px solid var(--kc); outline-offset: 2px; }
+  #kitList .kit.kit-own { border-left: 3px solid #22c55e; } #kitList .kit.kit-no { border-left: 3px dashed var(--line-2); } #kitList .kit.kit-no .k-name { color: var(--text-3); }
+  .okit { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 8px 10px; border: 1px dashed var(--line-2); border-radius: var(--radius-s); margin-bottom: 6px; opacity: .8; } .okit b { color: var(--text-2); font-weight: 600; }
+  .sumkits .kyes b { color: #22c55e; }
   .kfoot { display: flex; align-items: center; gap: 8px; margin-top: 10px; min-height: 30px; } .kfoot .badge { position: static; } .kfoot .fav { position: static; width: 30px; height: 30px; margin-left: auto; flex: none; }
   .pstrip .pmore { width: auto !important; min-width: 22px; padding: 0 6px; font-style: normal; font-size: 11px; font-weight: 600; display: inline-flex !important; align-items: center; justify-content: center; color: var(--text-2); background: var(--bg-2, rgba(127,127,127,.15)) !important; }
   .karr { position: absolute; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(0,0,0,.55); color: #fff; font-size: 22px; line-height: 1; display: grid; place-items: center; cursor: pointer; opacity: 0; transition: opacity .15s; z-index: 2; padding: 0 0 3px; }
@@ -324,6 +331,7 @@
   .pp-th { flex: none; width: 84px; background: none; border: 2px solid transparent; border-radius: 8px; padding: 2px; color: #bbb; font: inherit; font-size: 10.5px; cursor: pointer; text-align: center; }
   .pp-th.on { border-color: var(--kc); } .pp-th img { width: 76px; height: 57px; object-fit: cover; border-radius: 5px; display: block; background: #222; } .pp-th span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
   .pp-bar { display: flex; gap: 10px; align-items: center; padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); border-top: 1px solid #222; flex-wrap: wrap; }
+  #zbkDlg .zbkgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 2px 12px; } #zbkDlg .check { display: flex; gap: 8px; align-items: flex-start; margin: 3px 0; }
   .pp-tools { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; padding: 8px 12px; border-bottom: 1px solid #222; } .pp-tools .btn, .pp-tools .seg button { padding: 5px 10px; font-size: 13px; } .pp-zoom { display: inline-flex; gap: 4px; align-items: center; } .pp-zl { min-width: 46px; text-align: center; font-size: 12.5px; } .pp-nudge { display: inline-flex; gap: 4px; } .pp-nudge .btn { padding: 5px 9px; }
   .pp-img { transform-origin: 0 0; will-change: transform; }
   .pp-box { position: absolute; border: 2px solid #fff; outline: 1px dashed rgba(0,0,0,.8); background: rgba(255,255,255,.08); pointer-events: none; }
@@ -390,8 +398,8 @@
   .aadd .select { grid-column: 1 / -1; }
   .aadd .select, .aadd .input { padding: 7px 8px; font-size: 12.5px; min-width: 0; }
   .kit { border: var(--bw) var(--bs) var(--line); border-radius: var(--radius-s); padding: 10px; background: var(--bg-2); margin-bottom: 10px; }
-  .kit-top { display: grid; grid-template-columns: 1fr 170px 70px auto; gap: 8px; } .kit-top > * { min-width: 0; }
-  @media (max-width: 700px) { .kit-top { grid-template-columns: 1fr 64px auto; } .kit-top .k-name { grid-column: 1 / -1; } .kit-grid { grid-template-columns: 1fr 1fr !important; } .kit-grid > * { min-width: 0; } .kit-grid .input, .kit-grid .select { width: 100%; min-width: 0; box-sizing: border-box; } }
+  .kit-top { display: grid; grid-template-columns: auto 1fr 170px 70px auto; gap: 8px; align-items: center; } .kit-top > * { min-width: 0; }
+  @media (max-width: 700px) { .kit-top { grid-template-columns: auto 1fr 64px auto; } .kit-top .k-name { grid-column: 1 / -1; order: -1; } .kit-grid { grid-template-columns: 1fr 1fr !important; } .kit-grid > * { min-width: 0; } .kit-grid .input, .kit-grid .select { width: 100%; min-width: 0; box-sizing: border-box; } }
   .kit .bad { border-color: var(--bad) !important; }
   .kit-more summary { cursor: pointer; font-size: 12.5px; color: var(--text-2); margin-top: 8px; }
   .kit-more .k-total { color: var(--text); font-weight: 650; font-variant-numeric: tabular-nums; }
@@ -690,7 +698,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.110.0';
+const APP_VERSION = 'v0.113.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -882,6 +890,13 @@ function allKeyboards() { return savedKeyboards.concat(activeSamples()); }
 function sortDate(k) { return k.datePurchased || k.createdIso || ''; }
 
 /* Styled "Are you sure?" box (replaces the browser's own). Resolves true or false. Enter = yes, Esc = no. */
+function askChoice(msg, choices) {   // v0.113.0: a question with several answers; resolves to the chosen key, or null
+  return new Promise(res => { const d = document.createElement('div'); d.className = 'gdlg askdlg'; d.setAttribute('role', 'alertdialog'); d.setAttribute('aria-modal', 'true');
+    d.innerHTML = `<div class="card askcard"><p class="askmsg">${esc(msg).replace(/\n/g, '<br>')}</p><div class="btnrow" style="justify-content:flex-end;margin-top:16px;flex-wrap:wrap"><button class="btn" data-ac="">Cancel</button>${choices.map(([k, t, c]) => `<button class="btn ${c || ''}" data-ac="${esc(k)}">${esc(t)}</button>`).join('')}</div></div>`;
+    const done = v => { document.removeEventListener('keydown', key, true); d.remove(); res(v || null); }, key = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(null); } };
+    d.onclick = e => { const b = e.target.closest('[data-ac]'); if (e.target === d) done(null); else if (b) done(b.dataset.ac); };
+    document.addEventListener('keydown', key, true); document.body.appendChild(d); (d.querySelector('.btn.primary') || d.querySelector('[data-ac]')).focus(); });
+}
 function askConfirm(msg, o = {}) {
   return new Promise(res => {
     const danger = o.danger ?? /^(delete|remove|cancel and throw|sign out|unlink|restore|move )/i.test(msg);
@@ -1516,10 +1531,22 @@ document.addEventListener('click', e => {   // in select mode a click on a card 
   if (!selMode) return; const el = e.target.closest('#view a.kcard, #view tr.row[data-href]'); if (!el) return;
   e.preventDefault(); e.stopPropagation(); const id = idOfEl(el); if (!id) return; selIds.has(id) ? selIds.delete(id) : selIds.add(id); markSel(); drawSelBar();
 }, true);
+document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[data-addmenu]'); const open = document.getElementById('addMenu');
+  if (open && !e.target.closest('#addMenu')) open.remove(); if (!a) return; e.preventDefault(); if (open) return;
+  const r = a.getBoundingClientRect(), m = document.createElement('div'); m.id = 'addMenu'; m.setAttribute('role', 'menu'); m.className = 'card addmenu';
+  m.innerHTML = `<a role="menuitem" href="#/import/link"><b>🔗 From a webpage link</b><span>Paste a shop or catalog page: make a new entry, or choose “Add to an entry I have” to fill one you already have.</span></a>
+    <a role="menuitem" href="#/import"><b>📄 From a receipt (PDF)</b><span>Drop an order receipt: each line becomes a new entry or fills one you have.</span></a>
+    <a role="menuitem" href="${esc(a.dataset.addmenu)}"><b>✎ Enter it by hand</b><span>A blank new entry. To change one you have, open it from the list.</span></a>`;
+  document.body.appendChild(m); const w = Math.min(340, window.innerWidth - 16); m.style.width = w + 'px'; m.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + 'px'; m.style.top = (r.bottom + window.scrollY + 6) + 'px';
+  m.addEventListener('click', () => setTimeout(() => m.remove(), 0)); }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = document.getElementById('addMenu'); if (m) m.remove(); } });
+window.addEventListener('hashchange', () => { const m = document.getElementById('addMenu'); if (m) m.remove(); });
 function ensureListTools() {   // adds Select (list pages) and Duplicate (item pages) to the page header
   const tools = document.querySelector('#view .pagehead .tools'); if (!tools) return;
   const lt = listTypeNow();
-  if (lt && !document.getElementById('btnFromLink') && db && !isFile) { tools.insertAdjacentHTML('afterbegin', '<a class="btn" id="btnFromLink" href="#/import/link" title="Add from a shop\'s product page">From a link</a>'); }
+  const addA = lt && tools.querySelector('a.btn.primary[href$="/new"]:not([data-addmenu])');   // v0.113.0: one "Add or modify" button with a menu (link, receipt, by hand) instead of Add + From a link
+  if (addA) { const sec = SECTIONS.find(x => x.id === lt) || {}, noun = lt === 'keycaps' ? 'set' : sec.singular || 'entry'; addA.dataset.addmenu = addA.getAttribute('href');
+    addA.innerHTML = `${I.plus}Add or modify existing ${esc(noun)} ▾`; addA.title = 'New entry, or add to one you have: from a webpage link, a receipt, or by hand'; addA.setAttribute('aria-haspopup', 'menu'); }
   if (lt && !document.getElementById('btnSelect') && db && !isFile) { tools.insertAdjacentHTML('afterbegin', '<button class="btn" id="btnSelect" type="button" title="Pick several items to favorite, move or delete">Select</button>'); document.getElementById('btnSelect').onclick = () => setSelMode(!selMode); }
   if (selMode && lt === selType) { document.getElementById('view').classList.add('selmode'); markSel(); const b = document.getElementById('btnSelect'); if (b && b.textContent !== 'Done') { b.textContent = 'Done'; b.classList.add('primary'); } }
   const del = tools.querySelector('#btnDelete'), m = location.hash.match(/^#\/(\w+)\/([^/]+)$/);
@@ -1625,9 +1652,33 @@ function bulkEditDialog(t, ids) {
 /* coverFit { z: zoom 1–4, x, y: focus point 0–100, fit: 'contain' | undefined } frames the display picture on cards and the Summary */
 const coverSrcOf = (t, x) => t === 'keycaps' ? (kcMainSrc(x).src || '') : (x.coverThumb || x.stockThumb || x.refImage || '');
 function fitStyle(f) { if (!f) return ''; if (f.fit === 'contain') return 'object-fit:contain;object-position:50% 50%;transform:none;'; const x = f.x == null ? 50 : f.x, y = f.y == null ? 50 : f.y; return `object-fit:cover;object-position:${x}% ${y}%;transform:scale(${f.z || 1});transform-origin:${x}% ${y}%;`; }
+/* v0.111.0: plain bars baked into a picture (coverFit.trim) are left out by showing a trimmed display copy, coverTrimmed { of, src }
+   (WebP, at most 800 px wide), made when you Save; "of" says which picture it was made from, so a new display picture is never replaced by it. */
+const picKeyOf = src => src ? src.length + ':' + src.slice(-48) : '';
+const trimmedSrc = (x, src) => x && x.coverTrimmed && x.coverFit && x.coverFit.trim && x.coverTrimmed.of === picKeyOf(src) ? x.coverTrimmed.src : '';
+async function makeTrimmed(src, tr) {
+  const im = new Image(); if (!/^data:/.test(src)) im.crossOrigin = 'anonymous';
+  const ok = await new Promise(res => { im.onload = () => res(true); im.onerror = () => res(false); im.src = src; }); if (!ok) return '';
+  const W = im.naturalWidth, H = im.naturalHeight, sx = W * (tr.l || 0) / 100, sy = H * (tr.t || 0) / 100, sw = W * (1 - ((tr.l || 0) + (tr.r || 0)) / 100), sh = H * (1 - ((tr.t || 0) + (tr.b || 0)) / 100);
+  const k = Math.min(1, 800 / sw), c = document.createElement('canvas'); c.width = Math.max(1, Math.round(sw * k)); c.height = Math.max(1, Math.round(sh * k)); const x = c.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(im, sx, sy, sw, sh, 0, 0, c.width, c.height);
+  try { let u = c.toDataURL('image/webp', 0.85); if (!/^data:image\/webp/.test(u)) u = c.toDataURL('image/jpeg', 0.88); return u; } catch (e) { return ''; } }
+async function picData(src, maxW) {   // a small readable copy of a picture: { d, W, H } or null when its website doesn't allow reading it
+  const im = new Image(); if (!/^data:/.test(src)) im.crossOrigin = 'anonymous';
+  const ok = await new Promise(res => { im.onload = () => res(true); im.onerror = () => res(false); im.src = src; }); if (!ok || !im.naturalWidth) return null;
+  const c = document.createElement('canvas'), W = Math.min(maxW, im.naturalWidth), H = Math.max(4, Math.round(W * im.naturalHeight / im.naturalWidth)); c.width = W; c.height = H; const x = c.getContext('2d'); x.drawImage(im, 0, 0, W, H);
+  try { return { d: x.getImageData(0, 0, W, H).data, W, H }; } catch (e) { return null; } }
+async function plainBarsOf(src) {   // v0.111.0: plain bars baked into a picture (a kept shop picture fitted into 4:3 on white): { t, r, b, l } in %, or null
+  const p = await picData(src, 320); if (!p) return null; const { d, W, H } = p, at = (x, y) => (y * W + x) * 4;
+  const plainLine = (n, get, ref) => { let off = 0; for (let k = 0; k < n; k++) { const i = get(k); if (Math.max(Math.abs(d[i] - d[ref]), Math.abs(d[i + 1] - d[ref + 1]), Math.abs(d[i + 2] - d[ref + 2])) > 14) off++; } return off <= n * 0.02; };
+  const barColor = i => Math.min(d[i], d[i + 1], d[i + 2]) >= 236 || Math.max(d[i], d[i + 1], d[i + 2]) <= 22;   // only white or black bars (kept copies, letterboxing), not a plain studio background
+  const scan = (len, n, get) => { const ref = get(0, Math.floor(n / 2)); if (!barColor(ref)) return 0; let k = 0; while (k < len * 0.45 && plainLine(n, j => get(k, j), ref)) k++; return k / len * 100; };
+  const r1 = v => v < 1.5 ? 0 : Math.round(v * 10) / 10;
+  const out = { l: r1(scan(W, H, (k, j) => at(k, j))), r: r1(scan(W, H, (k, j) => at(W - 1 - k, j))), t: r1(scan(H, W, (k, j) => at(j, k))), b: r1(scan(H, W, (k, j) => at(j, H - 1 - k))) };
+  return out.l || out.r || out.t || out.b ? out : null; }
 function applyFits() {
   const lt = listTypeNow();
-  if (lt) document.querySelectorAll('#view a.kcard').forEach(el => { const x = itemsOfType(lt).find(y => y.id === idOfEl(el)), img = el.querySelector('.ph img'); if (!img) return; const st = x && x.coverFit && !img.dataset.nofit ? fitStyle(x.coverFit) : ''; if ((img.dataset.fit || '') !== st) { img.dataset.fit = st; img.style.cssText = st; } });
+  if (lt) document.querySelectorAll('#view a.kcard').forEach(el => { const x = itemsOfType(lt).find(y => y.id === idOfEl(el)), img = el.querySelector('.ph img'); if (!img) return; const st = x && x.coverFit && !img.dataset.nofit ? fitStyle(x.coverFit) : ''; if ((img.dataset.fit || '') !== st) { img.dataset.fit = st; img.style.cssText = st; }
+    const ts = !img.dataset.nofit && trimmedSrc(x, img.getAttribute('src')); if (ts) img.src = ts; });   // v0.111.0
 }
 new MutationObserver(() => { applyFits(); wireUnitPrice(); }).observe(document.getElementById('view'), { childList: true, subtree: true });
 function adjustPictureDialog(t, id) {
@@ -1637,13 +1688,22 @@ function adjustPictureDialog(t, id) {
     <div class="fitbox" id="fitBox"><img id="fitImg" src="${src.startsWith('data:') ? src : esc(src)}" alt="" draggable="false" referrerpolicy="no-referrer"></div>
     <div class="fld" style="margin-top:10px"><label for="fitZoom" style="display:flex;justify-content:space-between"><span>Zoom</span><span id="fitZoomV"></span></label><input type="range" id="fitZoom" min="1" max="4" step="0.05" style="width:100%;accent-color:var(--accent)"></div>
     <label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="fitWhole"> Show the whole picture (no cropping; adds bars at the sides)</label>
-    <div class="fld" style="margin-top:10px"><label>Side bars: the color around a picture that doesn't fill the frame</label><div class="btnrow" style="align-items:center"><button class="btn" type="button" id="bgDef">Default</button><button class="btn" type="button" id="bgAuto" title="Uses the average color of the picture's outer edge">Match picture edge</button><label class="btn" style="display:inline-flex;gap:6px;align-items:center;cursor:pointer">Pick a color <input type="color" id="bgPick" style="width:28px;height:22px;border:0;padding:0;background:none"></label><span class="sub mono" id="bgNow"></span></div></div>
+    <label id="fitTrimRow" style="display:none;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="fitTrim"> <span id="fitTrimTxt"></span></label>
+    <div class="fld" style="margin-top:10px"><label>Side bars: the color around a picture that doesn't fill the frame</label><div class="btnrow" style="align-items:center"><button class="btn" type="button" id="bgDef">Default</button><button class="btn" type="button" id="bgAuto" title="Uses the average color of the picture's outer edge">Match picture edge</button><label class="btn" style="display:inline-flex;gap:6px;align-items:center;cursor:pointer">Pick a color <input type="color" id="bgPick" style="width:28px;height:22px;border:0;padding:0;background:none"></label><span class="sub mono" id="bgNow"></span></div><p class="sub" id="bgHint" style="margin:6px 0 0"></p></div>
     <div class="btnrow" style="margin-top:14px"><button class="btn primary" id="fitSave">Save</button><button class="btn" id="fitReset">Reset</button></div></div>`;
   document.body.appendChild(d); const img = d.querySelector('#fitImg'), box = d.querySelector('#fitBox'), zo = d.querySelector('#fitZoom'), wh = d.querySelector('#fitWhole');
-  const draw = () => { img.style.cssText = fitStyle(wh.checked ? { fit: 'contain' } : f); zo.value = f.z; zo.disabled = wh.checked; d.querySelector('#fitZoomV').textContent = wh.checked ? '—' : Math.round(f.z * 100) + '%'; box.style.cursor = wh.checked ? 'default' : 'grab'; };
+  let trim = (x.coverFit && x.coverFit.trim) || null; const tk = d.querySelector('#fitTrim'), useTrim = () => trim && tk.checked ? trim : null;   // v0.111.0
+  let trimURL = ''; const setPrev = async () => { const want = useTrim(); if (want && !trimURL) trimURL = await makeTrimmed(src, want); const u = want && trimURL ? trimURL : src; if (img.getAttribute('src') !== u) img.src = u; };
+  const draw = () => { img.style.cssText = fitStyle(wh.checked ? { fit: 'contain' } : f); setPrev(); bgHintUp(); zo.value = f.z; zo.disabled = wh.checked; d.querySelector('#fitZoomV').textContent = wh.checked ? '—' : Math.round(f.z * 100) + '%'; box.style.cursor = wh.checked ? 'default' : 'grab'; };
+  function bgHintUp() { const h = d.querySelector('#bgHint'); if (h) h.textContent = !wh.checked ? 'Side bars show when “Show the whole picture” is ticked (otherwise the picture fills the frame).' : ''; }
+  plainBarsOf(src).then(tb => { const found = tb || trim; if (!found) return; trim = trim || tb; d.querySelector('#fitTrimRow').style.display = 'flex'; tk.checked = !!(x.coverFit && x.coverFit.trim) || !!tb;
+    const parts = [['l', 'left'], ['r', 'right'], ['t', 'top'], ['b', 'bottom']].filter(([k]) => trim[k]).map(([k, w]) => `${w} ${Math.round(trim[k])}%`).join(', ');
+    d.querySelector('#fitTrimTxt').textContent = `Leave out the plain bars that are part of this picture (${parts}), e.g. the white edges of a kept shop picture. The picture file itself is not changed.`; draw(); });
+  tk.onchange = draw;
   let bg = x.coverBg || ''; const bgShow = () => { box.style.background = bg || ''; d.querySelector('#bgNow').textContent = bg ? bg : 'Default'; if (bg) d.querySelector('#bgPick').value = bg; };   // v0.110.0
-  d.querySelector('#bgDef').onclick = () => { bg = ''; bgShow(); }; d.querySelector('#bgPick').oninput = e => { bg = e.target.value.toUpperCase(); bgShow(); };
-  d.querySelector('#bgAuto').onclick = async () => { const h = await edgeColorOf(src); if (h) { bg = h; bgShow(); } else toast("This picture's website doesn't let apps read its colors; use Pick a color"); };
+  const wantBars = () => { if (!wh.checked) { wh.checked = true; draw(); } };   // choosing a side-bar color shows the bars
+  d.querySelector('#bgDef').onclick = () => { bg = ''; bgShow(); }; d.querySelector('#bgPick').oninput = e => { bg = e.target.value.toUpperCase(); bgShow(); wantBars(); };
+  d.querySelector('#bgAuto').onclick = async () => { const h = await edgeColorOf(src, useTrim()); if (h) { bg = h; bgShow(); wantBars(); } else toast("This picture's website doesn't let apps read its colors; use Pick a color"); };
   wh.checked = f.fit === 'contain'; draw(); bgShow();
   zo.oninput = () => { f.z = +zo.value; draw(); }; wh.onchange = draw;
   let drag = null; box.onpointerdown = e => { if (wh.checked) return; drag = { x: e.clientX, y: e.clientY, fx: f.x, fy: f.y }; box.setPointerCapture(e.pointerId); };
@@ -1652,8 +1712,9 @@ function adjustPictureDialog(t, id) {
   box.onwheel = e => { if (wh.checked) return; e.preventDefault(); f.z = Math.max(1, Math.min(4, f.z + (e.deltaY < 0 ? .1 : -.1))); draw(); };
   d.onclick = async e => { if (e.target === d || e.target.closest('[data-x]')) { d.remove(); return; }
     if (e.target.id !== 'fitSave' && e.target.id !== 'fitReset') return;
-    const val = e.target.id === 'fitReset' ? firebase.firestore.FieldValue.delete() : wh.checked ? { fit: 'contain' } : { z: Math.round(f.z * 100) / 100, x: Math.round(f.x * 10) / 10, y: Math.round(f.y * 10) / 10 };
-    try { await withTimeout(colOfType(t).doc(id).update({ coverFit: val, coverBg: e.target.id === 'fitReset' || !bg ? firebase.firestore.FieldValue.delete() : bg })); toast(e.target.id === 'fitReset' ? 'Picture reset' : 'Picture saved'); d.remove(); setTimeout(drawSumCarousel, 300); } catch (err) { toast('Not saved: ' + explain(err)); } };
+    const val = e.target.id === 'fitReset' ? firebase.firestore.FieldValue.delete() : Object.assign(wh.checked ? { fit: 'contain' } : { z: Math.round(f.z * 100) / 100, x: Math.round(f.x * 10) / 10, y: Math.round(f.y * 10) / 10 }, useTrim() ? { trim: useTrim() } : {});
+    const tv = e.target.id !== 'fitReset' && useTrim() ? (trimURL || await makeTrimmed(src, useTrim())) : '';
+    try { await withTimeout(colOfType(t).doc(id).update({ coverFit: val, coverBg: e.target.id === 'fitReset' || !bg ? firebase.firestore.FieldValue.delete() : bg, coverTrimmed: tv ? { of: picKeyOf(src), src: tv } : firebase.firestore.FieldValue.delete() })); toast(e.target.id === 'fitReset' ? 'Picture reset' : 'Picture saved'); d.remove(); setTimeout(drawSumCarousel, 300); } catch (err) { toast('Not saved: ' + explain(err)); } };
 }
 /* Summary carousel: the display picture first, then your photos, the product picture and (keycaps) kit pictures */
 let sumCarIdx = 0, sumCarFor = '';
@@ -1679,18 +1740,28 @@ function drawSumCarousel() {
   const box = document.getElementById('sumCar'); if (!box) return; const t = box.dataset.type, x = itemsOfType(t).find(y => y.id === box.dataset.id); if (!x) { box.innerHTML = box.dataset.cover ? `<img src="${box.dataset.cover}" alt="">` : ''; box.hidden = !box.dataset.cover; return; }
   const slides = sumCarSlides(t, x); box.hidden = !slides.length; if (!slides.length) return; box.style.background = x.coverBg || '';   // v0.110.0
   if (sumCarFor !== x.id) { sumCarFor = x.id; sumCarIdx = 0; } sumCarIdx = Math.max(0, Math.min(slides.length - 1, sumCarIdx)); const sl = slides[sumCarIdx], isCover = sl.src === coverSrcOf(t, x);
-  box.innerHTML = `<button type="button" class="sumcarimg" data-car="open" title="Click to enlarge and zoom"><img src="${sl.src.startsWith('data:') ? sl.src : esc(sl.src)}" alt="" referrerpolicy="no-referrer" style="${isCover && x.coverFit ? fitStyle(x.coverFit) : ''}"></button>${sl.notOwned ? '<span class="basenotown">Not owned</span>' : ''}
+  const shown = (isCover && trimmedSrc(x, sl.src)) || sl.src;   // v0.111.0
+  box.innerHTML = `<button type="button" class="sumcarimg" data-car="open" title="Click to enlarge and zoom"><img src="${shown.startsWith('data:') ? shown : esc(shown)}" alt="" referrerpolicy="no-referrer" style="${isCover && x.coverFit ? fitStyle(x.coverFit) : ''}"></button>${sl.notOwned ? '<span class="basenotown">Not owned</span>' : ''}
     ${slides.length > 1 ? `<button type="button" class="sumcarnav l" data-car="prev" aria-label="Previous picture">‹</button><button type="button" class="sumcarnav r" data-car="next" aria-label="Next picture">›</button><span class="sumcarn">${sumCarIdx + 1} / ${slides.length}</span>` : ''}
     ${isCover ? '<button type="button" class="sumcarfit" data-car="fit" title="Adjust zoom and position of the display picture">Adjust</button>' : ''}`;
   box.onclick = e => { const b = e.target.closest('[data-car]'); if (!b) return; const a = b.dataset.car;
     if (a === 'prev' || a === 'next') { sumCarIdx = (sumCarIdx + (a === 'next' ? 1 : slides.length - 1)) % slides.length; drawSumCarousel(); }
-    else if (a === 'fit') adjustPictureDialog(t, x.id); else openLightbox(slides, sumCarIdx, i => { sumCarIdx = i; drawSumCarousel(); }); };
+    else if (a === 'fit') adjustPictureDialog(t, x.id); else openLightbox(slides, sumCarIdx, i => { sumCarIdx = i; drawSumCarousel(); }, { type: t, id: x.id, name: [x.brand || x.manufacturer, x.name].filter(Boolean).join(' ') }); };
 }
 new MutationObserver(() => { const b = document.getElementById('sumCar'); if (b && !b.dataset.drawn) { b.dataset.drawn = '1'; drawSumCarousel(); } }).observe(document.getElementById('view'), { childList: true, subtree: true });
 /* full-screen viewer: wheel or pinch to zoom, drag to move, double-click to zoom in and out, arrows for the next picture */
-function openLightbox(slides, start, onMove) {
+async function downloadPicture(u, base) {   // v0.112.0: any picture to this device; opens it in a new tab when the website refuses
+  const name = zbkSafe(base || 'picture'); try { let b; if (/^data:/.test(u)) { const x = zbkDataUrlBytes(u); b = new Blob([x.bytes], { type: x.mime }); } else { const r = await fetch(u, { mode: 'cors', referrerPolicy: 'no-referrer' }); if (!r.ok) throw new Error(r.status); b = await r.blob(); }
+    const ext = zbkExt(b.type) !== 'bin' ? zbkExt(b.type) : ((/\.(jpe?g|png|webp|gif|avif)(?:\?|$)/i.exec(u) || [, 'jpg'])[1]), a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `${name}.${ext}`; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); if (/^https?:/.test(u)) shopDlAdd(u); toast('Picture downloaded'); }
+  catch (e) { window.open(u, '_blank', 'noopener'); toast('This website doesn’t allow a direct download: the picture opened in a new tab; right-click it → Save image as…'); } }
+async function keepPicture(type, id, u, label) {   // v0.112.0: a copy of any linked picture (catalog, Keycap Collection app, shop) into the item's own photos
+  if (!/^https?:/i.test(u || '')) { toast('This is already one of your own photos'); return false; }
+  if (shopPicKept(u)) { toast('Already kept: this picture is in your photos'); return false; }
+  toast('Keeping a copy…'); try { const r = await rdKeepCopy(type, id, u, label); toast(r === 'already' ? 'Already kept: this picture is in your photos' : 'Copy kept with your photos'); try { currentPhotos.push({ sourceUrl: u, itemId: id }); } catch (e) {} return true; }
+  catch (e) { toast('This picture’s website doesn’t allow copying it. Use ⬇ Download and add it as your own photo.'); return false; } }
+function openLightbox(slides, start, onMove, ctx) {
   let i = start, z = 1, tx = 0, ty = 0; const d = document.createElement('div'); d.className = 'lbox'; d.id = 'lbox';
-  d.innerHTML = `<div class="lbtop"><span id="lbCap"></span><span class="lbtools"><button data-lb="out" title="Zoom out">−</button><button data-lb="reset" title="Fit to screen">Fit</button><button data-lb="in" title="Zoom in">+</button><button data-lb="x" title="Close">✕</button></span></div>
+  d.innerHTML = `<div class="lbtop"><span id="lbCap"></span><span class="lbtools"><button data-lb="dl" title="Download this picture to this device">⬇</button>${ctx ? '<button data-lb="keep" title="Keep a copy of this picture in this item\'s photos">Keep</button>' : ''}<button data-lb="out" title="Zoom out">−</button><button data-lb="reset" title="Fit to screen">Fit</button><button data-lb="in" title="Zoom in">+</button><button data-lb="x" title="Close">✕</button></span></div>
     <div class="lbstage" id="lbStage"><img id="lbImg" alt="" draggable="false" referrerpolicy="no-referrer"></div>${slides.length > 1 ? '<button class="lbnav l" data-lb="prev" aria-label="Previous">‹</button><button class="lbnav r" data-lb="next" aria-label="Next">›</button>' : ''}`;
   document.body.appendChild(d); const img = d.querySelector('#lbImg'), stage = d.querySelector('#lbStage');
   const show = () => { img.style.transform = `translate(${tx}px, ${ty}px) scale(${z})`; stage.style.cursor = z > 1 ? 'grab' : 'zoom-in'; };
@@ -1700,6 +1771,8 @@ function openLightbox(slides, start, onMove) {
   const key = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } else if (e.key === 'ArrowRight' && slides.length > 1) { i = (i + 1) % slides.length; load(); } else if (e.key === 'ArrowLeft' && slides.length > 1) { i = (i + slides.length - 1) % slides.length; load(); } else if (e.key === '+' || e.key === '=') zoom(z * 1.4); else if (e.key === '-') zoom(z / 1.4); };
   document.addEventListener('keydown', key, true);
   d.onclick = e => { const b = e.target.closest('[data-lb]'); if (!b) { if (e.target === d || e.target === stage) { if (z === 1 && !moved) close(); } return; } const a = b.dataset.lb;
+    if (a === 'dl') { downloadPicture(slides[i].full, [ctx && ctx.name, slides[i].cap].filter(Boolean).join(' - ') || 'picture'); return; }
+    if (a === 'keep') { keepPicture(ctx.type, ctx.id, slides[i].full, slides[i].cap || 'Picture'); return; }
     if (a === 'x') close(); else if (a === 'in') zoom(z * 1.5); else if (a === 'out') zoom(z / 1.5); else if (a === 'reset') zoom(1); else { i = (i + (a === 'next' ? 1 : slides.length - 1)) % slides.length; load(); } };
   stage.onwheel = e => { e.preventDefault(); zoom(z * (e.deltaY < 0 ? 1.2 : 1 / 1.2), e.clientX, e.clientY); };
   stage.ondblclick = e => zoom(z > 1 ? 1 : 2.5, e.clientX, e.clientY);
@@ -2154,7 +2227,7 @@ const HELP = [
   { id: 'add', t: 'Add an item by hand', g: 'Adding and reading', k: 'add new create item entry manual keyboard switch keycap accessory', ctx: ['keyboards', 'switches', 'keycaps', 'accessories', 'pcbs', 'deskmats', 'artisans', 'switchparts'],
     s: ['Open the list and press the Add button (or N).', 'Fill Overview, then the other tabs (Build, Purchase, Notes; keycap sets have Kits and Colors). Brand, maker and name suggest what you already own after 2 letters.', 'Press Save. An unfinished keyboard is kept as a draft on this device.'], go: '#/keyboards/new' },
   { id: 'readpage', t: 'Read a product page (shop link)', g: 'Adding and reading', ctx: ['import'], k: 'read page link url website webpage shop product import from a link paste details specs retail picture',
-    s: ['Import → "Read a product page" (or the "From a link" button on a list), paste the shop link, press Read page.', 'Pick the options you bought. Each line can be a New entry, "Add to an entry I have" (fills empty fields; tick Replace to refresh) or Wishlist.', 'Check the lines and press Save. Specs, the shop\'s text, retail price, the webpage link and every picture (as links) are saved.', 'Only shops listed in Settings → Product page reader can be read.'], go: '#/import/link' },
+    s: ['Import → "Read a product page" (or on a list: "Add or modify existing … ▾" → From a webpage link), paste the shop link, press Read page.', 'Pick the options you bought. Each line can be a New entry, "Add to an entry I have" (fills empty fields; tick Replace to refresh) or Wishlist.', 'Check the lines and press Save. Specs, the shop\'s text, retail price, the webpage link and every picture (as links) are saved.', 'Only shops listed in Settings → Product page reader can be read.'], go: '#/import/link' },
   { id: 'readpageinto', t: 'Read a webpage into one entry', g: 'Adding and reading', ctx: ['item'], k: 'read webpage into this entry link page shop details update refresh pull from entry main section keyboard switch keycap set accessory item existing',
     s: ['Open the entry and find the "From the shop" card (side column).', 'Press "🔗 Read a webpage into this entry" (or "Read the page again" if it has one) and paste the link.', 'The banner "Reading into …" means the option you pick fills this entry only. Tick Replace to refresh price and pictures.', 'Save takes you back to the entry. "Stop reading into it" turns it into a normal read.'], go: '' },
   { id: 'receipt', t: 'Read a receipt', g: 'Adding and reading', ctx: ['import'], k: 'receipt pdf invoice order paypal ebay drop price tax shipping read import purchase phone android paste text could not read no text',
@@ -2188,11 +2261,11 @@ const HELP = [
   { id: 'photos', t: 'Add, crop or delete your own photos', g: 'Pictures', ctx: ['item'], k: 'photo picture image upload add camera take crop own delete remove',
     s: ['On an entry, the Photos card: drop pictures or choose files; on a phone "Take a photo".', 'Each is cropped to 4:3 and saved small (WebP). The first photo is the display picture; "Set as default" on another photo changes it. Crop and Delete are under each photo.', 'HEIC from an iPhone must be JPG (iPhone Settings → Camera → Formats → Most Compatible).'], go: '' },
   { id: 'mainpic', t: 'Choose and frame the main picture', g: 'Pictures', ctx: ['item'], k: 'main picture display cover stock adjust frame zoom crop card picture whole side bars background border edge fill color',
-    s: ['Your default photo is the card picture. "Use as stock picture" on a photo makes it the Summary picture.', 'Summary picture → Adjust: drag, zoom, or "Show the whole picture". Side bars sets the color around a picture that doesn\'t fill the frame (card and Summary): Default, "Match picture edge" (the average color of the picture\'s border), or Pick a color; then Save.', 'Keycap sets: Kit gallery → kit → "Use as main picture"; the Keycaps page "Main picture" menu switches all cards to Base / Novelties / Spacebars / Numpads.'], go: '' },
+    s: ['Your default photo is the card picture. "Use as stock picture" on a photo makes it the Summary picture.', 'Summary picture → Adjust: drag, zoom, or "Show the whole picture". Side bars sets the color around a picture that doesn\'t fill the frame (card and Summary): Default, "Match picture edge" (the average color of the picture\'s border), or Pick a color; choosing one ticks "Show the whole picture" so the bars show; then Save. A kept shop picture has white bars inside the picture itself: tick "Leave out the plain bars…" (offered when such bars are found) so your side-bar color replaces them (a small trimmed copy is saved for the card and Summary; your picture is not changed).', 'Keycap sets: Kit gallery → kit → "Use as main picture"; the Keycaps page "Main picture" menu switches all cards to Base / Novelties / Spacebars / Numpads.'], go: '' },
   { id: 'shoppics', t: 'Shop pictures: download, keep, use or hide', g: 'Pictures', ctx: ['item'], k: 'shop pictures carousel download downloaded keep kept copy already duplicate remove delete star main link pictures from the shop',
     s: ['From the shop card → "Pictures from the shop": every picture of the page, saved as links (no storage).', '⬇ downloads one to your device · Keep copies it into your photos · ★ makes it the shop picture · ✕ removes it.', 'A picture already in your photos shows "✓ Kept" (also when you ticked Keep a copy while reading the page); Keep then does nothing, so there are no double copies. ⬇✓ = downloaded on this device before. Delete the copy from your photos and it shows Keep again.', 'Read the page again with Replace to get them all back.'], go: '' },
-  { id: 'viewer', t: 'Zoom into pictures', g: 'Pictures', ctx: ['item'], k: 'zoom viewer full screen carousel enlarge bigger look closer',
-    s: ['Click the Summary picture: arrows go through all pictures; click opens the full-screen viewer.', 'Wheel, pinch or +/− zooms up to 8×; drag moves; double-click zooms; Esc closes.'], go: '' },
+  { id: 'viewer', t: 'Zoom into pictures', g: 'Pictures', ctx: ['item'], k: 'zoom viewer full screen carousel enlarge bigger look closer save download keep picture catalog matrix copy',
+    s: ['Click the Summary picture: arrows go through all pictures; click opens the full-screen viewer.', 'Wheel, pinch or +/− zooms up to 8×; drag moves; double-click zooms; Esc closes.', 'Save a picture: ⬇ (top right of the viewer) downloads the one you are looking at to this device; Keep copies it into the item\'s own photos (uses storage). Works for catalog, Keycap Collection app and shop pictures; a few websites don\'t allow it (then ⬇ opens it in a new tab to save by hand).', 'Keycaps: Kit gallery → a kit → "⬇ Download" or "Keep in my photos" for the picture shown there.', 'Gallery cards: ‹ › step through a card\'s pictures; the picture info shows only on the card you are using and goes away after 15 seconds.'], go: '' },
 
   // ---------- Prices and value ----------
   { id: 'purchase', t: 'Purchase details', g: 'Prices and value', ctx: ['item'], k: 'purchase price tax shipping discount total paid seller date order receipt link webpage',
@@ -2234,7 +2307,7 @@ const HELP = [
 
   // ---------- Keycaps ----------
   { id: 'kits', t: 'Keycap kits (add, not owned, types)', g: 'Keycaps', ctx: ['keycaps'], k: 'kit kits base novelties spacebars alphas not owned own add kit type quantity came with keyboard bundle included free',
-    s: ['Keycap set → Kits tab: + Add kit, name, kit type, quantity and its own purchase details.', 'Untick "I own this kit" to keep a kit you don\'t have yet (greyed in the Kit gallery, not counted as owned).', 'A kit that came with a keyboard (its price is in the keyboard\'s): open Purchase details → "Came with keyboard" and pick the keyboard. The set\'s Summary shows "Came with", and the keyboard\'s Summary lists the kit.', 'Kit gallery shows every kit as a picture; click one for details.'], go: '#/keycaps' },
+    s: ['Keycap set → Kits tab: + Add kit, name, kit type, quantity and its own purchase details.', 'Each kit has a switch at the top: green "✓ Owned" or grey "Not owned" (click to change, then Save). Not-owned kits stay in the set, greyed in the Kit gallery and not counted as yours.', '✕ on a kit asks: "Mark as not owned (keep it in the set)" or "Delete it from this set".', 'For a set linked to the GMK catalog, the Kits tab and the Summary also list the catalog\'s kits you have no record of, as not owned; "I own it" adds one. Your kits show in green on the Summary.', 'Reading a keycap page with several kits: each kit line has the same Owned / Not owned switch, and "mark all ✓ Owned / Not owned" above the lines.', 'A kit that came with a keyboard (its price is in the keyboard\'s): open Purchase details → "Came with keyboard" and pick the keyboard. The set\'s Summary shows "Came with", and the keyboard\'s Summary lists the kit.', 'Kit gallery shows every kit as a picture; click one for details.'], go: '#/keycaps' },
   { id: 'splitbases', t: 'Show each base as its own card (two bases in one set)', g: 'Keycaps', ctx: ['keycaps'], k: 'split base bases two bases light dark separate card each base analog dreams digital nightmares duplicate shared kits gallery summary not owned grey greyed gray choose',
     s: ['For a set with two or more bases (a light and a dark base, say), also when you own only one of them. Open the set → Summary → tick "Show each base as its own card". When the set has only one base you own, the Summary shows "Another base in this set? Show each base as its own card…" instead.', 'Under "Choose the bases", tick the kits that are bases: your kits, kits you marked not owned, and the GMK catalog\'s kits you don\'t have (GMK Analog Dreams: tick Analog Dreams next to your Digital Nightmares). At least two, one of them yours. Without a choice, kits of type Base, Alphas or Full set (or "Base" in the name) are the bases.', 'A base you don\'t own shows greyed with "Not owned" on its gallery card, like kits you don\'t own in the Kit gallery: point at it to see it in color. Once you open it, its pictures are in color, with a "Not owned" tag.', 'The Keycaps gallery then shows one card per base, named "Set: Base", with that base\'s picture. Your other kits (novelties, spacebars…) are shared by every base card.', 'On the set\'s Summary, the buttons at the top switch between the bases: the name, the pictures and the kit list follow the base you pick. Your other base is greyed in the kit list.', 'Nothing is copied: it is still one set, so cost, count and totals are counted once. The checkbox "Show each base as its own card" on the Keycaps gallery turns it off or on for every set at once.'], go: '#/keycaps' },
   { id: 'completion', t: 'Completion and missing kits', g: 'Keycaps', ctx: ['keycaps'], k: 'completion complete missing kits percent bar wishlist gmk',
@@ -2259,8 +2332,8 @@ const HELP = [
   // ---------- Data and tools ----------
   { id: 'check', t: 'Check my data (fix mistakes)', g: 'Data and tools', ctx: ['check'], k: 'check my data fix errors spelling duplicates categories keyboard type cleanup tidy',
     s: ['Tools → Check my data: fixes waiting (tick, then "Apply ticked fixes"; a copy is saved first) and checks that update every time: spellings, keyboards with no type, accessories with no category, same names, categories to sort.'], go: '#/check' },
-  { id: 'backup', t: 'Back up and restore', g: 'Data and tools', ctx: ['settings'], k: 'backup restore save my data download json safe copy',
-    s: ['Settings → Backup and restore: "Back up my records" (JSON) or "Back up everything" (with photos and recordings). Keep it on your PC, not online.', 'Restore previews the file, then replaces those records; it never deletes others.'], go: '#/settings' },
+  { id: 'backup', t: 'Back up and restore', g: 'Data and tools', ctx: ['settings'], k: 'backup restore save my data download json zip safe copy pictures photos folder desktop file',
+    s: ['Settings → Backup and restore → "Make a backup file (.zip, with pictures)…": tick the lists (Keyboards, Keycaps, …, Wishlist, Build timeline, Settings) and what to include: your photos and kept copies, linked pictures (GMK catalog, Keycap Collection app and shop pictures), sound recordings; "Only what I own" leaves out the wishlist and pictures of kits you don\'t own.', 'The .zip downloads to this device. Inside: data (your records), pictures sorted by list and item ("Linked" folders for catalog and shop pictures), recordings, and README.txt listing everything plus any linked picture a website wouldn\'t let the app save. Keep it on your PC, never in the public GitHub repo.', 'Restore: "Choose a backup file…" and pick the .zip: tick per list which records, photos and recordings to put back, then "Restore what is ticked". Each restored record replaces the same record; nothing else is deleted.', 'The older one-file .json backups still work, and you can still make them ("Quick backup: records only").'], go: '#/settings' },
   { id: 'excel', t: 'Export to Excel', g: 'Data and tools', ctx: ['import'], k: 'excel export workbook spreadsheet xlsx v19 download',
     s: ['Import and export → "Export to Excel": Keyboard_Hobby_List_v<N>.xlsx in the v18 layout with formulas. The number goes up by one each time.', 'The app is the source of truth; the workbook is an export.'], go: '#/import' },
   { id: 'storage', t: 'Storage used', g: 'Data and tools', ctx: ['settings'], k: 'storage space full limit firebase photos size',
@@ -3716,8 +3789,9 @@ function newKitId() { return 'k' + Math.random().toString(36).slice(2, 10); }
 function kitRowHtml(k, i) {
   const tax = k.taxRate != null ? String(Math.round(k.taxRate * 1e8) / 1e6) : '';
   const val = v => v != null ? esc(String(v)) : '';
-  return `<div class="kit" data-kit="${esc(k.id)}">
+  return `<div class="kit ${k.notOwned ? 'kit-no' : 'kit-own'}" data-kit="${esc(k.id)}">
     <div class="kit-top">
+      <label class="kownt" title="Owned: you have this kit. Not owned: it stays in the set (greyed in the Kit gallery) but doesn't count as yours. Click Save to keep the change."><input type="checkbox" class="k-owned"${k.notOwned ? '' : ' checked'}><span class="kown-on">✓ Owned</span><span class="kown-off">Not owned</span></label>
       <input class="input k-name" placeholder="Kit name, e.g. Base kit" value="${val(k.name)}" aria-label="Kit name">
       <select class="select k-type" aria-label="Kit type"><option value="">Kit type</option>${KIT_TYPES.concat(k.kitType && !KIT_TYPES.includes(k.kitType) ? [k.kitType] : []).map(t => `<option${t === k.kitType ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select>
       <input class="input k-qty" type="number" min="1" step="1" value="${val(k.quantity ?? 1)}" aria-label="Quantity" title="Quantity">
@@ -3737,11 +3811,19 @@ function kitRowHtml(k, i) {
         <div class="kacq"><span>Acquisition</span>${ACQUISITION.map(([v, t]) => `<label class="check"><input type="checkbox" class="k-acq" value="${v}"${(k.acquisition || []).includes(v) ? ' checked' : ''}> ${t}</label>`).join('')}</div>
         <label class="wide">Receipt<input class="input k-receipt" placeholder="Order number or link" value="${val(k.receipt)}"></label>
         <label class="wide">Kit notes<input class="input k-notes" placeholder="e.g. Sealed, extra keys, sold the spares" value="${val(k.kitNotes)}"></label>
-        <label class="check wide" style="display:flex;gap:8px;align-items:center" title="Untick for a kit you do not own (any more). It stays in your records and totals, but shows as not owned in the Kit gallery and does not count toward completion."><input type="checkbox" class="k-owned"${k.notOwned ? '' : ' checked'}> I own this kit</label>
         ${k.installedOnText ? `<p class="sub wide" style="margin:0">Excel "Installed On": ${esc(k.installedOnText)}</p>` : ''}
         ${k.excelRow ? `<p class="sub wide" style="margin:0">From Excel row ${k.excelRow}${k.kitsPurchasedExcel && k.kitsPurchasedExcel !== k.name ? ` · "${esc(k.kitsPurchasedExcel)}"` : ''}</p>` : ''}
       </div></details>
   </div>`;
+}
+function catKitsNotListed() {   // v0.113.0: the linked catalog set's kits that none of the kits on the Kits tab is (by name or kit match)
+  const ref = document.getElementById('f_gmkRef'), set = ref && ref.value && gmkSets && gmkSets.find(x => x.id === ref.value); if (!set) return [];
+  const mine = [...document.querySelectorAll('#kitList .kit')].map(r => ({ name: r.querySelector('.k-name').value.trim() })).filter(k => k.name), links = (editing && editing.kitLinks) || {};
+  const pr = pairKits(mine, set.kits || [], links); return (set.kits || []).filter(c => !pr.has(c));
+}
+function drawOtherKits() {
+  const box = document.getElementById('otherKits'); if (!box) return; const list = catKitsNotListed();
+  box.innerHTML = list.length ? `<div class="okits"><p class="sub" style="margin:12px 0 6px">Also in this set (GMK catalog), not on your list: not owned</p>${list.map(c => `<div class="okit"><span class="kown-off" style="display:inline-block">Not owned</span><b>${esc(c.name)}</b>${gmkKitPrice(c) ? `<span class="sub">${esc(gmkKitPrice(c))}</span>` : ''}<span style="margin-left:auto;display:flex;gap:6px"><button type="button" class="btn" data-okadd="${esc(kitKey(c.name))}" data-okname="${esc(c.name)}" data-own="1" title="Add it to your kits as owned">I own it</button><button type="button" class="btn" data-okadd="${esc(kitKey(c.name))}" data-okname="${esc(c.name)}" data-own="0" title="Add it to your kits as not owned (e.g. to note a price)">Add as not owned</button></span></div>`).join('')}</div>` : '';
 }
 function renderKeycapForm(s = null) {
   formDirty = false; editing = s;
@@ -3786,7 +3868,7 @@ function renderKeycapForm(s = null) {
         <div class="card" data-panel="kits" hidden>
           <div class="sec-title"><h3>Kits</h3><span class="sub" style="margin:0">Set total: <b id="setTotal">${money(kits.reduce((t, k) => t + kbTotal(k), 0))}</b></span></div>
           <p class="sub">Each kit keeps its own purchase details. Base is optional.</p>
-          <div id="kitList">${kits.map((k, i) => kitRowHtml(k, i)).join('')}</div>
+          <div id="kitList">${kits.map((k, i) => kitRowHtml(k, i)).join('')}</div><div id="otherKits"></div>
           <button type="button" class="btn" id="addKit" style="margin-top:10px">${I.plus}Add kit</button>
         </div>
         <div class="card" data-panel="gallery" hidden>
@@ -3877,13 +3959,23 @@ function renderKeycapForm(s = null) {
     list.insertAdjacentHTML('beforeend', kitRowHtml({ id: newKitId(), quantity: 1 }, -1));
     list.lastElementChild.querySelector('.k-name').focus(); kitCountUpdate(); markDirty();
   };
+  document.getElementById('kitList').addEventListener('change', e => { const o = e.target.closest('.k-owned'); if (!o) return; const r = o.closest('.kit'); r.classList.toggle('kit-own', o.checked); r.classList.toggle('kit-no', !o.checked); drawOtherKits(); });
   document.getElementById('kitList').addEventListener('click', async e => {
     const d = e.target.closest('.k-del'); if (!d) return;
-    const row = d.closest('.kit'), name = row.querySelector('.k-name').value.trim();
-    if (name && !await askConfirm(`Remove the kit "${name}" from this set?`)) return;
-    row.remove(); kitCountUpdate(); updateSetTotal(); markDirty();
+    const row = d.closest('.kit'), name = row.querySelector('.k-name').value.trim(), own = row.querySelector('.k-owned');
+    if (name) {   // v0.113.0: ✕ asks first whether the kit should only be marked not owned (kept in the set) or really deleted
+      const a = own && own.checked ? await askChoice(`“${name}”: you don't own it, or it shouldn't be in this set at all?`, [['notown', 'Mark as not owned (keep it in the set)', 'primary'], ['delete', 'Delete it from this set', 'danger']])
+        : (await askConfirm(`Delete the kit “${name}” from this set? It is already marked not owned; deleting removes it from the set (and from the Kit gallery if the set isn't linked to the catalog).`, { ok: 'Delete', danger: true }) ? 'delete' : null);
+      if (!a) return;
+      if (a === 'notown') { own.checked = false; own.dispatchEvent(new Event('change', { bubbles: true })); markDirty(); toast('Marked as not owned. Click Save to keep it.'); return; } }
+    row.remove(); kitCountUpdate(); updateSetTotal(); markDirty(); drawOtherKits();
   });
-  document.getElementById('btnSave').onclick = saveKeycapSet;
+  document.getElementById('btnSave').onclick = saveKeycapSet; drawOtherKits();
+  document.getElementById('otherKits').addEventListener('click', e => { const b = e.target.closest('[data-okadd]'); if (!b) return;   // v0.113.0
+    document.getElementById('addKit').click(); const rows = document.querySelectorAll('#kitList .kit'), row = rows[rows.length - 1], inp = row.querySelector('.k-name'), ck = (catKitsNotListed().find(c => kitKey(c.name) === b.dataset.okadd) || {});
+    inp.value = ck.name || b.dataset.okname; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true }));
+    if (b.dataset.own === '0') { const o = row.querySelector('.k-owned'); o.checked = false; o.dispatchEvent(new Event('change', { bubbles: true })); }
+    drawOtherKits(); row.scrollIntoView({ behavior: 'smooth', block: 'center' }); toast(b.dataset.own === '0' ? `Added ${inp.value} as not owned. Click Save to keep it.` : `Added ${inp.value}. Fill in what you paid, then Save.`); });
   if (s) {
     const st = { fields: {}, acq: [], fav: !!s.isFavorite };
     ['manufacturer', 'name', 'profile', 'location', 'designer', 'material', 'legends', 'stemMount', 'font', 'keycapColor', 'legendColor', 'colorsText', 'notes']
@@ -5663,6 +5755,7 @@ function openKitView(s, t) {
         <p class="sub" style="margin:0;flex-basis:100%">Kit type decides which picture "Main picture: Novelties" (Base, Spacebars, Numpads) uses. These go to the Kits tab: Save the set to keep them.</p></div>`; })()}
     <div class="btnrow" style="margin-top:12px">
       ${t.owned ? '<button class="btn" id="kvShow">Show in Kits tab</button><button class="btn" id="kvUnown" title="Marks this kit as not owned; click Save to keep it">I don’t own this kit</button>' : `<button class="btn primary" id="kvOwn" title="Adds this kit to the Kits tab; click Save to keep it">I own this kit</button>${s ? (onWish ? '<span class="chip">On wishlist</span>' : '<button class="btn" id="kvWish">+ Wishlist</button>') : ''}`}
+      ${imgs.length ? `<button class="btn" id="kvDl" title="Download the picture you are looking at to this device">⬇ Download</button>` : ''}${s && s.id && imgs.length ? `<button class="btn" id="kvKeep" title="Keep a copy of the picture you are looking at in this set's photos (uses storage)">Keep in my photos</button>` : ''}
       ${s && s.id && imgs.length > 1 ? `<button class="btn" id="kvPick" title="Show the picture you are looking at for this kit everywhere (card, Summary, gallery)">Use this picture for this kit</button>` : ''}${s && s.id && t.picked ? '<button class="btn" id="kvPickOff" title="Go back to the automatic picture for this kit">★ Chosen picture · stop using</button>' : ''}
       ${t.img && s && s.id ? (kitKey((savedKeycaps.find(x => x.id === s.id) || s).coverKit || '') === kitKey(t.name) ? '<button class="btn" id="kvMainOff" title="Go back to the set\'s usual picture">★ Main picture · stop using</button>' : '<button class="btn" id="kvMainOn" title="Show this kit\'s picture for the set in the Keycaps gallery and on the Summary">Use as main picture</button>') : ''}
       <span style="margin-left:auto">${matrixLinkHtml(t.cat ? gmkSets.find(x => x.id === document.getElementById('f_gmkRef').value) : null)}</span></div></div>`;
@@ -5676,7 +5769,9 @@ function openKitView(s, t) {
   d.onclick = async e => {
     if (e.target === d || e.target.closest('[data-x]')) { d.remove(); return; }
     const th = e.target.closest('[data-kvi]'); if (th) { document.getElementById('kvMain').src = imgs[+th.dataset.kvi]; d.dataset.cur = th.dataset.kvi; return; }
-    if (e.target.id === 'kvMain') { openLightbox(imgs.map(u => ({ src: u, full: u, cap: t.name })), +(d.dataset.cur || 0), i => { d.dataset.cur = i; const m = document.getElementById('kvMain'); if (m) m.src = imgs[i]; }); return; }
+    if (e.target.id === 'kvMain') { openLightbox(imgs.map(u => ({ src: u, full: u, cap: t.name })), +(d.dataset.cur || 0), i => { d.dataset.cur = i; const m = document.getElementById('kvMain'); if (m) m.src = imgs[i]; }, s && s.id ? { type: 'keycaps', id: s.id, name: s.name } : null); return; }
+    if (e.target.id === 'kvDl') { downloadPicture(imgs[+(d.dataset.cur || 0)], `${s && s.name ? s.name + ' - ' : ''}${t.name}`); return; }   // v0.112.0
+    if (e.target.id === 'kvKeep') { const b = e.target; b.disabled = true; if (await keepPicture('keycaps', s.id, imgs[+(d.dataset.cur || 0)], t.name)) { b.textContent = '✓ Kept'; } else b.disabled = false; return; }
     if (e.target.id === 'kvType' ) return;
     if (e.target.id === 'kvRename') { const row = [...document.querySelectorAll('#kitList .kit')].find(r => r.dataset.kit === t.kit.id); if (!row) return; const inp = row.querySelector('.k-name'); inp.value = t.name; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); toast(`Renamed to “${t.name}” on the Kits tab. Save the set to keep it.`); d.remove(); drawKitGallery(s); return; }
     if (e.target.id === 'kvPick' || e.target.id === 'kvPickOff') { const u = imgs[+(d.dataset.cur || 0)], live = savedKeycaps.find(x => x.id === s.id) || s, P = Object.assign({}, live.kitPicPick || {}), key = kitKey(t.name);
@@ -5911,7 +6006,8 @@ function drawSummary(view, x, type) {
     if (t === 'kits') { const kits = [...panel.querySelectorAll('#kitList .kit')].map(readKitRow).filter(k => k.name);
       const bv = type === 'keycaps' && baseViewOf(live), bks = new Set(bv ? splitBasesOf(live).map(baseKey) : []), isOther = k => bv && !k.notOwned && bks.has(kitKey(k.name)) && kitKey(k.name) !== baseKey(bv), isBaseRow = k => bks.has(kitKey(k.name));   // v0.106.0 / v0.107.0
       const cw = k => { const kb = k.cameWith && savedKeyboards.find(b => b.id === k.cameWith); return kb ? 'Came with ' + kb.name : ''; };
-      if (kits.length) extra = `<div class="sumkits">${bv && bv.cat ? `<div><b>${esc(bv.name)}</b><span>This base · Not owned · from the GMK catalog</span></div>` : ''}${kits.map(k => `<div${(k.notOwned && !(bv && kitKey(k.name) === baseKey(bv))) || isOther(k) ? ' class="kno"' : ''}><b>${esc(k.name)}</b><span>${esc([k.notOwned ? 'Not owned yet' : '', isOther(k) ? 'Your other base (on its own card)' : '', bv && kitKey(k.name) === baseKey(bv) ? 'This base' : bv && !isBaseRow(k) && !k.notOwned ? 'Shared by your bases' : '', k.kitType, k.datePurchased ? fmtDate(k.datePurchased) : '', k.purchasedFrom, Number(k.price) ? money(kbTotal(k)) : '', cw(Object.assign({}, kitsOf(live).find(o => o.id === k.id) || {}, k))].filter(Boolean).join(' · '))}</span></div>`).join('')}</div>`; }
+      const others = type === 'keycaps' ? catKitsNotListed().filter(c => !(bv && bv.cat && kitKey(c.name) === baseKey(bv))) : [];   // v0.113.0: every kit of the set, yours in green
+      if (kits.length || others.length) extra = `<div class="sumkits">${bv && bv.cat ? `<div><b>${esc(bv.name)}</b><span>This base · Not owned · from the GMK catalog</span></div>` : ''}${kits.map(k => `<div class="${(k.notOwned && !(bv && kitKey(k.name) === baseKey(bv))) || isOther(k) ? 'kno' : k.notOwned ? '' : 'kyes'}"><b>${k.notOwned ? '' : '✓ '}${esc(k.name)}</b><span>${esc([k.notOwned ? 'Not owned yet' : '', isOther(k) ? 'Your other base (on its own card)' : '', bv && kitKey(k.name) === baseKey(bv) ? 'This base' : bv && !isBaseRow(k) && !k.notOwned ? 'Shared by your bases' : '', k.kitType, k.datePurchased ? fmtDate(k.datePurchased) : '', k.purchasedFrom, Number(k.price) ? money(kbTotal(k)) : '', cw(Object.assign({}, kitsOf(live).find(o => o.id === k.id) || {}, k))].filter(Boolean).join(' · '))}</span></div>`).join('')}${others.map(c => `<div class="kno"><b>${esc(c.name)}</b><span>Not owned · GMK catalog${gmkKitPrice(c) ? ' · ' + esc(gmkKitPrice(c)) : ''}</span></div>`).join('')}</div>`; }
     if (t === 'colors') { const pal = paletteOf(live); if (pal.length) extra = `<div class="sumsw">${pal.map(c => `<span title="${esc([c.name, c.gmk, c.ral, c.pantone, c.hex].filter(Boolean).join(' · '))}"><i style="background:${swBg(c) || esc(c.hex || '#000')}"></i>${esc(c.name || c.hex || '')}</span>`).join('')}</div>`; rows = []; }
     if (t === 'review') { rows = [...panel.querySelectorAll('.rate')].map(r => [r.querySelector('label')?.textContent.trim(), r.querySelector('.val')?.textContent.trim()]).filter(([, v]) => v && v !== 'Not rated'); const rt = fieldValue(panel.querySelector('textarea')); if (rt) rows.push(['Review', rt]); }
     rows = rows.map(r => { const key = t + '|' + r[0], hid = hidden.includes(key); if (hid) nHidden++; return { k: r[0], v: r[1], kind: r[2] || '', cid: r[3] || '', key, hid }; }).filter(r => !r.hid || sumShowHidden);
@@ -7079,6 +7175,8 @@ function stepCard(el, dir) {
   img.src = p.src; img.title = p.cap;
   let c = ph.querySelector('.kcnt'); if (!c) { ph.insertAdjacentHTML('beforeend', '<span class="kcnt"></span>'); c = ph.querySelector('.kcnt'); }
   c.textContent = `${el._pi + 1}/${pics.length} · ${p.cap}`; c.title = p.cap;
+  document.querySelectorAll('#view .kcnt').forEach(o => { if (o !== c) o.remove(); });   // v0.112.0: only the card you are stepping through shows its picture info, for 15 s
+  clearTimeout(el._kt); el._kt = setTimeout(() => c.remove(), 15000);
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-karr]'); if (!b) return; e.preventDefault(); e.stopPropagation(); stepCard(b.closest('a.kcard'), +b.dataset.karr); }, true);
 var kcRet = (() => { try { return JSON.parse(sessionStorage.getItem('kbc_ret') || 'null'); } catch (e) { return null; } })();
@@ -7089,13 +7187,11 @@ function restoreListPos(r) {
     const rc = el.getBoundingClientRect(); if (rc.top < 60 || rc.bottom > window.innerHeight) el.scrollIntoView({ block: 'center' }); el.classList.add('kflash'); setTimeout(() => el.classList.remove('kflash'), 1600); };
   go(); requestAnimationFrame(go);
 }
-async function edgeColorOf(src) {   // average color of a picture's outer edge (2 px of a 64 px copy); '' when the website doesn't allow reading it
-  const im = new Image(); if (!/^data:/.test(src)) im.crossOrigin = 'anonymous';
-  const ok = await new Promise(res => { im.onload = () => res(true); im.onerror = () => res(false); im.src = src; }); if (!ok) return '';
-  const c = document.createElement('canvas'), W = 64, H = Math.max(8, Math.round(64 * im.naturalHeight / im.naturalWidth)); c.width = W; c.height = H; const x = c.getContext('2d'); x.drawImage(im, 0, 0, W, H);
-  let d; try { d = x.getImageData(0, 0, W, H).data; } catch (e) { return ''; }
-  const sum = [0, 0, 0]; let n = 0; for (let yy = 0; yy < H; yy++) for (let xx = 0; xx < W; xx++) { if (xx > 1 && xx < W - 2 && yy > 1 && yy < H - 2) continue; const i = (yy * W + xx) * 4; sum[0] += d[i]; sum[1] += d[i + 1]; sum[2] += d[i + 2]; n++; }
-  return rgbToHex(sum[0] / n, sum[1] / n, sum[2] / n);
+async function edgeColorOf(src, trim) {   // average color of a picture's outer edge (inside any trimmed bars); '' when the website doesn't allow reading it
+  const p = await picData(src, 160); if (!p) return ''; const { d, W, H } = p, tr = trim || {};
+  const x0 = Math.floor(W * (tr.l || 0) / 100), x1 = Math.ceil(W * (1 - (tr.r || 0) / 100)) - 1, y0 = Math.floor(H * (tr.t || 0) / 100), y1 = Math.ceil(H * (1 - (tr.b || 0) / 100)) - 1;
+  const sum = [0, 0, 0]; let n = 0; for (let yy = y0; yy <= y1; yy++) for (let xx = x0; xx <= x1; xx++) { if (xx > x0 + 1 && xx < x1 - 1 && yy > y0 + 1 && yy < y1 - 1) continue; const i = (yy * W + xx) * 4; sum[0] += d[i]; sum[1] += d[i + 1]; sum[2] += d[i + 2]; n++; }
+  return n ? rgbToHex(sum[0] / n, sum[1] / n, sum[2] / n) : '';
 }
 
 /* B10: gallery card sizes on desktop, remembered per category on this device */
@@ -7613,10 +7709,15 @@ function rdRowHtml(r, i) {
         ${r.type === 'switches' ? `<label class="rc-f"><span>Packs</span><input class="input" type="number" min="1" step="1" data-rdqty value="${esc(r.qty)}"></label><label class="rc-f"><span>Switches per pack</span><input class="input" type="number" min="1" step="1" data-rdpack value="${r.pack == null ? '' : esc(r.pack)}" placeholder="?"></label>` : ''}
         <label class="rc-f"><span>${esc(priceLbl)}</span><div class="money-in"><span>$</span><input class="input" type="number" min="0" step="0.01" data-rdprice value="${r.price == null ? '' : esc(rcRound((r.price || 0) * (r.type === 'switches' ? (r.qty || 1) : 1)))}"${p.currency && p.currency !== 'USD' ? ' placeholder="US dollars"' : ''}></div>${p.currency && p.currency !== 'USD' && r.shopPrice != null ? `<span class="sub rd-cur">The shop sells in ${esc(p.currency)} (${esc(rdMoney(p, r.shopPrice))}). The app keeps US dollars, so type the US price or leave it empty.</span>` : ''}</label>
       </div>
-      <div class="rd-opts">${r.type === 'keycaps' && r.mode !== 'wish' ? `<label class="check" title="Untick to add the kit to the set as not owned yet: it shows greyed out in the Kit gallery"><input type="checkbox" data-rdown${r.notOwned ? '' : ' checked'}> I own this kit</label>` : ''}${r.img && r.mode !== 'wish' ? `<label class="check"><input type="checkbox" data-rdcopy${r.copy ? ' checked' : ''}> Keep a copy of this picture (uses Firebase storage; otherwise it is saved as a link)</label>` : ''}
+      <div class="rd-opts">${r.type === 'keycaps' && r.mode !== 'wish' ? `<label class="kownt" title="Click to switch: kits you don't own are added to the set as not owned (greyed in the Kit gallery)"><input type="checkbox" data-rdown${r.notOwned ? '' : ' checked'}><span class="kown-on">✓ I own this kit</span><span class="kown-off">Not owned: click if you own it</span></label>` : ''}${r.img && r.mode !== 'wish' ? `<label class="check"><input type="checkbox" data-rdcopy${r.copy ? ' checked' : ''}> Keep a copy of this picture (uses Firebase storage; otherwise it is saved as a link)</label>` : ''}
         ${r.mode === 'existing' ? `<label class="check"><input type="checkbox" data-rdrep${r.replace ? ' checked' : ''}> Replace its product page, pictures, shop text and retail price (unticked: only empty fields are filled)</label>` : ''}</div>
       <div class="rd-note sub"></div></div></div>`;
 }
+function rdOwnBar() {   // v0.113.0: one click to mark every kit line owned or not owned
+  const ks = rdState.rows.filter(r => r.type === 'keycaps' && r.mode !== 'wish'); if (ks.length < 2) return ''; const n = ks.filter(r => !r.notOwned).length;
+  return `<div class="btnrow rd-ownbar" style="align-items:center;margin:0 0 10px"><span class="sub" style="margin:0">Kits you own: <b>${n} of ${ks.length}</b> · mark all</span><button type="button" class="btn" data-rdownall="1">✓ Owned</button><button type="button" class="btn" data-rdownall="0">Not owned</button><span class="sub" style="margin:0">then switch single kits below</span></div>`; }
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-rdownall]'); if (!b || !rdState || !rdState.rows) return; const on = b.dataset.rdownall === '1';
+  rdState.rows.forEach(r => { if (r.type === 'keycaps' && r.mode !== 'wish') r.notOwned = !on; }); const rows = document.getElementById('rdRows'); if (rows) { rows.innerHTML = rdOwnBar() + rdState.rows.map(rdRowHtml).join(''); rdNotes(); } });
 function rdNotes() {
   document.querySelectorAll('#rdRows .rd-row').forEach(el => { const r = rdState.rows[+el.dataset.i], box = el.querySelector('.rd-note'); if (!r || !box) return; let h = '';
     if (r.mode === 'existing' && r.itemId) { const x = itemsOfType(r.type).find(y => y.id === r.itemId); if (x) h = `Fills empty fields of <b>${esc(rdMatchLabel(r.type, x))}</b>${x.retailPrice != null && !r.replace ? ` · keeps its retail price ${money(x.retailPrice)}` : ''}${r.type === 'keycaps' ? (kitsOf(x).some(k => kitKey(k.name) === kitKey(r.kitName)) ? ` · kit “${esc(r.kitName)}” is already there; only its empty retail price is filled` : ` · adds kit “${esc(r.kitName)}”`) : ''}.`; }
@@ -7652,10 +7753,10 @@ function rdDrawBody() {
     ${many ? `<div class="card" style="margin-top:16px"><h3>Which option?</h3><p class="sub">${p.variants.length} options on this page. Pick the one you have (or want), then add it. Add several to save them as separate entries${p.variants.some(() => true) && rdGuessType(p, p.variants[0]) === 'keycaps' ? ' (keycap kits go into one set)' : ''}.</p>
       ${small && p.options.length <= 1 ? `<div class="btnrow" style="margin:0 0 8px"><button class="btn" id="rdAll" type="button">${p.variants.every(v => rdState.rows.some(r => r.vid === v.id)) ? 'Clear all' : 'Select all'}</button></div><div class="rd-vlist">${p.variants.map(v => `<label class="check"><input type="checkbox" data-rdv="${esc(v.id)}"${rdState.rows.some(r => r.vid === v.id) ? ' checked' : ''}> ${esc(rdVariantLabel(v))}${v.price != null ? ' · ' + rdMoney(p, v.price) : ''}</label>`).join('')}</div>`
         : `<div class="rd-pick">${p.options.map((o, i) => `<label class="rc-f"><span>${esc(o.name)}</span><select class="select" data-rdopt="${i}">${o.values.map(x => `<option>${esc(x)}</option>`).join('')}</select></label>`).join('')}<button class="btn" id="rdAddV">+ Add this option</button>${p.variants.length <= 40 ? `<button class="btn" id="rdEvery" type="button" title="Adds every option on this page as its own line">+ Add all ${p.variants.length}</button>` : ''}</div><p class="sub" id="rdPickMsg" style="margin:6px 0 0"></p>`}</div>` : ''}
-    <div class="card" style="margin-top:16px"><h3>What will be saved</h3><div id="rdRows">${rdState.rows.length ? rdState.rows.map(rdRowHtml).join('') : '<p class="sub">Pick an option above.</p>'}</div></div>
+    <div class="card" style="margin-top:16px"><h3>What will be saved</h3><div id="rdRows">${rdState.rows.length ? rdOwnBar() + rdState.rows.map(rdRowHtml).join('') : '<p class="sub">Pick an option above.</p>'}</div></div>
     <div class="card" style="margin-top:16px"><div id="rdErr" class="sub" style="color:var(--bad-text);margin:0 0 10px"></div><div class="btnrow"><button class="btn primary" id="rdSave" ${rdState.rows.length && db && !isFile ? '' : 'disabled'}>Save</button><button class="btn" id="rdClear">Start over</button></div></div>`;
   rdNotes();
-  const rows = document.getElementById('rdRows'), redraw = () => { rows.innerHTML = rdState.rows.length ? rdState.rows.map(rdRowHtml).join('') : '<p class="sub">Pick an option above.</p>'; document.getElementById('rdSave').disabled = !rdState.rows.length; rdNotes(); };
+  const rows = document.getElementById('rdRows'), redraw = () => { rows.innerHTML = rdState.rows.length ? rdOwnBar() + rdState.rows.map(rdRowHtml).join('') : '<p class="sub">Pick an option above.</p>'; document.getElementById('rdSave').disabled = !rdState.rows.length; rdNotes(); };
   const kcJoin = n => { const o = rdState.rows.find(r => r.type === 'keycaps' && r !== n); if (o && n.type === 'keycaps') { n.setName = o.setName; n.mode = o.mode; n.itemId = o.itemId; } return n; };   // all kits from one keycap page go into one set
   const addRow = v => { if (v && !rdState.rows.some(r => r.vid === v.id)) rdState.rows.push(kcJoin(rdNewRow(p, v))); };
   body.querySelectorAll('[data-rdv]').forEach(c => c.onchange = () => { const v = p.variants.find(x => x.id === c.dataset.rdv); if (c.checked) addRow(v); else rdState.rows = rdState.rows.filter(r => r.vid !== v.id); redraw(); });
@@ -7673,7 +7774,7 @@ function rdDrawBody() {
   rows.addEventListener('change', e => { const el = e.target.closest('.rd-row'); if (!el) return; const i = +el.dataset.i, r = rdState.rows[i], d = e.target.dataset;
     if ('rdmode' in d) { r.mode = e.target.value; if (r.mode === 'existing' && !r.itemId) { const v = p.variants.find(x => x.id === r.vid) || null; r.itemId = rdSuggest(r.type, r.type === 'keycaps' ? r.setName : rdMatchLabel(r.type, Object.assign({}, rdFields(p, v, r.type), { name: r.name })), r.type === 'keycaps' ? '' : rdPageUrl(p, r.vid), r.type !== 'keycaps' && p.variants.length > 1); } if (r.type === 'keycaps') rdState.rows.forEach(x => { if (x.type === 'keycaps') { x.mode = r.mode; x.itemId = r.itemId; } }); redraw(); }
     else if ('rdtype' in d) { const v = p.variants.find(x => x.id === r.vid) || null, n = rdNewRow(p, v, e.target.value); n.price = r.price; n.qty = r.qty; n.copy = r.copy; if (r.mode === 'wish') n.mode = 'wish'; rdState.rows[i] = n; redraw(); }
-    else if ('rditem' in d) { r.itemId = e.target.value; if (r.type === 'keycaps') { rdState.rows.forEach(x => { if (x.type === 'keycaps') x.itemId = r.itemId; }); redraw(); } else rdNotes(); } else if ('rdcopy' in d) r.copy = e.target.checked; else if ('rdown' in d) r.notOwned = !e.target.checked; else if ('rdrep' in d) { r.replace = e.target.checked; rdNotes(); } });
+    else if ('rditem' in d) { r.itemId = e.target.value; if (r.type === 'keycaps') { rdState.rows.forEach(x => { if (x.type === 'keycaps') x.itemId = r.itemId; }); redraw(); } else rdNotes(); } else if ('rdcopy' in d) r.copy = e.target.checked; else if ('rdown' in d) { r.notOwned = !e.target.checked; const ob = document.querySelector('.rd-ownbar'); if (ob) ob.outerHTML = rdOwnBar(); } else if ('rdrep' in d) { r.replace = e.target.checked; rdNotes(); } });
   rows.addEventListener('click', e => { const el = e.target.closest('.rd-row'); if (!el) return; const i = +el.dataset.i, r = rdState.rows[i];
     if (e.target.closest('[data-rddel]')) { rdState.rows.splice(i, 1); body.querySelectorAll(`[data-rdv="${r.vid}"]`).forEach(c => c.checked = false); redraw(); return; }
     if (e.target.closest('[data-rdimg]') && p.images.length > 1) { const k = p.images.findIndex(x => x.src === r.img); r.img = p.images[(k + 1) % p.images.length].src; el.querySelector('.rd-img').innerHTML = `<img src="${esc(r.img)}" alt="" referrerpolicy="no-referrer">`; } });
@@ -8174,13 +8275,172 @@ async function recountStorage() {   // reads every photo and recording once and 
   await withTimeout(metaRef().set({ photoCount: pn, photoBytes: pb, soundCount: sn, soundBytes: sb }, { merge: true }));
   return { pn, pb, sn, sb };
 }
+/* ===================== v0.112.0: backup file (.zip) with pictures, and a pick-what-to-restore restore (Faraz Nov 25) =====================
+   keyboard_collection_backup_<date>.zip, built in the browser (nothing uploaded):
+     manifest.json                 what is inside, when, which options, pictures that could not be fetched
+     README.txt                    the same in words
+     data/<list>.json              records { id: record } (timestamps as { __ts: ms }), plus timeline, wishlist, settings
+     data/photos.json, data/sounds.json   photo / recording records without the picture or sound (thumb kept), each with its file path
+     pictures/<List>/<Item>/NN <label>.webp            your photos and kept copies (full size)
+     pictures/<List>/<Item>/Linked/NN <label>.<ext>     linked pictures (GMK catalog, Keycap Collection app, shop) where the website allows it
+     recordings/<List>/<Item>/NN <note>.webm|m4a        switch sound tests
+   Restore reads the .zip (or an older .json) and asks per list: records / photos / recordings. It sets each chosen record by its id; it never deletes. */
+const ZBK_LISTS = [['keyboards', 'Keyboards'], ['switches', 'Switches'], ['switchparts', 'Switch parts'], ['keycaps', 'Keycaps'], ['deskmats', 'Deskmats'], ['pcbs', 'PCBs and Components'], ['accessories', 'Accessories'], ['artisans', 'Artisans']];
+const ZBK_EXTRA = [['wishlist', 'Wishlist'], ['timeline', 'Build timeline'], ['settings', 'Settings (theme, shops, Pantone table, box order)']];
+const zbkCRC = (() => { const T = new Uint32Array(256).map((_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; }); return b => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }; })();
+function zbkZip(files) {   // stored (no compression: pictures are compressed already); names in UTF-8
+  const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+  const u16 = n => [n & 255, n >>> 8 & 255], u32 = n => [n & 255, n >>> 8 & 255, n >>> 16 & 255, n >>> 24 & 255], d = new Date(), dt = ((d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1)), dd = (((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate());
+  files.forEach(f => { const name = enc.encode(f.name), data = typeof f.data === 'string' ? enc.encode(f.data) : f.data, c = zbkCRC(data);
+    const head = [0x50, 0x4B, 3, 4, ...u16(20), ...u16(0x800), ...u16(0), ...u16(dt), ...u16(dd), ...u32(c), ...u32(data.length), ...u32(data.length), ...u16(name.length), ...u16(0)];
+    parts.push(new Uint8Array(head), name, data);
+    central.push(new Uint8Array([0x50, 0x4B, 1, 2, ...u16(20), ...u16(20), ...u16(0x800), ...u16(0), ...u16(dt), ...u16(dd), ...u32(c), ...u32(data.length), ...u32(data.length), ...u16(name.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(off)]), name);
+    off += head.length + name.length + data.length; });
+  const cs = central.reduce((a, b) => a + b.length, 0);
+  return new Blob([...parts, ...central, new Uint8Array([0x50, 0x4B, 5, 6, ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length), ...u32(cs), ...u32(off), ...u16(0)])], { type: 'application/zip' });
+}
+async function zbkOpen(file) {   // reads the zip's directory; returns { names, get(name) → Uint8Array, text(name) }
+  const size = file.size, tail = new Uint8Array(await file.slice(Math.max(0, size - 66000)).arrayBuffer()), dv0 = new DataView(tail.buffer); let e = -1;
+  for (let i = tail.length - 22; i >= 0; i--) if (dv0.getUint32(i, true) === 0x06054B50) { e = i; break; } if (e < 0) throw new Error('not a zip');
+  const n = dv0.getUint16(e + 10, true), cdSize = dv0.getUint32(e + 12, true), cdOff = dv0.getUint32(e + 16, true);
+  const cd = new Uint8Array(await file.slice(cdOff, cdOff + cdSize).arrayBuffer()), dv = new DataView(cd.buffer), dec = new TextDecoder(), ent = new Map(); let p = 0;
+  for (let k = 0; k < n; k++) { const meth = dv.getUint16(p + 10, true), cs = dv.getUint32(p + 20, true), nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), lo = dv.getUint32(p + 42, true);
+    ent.set(dec.decode(cd.subarray(p + 46, p + 46 + nl)), { meth, cs, lo }); p += 46 + nl + xl + cl; }
+  const get = async name => { const x = ent.get(name); if (!x) return null; const lh = new DataView(await file.slice(x.lo, x.lo + 30).arrayBuffer()), st = x.lo + 30 + lh.getUint16(26, true) + lh.getUint16(28, true), raw = new Uint8Array(await file.slice(st, st + x.cs).arrayBuffer());
+    if (x.meth === 0) return raw; if (x.meth === 8 && typeof DecompressionStream === 'function') return new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()); throw new Error('compressed entry'); };
+  return { names: [...ent.keys()], get, text: async name => { const b = await get(name); return b ? dec.decode(b) : null; } };
+}
+const zbkSafe = s => String(s || 'Untitled').replace(/[\\/:*?"<>|\u0000-\u001F]+/g, '-').replace(/\s+/g, ' ').replace(/^[ .]+|[ .]+$/g, '').slice(0, 80) || 'Untitled';
+const zbkExt = mime => ({ 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/avif': 'avif', 'audio/webm': 'webm', 'audio/mp4': 'm4a', 'audio/ogg': 'ogg' }[String(mime || '').split(';')[0]] || 'bin');
+function zbkDataUrlBytes(u) { const m = /^data:([^;,]+)?(;base64)?,(.*)$/s.exec(u || ''); if (!m) return null; const bin = m[2] ? atob(m[3]) : decodeURIComponent(m[3]), b = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i); return { mime: m[1] || 'application/octet-stream', bytes: b }; }
+function zbkBytesDataUrl(bytes, mime) { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return `data:${mime};base64,${btoa(s)}`; }
+function zbkLinkedOf(type, x, onlyOwned) {   // linked pictures of one item: [{ url, label }]
+  const out = [], seen = new Set(), add = (url, label) => { if (!/^https?:\/\//i.test(url || '')) return; const k = picKey(url); if (seen.has(k)) return; seen.add(k); out.push({ url, label }); };
+  if (type === 'keycaps') { const own = ownedKits(x), owns = n => own.some(k => kitKey(k.name) === kitKey(n) || kitMatch(k.name, n));
+    let pics = []; try { pics = kitPicsOf(x); } catch (e) {}
+    pics.forEach(p => { if (!onlyOwned || owns(p.name)) add(p.url, p.name + (owns(p.name) ? '' : ' (not owned)')); });
+    kitsOf(x).forEach(k => { if (!onlyOwned || !k.notOwned) add(k.refImage, k.name + ' (shop)'); }); }
+  add(x.refImage, 'Shop picture'); (x.refImages || []).forEach((u, i) => add(u, 'Shop picture ' + (i + 1)));
+  return out;
+}
+let zbkCancel = false;
+async function makeZipBackup(opt, say) {
+  zbkCancel = false; const files = [], counts = {}, missing = [], when = new Date(), names = {}, folderOf = {};
+  const lists = ZBK_LISTS.filter(([c]) => opt.lists.includes(c)), all = {};
+  for (const [c, title] of lists) { say(`Reading ${title}…`); const snap = await withTimeout(rootDoc().collection(c).get(), 180000), o = {}; snap.docs.forEach(d => { if (!d.id.startsWith('_')) o[d.id] = d.data(); }); all[c] = o;
+    files.push({ name: `data/${c}.json`, data: JSON.stringify(bkEncode(o)) }); counts[c] = { records: Object.keys(o).length, photos: 0, linked: 0, recordings: 0 };
+    const used = new Set(); Object.entries(o).forEach(([id, x]) => { const mk = x.brand || x.manufacturer || '', nm = String(x.name || ''); let f = zbkSafe(mk && !nm.toLowerCase().startsWith(String(mk).toLowerCase()) ? mk + ' ' + nm : nm || mk); let g = f, k = 2; while (used.has(g.toLowerCase())) g = `${f} (${k++})`; used.add(g.toLowerCase()); folderOf[c + '/' + id] = `${zbkSafe(title)}/${g}`; }); }
+  for (const [c, title] of ZBK_EXTRA.filter(([c]) => opt.lists.includes(c))) { say(`Reading ${title}…`);
+    if (c === 'settings') { const s = await withTimeout(settingsRef().get(), 60000); files.push({ name: 'data/settings.json', data: JSON.stringify(bkEncode(s.exists ? s.data() : {})) }); counts.settings = { records: s.exists ? 1 : 0 }; continue; }
+    const snap = await withTimeout(rootDoc().collection(c).get(), 180000), o = {}; snap.docs.forEach(d => { if (!d.id.startsWith('_')) o[d.id] = d.data(); });
+    files.push({ name: `data/${c}.json`, data: JSON.stringify(bkEncode(o)) }); counts[c] = { records: Object.keys(o).length }; }
+  const inList = it => opt.lists.includes(it.itemType) && all[it.itemType] && all[it.itemType][it.itemId];
+  if (opt.photos) { say('Reading your photos…'); const snap = await withTimeout(rootDoc().collection('photos').get(), 300000), meta = {}, nth = {};
+    snap.docs.forEach(d => { const p = d.data(); if (!inList(p)) return; const b = zbkDataUrlBytes(p.full); if (!b) return; const key = p.itemType + '/' + p.itemId; nth[key] = (nth[key] || 0) + 1;
+      const path = `pictures/${folderOf[key]}/${String(nth[key]).padStart(2, '0')} ${zbkSafe(p.fileName || 'Photo')}.${zbkExt(b.mime)}`; files.push({ name: path, data: b.bytes });
+      const m = Object.assign({}, p); delete m.full; m.file = path; meta[d.id] = m; counts[p.itemType].photos++; });
+    files.push({ name: 'data/photos.json', data: JSON.stringify(bkEncode(meta)) }); }
+  if (opt.sounds) { say('Reading your recordings…'); const snap = await withTimeout(rootDoc().collection('sounds').get(), 300000), meta = {}, nth = {};
+    snap.docs.forEach(d => { const p = d.data(); if (!inList(p)) return; const b = zbkDataUrlBytes(p.audio); if (!b) return; const key = p.itemType + '/' + p.itemId; nth[key] = (nth[key] || 0) + 1;
+      const path = `recordings/${folderOf[key]}/${String(nth[key]).padStart(2, '0')} ${zbkSafe(p.note || p.keyboardName || 'Sound test')}.${zbkExt(p.mime || b.mime)}`; files.push({ name: path, data: b.bytes });
+      const m = Object.assign({}, p); delete m.audio; m.file = path; meta[d.id] = m; counts[p.itemType].recordings++; });
+    files.push({ name: 'data/sounds.json', data: JSON.stringify(bkEncode(meta)) }); }
+  if (opt.linked) {
+    if (opt.lists.includes('keycaps') && typeof loadGmk === 'function' && (!gmkSets || !gmkSets.length)) { say('Loading the GMK catalog for its kit pictures (about 30 seconds)…'); try { await loadGmk(); } catch (e) {} }
+    const jobs = []; for (const [c] of lists) Object.keys(all[c]).forEach(id => { const x = itemsOfType(c).find(y => y.id === id) || Object.assign({ id }, all[c][id]); zbkLinkedOf(c, x, opt.onlyOwned).forEach((l, i) => jobs.push({ c, id, l, i })); });
+    let done = 0; const run = async j => { if (zbkCancel) return; try { const r = await fetch(j.l.url, { mode: 'cors', referrerPolicy: 'no-referrer' }); if (!r.ok) throw new Error('HTTP ' + r.status); const b = await r.blob();
+        const ext = zbkExt(b.type) !== 'bin' ? zbkExt(b.type) : ((/\.(jpe?g|png|webp|gif|avif)(?:\?|$)/i.exec(j.l.url) || [, 'jpg'])[1].replace('jpeg', 'jpg'));
+        files.push({ name: `pictures/${folderOf[j.c + '/' + j.id]}/Linked/${String(j.i + 1).padStart(2, '0')} ${zbkSafe(j.l.label)}.${ext}`, data: new Uint8Array(await b.arrayBuffer()) }); counts[j.c].linked++; }
+      catch (e) { missing.push({ item: folderOf[j.c + '/' + j.id], label: j.l.label, url: j.l.url }); }
+      done++; if (done % 5 === 0 || done === jobs.length) say(`Downloading linked pictures… ${done} of ${jobs.length}`); };
+    for (let i = 0; i < jobs.length; i += 6) { if (zbkCancel) throw new Error('cancelled'); await Promise.all(jobs.slice(i, i + 6).map(run)); }
+  }
+  if (zbkCancel) throw new Error('cancelled');
+  const manifest = { kind: 'kbc_backup_zip', version: 2, app: APP_VERSION, createdAt: when.toISOString(), options: opt, counts, linkedNotSaved: missing };
+  const lines = [`Keyboard Collection backup · ${when.toLocaleString()} · ${APP_VERSION}`, '', 'Keep this file on your PC. It holds prices and receipt links: never put it in the public GitHub repo.', '',
+    'data/          your records (one file per list) for Settings → Restore from a backup',
+    'pictures/      your photos and kept copies, by list and item; "Linked" folders hold the catalog, Keycap Collection app and shop pictures',
+    'recordings/    switch sound tests', '', 'Contents:', ...Object.entries(counts).map(([c, v]) => `  ${(ZBK_LISTS.concat(ZBK_EXTRA).find(x => x[0] === c) || [, c])[1]}: ${v.records} record${v.records === 1 ? '' : 's'}${v.photos ? `, ${v.photos} photo${v.photos === 1 ? '' : 's'}` : ''}${v.linked ? `, ${v.linked} linked picture${v.linked === 1 ? '' : 's'}` : ''}${v.recordings ? `, ${v.recordings} recording${v.recordings === 1 ? '' : 's'}` : ''}`),
+    ...(missing.length ? ['', `${missing.length} linked picture${missing.length === 1 ? '' : 's'} could not be saved (the website doesn't allow it or is offline); they stay as links in the records:`, ...missing.map(m => `  ${m.item} · ${m.label}: ${m.url}`)] : [])];
+  files.unshift({ name: 'manifest.json', data: JSON.stringify(manifest, null, 1) }, { name: 'README.txt', data: lines.join('\r\n') });
+  say('Packing the file…'); const blob = zbkZip(files), a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `keyboard_collection_backup_${todayIso()}.zip`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 20000);
+  lsSet('kbc_last_backup', { at: manifest.createdAt, full: true, zip: true });
+  return { blob, counts, missing, files: files.length };
+}
+function zipBackupDialog() {
+  const d = document.createElement('div'); d.className = 'gdlg'; d.id = 'zbkDlg';
+  const pre = lsGet('kbc_zbk_opt') || { lists: ZBK_LISTS.map(x => x[0]).concat(['wishlist', 'timeline', 'settings']), photos: true, linked: true, sounds: true, onlyOwned: false };
+  d.innerHTML = `<div class="card kv-card" style="max-width:560px"><div class="sec-title"><h3>Make a backup file</h3><button class="btn" data-x>✕</button></div>
+    <p class="sub">One .zip file to keep on your PC: your records in a <b>data</b> folder, your pictures sorted in a <b>pictures</b> folder by list and item. Settings → Restore can put back whatever you pick from it.</p>
+    <div class="fld"><label>Lists</label><div class="zbkgrid">${ZBK_LISTS.concat(ZBK_EXTRA).map(([c, t]) => `<label class="check"><input type="checkbox" data-zl="${c}"${pre.lists.includes(c) ? ' checked' : ''}> ${esc(t)}</label>`).join('')}</div>
+      <div class="btnrow" style="margin-top:4px"><button class="lnk" type="button" data-zall="1">Tick all</button><button class="lnk" type="button" data-zall="0">Untick all</button></div></div>
+    <div class="fld" style="margin-top:8px"><label>Pictures and sounds</label>
+      <label class="check"><input type="checkbox" id="zbkPhotos"${pre.photos ? ' checked' : ''}> My photos and kept copies</label>
+      <label class="check"><input type="checkbox" id="zbkLinked"${pre.linked ? ' checked' : ''}> Linked pictures: GMK catalog, Keycap Collection app and shop pictures (slower; bigger file)</label>
+      <label class="check"><input type="checkbox" id="zbkSounds"${pre.sounds ? ' checked' : ''}> Switch sound recordings</label>
+      <label class="check"><input type="checkbox" id="zbkOwned"${pre.onlyOwned ? ' checked' : ''}> Only what I own: leave out the wishlist and pictures of kits I don't own (records keep every kit)</label></div>
+    <p class="sub" id="zbkMsg" style="margin:8px 0 0">It holds prices and receipt links: keep it on your PC, never in the public GitHub repo.</p>
+    <div class="btnrow" style="margin-top:12px"><button class="btn primary" id="zbkGo">Make the backup file</button><button class="btn" id="zbkStop" hidden>Stop</button></div></div>`;
+  document.body.appendChild(d); const $ = s => d.querySelector(s), msg = $('#zbkMsg');
+  d.onclick = async e => { if (e.target === d || e.target.closest('[data-x]')) { zbkCancel = true; d.remove(); return; }
+    const al = e.target.closest('[data-zall]'); if (al) { d.querySelectorAll('[data-zl]').forEach(c => c.checked = al.dataset.zall === '1'); return; }
+    if (e.target.id === 'zbkStop') { zbkCancel = true; msg.textContent = 'Stopping…'; return; }
+    if (e.target.id !== 'zbkGo') return;
+    const opt = { lists: [...d.querySelectorAll('[data-zl]:checked')].map(c => c.dataset.zl), photos: $('#zbkPhotos').checked, linked: $('#zbkLinked').checked, sounds: $('#zbkSounds').checked, onlyOwned: $('#zbkOwned').checked };
+    if (opt.onlyOwned) opt.lists = opt.lists.filter(c => c !== 'wishlist');
+    if (!opt.lists.length) { msg.textContent = 'Tick at least one list.'; return; } lsSet('kbc_zbk_opt', opt);
+    $('#zbkGo').disabled = true; $('#zbkStop').hidden = false;
+    try { const r = await makeZipBackup(opt, t => { msg.textContent = t; }); const ph = Object.values(r.counts).reduce((a, v) => a + (v.photos || 0), 0), li = Object.values(r.counts).reduce((a, v) => a + (v.linked || 0), 0), rec = Object.values(r.counts).reduce((a, v) => a + (v.records || 0), 0);
+      msg.innerHTML = `<span style="color:var(--ok-text)">Backup saved: ${(r.blob.size / 1048576).toFixed(1)} MB · ${rec} records · ${ph} photos · ${li} linked pictures.</span>${r.missing.length ? ` ${r.missing.length} linked picture${r.missing.length === 1 ? '' : 's'} could not be fetched (listed in README.txt; they stay as links).` : ''}`; toast('Backup file downloaded');
+      const bm = document.getElementById('backupMsg'); if (bm) bm.textContent = `Last backup on this device: ${fmtDate(todayIso())} (backup file with pictures).`; }
+    catch (err) { msg.textContent = err.message === 'cancelled' ? 'Stopped: no file was made.' : 'Backup failed: ' + explain(err); }
+    $('#zbkGo').disabled = false; $('#zbkStop').hidden = true; };
+}
+/* restore from a .zip: the preview lists each list with tick boxes for records / photos / recordings */
+let zrs = null;
+async function readZipRestore(f) {
+  const z = await zbkOpen(f), man = JSON.parse(await z.text('manifest.json') || 'null'); if (!man || man.kind !== 'kbc_backup_zip') throw new Error('This is not a Keyboard Collection backup file.');
+  const data = {}; for (const [c] of ZBK_LISTS.concat(ZBK_EXTRA)) { const t = await z.text(`data/${c}.json`); if (t) data[c] = JSON.parse(t); }
+  const photos = JSON.parse(await z.text('data/photos.json') || '{}'), sounds = JSON.parse(await z.text('data/sounds.json') || '{}');
+  zrs = { z, man, data, photos, sounds }; drawZipRestore();
+}
+function drawZipRestore(note) {
+  const box = document.getElementById('restorePreview'); if (!box || !zrs) return; const { man, data, photos, sounds } = zrs;
+  const pc = c => Object.values(photos).filter(p => p.itemType === c).length, sc = c => Object.values(sounds).filter(p => p.itemType === c).length;
+  const rows = ZBK_LISTS.concat(ZBK_EXTRA).filter(([c]) => data[c]).map(([c, t]) => { const n = c === 'settings' ? 1 : Object.keys(data[c]).length, p = pc(c), s = sc(c);
+    return `<tr><td>${esc(t)}</td><td><label class="check"><input type="checkbox" data-zr="${c}"${c === 'settings' ? '' : ' checked'}> ${c === 'settings' ? 'settings' : n + ' record' + (n === 1 ? '' : 's')}</label></td><td>${p ? `<label class="check"><input type="checkbox" data-zp="${c}" checked> ${p} photo${p === 1 ? '' : 's'}</label>` : '<span class="sub">—</span>'}</td><td>${s ? `<label class="check"><input type="checkbox" data-zs="${c}" checked> ${s}</label>` : '<span class="sub">—</span>'}</td></tr>`; }).join('');
+  box.innerHTML = `<p class="sub" style="margin:0 0 6px">Backup file from <b>${esc(fmtDate(String(man.createdAt).slice(0, 10)))}</b> (${esc(man.app || '')}). Tick what to put back:</p>
+    <table class="list" style="font-size:13px"><thead><tr><th>List</th><th>Records</th><th>Photos</th><th>Recordings</th></tr></thead><tbody>${rows}</tbody></table>
+    <p class="sub" style="margin:6px 0 0">Records you tick replace the same records here; nothing else is changed or deleted. Photos and recordings come back for the items they belong to. Linked pictures in the file are only for you (they are links in the records). Settings is unticked so your current theme stays.</p>
+    <div class="btnrow" style="margin-top:10px"><button class="btn primary" id="btnZrGo">Restore what is ticked</button><button class="btn" id="btnZrCancel">Cancel</button></div><p class="sub" id="restoreMsg" style="margin:6px 0 0">${esc(note || '')}</p>`;
+  document.getElementById('btnZrCancel').onclick = () => { zrs = null; box.innerHTML = ''; };
+  document.getElementById('btnZrGo').onclick = runZipRestore;
+}
+async function runZipRestore() {
+  const box = document.getElementById('restorePreview'), msg = document.getElementById('restoreMsg'), btn = document.getElementById('btnZrGo'), { z, data, photos, sounds, man } = zrs;
+  const R = [...box.querySelectorAll('[data-zr]:checked')].map(c => c.dataset.zr), P = [...box.querySelectorAll('[data-zp]:checked')].map(c => c.dataset.zp), S = [...box.querySelectorAll('[data-zs]:checked')].map(c => c.dataset.zs);
+  const nRec = R.reduce((a, c) => a + (c === 'settings' ? 1 : Object.keys(data[c]).length), 0), ph = Object.entries(photos).filter(([, p]) => P.includes(p.itemType)), so = Object.entries(sounds).filter(([, p]) => S.includes(p.itemType));
+  if (!nRec && !ph.length && !so.length) { msg.textContent = 'Nothing is ticked.'; return; }
+  if (!await askConfirm(`Restore from the backup of ${fmtDate(String(man.createdAt).slice(0, 10))}: ${nRec} records, ${ph.length} photos, ${so.length} recordings?\n\nEach one replaces the same record here (changes made since the backup are lost). Nothing else is deleted.`, { ok: 'Restore' })) return;
+  btn.disabled = true; let done = 0; const tot = nRec + ph.length + so.length;
+  try {
+    for (const c of R) { if (c === 'settings') { await withTimeout(settingsRef().set(bkDecode(data.settings), { merge: true })); done++; continue; }
+      const ids = Object.keys(data[c]); for (let i = 0; i < ids.length; i += 50) { const b = db.batch(); ids.slice(i, i + 50).forEach(id => b.set(rootDoc().collection(c).doc(id), bkDecode(data[c][id]))); await withTimeout(b.commit(), 60000); done += Math.min(50, ids.length - i); msg.textContent = `Restoring… ${done} of ${tot}`; } }
+    for (const [id, p] of ph) { const bytes = await z.get(p.file); if (bytes) { const m = Object.assign({}, p); delete m.file; m.full = zbkBytesDataUrl(bytes, 'image/' + (/\.(\w+)$/.exec(p.file) || [, 'webp'])[1].replace('jpg', 'jpeg')); await withTimeout(rootDoc().collection('photos').doc(id).set(bkDecode(m)), 60000); } done++; msg.textContent = `Restoring… ${done} of ${tot}`; }
+    for (const [id, p] of so) { const bytes = await z.get(p.file); if (bytes) { const m = Object.assign({}, p); delete m.file; m.audio = zbkBytesDataUrl(bytes, p.mime || 'audio/webm'); await withTimeout(rootDoc().collection('sounds').doc(id).set(bkDecode(m)), 60000); } done++; msg.textContent = `Restoring… ${done} of ${tot}`; }
+    if (ph.length || so.length) { msg.textContent = 'Counting photos and recordings…'; await recountStorage(); }
+    zrs = null; box.innerHTML = `<p class="sub" style="margin:0;color:var(--ok-text)">Restored ${nRec} record${nRec === 1 ? '' : 's'}, ${ph.length} photo${ph.length === 1 ? '' : 's'} and ${so.length} recording${so.length === 1 ? '' : 's'}.</p>`; toast('Backup restored');
+  } catch (e) { msg.textContent = `Stopped after ${done} of ${tot}: ${explain(e)} Running it again is safe.`; btn.disabled = false; }
+}
 function wireBackup() {
   const $ = id => document.getElementById(id); if (!$('btnBackup')) return;
   if (!db || isFile) { ['btnBackup', 'btnBackupFull', 'btnRestorePick', 'btnRecount'].forEach(i => { if ($(i)) $(i).disabled = true; }); return; }
-  $('btnBackup').onclick = () => makeBackup(false);
+  $('btnBackup').onclick = () => makeBackup(false); if ($('btnBackupZip')) $('btnBackupZip').onclick = zipBackupDialog;
   $('btnBackupFull').onclick = async () => { if (await askConfirm('This reads every photo and recording, so it can take a few minutes and make a large file. Continue?')) makeBackup(true); };
   $('btnRestorePick').onclick = () => $('restoreFile').click();
-  $('restoreFile').onchange = async () => { const f = $('restoreFile').files[0]; $('restoreFile').value = ''; if (!f) return; restoreData = null;
+  $('restoreFile').onchange = async () => { const f = $('restoreFile').files[0]; $('restoreFile').value = ''; if (!f) return; restoreData = null; zrs = null;
+    if (/\.zip$/i.test(f.name)) { try { await readZipRestore(f); } catch (e) { drawRestorePreview(/not a Keyboard Collection/.test(e.message || '') ? e.message : 'This file could not be read as a backup. Choose a keyboard_collection_backup_….zip or .json file.'); } return; }
     try { const d = JSON.parse(await f.text()); if (!d || d.kind !== 'kbc_backup' || !d.collections) throw new Error('This is not a Keyboard Collection backup file.'); restoreData = d; drawRestorePreview(); }
     catch (e) { drawRestorePreview(/not a Keyboard Collection/.test(e.message || '') ? e.message : 'This file could not be read as a backup. Choose a keyboard_collection_backup_….json file.'); } };
   $('btnRecount').onclick = async () => { const m = $('recountMsg'); $('btnRecount').disabled = true; m.textContent = 'Counting…';
@@ -8208,12 +8468,13 @@ function renderSettings() {
     <h2 style="font-size:17px;margin:26px 0 12px">Backup and restore</h2>
     <div class="two">
       <div class="card" id="backupCard"><h3>Download a backup</h3><p class="sub">Saves a file to this device. It contains prices and receipt links, so keep it on your PC and never put it in the public GitHub repo.</p>
-        <div class="btnrow"><button class="btn primary" id="btnBackup">Back up my records</button><button class="btn" id="btnBackupFull">Back up everything (with photos and recordings)</button></div>
+        <div class="btnrow"><button class="btn primary" id="btnBackupZip" title="One .zip file: your records plus your pictures sorted by list and item; choose what goes in">Make a backup file (.zip, with pictures)…</button></div>
+        <div class="btnrow" style="margin-top:6px"><button class="btn" id="btnBackup" title="Records only, one .json file">Quick backup: records only (.json)</button><button class="btn" id="btnBackupFull" title="The older single-file backup with photos inside">Everything in one .json</button></div>
         <p class="sub" id="backupMsg" style="margin:8px 0 0">${(() => { const l = lsGet('kbc_last_backup'); return l ? `Last backup on this device: ${esc(fmtDate(String(l.at).slice(0, 10)))} (${l.full ? 'everything' : 'records'}).` : 'No backup made on this device yet.'; })()}</p>
         <p class="sub" style="margin:6px 0 0">Tip: press <b>?</b> anywhere for the keyboard shortcuts.</p>
         <p class="sub" style="margin:6px 0 0">Records = keyboards, switches, keycaps, PCBs, artisans, accessories and wishlist. The GMK catalog is not included; reload it from its own file.</p></div>
-      <div class="card" id="restoreCard"><h3>Restore from a backup</h3><p class="sub">Puts back every record in the file, replacing the current version of each. Records that are not in the file are left alone. Nothing happens until you confirm.</p>
-        <input type="file" id="restoreFile" accept=".json,application/json" hidden><div class="btnrow"><button class="btn" id="btnRestorePick">Choose a backup file…</button></div>
+      <div class="card" id="restoreCard"><h3>Restore from a backup</h3><p class="sub">A .zip backup file shows each list with tick boxes so you choose what to put back; an older .json puts back every record in it. Each restored record replaces the current version of it. Records that are not in the file are left alone. Nothing happens until you confirm.</p>
+        <input type="file" id="restoreFile" accept=".zip,.json,application/zip,application/json" hidden><div class="btnrow"><button class="btn" id="btnRestorePick">Choose a backup file…</button></div>
         <div id="restorePreview" style="margin-top:8px"></div></div>
     </div>
     ${currentUser ? `<h2 style="font-size:17px;margin:26px 0 12px">Account and security</h2>
