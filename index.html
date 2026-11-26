@@ -704,7 +704,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.115.0';
+const APP_VERSION = 'v0.116.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -1583,9 +1583,13 @@ function organizeHeader() {
     const pop = tl.querySelector('.hpop');
     if (!pop.querySelector('[data-hread]')) pop.insertAdjacentHTML('beforeend', `<button class="btn hitem" type="button" data-hread="page" title="Read a shop or catalog page into this entry">Read a webpage into it…</button><button class="btn hitem" type="button" data-hread="rc" title="Read an order receipt (PDF) into this entry">Read a receipt into it…</button>`);
     hmenuFill(tl, [$('btnDone')].filter(Boolean)); if ($('btnDone') && pop.firstChild !== $('btnDone')) pop.insertBefore($('btnDone'), pop.firstChild);
-    pop.querySelector('[data-hread="page"]').hidden = !$('refReread'); pop.querySelector('[data-hread="rc"]').hidden = !$('readIntoRc');
-    const first = tools.querySelector('#btnCancelTop') || tools.querySelector('#btnDelete'); [share, org, tl].forEach(w => { if (w.nextElementSibling !== first && w.parentNode === tools) tools.insertBefore(w, first); });
-    const del = $('btnDelete'), can = $('btnCancelTop'); if (del && can && del.nextElementSibling !== can) tools.insertBefore(del, can);
+    const hp = pop.querySelector('[data-hread="page"]'), hr = pop.querySelector('[data-hread="rc"]'), wantRc = !$('readIntoRc');
+    if (hp.hidden) hp.hidden = false; if (hr.hidden !== wantRc) hr.hidden = wantRc;
+    /* v0.116.0: move nodes only when they are out of place. v0.115.0 moved them on every call, which set off the observer again,
+       so the header was rebuilt about 100 times a second and a real (slow) click often lost its button between press and release. */
+    const del = $('btnDelete'), can = $('btnCancelTop'), first = del || can; /* order: Share, Organize, Tools, Delete, Discard, Save */
+    if (first && !(first.previousElementSibling === tl && tl.previousElementSibling === org && org.previousElementSibling === share)) [share, org, tl].forEach(w => tools.insertBefore(w, first));
+    if (del && can && del.nextElementSibling !== can) tools.insertBefore(del, can);
   } else if (lt && !onItem) {
     const view = hmenuOf(tools, 'view', 'View', 'Gallery or list, card size, colors per card, main picture'), more = hmenuOf(tools, 'more', 'More', 'Share as image, stats, work queue');
     const seg = tools.querySelector('.seg[aria-label="View"]');
@@ -1600,7 +1604,12 @@ document.addEventListener('click', e => {
   const hb = e.target.closest && e.target.closest('.hmb'), inPop = e.target.closest && e.target.closest('.hpop');
   document.querySelectorAll('.hmenu .hpop:not([hidden])').forEach(p => { if (!(hb && hb.nextElementSibling === p) && !(inPop === p && !e.target.closest('button.hitem:not(.seg button), a'))) { p.hidden = true; p.previousElementSibling.setAttribute('aria-expanded', 'false'); } });
   if (hb) { const p = hb.nextElementSibling; p.hidden = !p.hidden; hb.setAttribute('aria-expanded', String(!p.hidden)); if (!p.hidden) { p.style.left = ''; p.style.right = ''; const r = p.getBoundingClientRect(); if (r.right > window.innerWidth - 8) { p.style.left = 'auto'; p.style.right = '0'; } } return; }
-  const rd = e.target.closest && e.target.closest('[data-hread]'); if (rd) { const b = document.getElementById(rd.dataset.hread === 'page' ? 'refReread' : 'readIntoRc'); if (b) b.click(); }
+  const rd = e.target.closest && e.target.closest('[data-hread]'); if (rd) {
+    const b = document.getElementById(rd.dataset.hread === 'page' ? 'refReread' : 'readIntoRc'); if (b) { b.click(); return; }
+    if (rd.dataset.hread === 'page') { /* keycap sets have no From the shop card: start the reader here */
+      const m = location.hash.match(/^#\/(\w+)\/([^/?]+)/), t = m && m[1], x = t && itemsOfType(t).find(y => y.id === m[2]); if (!x) return;
+      if (formDirty) { toast('Save or discard your changes first'); return; }
+      setReadTarget({ kind: 'page', type: t, id: x.id, label: rcLabel(t, x) || x.name || 'this entry' }); if (x.refUrl && /^https?:/.test(x.refUrl)) sessionStorage.setItem('kbc_link', x.refUrl); location.hash = '#/import/link'; } }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.hmenu .hpop:not([hidden])').forEach(p => { p.hidden = true; p.previousElementSibling.setAttribute('aria-expanded', 'false'); }); });
 
