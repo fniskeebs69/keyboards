@@ -143,6 +143,19 @@
   .fav.on { color: var(--kb); border-color: color-mix(in srgb, var(--kb) 50%, var(--line)); }
   .badge { position: absolute; top: 12px; left: 12px; }
   .hmenu { position: relative; display: inline-flex; } .hmenu[hidden] { display: none; } .hpop { position: absolute; top: calc(100% + 6px); left: 0; z-index: 70; min-width: 220px; padding: 6px; display: grid; gap: 4px; background: var(--surface); border: var(--bw) var(--bs) var(--line-2); border-radius: var(--radius-s); box-shadow: 0 12px 32px rgba(0,0,0,.35); } .hpop[hidden] { display: none; }
+  body:has(#picWin) .modal-bg, body:has(#picWin) .wheel { z-index: 150; }   /* crop step and color wheel open above the Pictures window */
+  .k-wishrow { display: none; margin: 6px 0 0; } .kit-no .k-wishrow { display: block; } .k-wish { font-size: 12px; padding: 4px 10px; }
+  .kgwish { position: absolute; right: 6px; bottom: 6px; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: rgba(15,17,21,.82); color: var(--accent); border: 1px solid var(--accent); filter: none; opacity: 1; cursor: pointer; z-index: 2; }
+  .kgwish.on { color: var(--text-2); border-color: var(--line-2); } .kgwish:hover { background: var(--accent); color: var(--on-accent); }
+  body.nodone [data-sel="queue"], body.nodone [data-sel="done"][data-donev], body.nodone [data-workmenu], body.nodone .donebtn, body.nodone #btnDone { display: none !important; }
+  .pw-card { max-width: 900px; width: 100%; } .pw-tabs { margin: 4px 0 12px; } .pw-panel > .side-card { margin: 0; border: 0; padding: 0; background: none; box-shadow: none; }
+  #picWin [data-openpics] { display: none; } .pw-kits { display: grid; gap: 8px; } .pw-kit { display: grid; grid-template-columns: 96px 1fr auto; gap: 12px; align-items: center; padding: 8px; border: var(--bw) var(--bs) var(--line); border-radius: var(--radius-s); }
+  .pw-kit.pw-not { border-style: dashed; } .pw-kit.pw-not .pw-kimg img { filter: grayscale(1) brightness(.8); opacity: .6; } .pw-kimg { width: 96px; height: 72px; border-radius: 8px; overflow: hidden; background: var(--bg-2); display: grid; place-items: center; }
+  .pw-kimg img { width: 100%; height: 100%; object-fit: cover; } .pw-kname { display: grid; gap: 2px; min-width: 0; } .pw-kname b { overflow-wrap: anywhere; } .pw-kbtns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .pw-frame { display: grid; grid-template-columns: minmax(0, 360px) 1fr; gap: 16px; align-items: start; } .pw-fbox { aspect-ratio: 4 / 3; border-radius: var(--radius-s); overflow: hidden; background: var(--bg-2); }
+  .pw-fbox img { width: 100%; height: 100%; display: block; } .pw-row { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); } .pw-row span { color: var(--text-2); }
+  .pw-sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; border: 1px solid var(--line-2); }
+  @media (max-width: 700px) { .pw-kit { grid-template-columns: 72px 1fr; } .pw-kimg { width: 72px; height: 54px; } .pw-kbtns { grid-column: 1 / -1; justify-content: flex-start; } .pw-frame { grid-template-columns: 1fr; } .pw-tabs { overflow-x: auto; } }
   .hpop .hitem { width: 100%; justify-content: flex-start; text-align: left; margin: 0; } .hpop button.hitem:not(.seg) { border-color: transparent; background: transparent; } .hpop button.hitem:not(.seg):hover { background: var(--bg-2); } .hpop select.hitem { width: 100%; } .hpop .seg.hitem { display: flex; }
   .addmenu { position: absolute; z-index: 60; padding: 6px; display: grid; gap: 2px; box-shadow: 0 12px 32px rgba(0,0,0,.35); } .addmenu a { display: grid; gap: 2px; padding: 9px 10px; border-radius: var(--radius-s); color: var(--text); text-decoration: none; } .addmenu a:hover, .addmenu a:focus-visible { background: var(--bg-2); } .addmenu a span { font-size: 12.5px; color: var(--text-2); }
   .k-pic { width: 46px; height: 36px; padding: 0; border-radius: 6px; border: var(--bw) var(--bs) var(--line-2); background: var(--bg); color: var(--text-3); cursor: pointer; overflow: hidden; display: grid; place-items: center; font-size: 15px; } .k-pic img { width: 100%; height: 100%; object-fit: cover; display: block; } .k-pic:hover { border-color: var(--kc); }
@@ -704,7 +717,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.116.0';
+const APP_VERSION = 'v0.120.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -793,7 +806,7 @@ const SECTIONS = [
   { id: 'artisans',    title: 'Artisans',    color: 'var(--ar)',  built: true,  singular: 'artisan' },
   { id: 'wishlist',    title: 'Wishlist',    color: '#f472b6', built: true },
   { group: 'TOOLS' },
-  { id: 'value',       title: 'Value',       color: '#34d399', built: true },
+  { id: 'value',       title: 'Value',       color: '#34d399', built: true, nonav: true },   // v0.120.0: a tab of Stats (Market value)
   { id: 'check',       title: 'Check my data', color: 'var(--ch1)', built: true },
   { id: 'stats',       title: 'Stats',       color: 'var(--ch1)', built: true },
   { id: 'sounds',      title: 'Sound compare', color: 'var(--sw)', built: true },
@@ -829,10 +842,11 @@ document.addEventListener('click', e => {
 document.addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
 
 function renderNav(active) {
+  if (active === 'value') active = 'stats';   // v0.120.0
   const subsOf = id => SECTIONS.filter(x => x.parent === id).map(x => x.title).join(', ');
   document.getElementById('nav').innerHTML = SECTIONS.map(s => s.group
     ? `<div class="navgroup">${s.group}</div>`
-    : s.sub && navCollapsed(s.parent) && s.id !== active ? '' : `<a class="navitem${s.id === active ? ' on' : ''}${s.sub ? ' navsub' : ''}" href="#/${s.id}" style="--c:${s.color}" title="${s.title}">${I[s.id] || I[s.parent] || ''}<span class="t">${s.title}</span>${NAV_KEYS[s.id] ? `<button class="navtog" type="button" data-navtog="${s.id}" title="${navCollapsed(s.id) ? 'Show' : 'Hide'} ${subsOf(s.id)}" aria-label="${navCollapsed(s.id) ? 'Show' : 'Hide'} ${subsOf(s.id)}" aria-expanded="${!navCollapsed(s.id)}">${navCollapsed(s.id) ? '▸' : '▾'}</button>` : ''}${s.built ? '' : '<span class="soon">Later</span>'}</a>`).join('');
+    : s.nonav ? '' : s.sub && navCollapsed(s.parent) && s.id !== active ? '' : `<a class="navitem${s.id === active ? ' on' : ''}${s.sub ? ' navsub' : ''}" href="#/${s.id}" style="--c:${s.color}" title="${s.title}">${I[s.id] || I[s.parent] || ''}<span class="t">${s.title}</span>${NAV_KEYS[s.id] ? `<button class="navtog" type="button" data-navtog="${s.id}" title="${navCollapsed(s.id) ? 'Show' : 'Hide'} ${subsOf(s.id)}" aria-label="${navCollapsed(s.id) ? 'Show' : 'Hide'} ${subsOf(s.id)}" aria-expanded="${!navCollapsed(s.id)}">${navCollapsed(s.id) ? '▸' : '▾'}</button>` : ''}${s.built ? '' : '<span class="soon">Later</span>'}</a>`).join('');
 }
 
 /* ===================== Data: sample keyboards (in-app only, not saved) ===================== */
@@ -1578,6 +1592,7 @@ function organizeHeader() {
   const lt = listTypeNow(), onItem = /^#\/\w+\/[^/]+/.test(location.hash) && !/\/new$/.test(location.hash) && !/^#\/(import|settings|help|check|catalog|stats|value|sounds)/.test(location.hash);
   const $ = id => document.getElementById(id);
   if (onItem && tools.querySelector('#btnDelete')) {
+    let pics = $('btnPictures'); if (!pics) { tools.insertAdjacentHTML('afterbegin', '<button class="btn" type="button" id="btnPictures" title="Your photos, shop pictures, kit pictures and how the picture is framed">Pictures</button>'); pics = $('btnPictures'); }
     const share = hmenuOf(tools, 'share', 'Share', 'Build card and QR label'), org = hmenuOf(tools, 'org', 'Organize', 'Merge, duplicate, move or split this entry'), tl = hmenuOf(tools, 'tools', 'Tools', 'Done mark, read a webpage or a receipt into this entry');
     hmenuFill(share, [$('btnBuildCard'), $('btnQr')]); hmenuFill(org, [$('btnMerge'), $('btnDup'), $('btnMove'), $('btnSplit'), $('btnBundle')]);
     const pop = tl.querySelector('.hpop');
@@ -1588,7 +1603,7 @@ function organizeHeader() {
     /* v0.116.0: move nodes only when they are out of place. v0.115.0 moved them on every call, which set off the observer again,
        so the header was rebuilt about 100 times a second and a real (slow) click often lost its button between press and release. */
     const del = $('btnDelete'), can = $('btnCancelTop'), first = del || can; /* order: Share, Organize, Tools, Delete, Discard, Save */
-    if (first && !(first.previousElementSibling === tl && tl.previousElementSibling === org && org.previousElementSibling === share)) [share, org, tl].forEach(w => tools.insertBefore(w, first));
+    if (first && !(first.previousElementSibling === tl && tl.previousElementSibling === org && org.previousElementSibling === share && share.previousElementSibling === pics)) [pics, share, org, tl].forEach(w => tools.insertBefore(w, first));
     if (del && can && del.nextElementSibling !== can) tools.insertBefore(del, can);
   } else if (lt && !onItem) {
     const view = hmenuOf(tools, 'view', 'View', 'Gallery or list, card size, colors per card, main picture'), more = hmenuOf(tools, 'more', 'More', 'Share as image, stats, work queue');
@@ -1613,6 +1628,154 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.hmenu .hpop:not([hidden])').forEach(p => { p.hidden = true; p.previousElementSibling.setAttribute('aria-expanded', 'false'); }); });
 
+
+/* ===================== v0.118.0 (audit item 11): "+ Wishlist" on every kit you don't own =====================
+   Kits tab rows marked Not owned, the GMK catalog kits not on your list, greyed Kit gallery tiles and the Pictures window's Kits tab.
+   Same wishlist item as the GMK reference card: Keycaps, set name, kit name, Wanted, estimated price = catalog price or the kit's retail price. */
+function kwSet() { const id = (editing && editing.id) || (picWinCurrent() || {}).x?.id; return id ? savedKeycaps.find(x => x.id === id) : null; }
+function kwPrice(s, name) {
+  const ref = s.gmkRef && typeof gmkSets !== 'undefined' && gmkSets ? gmkSets.find(g => g.id === s.gmkRef) : null;
+  if (ref) { const ck = (ref.kits || []).find(k => kitKey(k.name) === kitKey(name)) || [...pairKits([{ name }], ref.kits || [], s.kitLinks || {}).keys()][0]; if (ck && ck.priceUsd != null) return ck.priceUsd; }
+  const mine = kitsOf(s).find(k => kitKey(k.name) === kitKey(name)); return mine && mine.retailPrice != null ? mine.retailPrice : null;
+}
+function kitWishRefresh() {
+  const s = kwSet(); document.querySelectorAll('[data-kwish]').forEach(b => { const n = b.dataset.kwish || b.closest('.kit')?.querySelector('.k-name')?.value.trim() || '', on = !!(s && n && wishHas(s.name, n));
+    if (b.classList.contains('kgwish')) { b.textContent = on ? 'On wishlist' : '+ Wishlist'; b.classList.toggle('on', on); } else { b.textContent = on ? 'On wishlist' : '+ Wishlist'; b.disabled = on; } });
+}
+document.addEventListener('click', async e => {
+  const b = e.target.closest && e.target.closest('[data-kwish]'); if (!b) return; e.stopPropagation(); e.preventDefault();
+  const s = kwSet(), n = b.dataset.kwish || b.closest('.kit')?.querySelector('.k-name')?.value.trim() || '';
+  if (!s) { toast('Save the set first'); return; } if (!n) { toast('Name the kit first'); return; } if (b.disabled || b.classList.contains('on')) { toast('Already on your wishlist'); return; }
+  b.disabled = true; await addKitToWishlist(s, { name: n, priceUsd: kwPrice(s, n) }); setTimeout(kitWishRefresh, 700); setTimeout(() => { b.disabled = false; kitWishRefresh(); }, 1500);
+}, true);
+document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('kgwish')) { e.preventDefault(); e.stopPropagation(); e.target.click(); } }, true);
+document.addEventListener('change', e => { if (e.target.classList && (e.target.classList.contains('k-owned') || e.target.classList.contains('k-name'))) setTimeout(kitWishRefresh, 0); });
+{ const f0 = drawKitGallery; drawKitGallery = function () { const r = f0.apply(this, arguments); setTimeout(kitWishRefresh, 0); return r; }; }
+
+
+/* ===================== v0.120.0 (audit items 13, 14) =====================
+   Stats has two tabs: Spending (#/stats) and Market value (#/value, no longer its own menu entry).
+   Done marks and the work queue can be switched off (Settings): the Done ticks on cards, Tools ▾ → Mark done, Filter → Work,
+   More ▾ → Work… and Select → Add to work queue / Mark done. Default: on if any entry has a done mark or is in the queue, else off. */
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-sttab]'); if (b) location.hash = '#/' + b.dataset.sttab; });
+function doneUi() { try { const v = localStorage.getItem('kbc_done_ui'); if (v === '1') return true; if (v === '0') return false; } catch (e) {}
+  return LIST_TYPES.some(t => (itemsOfType(t) || []).some(x => x.doneAt || x.inQueue)); }
+function applyDoneUi() { document.body.classList.toggle('nodone', !doneUi()); }
+/* ===================== v0.119.0 (audit items 5 and 6): owned / not owned saves at once =====================
+   On a saved set, the Owned switch of a saved kit, ✕ → "Mark as not owned", "I own it" / "Add as not owned" on the catalog kits
+   and "I own this kit" / "I don't own this kit" in the kit window write straight away (Undo in the message). Only that kit's
+   owned mark is written, from the saved record, so other unsaved typing on the form stays unsaved (Save still lit for it).
+   A kit you added but haven't saved yet still needs Save. */
+function kitOwnSaved(row) {
+  const sid = editing && editing.id, live = sid && savedKeycaps.find(x => x.id === sid); if (!live || !row) return null;
+  const k = kitsOf(live).find(y => y.id === row.dataset.kit); return k ? { live, k } : null;
+}
+async function kitOwnWrite(sid, mutate, msg, undoMut) {
+  const live = savedKeycaps.find(x => x.id === sid); if (!live) return false; const y0 = window.scrollY, h0 = location.hash, was = !!formDirty;
+  const kits = mutate(JSON.parse(JSON.stringify(kitsOf(live))));
+  if (editing && editing.id === sid) editing = Object.assign({}, editing, { kits });
+  try { await withTimeout(kcCol().doc(sid).update({ kits, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); }
+  catch (er) { toast('Not saved: ' + explain(er)); return false; }
+  if (!was) setTimeout(() => { if (location.hash === h0) window.scrollTo(0, y0); }, 450);   // the page is redrawn from the saved record: keep your place
+  toast(msg, undoMut ? { action: 'Undo', ms: 8000, onAction: () => kitOwnWrite(sid, undoMut, 'Undone') } : undefined); return true;
+}
+function kitOwnFlip(row, owned) {
+  const hit = kitOwnSaved(row); if (!hit) return false; const id = hit.k.id, nm = row.querySelector('.k-name')?.value.trim() || hit.k.name;
+  const set = on => ks => ks.map(k => { if (k.id !== id) return k; const c = Object.assign({}, k); if (on) delete c.notOwned; else c.notOwned = true; return c; });
+  kitOwnWrite(hit.live.id, set(owned), `${nm}: ${owned ? '✓ owned' : 'not owned'} (saved)`, set(!owned)); return true;
+}
+document.addEventListener('input', e => { if (e.target.classList && e.target.classList.contains('k-owned') && kitOwnSaved(e.target.closest('.kit'))) e.stopPropagation(); }, true);
+document.addEventListener('change', e => {
+  const o = e.target; if (!o.classList || !o.classList.contains('k-owned')) return; const r = o.closest('.kit'); if (!kitOwnSaved(r)) return;
+  e.stopPropagation(); r.classList.toggle('kit-own', o.checked); r.classList.toggle('kit-no', !o.checked); try { drawOtherKits(); } catch (er) {} setTimeout(kitWishRefresh, 0);
+  kitOwnFlip(r, o.checked);
+}, true);
+async function kitOwnAdd(name, owned) {   // a catalog kit added to the saved set at once
+  const sid = editing && editing.id, live = sid && savedKeycaps.find(x => x.id === sid); if (!live) return null;
+  const id = 'k' + Math.random().toString(36).slice(2, 10), kit = { id, name, quantity: 1, source: 'app' }; const kt = kitTypeGuess(live, name); if (kt) kit.kitType = kt; if (!owned) kit.notOwned = true;
+  const ok = await kitOwnWrite(sid, ks => ks.concat([kit]), owned ? `Added ${name} as owned (saved). Add what you paid on the Kits tab.` : `Added ${name} as not owned (saved)`, ks => ks.filter(k => k.id !== id));
+  return ok ? kit : null;
+}
+/* ===================== v0.117.0 (Faraz Nov 26, audit item 4): one Pictures window =====================
+   Header "Pictures" button on every saved entry. Tabs: Your photos (the Photos card itself), Shop (the From the shop card itself),
+   Kits (keycap sets: each kit's picture, Change picture…, main picture) and Frame & side bars (how the display picture shows, Adjust…).
+   The two cards are moved into the window while it is open and put back when it closes, so they work exactly as on the page. */
+let picWinHome = [];
+function picWinClose() {
+  const d = document.getElementById('picWin'); if (!d) return;
+  picWinHome.forEach(({ node, mark }) => { if (mark.isConnected && !document.querySelector(`#view #${node.id}`)) mark.replaceWith(node); else mark.remove(); });
+  picWinHome = []; if (picWinObs) { picWinObs.disconnect(); picWinObs = null; } d.remove(); document.removeEventListener('keydown', picWinKey, true);
+}
+let picWinObs = null, picWinQ = 0;
+/* the page redraws its side cards when the entry changes (a new photo, a shop picture starred): the fresh card is moved into the window too */
+function picWinAdopt() {
+  const d = document.getElementById('picWin'); if (!d) return;
+  [['photoCard', 'photos'], ['refCard', 'shop']].forEach(([id, k]) => {
+    const fresh = document.querySelector(`#view #${id}`), panel = d.querySelector(`[data-pwp="${k}"]`); if (!fresh || !panel) return;
+    const mark = document.createElement('span'); mark.hidden = true; mark.className = 'pw-home'; fresh.replaceWith(mark);
+    const old = panel.querySelector(`#${id}`); if (old) old.replaceWith(fresh); else { panel.querySelectorAll(':scope > p.sub').forEach(x => x.remove()); panel.appendChild(fresh); }
+    const e = picWinHome.find(h => h.node.id === id); if (e) { if (e.mark.isConnected && e.mark !== mark) e.mark.remove(); e.node = fresh; e.mark = mark; } else picWinHome.push({ node: fresh, mark });
+  });
+}
+function picWinKey(e) { if (e.key !== 'Escape') return; const top = [...document.querySelectorAll('.gdlg')].pop(); if (top && top.id === 'picWin') { e.stopPropagation(); picWinClose(); } }
+function picWinCurrent() { const m = location.hash.match(/^#\/(\w+)\/([^/?]+)/); if (!m || m[2] === 'new') return null; const t = m[1], x = itemsOfType(t)?.find(y => y.id === m[2]); return x ? { t, x } : null; }
+function picWinKitsHtml(s) {
+  let tiles = []; try { tiles = kitGalleryTiles(s).tiles; } catch (e) { tiles = kitsOf(s).map(k => ({ name: k.name, owned: !k.notOwned })); }
+  const seen = new Set(); tiles = tiles.filter(t => { const k = kitKey(t.name); if (!t.name || seen.has(k)) return false; seen.add(k); return true; });
+  if (!tiles.length) return '<p class="sub">No kits on this set yet. Add them on the Kits tab.</p>';
+  const main = kitKey(s.coverKit || '');
+  return `<p class="sub" style="margin:0 0 10px">Every kit of this set with the picture it shows now. ★ marks the set's main picture (card and Summary).</p><div class="pw-kits">${tiles.map(t => { const u = kitPicNow(s, t.name), on = main && kitKey(t.name) === main;
+    return `<div class="pw-kit${t.owned ? '' : ' pw-not'}" data-kitname="${esc(t.name)}"><div class="pw-kimg">${u ? `<img src="${u.startsWith('data:') ? u : esc(u)}" alt="" referrerpolicy="no-referrer" loading="lazy">` : '<span>📷</span>'}</div>
+      <div class="pw-kname"><b>${esc(t.name)}</b><span class="sub">${t.owned ? '✓ Owned' : 'Not owned'}</span></div>
+      <div class="pw-kbtns">${t.owned ? '' : `<button class="btn" type="button" data-kwish="${esc(t.name)}">+ Wishlist</button>`}<button class="btn" type="button" data-pwk="pic">Change picture…</button>${u ? `<button class="btn${on ? ' primary' : ''}" type="button" data-pwk="${on ? 'mainoff' : 'main'}" title="${on ? 'Stop using this kit as the set\'s main picture' : 'Show this kit\'s picture on the card and the Summary'}">${on ? '★ Main picture' : '☆ Use as main'}</button>` : ''}</div></div>`; }).join('')}</div>`;
+}
+function picWinFrameHtml(t, x) {
+  const src = coverSrcOf(t, x), f = x.coverFit || null, ts = src && trimmedSrc(x, src), shown = ts || src;
+  const fr = !f ? 'Fills the frame (default)' : f.fit === 'contain' ? 'Whole picture shown' : `Zoom ${(+(f.z || 1)).toFixed(2).replace(/\.?0+$/, '')}×, moved`;
+  const main = t === 'keycaps' ? (x.coverKit ? `Kit picture: ${x.coverKit} (change on the Kits tab)` : 'Set picture (or a Base kit picture)') : (x.coverThumb ? 'Your default photo' : x.stockThumb ? 'Your stock picture' : x.refImage ? 'Shop picture' : '');
+  return src ? `<div class="pw-frame"><div class="pw-fbox" style="background:${esc(x.coverBg || '')}"><img src="${shown.startsWith('data:') ? shown : esc(shown)}" alt="" referrerpolicy="no-referrer" style="${ts ? 'object-fit:contain' : fitStyle(f)}"></div>
+    <div class="pw-finfo"><p class="sub" style="margin:0 0 6px">This is how the picture shows on the gallery card.</p>
+      <div class="pw-row"><span>Picture</span><b>${esc(main)}</b></div><div class="pw-row"><span>Framing</span><b>${fr}</b></div>
+      <div class="pw-row"><span>Side bars</span><b>${x.coverBg ? `<i class="pw-sw" style="background:${esc(x.coverBg)}"></i>${esc(x.coverBg)}` : 'Default'}</b></div>
+      ${f && f.trim ? `<div class="pw-row"><span>Plain bars in the picture</span><b>${ts ? 'Left out' : 'Left out (make the copy again with Adjust → Save)'}</b></div>` : ''}
+      <button class="btn primary" type="button" data-pwf="adjust" style="margin-top:10px">Adjust…</button></div></div>`
+    : '<p class="sub">This entry has no picture yet. Add a photo on the Your photos tab, or a shop picture on the Shop tab.</p>';
+}
+function openPicturesWindow(tab) {
+  const cur = picWinCurrent(); if (!cur) { toast('Save the entry first'); return; } picWinClose();
+  const { t } = cur, x = cur.x, isKc = t === 'keycaps', photo = document.querySelector('#view #photoCard'), shop = document.querySelector('#view #refCard');
+  const nPh = typeof currentPhotos !== 'undefined' && currentPhotos ? currentPhotos.length : 0, nShop = (x.refImages || []).length || (x.refImage ? 1 : 0);
+  const tabs = [['photos', `Your photos${nPh ? ` (${nPh})` : ''}`], shop ? ['shop', `Shop${nShop ? ` (${nShop})` : ''}`] : null, isKc ? ['kits', `Kits (${kitsOf(x).length})`] : null, ['frame', 'Frame & side bars']].filter(Boolean);
+  const d = document.createElement('div'); d.className = 'gdlg'; d.id = 'picWin'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.setAttribute('aria-label', 'Pictures');
+  d.innerHTML = `<div class="card kv-card pw-card"><div class="sec-title"><h3>Pictures · ${esc((() => { const mk = x.brand || x.manufacturer || '', nm = x.name || ''; return mk && !nm.toLowerCase().startsWith(mk.toLowerCase()) ? mk + ' ' + nm : nm; })())}</h3><button class="btn" type="button" data-pwx title="Close (Esc)">✕</button></div>
+    <div class="tabs pw-tabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" role="tab" data-pwt="${k}">${l}</button>`).join('')}</div>
+    ${tabs.map(([k]) => `<div class="pw-panel" data-pwp="${k}" hidden></div>`).join('')}</div>`;
+  document.body.appendChild(d);
+  const park = (node, k) => { if (!node) return; const mark = document.createElement('span'); mark.hidden = true; mark.className = 'pw-home'; node.replaceWith(mark); picWinHome.push({ node, mark }); d.querySelector(`[data-pwp="${k}"]`).appendChild(node); };
+  park(photo, 'photos'); if (!photo) d.querySelector('[data-pwp="photos"]').innerHTML = '<p class="sub">Photos can be added once the entry is saved.</p>';
+  park(shop, 'shop');
+  const live = () => itemsOfType(t).find(y => y.id === x.id) || x;
+  const draw = k => { const p = d.querySelector(`[data-pwp="${k}"]`); if (!p) return; if (k === 'kits') { p.innerHTML = picWinKitsHtml(live()); kitWishRefresh(); } if (k === 'frame') p.innerHTML = picWinFrameHtml(t, live()); };
+  const show = k => { if (!d.querySelector(`[data-pwt="${k}"]`)) k = 'photos'; d.querySelectorAll('[data-pwt]').forEach(b => { const on = b.dataset.pwt === k; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
+    d.querySelectorAll('[data-pwp]').forEach(p => p.hidden = p.dataset.pwp !== k); draw(k); d.dataset.tab = k; };
+  d.addEventListener('click', async e => {
+    if (e.target === d || e.target.closest('[data-pwx]')) { picWinClose(); return; }
+    const tb = e.target.closest('[data-pwt]'); if (tb) { show(tb.dataset.pwt); return; }
+    if (e.target.closest('[data-pwf="adjust"]')) { adjustPictureDialog(t, x.id); const fd = document.getElementById('fitDlg');
+      if (fd) new MutationObserver((m, o) => { if (!fd.isConnected) { o.disconnect(); setTimeout(() => d.isConnected && d.dataset.tab === 'frame' && draw('frame'), 500); } }).observe(document.body, { childList: true }); return; }
+    const kb = e.target.closest('[data-pwk]'); if (kb) { const name = kb.closest('[data-kitname]').dataset.kitname, act = kb.dataset.pwk;
+      if (act === 'pic') { kitPicDialog(x.id, name, () => { setTimeout(() => { if (d.isConnected) draw('kits'); try { kitThumbsRefresh(); } catch (er) {} }, 400); }); return; }
+      kb.disabled = true;
+      try { await withTimeout(kcCol().doc(x.id).update({ coverKit: act === 'main' ? name : firebase.firestore.FieldValue.delete(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }));
+        toast(act === 'main' ? `${name} is now the main picture of this set` : 'Back to the usual picture'); setTimeout(() => d.isConnected && draw('kits'), 400); } catch (er) { toast('Not saved: ' + explain(er)); kb.disabled = false; } }
+  });
+  document.addEventListener('keydown', picWinKey, true);
+  picWinObs = new MutationObserver(() => { cancelAnimationFrame(picWinQ); picWinQ = requestAnimationFrame(picWinAdopt); }); picWinObs.observe(document.getElementById('view'), { childList: true, subtree: true });
+  show(tab || 'photos'); d.querySelector('[data-pwt].on')?.focus();
+}
+window.addEventListener('hashchange', picWinClose);
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('#btnPictures, [data-openpics]'); if (b) { e.preventDefault(); openPicturesWindow(b.dataset.openpics || ''); } });
+
 window.addEventListener('hashchange', () => { if (selMode && listTypeNow() !== selType) setSelMode(false); });
 /* ---------- v0.62.0: Last modified, one Filter drop-down per list, Done marks and a work queue, bulk field edit ---------- */
 const listFilter = { keyboards: '', switches: '', keycaps: '', pcbs: '', artisans: '', accessories: '' };
@@ -1622,15 +1785,15 @@ function listFilterHtml(t) {
   const its = itemsOfType(t), f = t === 'keycaps' && kcChip ? 'kc:' + kcChip : listFilter[t] || '', o = (v, label) => `<option value="${esc(v)}"${f === v ? ' selected' : ''}>${esc(label)}</option>`;
   const nd = its.filter(x => x.doneAt).length, nq = its.filter(x => x.inQueue).length;
   return `<select class="select" data-listfilter="${t}" aria-label="Filter" title="Filter">${o('', 'Filter: all')}${o('fav', '★ Favorites')}
-    <optgroup label="Work">${o('todo', `Not done yet (${its.length - nd})`)}${o('done', `Done (${nd})`)}${o('done7', 'Done in the last 7 days')}${o('queue', `My work queue (${nq})`)}</optgroup>
+    ${doneUi() ? `<optgroup label="Work">${o('todo', `Not done yet (${its.length - nd})`)}${o('done', `Done (${nd})`)}${o('done7', 'Done in the last 7 days')}${o('queue', `My work queue (${nq})`)}</optgroup>` : ''}
     <optgroup label="Last modified">${o('mod7', 'Changed in the last 7 days')}${o('mod30', 'Changed in the last 30 days')}${o('old30', 'Not changed for 30+ days')}</optgroup>
     ${t === 'accessories' ? (() => { const cs = new Map(); its.forEach(x => { const c = x.category || '(none)'; if (!cs.has(c)) cs.set(c, { n: 0, subs: new Map() }); const e = cs.get(c); e.n++; if (x.subCategory) e.subs.set(x.subCategory, (e.subs.get(x.subCategory) || 0) + 1); });
       return `<optgroup label="Category">${[...cs.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([c, e]) => o('cat:' + c, `${c} (${e.n})`) + [...e.subs.entries()].sort().map(([sc, n]) => o('sub:' + c + '|' + sc, `   ${c} › ${sc} (${n})`)).join('')).join('')}</optgroup>`; })() : ''}
     ${t === 'keycaps' ? `<optgroup label="Keycaps">${o('kc:incomplete', 'Missing kits')}${savedKeycaps.some(x => { const c = completionOf(x); return c && c.check.length; }) ? o('kc:kitcheck', '⚠ Kit names to check') : ''}${[...new Set(savedKeycaps.map(x => x.profile).filter(Boolean))].sort().map(p2 => o('kc:profile:' + p2, 'Profile: ' + p2)).join('')}</optgroup>` : ''}</select>
-    <select class="select" data-workmenu="${t}" aria-label="Work list actions" title="Done marks and work queue"><option value="">Work…</option><option value="finish"${nq ? '' : ' disabled'}>Finish my queue: mark all ${nq} done</option><option value="clearq"${nq ? '' : ' disabled'}>Empty my queue (no done marks)</option><option value="reset"${nd ? '' : ' disabled'}>Reset: clear all ${nd} done marks</option></select>`;
+    <select class="select" data-workmenu="${t}"${doneUi() ? '' : ' hidden'} aria-label="Work list actions" title="Done marks and work queue"><option value="">Work…</option><option value="finish"${nq ? '' : ' disabled'}>Finish my queue: mark all ${nq} done</option><option value="clearq"${nq ? '' : ' disabled'}>Empty my queue (no done marks)</option><option value="reset"${nd ? '' : ' disabled'}>Reset: clear all ${nd} done marks</option></select>`;
 }
 function finishList(t, list) {
-  const f = listFilter[t] || '', now = Date.now(), sort = t === 'keyboards' ? kbSort : t === 'switches' ? swSort : t === 'keycaps' ? kcSort : (partState[t] || {}).sort;
+  const f0 = listFilter[t] || '', f = !doneUi() && ['todo', 'done', 'done7', 'queue'].includes(f0) ? '' : f0, now = Date.now(), sort = t === 'keyboards' ? kbSort : t === 'switches' ? swSort : t === 'keycaps' ? kcSort : (partState[t] || {}).sort;
   const ok = { fav: x => x.isSample ? favs.has(x.id) : !!x.isFavorite, todo: x => !x.doneAt, done: x => !!x.doneAt, done7: x => x.doneAt && now - x.doneAt < 7 * DAY, queue: x => !!x.inQueue, mod7: x => now - modMs(x) < 7 * DAY, mod30: x => now - modMs(x) < 30 * DAY, old30: x => now - modMs(x) >= 30 * DAY }[f];
   const okC = f.startsWith('cat:') ? (x => (x.category || '(none)') === f.slice(4)) : f.startsWith('sub:') ? (x => (x.category || '(none)') + '|' + (x.subCategory || '') === f.slice(4)) : null;
   let out = ok ? list.filter(ok) : okC ? list.filter(okC) : list.slice();
@@ -1655,13 +1818,14 @@ async function toggleDone(t, id) { const x = itemsOfType(t).find(y => y.id === i
   try { await withTimeout(colOfType(t).doc(id).update(x.doneAt ? { doneAt: del } : { doneAt: Date.now(), inQueue: del })); toast(x.doneAt ? 'Marked not done' : 'Marked done'); } catch (e) { toast('Not saved: ' + explain(e)); } }
 function decorateCards() {   // a Done tick on every card and row; a Done button on item pages
   const lt = listTypeNow();
-  if (lt && db && !isFile) document.querySelectorAll('#view a.kcard, #view tr.row[data-href]').forEach(el => { const id = idOfEl(el), x = id && itemsOfType(lt).find(y => y.id === id); if (!x) return;
+  applyDoneUi(); const dOn = doneUi(); if (!dOn) { document.querySelectorAll('#view .donebtn').forEach(b => b.remove()); document.getElementById('btnDone')?.remove(); }
+  if (dOn && lt && db && !isFile) document.querySelectorAll('#view a.kcard, #view tr.row[data-href]').forEach(el => { const id = idOfEl(el), x = id && itemsOfType(lt).find(y => y.id === id); if (!x) return;
     let b = el.querySelector('.donebtn'); const want = (x.doneAt ? 'd' : '') + (x.inQueue ? 'q' : '');
     if (b && b.dataset.st === want) return;
     if (!b) { b = document.createElement('button'); b.type = 'button'; b.className = 'donebtn'; b.dataset.done = id; (el.tagName === 'TR' ? el.cells[el.cells.length - 1] : (el.querySelector('.ph') || el)).appendChild(b); }
     b.dataset.st = want; b.classList.toggle('on', !!x.doneAt); b.classList.toggle('inq', !!x.inQueue); b.textContent = x.doneAt ? '✓ Done' : x.inQueue ? 'In queue' : 'Done?'; b.title = x.doneAt ? 'Done on ' + new Date(x.doneAt).toLocaleDateString() + '. Click to undo.' : 'Mark this entry as done'; });
   const m = location.hash.match(/^#\/(\w+)\/([^/]+)$/), tools = document.querySelector('#view .pagehead .tools'), del = tools && tools.querySelector('#btnDelete');
-  if (m && del && LIST_TYPES.includes(m[1])) { const x = itemsOfType(m[1]).find(y => y.id === m[2]); if (!x) return; let b = document.getElementById('btnDone');
+  if (dOn && m && del && LIST_TYPES.includes(m[1])) { const x = itemsOfType(m[1]).find(y => y.id === m[2]); if (!x) return; let b = document.getElementById('btnDone');
     if (!b) { del.insertAdjacentHTML('beforebegin', '<button class="btn" id="btnDone" type="button"></button>'); b = document.getElementById('btnDone'); b.onclick = () => toggleDone(m[1], m[2]); }
     const txt = x.doneAt ? '✓ Done' : x.inQueue ? 'Mark done (in queue)' : 'Mark done'; if (b.textContent !== txt) { b.textContent = txt; b.classList.toggle('donestate', !!x.doneAt); } }
 }
@@ -1998,6 +2162,24 @@ function ckFixes() {   // the Nov 21 fixes still to do, worked out from the data
   const optRe = /^Option chosen on [^:\n]+:.*$\n?/gm;
   LIST_TYPES.forEach(t => itemsOfType(t).filter(x => /^Option chosen on [^:\n]+:/m.test(x.notes || '') && (x.alsoAvailable || x.refUrl)).forEach(x => { const rest = String(x.notes).replace(optRe, '').trim();
     F.push({ id: 'note-' + x.id, group: 'Old automatic notes', title: [x.brand || x.manufacturer, x.name, x.color && '(' + x.color + ')'].filter(Boolean).join(' '), href: `#/${t}/${x.id}`, detail: `Remove “${(String(x.notes).match(/^Option chosen on .*$/m) || [''])[0]}” (the option is marked under Also available in)`, recs: [[t, x.id]], run: () => colOfType(t).doc(x.id).update({ notes: rest || firebase.firestore.FieldValue.delete(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }) }); }));
+  // v0.118.0 (audit item 10): not-owned kit records that only repeat a kit the linked GMK catalog set already lists
+  if (typeof gmkSets !== 'undefined' && gmkSets && gmkSets.length) savedKeycaps.forEach(x => {
+    const g = x.gmkRef && gmkSets.find(c => c.id === x.gmkRef); if (!g) return;
+    const pr = pairKits(kitsOf(x), g.kits || [], x.kitLinks || {}), hits = [];
+    for (const [c, k] of pr) if (k.notOwned) hits.push([k, c]);
+    if (!hits.length) return;
+    const LBL = { refImage: 'shop picture', refSource: 'shop picture', pictureLink: 'webpage link', retailPrice: 'retail price', retailSource: 'retail price', retailPriceAt: 'retail price', price: 'price paid', kitNotes: 'notes', receipt: 'receipt', datePurchased: 'purchase date', purchasedFrom: 'seller', keyCount: 'key count', dateReceived: 'date received', cameWith: 'came with' };
+    const extra = k => [...new Set(Object.keys(k).filter(f => k[f] !== '' && k[f] != null && !(Array.isArray(k[f]) && !k[f].length) && !['id', 'name', 'kitType', 'notOwned', 'quantity', 'importKey', 'excelRow', 'source'].includes(f)).map(f => LBL[f] || f))];
+    const keeps = hits.map(([k]) => extra(k)).flat(), ids = new Set(hits.map(([k]) => k.id));
+    F.push({ id: 'nok-' + x.id, group: 'Not-owned kit records the GMK catalog already lists', href: '#/keycaps/' + x.id, off: keeps.length > 0,
+      title: `${x.name}: remove ${hits.length} not-owned kit record${hits.length === 1 ? '' : 's'}`,
+      detail: hits.map(([k, c]) => `${k.name}${kitKey(k.name) === kitKey(c.name) ? '' : ' = ' + c.name}${extra(k).length ? ' (holds: ' + extra(k).join(', ') + ')' : ''}`).join(' · '),
+      why: keeps.length ? `Some of these records hold details the catalog doesn't have (${[...new Set(keeps)].join(', ')}); removing them loses those. Left unticked: tick only if you don't need them.` : `You don't own these kits and the linked catalog set (${g.title}) lists them, so they still show greyed on the Kits tab ("Also in this set"), in the Kit gallery and on the Summary without a record of their own.`,
+      recs: [['keycaps', x.id]],
+      run: async () => { const live = savedKeycaps.find(y => y.id === x.id) || x, L = Object.assign({}, live.kitLinks || {});
+        hits.forEach(([k]) => { if (L[kitKey(k.name)] != null && !kitsOf(live).some(o => !ids.has(o.id) && kitKey(o.name) === kitKey(k.name))) delete L[kitKey(k.name)]; });
+        await kcCol().doc(x.id).update({ kits: kitsOf(live).filter(k => !ids.has(k.id)), kitLinks: Object.keys(L).length ? L : firebase.firestore.FieldValue.delete(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }); return hits.length + ' removed'; } });
+  });
   return F;
 }
 const CK_OLD_CATS = /^(cases & plates|deskmats?|switch parts|springs)$/i;   // v0.88.0: deskmats and switch parts have their own lists
@@ -2012,7 +2194,21 @@ function ckSpellings() {
 function ckSameNames() {
   const out = []; LIST_TYPES.forEach(t => { const m = new Map(); itemsOfType(t).forEach(x => { const k = ckNk([x.brand || x.manufacturer, x.name, x.color].join(' ')); if (!m.has(k)) m.set(k, []); m.get(k).push(x); }); m.forEach(xs => { if (xs.length > 1) out.push({ t, xs }); }); }); return out;
 }
+
+/* v0.119.0 (audit item 15): checks worked out every time, shown at the end of Check my data */
+function ckStandingHtml() {
+  const noPrice = savedKeycaps.map(x => ({ x, ks: kitsOf(x).filter(k => !k.notOwned && (k.price == null || k.price === '') && !k.cameWith) })).filter(r => r.ks.length).sort((p, q) => String(p.x.name).localeCompare(String(q.x.name)));
+  const nKits = noPrice.reduce((n, r) => n + r.ks.length, 0);
+  const cat = typeof gmkSets !== 'undefined' && gmkSets && gmkSets.length ? gmkSets : null;
+  const unl = savedKeycaps.filter(x => (/^gmk$/i.test(x.manufacturer || '') || /^gmk\b/i.test(x.name || '')) && !x.gmkRef && !x.gmkNone).sort((p, q) => String(p.name).localeCompare(String(q.name)));
+  const best = x => { if (!cat) return null; let b = null, bs = 0; cat.forEach(g => { const sc = gmkMatchScore(x.name, g); if (sc > bs) { bs = sc; b = g; } }); return bs >= 2 ? b : null; };
+  return `<div class="card ck-card"><h3>Owned kits with no price paid <span class="sub">${nKits ? `${nKits} in ${noPrice.length} set${noPrice.length === 1 ? '' : 's'}` : 'none'}</span></h3>${nKits ? `<p class="sub">Read the receipt into the set (Tools ▾ → Read a receipt into it) or type the price on the Kits tab. A kit you got for free: type 0. Kits that came with a keyboard are left out.</p>
+      ${noPrice.map(r => `<div class="ck-row"><span><a href="#/keycaps/${esc(r.x.id)}">${esc(r.x.name)}</a> <span class="sub">${r.ks.map(k => esc(k.name)).join(' · ')}</span></span></div>`).join('')}` : ''}</div>
+    <div class="card ck-card"><h3>GMK sets not linked to the catalog <span class="sub">${cat ? (unl.length || 'none') : 'loading the catalog…'}</span></h3>${cat && unl.length ? `<p class="sub">Linked sets get completion, the Kit gallery and the kits you don't own. “Not in the catalog” leaves a set out of this list.</p>
+      ${unl.map(x => { const b = best(x); return `<div class="ck-row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a href="#/keycaps/${esc(x.id)}">${esc(x.name)}</a>${b ? `<span class="sub">→ ${esc(b.title)}${b.source ? ' (' + esc(b.source) + ')' : ''}</span><button class="btn" type="button" data-cklink="${esc(x.id)}" data-ref="${esc(b.id)}">Link</button>` : '<span class="sub">no close match</span>'}<button class="btn" type="button" data-cknone="${esc(x.id)}" style="margin-left:auto">Not in the catalog</button></div>`; }).join('')}` : ''}</div>`;
+}
 function renderCheck() {
+  if ((typeof gmkSets === 'undefined' || !gmkSets || !gmkSets.length) && !renderCheck.gmkAsked && db && !isFile) { renderCheck.gmkAsked = true; loadGmk().then(() => { if (location.hash.startsWith('#/check')) renderCheck(); }).catch(() => {}); }   // v0.118.0: the kit-record check needs the catalog
   if (!rdCfg) rdLoadCfg().then(() => { if (location.hash.startsWith('#/check')) renderCheck(); }).catch(() => {});   // the approved-shop fix needs the reader settings
   const view = document.getElementById('view'), F = ckFixes(), sortCats = ckCatsToSort(), sp = ckSpellings(), noType = savedKeyboards.filter(k => !k.keyboardType), noCat = (savedParts.accessories || []).filter(x => !x.category), same = ckSameNames();
   const cats = PART_TYPES.accessories.fields.find(f => f[0] === 'category')[4];
@@ -2022,7 +2218,7 @@ function renderCheck() {
       <select class="select" data-ckb-pick="${i}"><option value="skip"${r.pick === 'skip' ? ' selected' : ''}>Skip${f.bundle && r.pick === 'skip' ? ' (not in your workbook list)' : ''}</option><option value="new"${r.pick === 'new' ? ' selected' : ''}>New switch entry</option>${r.cands.map(w => `<option value="${esc(w.id)}"${w.id === r.pick ? ' selected' : ''}>${esc([w.manufacturer, w.name].filter(Boolean).join(' '))}${w.totalCount != null ? ' · ' + w.totalCount + ' pcs' : ''}${w.datePurchased ? ' · ' + w.datePurchased : ''}</option>`).join('')}</select>
       <input class="input" data-ckb-ct="${i}" inputmode="numeric" value="${r.L.ct || ''}" aria-label="Count">${f.bundle ? `<input class="input" data-ckb-pr="${i}" inputmode="decimal" value="${r.price ? r.price.toFixed(2) : ''}" placeholder="0.00" aria-label="Price">` : ''}</div>`).join('')}
       ${f.bundle ? `<div class="ckb-sum" id="ckbSum"></div><label class="ck-opt"><input type="checkbox" id="ckbDel" checked> Delete the bundle entry when its whole price has moved to the new entries (a copy is kept on this device)</label>` : ''}</div>`;
-  const fixRow = f => f.bundleRows ? bundleHtml(f) : `<div class="ck-row"><label class="ck-tick"><input type="checkbox" data-ckfix="${esc(f.id)}" ${f.listing ? '' : 'checked'}><span><b>${f.href ? `<a href="${esc(f.href)}">${esc(f.title)}</a>` : esc(f.title)}</b>${f.detail ? `<span class="sub">${esc(f.detail)}</span>` : ''}${f.why ? `<span class="sub ck-why">${esc(f.why)}</span>` : ''}</span></label>
+  const fixRow = f => f.bundleRows ? bundleHtml(f) : `<div class="ck-row"><label class="ck-tick"><input type="checkbox" data-ckfix="${esc(f.id)}" ${f.listing || f.off ? '' : 'checked'}><span><b>${f.href ? `<a href="${esc(f.href)}">${esc(f.title)}</a>` : esc(f.title)}</b>${f.detail ? `<span class="sub">${esc(f.detail)}</span>` : ''}${f.why ? `<span class="sub ck-why">${esc(f.why)}</span>` : ''}</span></label>
       ${f.listing ? `<select class="select ck-pick" data-ckpick="${esc(f.id)}"><option value="skip">Skip</option>${f.cands.length ? `<optgroup label="Matching names">${f.cands.map(w => `<option value="${esc(w.id)}"${w.id === f.pick ? ' selected' : ''}>${esc([w.manufacturer, w.name].filter(Boolean).join(' '))}${w.totalCount != null ? ' · ' + w.totalCount + ' pcs' : ''}${w.datePurchased ? ' · ' + w.datePurchased : ''}${w.purchasedFrom ? ' · ' + w.purchasedFrom : ''}</option>`).join('')}</optgroup>` : ''}<option value="new">Add as a new switch entry</option><optgroup label="All switch entries">${f.swOpts().filter(w => !f.cands.includes(w)).map(w => `<option value="${esc(w.id)}">${esc([w.manufacturer, w.name].filter(Boolean).join(' '))}${w.totalCount != null ? ' · ' + w.totalCount : ''}</option>`).join('')}</optgroup></select>` : ''}</div>`;
   view.innerHTML = `<div class="pagehead"><div><h1>Check my data</h1><p>Things to tidy, found in your records. Nothing changes until you press a button.</p></div></div>
     ${F.length ? `<div class="card ck-card"><h3>Fixes waiting for you <span class="sub">(from our chat)</span></h3>
@@ -2038,9 +2234,11 @@ function renderCheck() {
       ${sortCats.length > 8 ? '<details open><summary class="lnk">' + sortCats.length + ' entries</summary>' : ''}${sortCats.map(({ x, g }) => `<div class="ck-row"><a href="#/accessories/${esc(x.id)}">${esc(x.name)}</a><span class="sub">${esc(x.category)} →</span><select class="select ck-pick" data-cksort="${esc(x.id)}">${cats.map(c => `<option${c === g ? ' selected' : ''}>${esc(c)}</option>`).join('')}<option value="@pcbs"${g === '@pcbs' ? ' selected' : ''}>→ Move to PCBs & Components</option><option value="@deskmats"${g === '@deskmats' ? ' selected' : ''}>→ Move to Deskmats</option><option value="@switchparts"${g === '@switchparts' ? ' selected' : ''}>→ Move to Switch parts</option></select></div>`).join('')}${sortCats.length > 8 ? '</details>' : ''}
       <div class="btnrow" style="margin-top:10px"><button class="btn primary" id="ckSortGo">Apply these ${sortCats.length} categories</button></div>` : ''}</div>
     <div class="card ck-card"><h3>Same name more than once <span class="sub">${same.length}</span></h3>${same.length ? `<p class="sub">Could be two you really own, or one entry saved twice. Open one and use Merge… if they are the same thing.</p>` : ''}
-      ${same.map(g => `<div class="ck-row"><span>${esc(SEC[g.t].title)}: ${g.xs.map(x => `<a href="#/${g.t}/${esc(x.id)}">${esc(x.name)}${x.price != null ? ' · $' + Number(x.price).toFixed(2) : ''}${x.addedFrom ? ' · ' + esc(x.addedFrom) : x.excelRow ? ' · Excel row ' + x.excelRow : ''}</a>`).join(' &nbsp;·&nbsp; ')}</span></div>`).join('')}</div>`;
+      ${same.map(g => `<div class="ck-row"><span>${esc(SEC[g.t].title)}: ${g.xs.map(x => `<a href="#/${g.t}/${esc(x.id)}">${esc(x.name)}${x.price != null ? ' · $' + Number(x.price).toFixed(2) : ''}${x.addedFrom ? ' · ' + esc(x.addedFrom) : x.excelRow ? ' · Excel row ' + x.excelRow : ''}</a>`).join(' &nbsp;·&nbsp; ')}</span></div>`).join('')}</div>${ckStandingHtml()}`;
   const bf = F.find(f => f.bundleRows && f.bundle); const bsum = () => { const el = document.getElementById('ckbSum'); if (!el || !bf) return; let m = 0; bf.bundleRows.forEach((r, i) => { if (document.querySelector(`[data-ckb-pick="${i}"]`).value === 'new') m += Number(document.querySelector(`[data-ckb-pr="${i}"]`).value) || 0; });
     const left = Math.round((bf.tot - m) * 100) / 100; el.innerHTML = `Bundle price $${bf.tot.toFixed(2)} · moved to new entries $${m.toFixed(2)} · left on the bundle <b${left < -0.004 ? ' style="color:var(--bad-text)"' : ''}>$${left.toFixed(2)}</b>`; };
+  view.querySelectorAll('[data-cklink], [data-cknone]').forEach(btn => btn.addEventListener('click', async () => { btn.disabled = true; const id = btn.dataset.cklink || btn.dataset.cknone;   // v0.119.0
+    try { await withTimeout(kcCol().doc(id).update(btn.dataset.cklink ? { gmkRef: btn.dataset.ref, updatedAt: firebase.firestore.FieldValue.serverTimestamp() } : { gmkNone: true, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); toast(btn.dataset.cklink ? 'Linked' : 'Left out of this list'); setTimeout(renderCheck, 700); } catch (er) { toast('Not saved: ' + explain(er)); btn.disabled = false; } }));
   view.querySelectorAll('[data-ckb-pick], [data-ckb-pr]').forEach(el => el.addEventListener('input', bsum)); view.querySelectorAll('[data-ckb-pick]').forEach(el => el.addEventListener('change', bsum)); bsum();
   renderCheck.touched = false; view.querySelectorAll('.ck-card').forEach(c => c.addEventListener('change', () => { renderCheck.touched = true; }));
   const msg = document.getElementById('ckMsg');
@@ -2085,6 +2283,7 @@ function renderStats() {
   const used = savedSwitches.map(w => ({ label: [w.manufacturer, w.name].filter(Boolean).join(' '), value: installedCount(w) })).filter(r => r.value).sort((a, b) => b.value - a.value).slice(0, 8);
   const valTotal = cat.reduce((a, r) => a + r.value2, 0), valPaid = cat.reduce((a, r) => a + r.value, 0), num = v => String(v);
   view.innerHTML = `<div class="pagehead"><div><h1>Stats</h1><p>Your collection in numbers. Totals are price + tax + shipping − discounts.</p></div><div class="tools"><button class="btn" id="statEye">${hid ? 'Show amounts' : 'Hide amounts'}</button></div></div>
+    <div class="tabs sttabs" role="tablist" style="margin:0 0 16px"><button type="button" role="tab" data-sttab="stats" class="on" aria-selected="true">Spending</button><button type="button" role="tab" data-sttab="value">Market value</button></div>
     <div class="stiles"><div class="stile"><b>${items}</b><span>items in the collection</span></div><div class="stile"><b${blur}>${m0(total)}</b><span>spent in total</span></div>
       <div class="stile"><b${blur}>${ys.length ? m0(years[ys[ys.length - 1]]) : '—'}</b><span>spent in ${ys.length ? ys[ys.length - 1] : 'the latest year'}</span></div>
       <div class="stile"><b${blur}>${cat.length ? m0(valTotal) : '—'}</b><span>${cat.length ? `market value of ${cat.reduce((a, r) => a + r.n, 0)} valued items (paid ${hid ? '•••' : m0(valPaid)})` : 'no market values entered yet'}</span></div></div>
@@ -2262,13 +2461,13 @@ function restoreListPrefs() {
 const HELP = [
   // ---------- Getting around ----------
   { id: 'search', t: 'Find anything', g: 'Getting around', ctx: ['keyboards', 'switches', 'keycaps', 'accessories', 'pcbs', 'deskmats', 'artisans', 'switchparts', 'wishlist'], k: 'search find look up where is filter name type box',
-    s: ['Open a list (Keyboards, Switches, Keycaps…) and type in the search box at the top. Press / anywhere to jump to it.', 'Names come first: it looks at name, maker, designer, profile and kit names. Only when nothing matches does it also look in colors, notes and specs.', 'The Catalog page (Tools → Catalog) lists every keyboard model, switch, keycap set and designer you own; clicking one opens that list already searched.'], go: '#/keyboards' },
+    s: ['Open a list (Keyboards, Switches, Keycaps…) and type in the search box at the top. Press / anywhere to jump to it.', 'Names come first: it looks at name, maker, designer, profile and kit names. Only when nothing matches does it also look in colors, notes and specs.', 'The Catalog page (Tools → Catalog) is the private GMK reference: search GMK sets by name, designer or color code.'], go: '#/keyboards' },
   { id: 'shortcuts', t: 'Keyboard shortcuts', g: 'Getting around', k: 'shortcut keys hotkey keyboard ctrl save quick jump',
     s: ['/ jumps to search, N starts a new item on a list page, Ctrl+S saves, Esc closes a box or leaves select mode.', 'G then D / K / S / C jumps to Dashboard, Keyboards, Switches, Keycaps.', 'Press ? (Shift + /) for the full list.'], go: '' },
   { id: 'filter', t: 'Sort, filter, card size and list view', g: 'Getting around', ctx: ['keyboards', 'switches', 'keycaps', 'accessories', 'pcbs', 'deskmats', 'artisans', 'switchparts'], k: 'sort filter order newest last modified favorites view gallery list card size big small tiny pictures only colors squares how many arrows next picture back scroll where i was star profile',
     s: ['On every list, next to Add or modify: View ▾ (Gallery or List, card size, colors per card; keycaps also Main picture), Sort, Filter, Select, and More ▾ (Share as image, Stats, Work…).', 'Sort (newest, name, last modified, longest untouched…) and Filter (favorites, work, last modified; keycaps also missing kits and profiles; accessories also each category › sub-category).', 'The two buttons next to them switch between gallery cards and a list.', 'On a computer the size menu sets the cards: Tiny to Extra large, Wide pictures, or Pictures only. Each list remembers its own settings on this device.', 'Keycaps and Keyboards: the colors menu (default "3 colors") sets how many color squares each gallery card shows, from none to all; "+N" says how many more. List view and the item\'s page always show every color, the page right beside the name.', 'On Medium cards and bigger, point at a card\'s picture: ‹ › step through its pictures (keycaps: every kit picture, yours first; others: display, stock and shop pictures) without opening it.', 'The profile or type chip and the ★ sit at the bottom of each card, so the picture is clear.', 'Back from an item (the link at the top, or the browser\'s back) returns to the list you came from, Keycaps › GMK too, at the spot where you were; the card you opened is outlined for a moment.'], go: '#/keycaps' },
-  { id: 'work', t: 'Done marks and the work queue', g: 'Getting around', k: 'done tick finished todo to do queue work progress checklist review mark',
-    s: ['Every card has a Done tick; on an item page it is Tools ▾ → "Mark done".', 'Select several items → "Add to work queue". More ▾ → Work… on a list has "Finish my queue", "Empty my queue" and "Reset: clear all done marks".', 'Filter → Work shows Not done yet, Done, Done in the last 7 days or My work queue.'], go: '#/keyboards' },
+  { id: 'work', t: 'Done marks and the work queue', g: 'Getting around', k: 'hide show setting off done tick finished todo to do queue work progress checklist review mark',
+    s: ['Every card has a Done tick; on an item page it is Tools ▾ → "Mark done".', 'Select several items → "Add to work queue". More ▾ → Work… on a list has "Finish my queue", "Empty my queue" and "Reset: clear all done marks".', 'Filter → Work shows Not done yet, Done, Done in the last 7 days or My work queue.', 'Not using them? Settings → "Done marks and work queue" → untick "Show done marks and the work queue" (your marks are kept; tick it again to bring them back).'], go: '#/keyboards' },
   { id: 'bulk', t: 'Select several items and change them together', g: 'Getting around', k: 'select bulk many several multiple all at once edit fields favorite location delete batch',
     s: ['On a list press Select, then tick cards or rows (or "Select all shown").', 'Choose Favorite / Unfavorite, Set location, "Edit fields…" (one or more general fields, e.g. maker or profile), QR labels, "Add to work queue", or Delete.', 'Changes and deletes can be undone for 10 seconds.'], go: '#/keyboards' },
   { id: 'phone', t: 'Using the app on your phone', g: 'Getting around', k: 'phone mobile iphone android install home screen share menu camera',
@@ -2315,6 +2514,8 @@ const HELP = [
   // ---------- Pictures ----------
   { id: 'photos', t: 'Add, crop or delete your own photos', g: 'Pictures', ctx: ['item'], k: 'photo picture image upload add camera take crop own delete remove',
     s: ['On an entry, the Photos card: drop pictures or choose files; on a phone "Take a photo".', 'Each is cropped to 4:3 and saved small (WebP). The first photo is the display picture; "Set as default" on another photo changes it. Crop and Delete are under each photo.', 'HEIC from an iPhone must be JPG (iPhone Settings → Camera → Formats → Most Compatible).'], go: '' },
+  { id: 'pictures', t: 'The Pictures window: every picture in one place', g: 'Pictures', ctx: ['item'], k: 'pictures window photos shop kit pictures frame side bars all pictures one place tabs upload adjust main picture change picture',
+    s: ['On any saved entry, click Pictures in the header (or "All pictures…" on the Primary photo card).', 'Your photos: add, crop, set the default photo or stock picture, delete (the same Photos card as on the page).', 'Shop: the From the shop card: shop pictures with ⬇ / Keep / ★ / ✕, the page link and options.', 'Kits (keycap sets): every kit with the picture it shows now; Change picture… picks another one (or swaps two kits); ☆ Use as main makes it the set\'s card and Summary picture.', 'Frame & side bars: how the picture shows on the card (framing, side-bar color, plain bars left out); Adjust… opens the framing window. Esc or ✕ closes the window.'], go: '' },
   { id: 'mainpic', t: 'Choose and frame the main picture', g: 'Pictures', ctx: ['item'], k: 'main picture display cover stock adjust frame zoom crop card picture whole side bars background border edge fill color',
     s: ['Your default photo is the card picture. "Use as stock picture" on a photo makes it the Summary picture.', 'Summary picture → Adjust: drag, zoom, or "Show the whole picture". Side bars sets the color around a picture that doesn\'t fill the frame (card and Summary): Default, "Match picture edge" (the average color of the picture\'s border), or Pick a color; choosing one ticks "Show the whole picture" so the bars show; then Save. A kept shop picture has white bars inside the picture itself: tick "Leave out the plain bars…" (offered when such bars are found) so your side-bar color replaces them (a small trimmed copy is saved for the card and Summary; your picture is not changed).', 'Keycap sets: Kit gallery → kit → "Use as main picture"; the Keycaps page "Main picture" menu switches all cards to Base / Novelties / Spacebars / Numpads.'], go: '' },
   { id: 'shoppics', t: 'Shop pictures: download, keep, use or hide', g: 'Pictures', ctx: ['item'], k: 'shop pictures carousel download downloaded keep kept copy already duplicate remove delete star main link pictures from the shop',
@@ -2330,9 +2531,9 @@ const HELP = [
   { id: 'pack', t: 'Switch packs and price per switch', g: 'Prices and value', ctx: ['switches'], k: 'pack per switch count 35 10 retail each how many switches change price per switch',
     s: ['The shop price covers a pack (10, 35, 36…). Summary → Paid and retail → Shop price shows "$12.25 for 35 switches" and the option chosen.', '"change" sets how many switches the shop price covers if it is wrong.', 'Purchase tab: "Price per switch" next to Price works both ways.'], go: '#/switches' },
   { id: 'value', t: 'Track market value', g: 'Prices and value', k: 'market value worth resale sell price history value page',
-    s: ['On an entry, the Market value card: value, date, source (e.g. eBay sold listings) → Add value. Newest date = current value.', 'Tools → Value lists everything valued with what you paid; the Dashboard has a Market value tile.'], go: '#/value' },
+    s: ['On an entry, the Market value card: value, date, source (e.g. eBay sold listings) → Add value. Newest date = current value.', 'Tools → Stats → Market value tab lists everything valued with what you paid; the Dashboard has a Market value tile.'], go: '#/value' },
   { id: 'stats', t: 'Spending and stats', g: 'Prices and value', k: 'spending stats total spent year month chart dashboard category seller',
-    s: ['Dashboard: spending by category and period (the eye hides amounts).', 'Tools → Stats: spend by year and month, paid vs value by category, top sellers, sizes, most-used switches; "Show as table" under charts.'], go: '#/stats' },
+    s: ['Dashboard: spending by category and period (the eye hides amounts).', 'Tools → Stats: the Spending tab has spend by year and month, paid vs value by category, top sellers, sizes, most-used switches ("Show as table" under charts); the Market value tab lists every item you valued.'], go: '#/stats' },
 
   // ---------- Keyboards ----------
   { id: 'install', t: 'Put switches, keycaps and parts on a keyboard', g: 'Keyboards', ctx: ['keyboards', 'switches', 'keycaps'], k: 'install installed build on board switches keycaps pcb plate case parts loose allocate mount',
@@ -2361,8 +2562,8 @@ const HELP = [
     s: ['Menu → ▸ next to Switches shows "Switch parts" (films, springs, stems, housings).', 'Switch pads are Foam (Accessories), lube is Lube & Tools.'], go: '#/switchparts' },
 
   // ---------- Keycaps ----------
-  { id: 'kits', t: 'Keycap kits (add, not owned, types)', g: 'Keycaps', ctx: ['keycaps'], k: 'kit kits base novelties spacebars alphas not owned own add kit type quantity came with keyboard bundle included free wrong picture change picture swap kit picture',
-    s: ['Keycap set → Kits tab: + Add kit, name, kit type, quantity and its own purchase details.', 'Each kit has a switch at the top: green "✓ Owned" or grey "Not owned" (click to change, then Save). Not-owned kits stay in the set, greyed in the Kit gallery and not counted as yours.', '✕ on a kit asks: "Mark as not owned (keep it in the set)" or "Delete it from this set".', 'Wrong picture on a kit (a shop mixed them up)? Click the small picture at the start of the kit on the Kits tab, or Kit gallery → the kit → "Change picture…": pick any picture of the set (other kits\' pictures, shop pictures, your photos, catalog), or paste a picture link, then "Use this picture". When you pick another kit\'s picture, "Swap" gives that kit this one\'s old picture. "No picture" clears it. Saved straight away.', 'For a set linked to the GMK catalog, the Kits tab and the Summary also list the catalog\'s kits you have no record of, as not owned; "I own it" adds one. Your kits show in green on the Summary.', 'Reading a keycap page with several kits: each kit line has the same Owned / Not owned switch, and "mark all ✓ Owned / Not owned" above the lines.', 'A kit that came with a keyboard (its price is in the keyboard\'s): open Purchase details → "Came with keyboard" and pick the keyboard. The set\'s Summary shows "Came with", and the keyboard\'s Summary lists the kit.', 'Kit gallery shows every kit as a picture; click one for details.'], go: '#/keycaps' },
+  { id: 'kits', t: 'Keycap kits (add, not owned, types)', g: 'Keycaps', ctx: ['keycaps'], k: 'wishlist kit kits base novelties spacebars alphas not owned own add kit type quantity came with keyboard bundle included free wrong picture change picture swap kit picture',
+    s: ['Keycap set → Kits tab: + Add kit, name, kit type, quantity and its own purchase details.', 'Each kit has a switch at the top: green "✓ Owned" or grey "Not owned". On a saved kit a click saves at once (Undo in the message); other unsaved changes on the form stay unsaved. A kit you just added needs Save first. Not-owned kits stay in the set, greyed in the Kit gallery and not counted as yours.', '✕ on a kit asks: "Mark as not owned (keep it in the set)" or "Delete it from this set".', 'Wrong picture on a kit (a shop mixed them up)? Click the small picture at the start of the kit on the Kits tab, or Kit gallery → the kit → "Change picture…": pick any picture of the set (other kits\' pictures, shop pictures, your photos, catalog), or paste a picture link, then "Use this picture". When you pick another kit\'s picture, "Swap" gives that kit this one\'s old picture. "No picture" clears it. Saved straight away.', 'For a set linked to the GMK catalog, the Kits tab and the Summary also list the catalog\'s kits you have no record of, as not owned; "I own it" adds one. Your kits show in green on the Summary.', 'Reading a keycap page with several kits: each kit line has the same Owned / Not owned switch, and "mark all ✓ Owned / Not owned" above the lines.', 'A kit that came with a keyboard (its price is in the keyboard\'s): open Purchase details → "Came with keyboard" and pick the keyboard. The set\'s Summary shows "Came with", and the keyboard\'s Summary lists the kit.', 'Kit gallery shows every kit as a picture; click one for details.', 'Kits you don\'t own have "+ Wishlist" (on the Kits tab, in the GMK catalog list below it, on greyed Kit gallery tiles and in the Pictures window); it adds the kit to your Wishlist with the catalog or retail price, and then shows "On wishlist".'], go: '#/keycaps' },
   { id: 'splitbases', t: 'Show each base as its own card (two bases in one set)', g: 'Keycaps', ctx: ['keycaps'], k: 'split base bases two bases light dark separate card each base analog dreams digital nightmares duplicate shared kits gallery summary not owned grey greyed gray choose',
     s: ['For a set with two or more bases (a light and a dark base, say), also when you own only one of them. Open the set → Summary → tick "Show each base as its own card". When the set has only one base you own, the Summary shows "Another base in this set? Show each base as its own card…" instead.', 'Under "Choose the bases", tick the kits that are bases: your kits, kits you marked not owned, and the GMK catalog\'s kits you don\'t have (GMK Analog Dreams: tick Analog Dreams next to your Digital Nightmares). At least two, one of them yours. Without a choice, kits of type Base, Alphas or Full set (or "Base" in the name) are the bases.', 'A base you don\'t own shows greyed with "Not owned" on its gallery card, like kits you don\'t own in the Kit gallery: point at it to see it in color. Once you open it, its pictures are in color, with a "Not owned" tag.', 'The Keycaps gallery then shows one card per base, named "Set: Base", with that base\'s picture. Your other kits (novelties, spacebars…) are shared by every base card.', 'On the set\'s Summary, the buttons at the top switch between the bases: the name, the pictures and the kit list follow the base you pick. Your other base is greyed in the kit list.', 'Nothing is copied: it is still one set, so cost, count and totals are counted once. The checkbox "Show each base as its own card" on the Keycaps gallery turns it off or on for every set at once.'], go: '#/keycaps' },
   { id: 'completion', t: 'Completion and missing kits', g: 'Keycaps', ctx: ['keycaps'], k: 'completion complete missing kits percent bar wishlist gmk',
@@ -2381,12 +2582,12 @@ const HELP = [
   // ---------- Other lists ----------
   { id: 'categories', t: 'Accessory categories and sub-categories', g: 'Other lists', ctx: ['accessories', 'pcbs', 'deskmats'], k: 'category sub-category foam case cstm alt weights plate cable deskmat pcb components daughterboard',
     s: ['Accessories have Category and Sub-category (e.g. Case › CSTM top cases, Foam › Case foam) and a Material for foam.', 'Deskmats, PCBs & Components and Switch parts have their own lists; Filter on Accessories lists every category and sub-category.', 'Check my data → Categories to sort suggests the right place.'], go: '#/accessories' },
-  { id: 'wishlist', t: 'Wishlist', g: 'Other lists', ctx: ['wishlist'], k: 'wishlist want buy later wanted bought todo',
-    s: ['Wishlist → Add, or "+ Wishlist" from a missing kit or a product page line.', 'Bought keeps the row with a date; wishlist items never count in totals.'], go: '#/wishlist' },
+  { id: 'wishlist', t: 'Wishlist', g: 'Other lists', ctx: ['wishlist'], k: 'greyed kit not owned wishlist want buy later wanted bought todo',
+    s: ['Wishlist → Add, or "+ Wishlist" from a missing kit or a product page line.', 'Bought keeps the row with a date; wishlist items never count in totals.', 'On a keycap set, "+ Wishlist" on any kit you don\'t own adds it (Kits tab, Kit gallery tiles, Pictures window → Kits, GMK reference card).'], go: '#/wishlist' },
 
   // ---------- Data and tools ----------
-  { id: 'check', t: 'Check my data (fix mistakes)', g: 'Data and tools', ctx: ['check'], k: 'check my data fix errors spelling duplicates categories keyboard type cleanup tidy',
-    s: ['Tools → Check my data: fixes waiting (tick, then "Apply ticked fixes"; a copy is saved first) and checks that update every time: spellings, keyboards with no type, accessories with no category, same names, categories to sort.'], go: '#/check' },
+  { id: 'check', t: 'Check my data (fix mistakes)', g: 'Data and tools', ctx: ['check'], k: 'not owned kit records duplicate catalog check my data fix errors spelling duplicates categories keyboard type cleanup tidy',
+    s: ['Tools → Check my data: fixes waiting (tick, then "Apply ticked fixes"; a copy is saved first) and checks that update every time: spellings, keyboards with no type, accessories with no category, same names, categories to sort.', '"Not-owned kit records the GMK catalog already lists": per set, the not-owned kits that only repeat a catalog kit (they still show greyed from the catalog after removal). Sets whose records hold a shop picture or a price start unticked.', 'At the end, checks worked out every time: "Owned kits with no price paid" (by set, linked) and "GMK sets not linked to the catalog" (Link to the suggested catalog set, or "Not in the catalog" to leave a set out of the list).'], go: '#/check' },
   { id: 'backup', t: 'Back up and restore', g: 'Data and tools', ctx: ['settings'], k: 'backup restore save my data download json zip safe copy pictures photos folder desktop file',
     s: ['Settings → Backup and restore → "Back up…": choose the kind of file (backup file with pictures .zip, records only .json, or everything in one .json). For the .zip, tick the lists (Keyboards, Keycaps, …, Wishlist, Build timeline, Settings) and what to include: your photos and kept copies, linked pictures (GMK catalog, Keycap Collection app and shop pictures), sound recordings; "Only what I own" leaves out the wishlist and pictures of kits you don\'t own.', 'The .zip downloads to this device. Inside: data (your records), pictures sorted by list and item ("Linked" folders for catalog and shop pictures), recordings, and README.txt listing everything plus any linked picture a website wouldn\'t let the app save. Keep it on your PC, never in the public GitHub repo.', 'Restore: "Choose a backup file…" and pick the .zip: tick per list which records, photos and recordings to put back, then "Restore what is ticked". Each restored record replaces the same record; nothing else is deleted.', 'The older one-file .json backups still work, and "Back up…" can still make them.'], go: '#/settings' },
   { id: 'excel', t: 'Export to Excel', g: 'Data and tools', ctx: ['import'], k: 'excel export workbook spreadsheet xlsx v19 download',
@@ -3201,7 +3402,7 @@ function photoItem(k) { return PHOTO_TYPES[photoType].saved().find(x => x.id ===
 function stopPhotoListener() { if (photoUnsub) { photoUnsub(); photoUnsub = null; } currentPhotos = []; }
 
 function photoCardHtml(k, type = 'keyboards') {
-  return `<div class="card side-card" id="photoCard"><h3>Primary photo</h3><p class="sub">Shown on the gallery card. Pick any photo below as the default.</p>
+  return `<div class="card side-card" id="photoCard"><h3 style="display:flex;justify-content:space-between;gap:8px;align-items:center">Primary photo<button type="button" class="btn" data-openpics="photos" style="font-size:12px;padding:4px 8px" title="Open the Pictures window: your photos, shop pictures, kit pictures and framing in one place">All pictures…</button></h3><p class="sub">Shown on the gallery card. Pick any photo below as the default.</p>
     <div class="cover" id="coverBox">${k.coverThumb ? `<img src="${k.coverThumb}" alt="${esc(k.name)}">` : `<span>${I[type]}No photo yet</span>`}</div>
     <div class="drop" id="dropZone" tabindex="0" role="button" aria-label="Add photos"><b>Drop photos here or click to upload</b><span>JPG, PNG or WebP. Each one can be cropped before it is saved.</span></div>
     <button type="button" class="btn camBtn" id="camBtn" style="width:100%;justify-content:center;margin-top:8px">${I.camera}Take a photo</button>
@@ -3847,12 +4048,13 @@ function kitRowHtml(k, i) {
   return `<div class="kit ${k.notOwned ? 'kit-no' : 'kit-own'}" data-kit="${esc(k.id)}">
     <div class="kit-top">
       <button type="button" class="k-pic" title="Change this kit's picture">📷</button>
-      <label class="kownt" title="Owned: you have this kit. Not owned: it stays in the set (greyed in the Kit gallery) but doesn't count as yours. Click Save to keep the change."><input type="checkbox" class="k-owned"${k.notOwned ? '' : ' checked'}><span class="kown-on">✓ Owned</span><span class="kown-off">Not owned</span></label>
+      <label class="kownt" title="Owned: you have this kit. Not owned: it stays in the set (greyed in the Kit gallery) but doesn't count as yours. On a saved kit the change is saved at once (Undo in the message)."><input type="checkbox" class="k-owned"${k.notOwned ? '' : ' checked'}><span class="kown-on">✓ Owned</span><span class="kown-off">Not owned</span></label>
       <input class="input k-name" placeholder="Kit name, e.g. Base kit" value="${val(k.name)}" aria-label="Kit name">
       <select class="select k-type" aria-label="Kit type"><option value="">Kit type</option>${KIT_TYPES.concat(k.kitType && !KIT_TYPES.includes(k.kitType) ? [k.kitType] : []).map(t => `<option${t === k.kitType ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select>
       <input class="input k-qty" type="number" min="1" step="1" value="${val(k.quantity ?? 1)}" aria-label="Quantity" title="Quantity">
       <button type="button" class="btn danger k-del" aria-label="Remove kit">✕</button>
     </div>
+    <div class="k-wishrow"><button type="button" class="btn k-wish" data-kwish="" title="Add this kit to your wishlist (Keycaps, Wanted)">+ Wishlist</button></div>
     <details class="kit-more"${i === -1 ? ' open' : ''}><summary>Purchase details · <span class="k-total">${money(kbTotal(k))}</span>${k.datePurchased ? ' · ' + esc(fmtDate(k.datePurchased)) : ''}${k.purchasedFrom ? ' · ' + esc(k.purchasedFrom) : ''}</summary>
       <div class="kit-grid">
         <label>Date purchased<input class="input k-date" type="date" value="${val(k.datePurchased)}"></label>
@@ -3877,9 +4079,10 @@ function catKitsNotListed() {   // v0.113.0: the linked catalog set's kits that 
   const mine = [...document.querySelectorAll('#kitList .kit')].map(r => ({ name: r.querySelector('.k-name').value.trim() })).filter(k => k.name), links = (editing && editing.kitLinks) || {};
   const pr = pairKits(mine, set.kits || [], links); return (set.kits || []).filter(c => !pr.has(c));
 }
-function drawOtherKits() {
+function drawOtherKits() { drawOtherKits0(); setTimeout(kitWishRefresh, 0); }
+function drawOtherKits0() {
   const box = document.getElementById('otherKits'); if (!box) return; const list = catKitsNotListed();
-  box.innerHTML = list.length ? `<div class="okits"><p class="sub" style="margin:12px 0 6px">Also in this set (GMK catalog), not on your list: not owned</p>${list.map(c => `<div class="okit"><span class="kown-off" style="display:inline-block">Not owned</span><b>${esc(c.name)}</b>${gmkKitPrice(c) ? `<span class="sub">${esc(gmkKitPrice(c))}</span>` : ''}<span style="margin-left:auto;display:flex;gap:6px"><button type="button" class="btn" data-okadd="${esc(kitKey(c.name))}" data-okname="${esc(c.name)}" data-own="1" title="Add it to your kits as owned">I own it</button><button type="button" class="btn" data-okadd="${esc(kitKey(c.name))}" data-okname="${esc(c.name)}" data-own="0" title="Add it to your kits as not owned (e.g. to note a price)">Add as not owned</button></span></div>`).join('')}</div>` : '';
+  box.innerHTML = list.length ? `<div class="okits"><p class="sub" style="margin:12px 0 6px">Also in this set (GMK catalog), not on your list: not owned</p>${list.map(c => `<div class="okit"><span class="kown-off" style="display:inline-block">Not owned</span><b>${esc(c.name)}</b>${gmkKitPrice(c) ? `<span class="sub">${esc(gmkKitPrice(c))}</span>` : ''}<span style="margin-left:auto;display:flex;gap:6px"><button type="button" class="btn" data-kwish="${esc(c.name)}" title="Add this kit to your wishlist">+ Wishlist</button><button type="button" class="btn" data-okadd="${esc(kitKey(c.name))}" data-okname="${esc(c.name)}" data-own="1" title="Add it to your kits as owned">I own it</button><button type="button" class="btn" data-okadd="${esc(kitKey(c.name))}" data-okname="${esc(c.name)}" data-own="0" title="Add it to your kits as not owned (e.g. to note a price)">Add as not owned</button></span></div>`).join('')}</div>` : '';
 }
 function renderKeycapForm(s = null) {
   formDirty = false; editing = s;
@@ -4027,11 +4230,17 @@ function renderKeycapForm(s = null) {
       const a = own && own.checked ? await askChoice(`“${name}”: you don't own it, or it shouldn't be in this set at all?`, [['notown', 'Mark as not owned (keep it in the set)', 'primary'], ['delete', 'Delete it from this set', 'danger']])
         : (await askConfirm(`Delete the kit “${name}” from this set? It is already marked not owned; deleting removes it from the set (and from the Kit gallery if the set isn't linked to the catalog).`, { ok: 'Delete', danger: true }) ? 'delete' : null);
       if (!a) return;
-      if (a === 'notown') { own.checked = false; own.dispatchEvent(new Event('change', { bubbles: true })); markDirty(); toast('Marked as not owned. Click Save to keep it.'); return; } }
+      if (a === 'notown') { own.checked = false; if (kitOwnSaved(row)) { own.dispatchEvent(new Event('change', { bubbles: true })); return; } own.dispatchEvent(new Event('change', { bubbles: true })); markDirty(); toast('Marked as not owned. Click Save to keep it.'); return; } }
     row.remove(); kitCountUpdate(); updateSetTotal(); markDirty(); drawOtherKits();
   });
-  document.getElementById('btnSave').onclick = saveKeycapSet; drawOtherKits(); setTimeout(kitThumbsRefresh, 0);
-  document.getElementById('otherKits').addEventListener('click', e => { const b = e.target.closest('[data-okadd]'); if (!b) return;   // v0.113.0
+  document.getElementById('btnSave').onclick = saveKeycapSet; drawOtherKits(); setTimeout(() => { kitThumbsRefresh(); kitWishRefresh(); }, 0);
+  document.getElementById('otherKits').addEventListener('click', async e => { const b = e.target.closest('[data-okadd]'); if (!b) return;   // v0.113.0
+    if (s && s.id && savedKeycaps.some(x => x.id === s.id)) {   // v0.119.0: saved at once
+      const ck = catKitsNotListed().find(c => kitKey(c.name) === b.dataset.okadd) || {}, nm = ck.name || b.dataset.okname; b.disabled = true; const was = !!formDirty;
+      const kit = await kitOwnAdd(nm, b.dataset.own !== '0'); if (!kit) { b.disabled = false; return; }
+      if (was) { document.getElementById('addKit').click(); const rows = document.querySelectorAll('#kitList .kit'), row = rows[rows.length - 1]; row.dataset.kit = kit.id; const inp = row.querySelector('.k-name'); inp.value = nm; if (kit.kitType) { const ty = row.querySelector('.k-type'); if (ty) ty.value = kit.kitType; }
+        const o = row.querySelector('.k-owned'); o.checked = !kit.notOwned; row.classList.toggle('kit-own', o.checked); row.classList.toggle('kit-no', !o.checked); kitCountUpdate(); drawOtherKits(); setTimeout(() => { kitThumbsRefresh(); kitWishRefresh(); }, 0); }
+      return; }
     document.getElementById('addKit').click(); const rows = document.querySelectorAll('#kitList .kit'), row = rows[rows.length - 1], inp = row.querySelector('.k-name'), ck = (catKitsNotListed().find(c => kitKey(c.name) === b.dataset.okadd) || {});
     inp.value = ck.name || b.dataset.okname; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true }));
     if (b.dataset.own === '0') { const o = row.querySelector('.k-owned'); o.checked = false; o.dispatchEvent(new Event('change', { bubbles: true })); }
@@ -4812,21 +5021,19 @@ function buildCatalog() {
   const sort = (m, f) => [...m.values()].sort((a, b) => f(a).localeCompare(f(b), 'en', { sensitivity: 'base' }));
   return { keyboards: sort(kb, r => r.brand + ' ' + r.name), switches: sort(sw, r => r.maker + ' ' + r.name), keycaps: sort(kc, r => r.name), makers: sort(makers, r => r.name), designers: sort(designers, r => r.name) };
 }
-let catTab = 'keycaps', catQuery = '';
+let catTab = 'gmk', catQuery = '';   // v0.120.0: the Catalog page is the private GMK reference only (the from-your-records tabs were removed; forms still use buildCatalog for suggestions)
 function renderCatalog() {
   document.getElementById('view').innerHTML = `
-    <div class="pagehead"><div><h1>Catalog</h1><p>Everything you have owned, grouped by model. Built from your records, so it grows as you add things; forms use it for suggestions.</p></div></div>
-    <div class="tabs" role="tablist" id="catTabs">${[['keycaps', 'Keycap sets'], ['switches', 'Switches'], ['keyboards', 'Keyboards'], ['makers', 'Makers & brands'], ['designers', 'Designers'], ['gmk', 'GMK reference (private)']].map(([v, t]) => `<button data-cat="${v}" class="${v === catTab ? 'on' : ''}">${t} <span id="catN_${v}" style="color:var(--text-3)"></span></button>`).join('')}</div>
-    <div class="tools" style="margin:14px 0 16px"><label class="search">${I.search}<input class="input" id="catSearch" placeholder="Search the catalog" value="${esc(catQuery)}"></label></div>
+    <div class="pagehead"><div><h1>Catalog</h1><p>The private GMK reference: every GMK set with its kits, prices, colors and pictures (Matrix, plus sets added from shops). <span id="catN_gmk" style="color:var(--text-3)"></span></p></div></div>
+    <div class="tools" style="margin:4px 0 16px"><label class="search">${I.search}<input class="input" id="catSearch" placeholder="Search GMK sets, designers, color codes" value="${esc(catQuery)}"></label></div>
     <div id="catResults"></div>
     <p class="sub" style="margin-top:14px">GMK reference tab: private data by Matrix Zou (Keycaps Info From Matrix, CC BY-NC-ND 4.0), loaded into your locked Firebase only.</p>`;
-  document.getElementById('catTabs').onclick = e => { const b = e.target.closest('[data-cat]'); if (!b) return; catTab = b.dataset.cat; renderCatalog(); };
   document.getElementById('catSearch').oninput = e => { catQuery = e.target.value; drawCatalog(); };
   drawCatalog();
 }
 function drawCatalog() {
   const box = document.getElementById('catResults'); if (!box) return;
-  if (catTab === 'gmk') { const c0 = buildCatalog(); Object.keys(c0).forEach(k => { const el = document.getElementById('catN_' + k); if (el) el.textContent = c0[k].length; }); if (gmkSets) document.getElementById('catN_gmk').textContent = gmkSets.length; drawGmkTab(box); return; }
+  catTab = 'gmk'; if (gmkSets) { const el = document.getElementById('catN_gmk'); if (el) el.textContent = gmkSets.length + ' sets'; } drawGmkTab(box); return;
   const c = buildCatalog(), q = catQuery.trim().toLowerCase();
   Object.keys(c).forEach(k => { const el = document.getElementById('catN_' + k); if (el) el.textContent = c[k].length; });
   const hit = (...v) => !q || q.split(/\s+/).every(w => v.join(' ').toLowerCase().includes(w));
@@ -5150,7 +5357,8 @@ function renderValue() {
   const valued = rows.filter(r => r.cur), show = (valFilter === 'all' ? valued : valFilter === 'none' ? rows.filter(r => !r.cur) : valued.filter(r => r.t === valFilter));
   const paid = valued.reduce((s, r) => s + r.paid, 0), val = valued.reduce((s, r) => s + r.cur.value, 0);
   document.getElementById('view').innerHTML = `
-    <div class="pagehead"><div><h1>Value</h1><p>What your collection is worth today, item by item. Add a value on any item's page; each one keeps its history.</p></div></div>
+    <div class="pagehead"><div><h1>Stats</h1><p>Market value: what your collection is worth today, item by item. Add a value on any item's page; each one keeps its history.</p></div></div>
+    <div class="tabs sttabs" role="tablist" style="margin:0 0 16px"><button type="button" role="tab" data-sttab="stats">Spending</button><button type="button" role="tab" data-sttab="value" class="on" aria-selected="true">Market value</button></div>
     <div class="dash-grid" style="grid-template-columns:repeat(3,1fr)">
       <div class="card tile" style="--c:var(--kc)"><span class="ic">${I.wallet}</span><div><div class="lbl">Market value</div><div class="big">${money(val)}</div><div class="hint">${valued.length} of ${rows.length} items valued</div></div></div>
       <div class="card tile" style="--c:var(--kb)"><span class="ic">${I.wallet}</span><div><div class="lbl">Paid for those items</div><div class="big">${money(paid)}</div><div class="hint">Price + tax + shipping − discounts</div></div></div>
@@ -5286,7 +5494,7 @@ function drawGmkTab(box) {
     if (!sets.length) { box.innerHTML = `<div class="card empty"><div class="big">${I.catalog}</div><h2>Not loaded yet</h2><p>On the Import page, choose <b>gmk_catalog_private.json</b> to load the private GMK reference catalog.</p></div>`; return; }
     const q = catQuery.trim().toLowerCase();
     const hit = s => !q || q.split(/\s+/).every(w => [s.title, s.titleCn, s.designer, s.profile, s.colorCodes].join(' ').toLowerCase().includes(w));
-    const list = sets.filter(hit), el = document.getElementById('catN_gmk'); if (el) el.textContent = sets.length;
+    const list = sets.filter(hit), el = document.getElementById('catN_gmk'); if (el) el.textContent = sets.length + ' sets';
     box.innerHTML = `<div class="btnrow" style="margin:0 0 10px"><a class="btn primary" href="#/catalog/match">Match your GMK sets…</a><a class="btn" href="#/catalog/shop">Add GMK sets from a shop…</a></div><p class="sub" style="margin:0 0 10px">${esc(gmkMeta?.credit || GMK_CREDIT)}${sets.some(x => x.source) ? ` Sets marked “shop” come from that shop's own pages (${esc([...new Set(sets.filter(x => x.source).map(x => x.source))].join(', '))}).` : ''}</p>
       ${list.length ? `<table class="list"><thead><tr><th>Set</th><th>Designer</th><th>Group buy</th><th>Kits</th><th>Colors</th><th>You own</th></tr></thead><tbody>${list.slice(0, 300).map(s => {
         const own = savedKeycaps.find(k => gmkMatchScore(k.name, s) === 3);
@@ -5785,7 +5993,7 @@ function drawKitGallery(s) {
     : `<p class="sub" style="margin-top:0">${!isGmk ? 'Kit pictures come from the GMK catalog or your Keycap Collection photos; this set has neither yet. Your kits are shown below.' : gmkSets && gmkSets.length ? 'Link this set on the GMK reference card (right) to see every kit in the set with pictures, and which ones you own.' : 'Load gmk_catalog_private.json on the Import page, then link this set on the GMK reference card to see every kit with pictures.'}</p>`}
     ${shown.length ? `<div class="kgrid">${shown.map(t => { const i = tiles.indexOf(t); return `<button type="button" class="kg ${t.owned ? 'own' : 'miss'}" data-kg="${i}" title="${t.owned ? 'You own this kit' : 'Not owned · click for details'}">
       <span class="kgimg">${t.img ? `<img src="${esc(t.img)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<span class="kgnone">${I.keycaps}<span>${t.inList ? 'No picture' : 'Your kit'}</span></span>`}
-        <span class="kgbadge">${t.owned ? '✓ Owned' : 'Not owned'}</span></span>
+        <span class="kgbadge">${t.owned ? '✓ Owned' : 'Not owned'}</span>${t.owned ? '' : `<span class="kgwish" role="button" tabindex="0" data-kwish="${esc(t.name)}" title="Add this kit to your wishlist">+ Wishlist</span>`}</span>
       <span class="kgname">${esc(t.name)}</span><span class="kgsub">${esc([t.price && t.price.replace(/<[^>]+>/g, ''), t.on ? 'On ' + t.on : '', t.mineNot ? 'You marked it not owned' : t.extra ? (kind === 'catalog' ? 'Not in the catalog' : 'Not in your old list') : ''].filter(Boolean).join(' · ')) || '&nbsp;'}</span></button>`; }).join('')}</div>`
     : `<p class="sub">${tiles.length ? 'No kits with this filter.' : 'No kits yet. Add the kits you own on the Kits tab.'}</p>`}
     ${ref ? `<p class="sub" style="margin:12px 0 0;font-size:11px">${tiles.some(t => t.yours) ? 'Pictures: your Keycap Collection photos, then ' : 'Pictures and kit list: '}${esc(GMK_CREDIT)}</p>` : ''}`;
@@ -5895,7 +6103,11 @@ function openKitView(s, t) {
     if (e.target.id === 'kvShow') { toKits(); const row = [...document.querySelectorAll('#kitList .kit')].find(r => r.dataset.kit === t.kit.id); if (row) { row.scrollIntoView({ behavior: 'smooth', block: 'center' }); row.classList.add('flash'); setTimeout(() => row.classList.remove('flash'), 1600); } }
     if (e.target.id === 'kvUnown' || e.target.id === 'kvOwn') {   // a kit already on the Kits tab is ticked or unticked instead of being added twice
       const want = e.target.id === 'kvOwn', row = [...document.querySelectorAll('#kitList .kit')].find(r => { const nm = r.querySelector('.k-name').value; return t.kit && r.dataset.kit === t.kit.id || (kitKey(nm) === kitKey(t.name) && r.querySelector('.k-owned').checked !== want); });
-      if (row) { const c = row.querySelector('.k-owned'); c.checked = want; c.dispatchEvent(new Event('input', { bubbles: true })); c.dispatchEvent(new Event('change', { bubbles: true })); d.remove(); drawKitGallery(s); toast(want ? 'Marked as owned. Click Save to keep it.' : 'Marked as not owned. Click Save to keep it.'); return; } }
+      if (row) { const c = row.querySelector('.k-owned'), inst = !!kitOwnSaved(row); c.checked = want; c.dispatchEvent(new Event('input', { bubbles: true })); c.dispatchEvent(new Event('change', { bubbles: true })); d.remove(); drawKitGallery(s); if (!inst) toast(want ? 'Marked as owned. Click Save to keep it.' : 'Marked as not owned. Click Save to keep it.'); return; } }
+    if (e.target.id === 'kvOwn' && s && s.id && savedKeycaps.some(x => x.id === s.id)) {   // v0.119.0: a catalog kit you have no record of is added at once
+      const was = !!formDirty, kit = await kitOwnAdd(t.name, true); if (!kit) return; d.remove();
+      if (was) { document.getElementById('addKit').click(); const rows = document.querySelectorAll('#kitList .kit'), row = rows[rows.length - 1]; row.dataset.kit = kit.id; row.querySelector('.k-name').value = t.name; if (kit.kitType) { const ty = row.querySelector('.k-type'); if (ty) ty.value = kit.kitType; } kitCountUpdate(); try { drawOtherKits(); } catch (er) {} }
+      setTimeout(() => drawKitGallery(savedKeycaps.find(x => x.id === s.id) || s), 500); return; }
     if (e.target.id === 'kvOwn') { toKits(); document.getElementById('addKit').click(); const rows = document.querySelectorAll('#kitList .kit'), row = rows[rows.length - 1], inp = row.querySelector('.k-name');
       inp.value = t.name; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); row.scrollIntoView({ behavior: 'smooth', block: 'center' }); toast(`Added ${t.name} to Kits. Fill in what you paid, then Save.`); }
     if (e.target.id === 'kvWish' && s) { await addKitToWishlist(s, t.ck); d.remove(); drawKitGallery(s); }
@@ -8588,12 +8800,15 @@ function wireBackup() {
   $('btnRecount').onclick = async () => { const m = $('recountMsg'); $('btnRecount').disabled = true; m.textContent = 'Counting…';
     try { const r = await recountStorage(); m.textContent = `Counted ${r.pn} photos and ${r.sn} recordings.`; } catch (e) { m.textContent = 'Could not count: ' + explain(e); } $('btnRecount').disabled = false; };
 }
+document.addEventListener('change', e => { if (e.target.id !== 'doneUiTog') return; try { localStorage.setItem('kbc_done_ui', e.target.checked ? '1' : '0'); } catch (er) {} applyDoneUi(); toast(e.target.checked ? 'Done marks shown' : 'Done marks hidden (your marks are kept)'); });
 function renderSettings() {
   const ready = !!db && !isFile;
   document.getElementById('view').innerHTML = `
     <div class="pagehead"><div><h1>Settings</h1><p>App information and tools.</p></div></div>
     ${themeCardHtml()}
     <div class="two">
+      <div class="card" id="doneCard"><h3>Done marks and work queue</h3><p class="sub">The Done tick on every card, Tools ▾ → Mark done, Filter → Work, More ▾ → Work… and Select → Add to work queue. Turn them off if you don't use them; your marks are kept.</p>
+        <label class="check"><input type="checkbox" id="doneUiTog"${doneUi() ? ' checked' : ''}> Show done marks and the work queue</label></div>
       <div class="card"><h3>About this app</h3><p class="sub">Keyboard Collection ${APP_VERSION} · single user · USD</p>
         <div class="kv">Data path: ${FIRESTORE_COLLECTION}/${ROOT_DOC}/&lt;type&gt;/&lt;id&gt;<br>Firebase project: ${firebaseConfig.projectId}</div></div>
       <div class="card"><h3>Storage</h3><p class="sub">Photos, sound recordings and your records are saved in your Firebase database. The free plan includes 1 GB in total.</p>
