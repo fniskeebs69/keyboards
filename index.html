@@ -148,6 +148,46 @@
   .kgwish { position: absolute; right: 6px; bottom: 6px; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: rgba(15,17,21,.82); color: var(--accent); border: 1px solid var(--accent); filter: none; opacity: 1; cursor: pointer; z-index: 2; }
   .kgwish.on { color: var(--text-2); border-color: var(--line-2); } .kgwish:hover { background: var(--accent); color: var(--on-accent); }
   body.nodone [data-sel="queue"], body.nodone [data-sel="done"][data-donev], body.nodone [data-workmenu], body.nodone .donebtn, body.nodone #btnDone { display: none !important; }
+  /* v0.121.0 layout fixes: form controls never wider than their card (a select sizes itself to its longest option, e.g. a long keyboard name) */
+  .card select, .card .select, .card input, .card textarea, .gdlg select, .gdlg .select, .gdlg input, .gdlg textarea { max-width: 100%; min-width: 0; }
+  .form-grid > div { min-width: 0; }   /* a wide table or long word in the main column must not push the side column off the screen */
+  .rates { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); } .rate .row { flex-wrap: wrap; row-gap: 4px; }
+  #valSeg { flex-wrap: wrap; max-width: 100%; } #valSeg button { flex: 0 1 auto; }
+  pre.rules { max-width: 100%; overflow-x: auto; } #rulesCard { min-width: 0; }
+  @media (max-width: 1000px) { .form-grid { grid-template-columns: minmax(0, 1fr) !important; } }   /* tablets: side cards go under the tabs */
+  @media (min-width: 701px) and (max-width: 1180px) { #kitList .kit-top { grid-template-columns: 46px auto minmax(0, 1fr) 64px; grid-template-areas: 'name name name del' 'pic own type qty'; } #kitList .kit-top .k-name { grid-area: name; } #kitList .kit-top .k-del { grid-area: del; justify-self: end; } #kitList .kit-top .k-pic { grid-area: pic; } #kitList .kit-top .kownt { grid-area: own; } #kitList .kit-top .k-type { grid-area: type; } #kitList .kit-top .k-qty { grid-area: qty; } }
+  @media (min-width: 701px) and (max-width: 1100px) { .main table.list { display: block; max-width: 100%; overflow-x: auto; } }   /* tablets: wide tables scroll in place (phones already do) */
+  .side-card .select, .side-card select { width: 100%; } .side-card .btnrow .select, .side-card .stools .select { width: auto; }
+  .costwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; } .costtbl td:not(.num) { overflow-wrap: anywhere; }
+  @media (max-width: 700px) {
+    /* phones: each row of the paid / retail table is a small block: the item on one line, then Paid · Retail · Difference with their names */
+    .costtbl, .costtbl tbody, .costtbl tfoot { display: block; } .costtbl thead { display: none; }
+    .costtbl tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px 10px; padding: 8px 0; border-bottom: var(--bw) var(--bs) var(--line); }
+    .costtbl td { display: block; border: 0 !important; padding: 0 !important; font-size: 12.5px; } .costtbl td:not(.num) { grid-column: 1 / -1; } .costtbl td.sub:first-child { font-size: 11px; }
+    .costtbl td.num { text-align: left; white-space: normal; } .costtbl td.num .sub { display: block; font-size: 10.5px; }
+    .costtbl td.num::before { display: block; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); font-weight: 600; }
+    .costtbl tr > td.num:nth-last-child(3)::before { content: 'Paid'; } .costtbl tr > td.num:nth-last-child(2)::before { content: 'Retail'; } .costtbl tr > td.num:last-child::before { content: 'Difference'; }
+    .costtbl tfoot td:first-child:empty { display: none; } .costtbl tfoot tr { border-bottom: 0; }
+    .rates { grid-template-columns: 1fr; } .rate .row { flex-wrap: wrap; row-gap: 4px; }
+    /* list toolbar on phones: Add or modify on its own line, Sort + Filter, then Select · View · More */
+    .pagehead .tools:has([data-addmenu]) { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pagehead .tools:has([data-addmenu]) > [data-addmenu], .pagehead .tools:has([data-addmenu]) > #addMenuWrap, .pagehead .tools:has([data-addmenu]) > .addwrap { order: -2; flex: 1 1 100%; justify-content: center; }
+    .pagehead .tools:has([data-addmenu]) > select[aria-label="Sort"], .pagehead .tools:has([data-addmenu]) > select[data-listfilter] { order: -1; flex: 1 1 40%; min-width: 0; }
+    .pagehead .tools:has([data-addmenu]) > #btnSelect, .pagehead .tools:has([data-addmenu]) > .hmenu { flex: 1 1 0; } .pagehead .tools:has([data-addmenu]) > .hmenu > .hmb { width: 100%; justify-content: center; } .pagehead .tools:has([data-addmenu]) > #btnSelect { justify-content: center; }
+  }
+  #rbCard [hidden] { display: none !important; }
+  .rb-pics { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .rb-pic { position: relative; margin: 0; width: 96px; height: 96px; border: var(--bw) var(--bs) var(--line-2); border-radius: var(--radius-s); overflow: hidden; background: var(--bg-2); }
+  .rb-pic img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+  .rb-picx { position: absolute; top: 3px; right: 3px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(0,0,0,.65); color: #fff; font-size: 12px; cursor: pointer; line-height: 24px; padding: 0; }
+  .rc-pic > summary { cursor: pointer; list-style-position: outside; }
+  .rc-picbox { margin-top: 10px; max-height: 460px; overflow: auto; border: var(--bw) var(--bs) var(--line); border-radius: var(--radius-s); background: #fff; }
+  .rc-picbox img { display: block; width: 100%; max-width: 760px; height: auto; margin: 0 auto; }
+  .rb-sel { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; } .rb-sel .fld { display: grid; gap: 4px; } .rb-sel .fld > span { font-size: 12px; color: var(--text-2); font-weight: 600; }
+  .rcpt-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: var(--bw) var(--bs) var(--line); color: var(--text); } .rcpt-row:last-child { border-bottom: 0; }
+  .rcpt-ic { font-size: 20px; } .rcpt-main { min-width: 0; overflow-wrap: anywhere; } .rcpt-btns { display: flex; gap: 6px; } .rcpt-btns .btn { padding: 5px 10px; }
+  .rcpt-mini { margin-top: 6px; } pre.rcpttext { white-space: pre-wrap; max-height: 60vh; overflow: auto; font-size: 12px; background: var(--bg-2); padding: 12px; border-radius: var(--radius-s); }
+  @media (max-width: 700px) { .rb-sel { grid-template-columns: 1fr; } .rcpt-row { grid-template-columns: auto minmax(0, 1fr); } .rcpt-btns { grid-column: 1 / -1; } }
   .pw-card { max-width: 900px; width: 100%; } .pw-tabs { margin: 4px 0 12px; } .pw-panel > .side-card { margin: 0; border: 0; padding: 0; background: none; box-shadow: none; }
   #picWin [data-openpics] { display: none; } .pw-kits { display: grid; gap: 8px; } .pw-kit { display: grid; grid-template-columns: 96px 1fr auto; gap: 12px; align-items: center; padding: 8px; border: var(--bw) var(--bs) var(--line); border-radius: var(--radius-s); }
   .pw-kit.pw-not { border-style: dashed; } .pw-kit.pw-not .pw-kimg img { filter: grayscale(1) brightness(.8); opacity: .6; } .pw-kimg { width: 96px; height: 72px; border-radius: 8px; overflow: hidden; background: var(--bg-2); display: grid; place-items: center; }
@@ -717,7 +757,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.120.0';
+const APP_VERSION = 'v0.123.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -1551,11 +1591,11 @@ document.addEventListener('click', e => {   // in select mode a click on a card 
   if (!selMode) return; const el = e.target.closest('#view a.kcard, #view tr.row[data-href]'); if (!el) return;
   e.preventDefault(); e.stopPropagation(); const id = idOfEl(el); if (!id) return; selIds.has(id) ? selIds.delete(id) : selIds.add(id); markSel(); drawSelBar();
 }, true);
+document.addEventListener('click', e => { if (e.target.closest && e.target.closest('[data-rbfocus]')) sessionStorage.setItem('kbc_rbfocus', '1'); });
 document.addEventListener('click', e => { const a = e.target.closest && e.target.closest('a[data-addmenu]'); const open = document.getElementById('addMenu');
   if (open && !e.target.closest('#addMenu')) open.remove(); if (!a) return; e.preventDefault(); if (open) return;
   const r = a.getBoundingClientRect(), m = document.createElement('div'); m.id = 'addMenu'; m.setAttribute('role', 'menu'); m.className = 'card addmenu';
-  m.innerHTML = `<a role="menuitem" href="#/import/link"><b>🔗 From a webpage link</b><span>Paste a shop or catalog page: make a new entry, or choose “Add to an entry I have” to fill one you already have.</span></a>
-    <a role="menuitem" href="#/import"><b>📄 From a receipt (PDF)</b><span>Drop an order receipt: each line becomes a new entry or fills one you have.</span></a>
+  m.innerHTML = `<a role="menuitem" href="#/import" data-rbfocus><b>📥 Read a receipt or webpage</b><span>Drop a receipt PDF, screenshot or photo, or paste a shop page link or the text of an order page: make new entries or fill ones you have.</span></a>
     <a role="menuitem" href="${esc(a.dataset.addmenu)}"><b>✎ Enter it by hand</b><span>A blank new entry. To change one you have, open it from the list.</span></a>`;
   document.body.appendChild(m); const w = Math.min(340, window.innerWidth - 16); m.style.width = w + 'px'; m.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left)) + 'px'; m.style.top = (r.bottom + window.scrollY + 6) + 'px';
   m.addEventListener('click', () => setTimeout(() => m.remove(), 0)); }, true);
@@ -1596,10 +1636,8 @@ function organizeHeader() {
     const share = hmenuOf(tools, 'share', 'Share', 'Build card and QR label'), org = hmenuOf(tools, 'org', 'Organize', 'Merge, duplicate, move or split this entry'), tl = hmenuOf(tools, 'tools', 'Tools', 'Done mark, read a webpage or a receipt into this entry');
     hmenuFill(share, [$('btnBuildCard'), $('btnQr')]); hmenuFill(org, [$('btnMerge'), $('btnDup'), $('btnMove'), $('btnSplit'), $('btnBundle')]);
     const pop = tl.querySelector('.hpop');
-    if (!pop.querySelector('[data-hread]')) pop.insertAdjacentHTML('beforeend', `<button class="btn hitem" type="button" data-hread="page" title="Read a shop or catalog page into this entry">Read a webpage into it…</button><button class="btn hitem" type="button" data-hread="rc" title="Read an order receipt (PDF) into this entry">Read a receipt into it…</button>`);
+    if (!pop.querySelector('[data-hread]')) pop.insertAdjacentHTML('beforeend', `<button class="btn hitem" type="button" data-hread="box" title="Read a receipt or a shop page into this entry (the Read box opens with this entry as the target)">Read a receipt or webpage into it…</button>`);
     hmenuFill(tl, [$('btnDone')].filter(Boolean)); if ($('btnDone') && pop.firstChild !== $('btnDone')) pop.insertBefore($('btnDone'), pop.firstChild);
-    const hp = pop.querySelector('[data-hread="page"]'), hr = pop.querySelector('[data-hread="rc"]'), wantRc = !$('readIntoRc');
-    if (hp.hidden) hp.hidden = false; if (hr.hidden !== wantRc) hr.hidden = wantRc;
     /* v0.116.0: move nodes only when they are out of place. v0.115.0 moved them on every call, which set off the observer again,
        so the header was rebuilt about 100 times a second and a real (slow) click often lost its button between press and release. */
     const del = $('btnDelete'), can = $('btnCancelTop'), first = del || can; /* order: Share, Organize, Tools, Delete, Discard, Save */
@@ -1619,7 +1657,11 @@ document.addEventListener('click', e => {
   const hb = e.target.closest && e.target.closest('.hmb'), inPop = e.target.closest && e.target.closest('.hpop');
   document.querySelectorAll('.hmenu .hpop:not([hidden])').forEach(p => { if (!(hb && hb.nextElementSibling === p) && !(inPop === p && !e.target.closest('button.hitem:not(.seg button), a'))) { p.hidden = true; p.previousElementSibling.setAttribute('aria-expanded', 'false'); } });
   if (hb) { const p = hb.nextElementSibling; p.hidden = !p.hidden; hb.setAttribute('aria-expanded', String(!p.hidden)); if (!p.hidden) { p.style.left = ''; p.style.right = ''; const r = p.getBoundingClientRect(); if (r.right > window.innerWidth - 8) { p.style.left = 'auto'; p.style.right = '0'; } } return; }
-  const rd = e.target.closest && e.target.closest('[data-hread]'); if (rd) {
+  const rd = e.target.closest && e.target.closest('[data-hread]'); if (rd && rd.dataset.hread === 'box') {   // v0.122.0: one Read box with this entry as the target
+    const m = location.hash.match(/^#\/(\w+)\/([^/?]+)/), t = m && m[1], x = t && itemsOfType(t).find(y => y.id === m[2]); if (!x) return;
+    if (formDirty) { toast('Save or discard your changes first'); return; }
+    sessionStorage.setItem('kbc_rbtarget', JSON.stringify({ type: t, id: x.id, label: rcLabel(t, x) || x.name || 'this entry' })); rbState = { what: '', src: '', user: false }; location.hash = '#/import'; return; }
+  if (rd) {
     const b = document.getElementById(rd.dataset.hread === 'page' ? 'refReread' : 'readIntoRc'); if (b) { b.click(); return; }
     if (rd.dataset.hread === 'page') { /* keycap sets have no From the shop card: start the reader here */
       const m = location.hash.match(/^#\/(\w+)\/([^/?]+)/), t = m && m[1], x = t && itemsOfType(t).find(y => y.id === m[2]); if (!x) return;
@@ -1696,6 +1738,356 @@ async function kitOwnAdd(name, owned) {   // a catalog kit added to the saved se
   const ok = await kitOwnWrite(sid, ks => ks.concat([kit]), owned ? `Added ${name} as owned (saved). Add what you paid on the Kits tab.` : `Added ${name} as not owned (saved)`, ks => ks.filter(k => k.id !== id));
   return ok ? kit : null;
 }
+/* ===================== v0.122.0 (audit item 7, Faraz Nov 26): one Read box, and receipt copies kept =====================
+   Import page: "Read a receipt or a webpage". Two drop-downs (What is it? / What do you have?) fill themselves in from what you
+   drop or paste and can be changed; the box then hands it to the right reader (receipt reader, product page reader, GMK shop reader).
+   Every receipt read and saved is kept as a copy (PDF as it is, pasted or fetched text as a .txt) in keyboard_collection/main/receipts
+   (metadata) + receiptparts (the file in ~700 KB pieces), linked to the entries it filled, labelled "date · seller · order number". */
+const RB_WHAT = [['', 'Work it out from what I add'], ['receipt', 'A receipt (what I paid)'], ['page', 'A product page (shop details, pictures, retail price)'], ['gmkshop', 'GMK sets from a shop (catalog)']];
+const RB_SRC = { '': [['', 'Work it out']], receipt: [['pdf', 'PDF file'], ['picture', 'Screenshot or photo'], ['text', 'Copied page text'], ['link', 'Web link (public order pages only)']], page: [['link', 'Web link']], gmkshop: [['shop', 'Shop web address']] };
+let rbState = { what: '', src: '', user: false }, rbPics = [], rbBusy = false, rbSrcData = null, savedReceipts = [], rcptLoaded = false, rcptUnsub = null;
+function rbTarget() { try { return JSON.parse(sessionStorage.getItem('kbc_rbtarget') || 'null'); } catch (e) { return null; } }
+function rbLooksOrder(u) { return /(^|\.)order\.|\/ord\/|\/orders?\b|\/account\b|\/invoice|\/receipt|\/purchase-?history|\/my-?orders|order_status|\/authenticate\?key=/i.test(u); }
+function rbGuess(text) {
+  const t = String(text || '').trim(); if (!t) return { what: '', src: '' };
+  if (/^https?:\/\/\S+$/i.test(t) || /^[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/i.test(t)) {
+    const u = /^https?:/i.test(t) ? t : 'https://' + t; let host = ''; try { host = new URL(u).hostname.replace(/^www\./, ''); } catch (e) {}
+    if (!/\/products?\//i.test(u) && rbLooksOrder(u)) return { what: 'receipt', src: 'link' };
+    if (/^[a-z0-9-]+(\.[a-z0-9-]+)+\/?$/i.test(t.replace(/^https?:\/\//i, '')) && host) return { what: 'gmkshop', src: 'shop' };
+    return { what: 'page', src: 'link' };
+  }
+  return { what: 'receipt', src: 'text' };
+}
+function readBoxHtml() {
+  const tg = rbTarget(), w = rbState.what, srcs = RB_SRC[w] || RB_SRC[''], src = rbState.src, pic = src === 'picture', zoneOn = !src || src === 'pdf' || pic;
+  const dropTxt = pic ? '<b>Drop screenshots or photos here</b><span>or click to choose (phone: take a photo or pick one) · Ctrl+V pastes a screenshot</span>'
+    : src === 'pdf' ? '<b>Drop a receipt PDF here</b><span>or click to choose a file</span>' : '<b>Drop a receipt PDF, screenshot or photo here</b><span>or click to choose a file · Ctrl+V pastes a screenshot</span>';
+  return `<div class="card" id="rbCard"><h3>Read a receipt or a webpage</h3>
+    <p class="sub" style="margin:0 0 10px">Drop a receipt PDF, a screenshot or a photo (Ctrl+V pastes a screenshot), or paste a link or the text of a page. The two choices below fill themselves in; change them if they're wrong. For an order page you have to be signed in to see (eBay, Amazon, PayPal…), take a screenshot of it, or open it, press Ctrl+A then Ctrl+C (phone: long-press → Select all → Copy) and paste the text here.</p>
+    ${tg ? `<div class="tgtbanner" id="rbTgt">Reading into <b>${esc(tg.label)}</b> · <button type="button" class="lnkbtn" id="rbTgtStop">Stop reading into it</button></div>` : ''}
+    <div class="rb-sel"><label class="fld"><span>What is it?</span><select class="select" id="rbWhat">${RB_WHAT.map(([v, l]) => `<option value="${v}"${v === w ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label class="fld"><span>What do you have?</span><select class="select" id="rbSrc"${w ? '' : ' disabled'}>${srcs.map(([v, l]) => `<option value="${v}"${v === src ? ' selected' : ''}>${l}</option>`).join('')}</select></label></div>
+    <div class="drop" id="rcDrop" tabindex="0" role="button"${zoneOn ? '' : ' hidden'}>${dropTxt}</div><input type="file" id="rcFile" accept="${src === 'pdf' ? '.pdf,application/pdf' : pic ? 'image/*' : '.pdf,application/pdf,image/*'}"${src === 'pdf' ? '' : ' multiple'} hidden>
+    <div class="rb-pics" id="rbPics"${pic && rbPics.length ? '' : ' hidden'}>${rbPics.map((p, i) => `<figure class="rb-pic"><img src="${p.url}" alt="Picture ${i + 1}"><button type="button" class="rb-picx" data-rbpicx="${i}" aria-label="Remove picture ${i + 1}" title="Remove">✕</button></figure>`).join('')}</div>
+    ${pic && rbPics.length ? `<p class="sub" style="margin:6px 0 0;font-size:11.5px">If the order runs over several screenshots, add them all; they are read in this order, top to bottom.</p>` : ''}
+    <textarea class="input" id="rbText" rows="3" style="width:100%;margin-top:10px"${src === 'pdf' || pic ? ' hidden' : ''} placeholder="${src === 'link' ? 'Paste the page link (https://…)' : src === 'shop' ? 'Shop address, e.g. oblotzky.industries' : src === 'text' ? 'Paste the text of the order page here' : '…or paste a link, or the text of an order page'}"></textarea>
+    <div class="btnrow" style="margin-top:8px"><button class="btn primary" type="button" id="rbGo"${src === 'pdf' || (pic && !rbPics.length) ? ' hidden' : ''}${rbBusy ? ' disabled' : ''}>${pic ? (rbPics.length > 1 ? `Read the ${rbPics.length} pictures` : 'Read the picture') : 'Read'}</button></div>
+    <div id="rcMsg" class="sub" style="margin:10px 0 0">${rcpt ? `<a class="lnk" href="#/import/receipt">Continue reviewing ${esc(rcpt.fileName)}</a>` : ''}</div>
+    <p class="sub" style="margin:10px 0 0;font-size:11.5px">Receipts, screenshots and photos are read on this device; you review every line, and a copy of the receipt is kept with your records (your account only) and in your backups. Text in pictures is read with Tesseract (tesseract.js, Apache-2.0), downloaded the first time from jsDelivr and checked before it runs. Product pages and shops are read through your helper and only from the approved shops (<a class="lnk" href="#/settings">Settings → Product page reader</a>).</p></div>`;
+}
+function rbRedraw() { const c = document.getElementById('rbCard'); if (!c) return; const keep = document.getElementById('rbText')?.value || ''; c.outerHTML = readBoxHtml(); const ta = document.getElementById('rbText'); if (ta) ta.value = keep; wireReadBox(); }
+function wireReadBox() {
+  const $ = id => document.getElementById(id), msg = $('rcMsg'), zone = $('rcDrop'), inp = $('rcFile'), ta = $('rbText'); if (!$('rbCard')) return;
+  $('rbWhat').onchange = e => { rbState.what = e.target.value; rbState.src = (RB_SRC[rbState.what] || [[]])[0][0] || ''; rbState.user = !!rbState.what; rbRedraw(); };
+  $('rbSrc').onchange = e => { rbState.src = e.target.value; rbState.user = true; rbRedraw(); };
+  if ($('rbTgtStop')) $('rbTgtStop').onclick = () => { sessionStorage.removeItem('kbc_rbtarget'); toast('Back to the normal reader'); rbRedraw(); };
+  const file = list => { const fs = [...(list && list.length != null ? list : [list])].filter(Boolean); if (!fs.length || rbBusy) return;
+    const pdf = fs.find(f => /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name)), pics = fs.filter(rbIsPic);
+    if (pics.length && !pdf) { rbAddPics(pics); return; }
+    if (!pdf) { msg.innerHTML = '<span style="color:var(--bad-text)">This reader takes PDF files, screenshots and photos.</span>'; return; }
+    rbState = { what: 'receipt', src: 'pdf', user: rbState.user }; $('rbWhat').value = 'receipt'; rbApplyTarget('receipt'); rcReadFile(pdf, msg); };
+  zone.onclick = () => inp.click(); zone.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inp.click(); } };
+  ['dragenter', 'dragover'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(t => zone.addEventListener(t, e => { e.preventDefault(); zone.classList.remove('over'); }));
+  zone.addEventListener('drop', e => file(e.dataTransfer && e.dataTransfer.files));
+  inp.onchange = () => { const f = [...inp.files]; inp.value = ''; file(f); };
+  const pics = $('rbPics'); if (pics) pics.onclick = e => { const b = e.target.closest('[data-rbpicx]'); if (!b) return; const p = rbPics.splice(+b.dataset.rbpicx, 1)[0]; if (p) URL.revokeObjectURL(p.url); rbRedraw(); };
+  ta.addEventListener('input', () => { if (rbState.user) return; const g = rbGuess(ta.value); if (g.what === rbState.what && g.src === rbState.src) return;
+    rbState.what = g.what; rbState.src = g.src; const w = $('rbWhat'), s = $('rbSrc'); w.value = g.what;
+    s.innerHTML = (RB_SRC[g.what] || RB_SRC['']).map(([v, l]) => `<option value="${v}"${v === g.src ? ' selected' : ''}>${l}</option>`).join(''); s.disabled = !g.what; zone.hidden = !!g.src && g.src !== 'pdf'; });
+  ta.addEventListener('paste', () => setTimeout(() => ta.dispatchEvent(new Event('input')), 0));
+  ta.addEventListener('dragover', e => e.preventDefault()); ta.addEventListener('drop', e => { const f = e.dataTransfer && e.dataTransfer.files; if (f && f.length) { e.preventDefault(); file(f); } });
+  $('rbGo').onclick = () => rbRead(ta.value);
+}
+function rbIsPic(f) { return !!f && (/^image\//.test(f.type) || /\.(png|jpe?g|webp|gif|bmp|heic|heif|avif)$/i.test(f.name || '')); }
+function rbAddPics(files) {   // v0.123.0: screenshots and photos wait in the box (with a preview) until Read is pressed
+  const room = 10 - rbPics.length; if (room <= 0) { toast('Up to 10 pictures at a time'); return; }
+  files.slice(0, room).forEach(f => rbPics.push({ file: f, url: URL.createObjectURL(f) })); if (files.length > room) toast('Up to 10 pictures at a time');
+  rbState = { what: 'receipt', src: 'picture', user: true }; rbRedraw();
+  const m = document.getElementById('rcMsg'); if (m) m.textContent = rbPics.length === 1 ? 'Picture added. Add more if the order runs over several screenshots, then press Read the picture.' : rbPics.length + ' pictures added.';
+}
+function rbClearPics() { rbPics.forEach(p => URL.revokeObjectURL(p.url)); rbPics = []; }
+document.addEventListener('paste', e => {   // a screenshot pasted anywhere on the Import page goes into the read box
+  if (!document.getElementById('rbCard') || !e.clipboardData) return;
+  const fs = [...(e.clipboardData.files || [])].filter(rbIsPic); if (!fs.length) return;
+  e.preventDefault(); rbAddPics(fs.map((f, i) => f.name && f.name !== 'image.png' ? f : new File([f], `pasted screenshot${fs.length > 1 ? ' ' + (i + 1) : ''}.${(f.type.split('/')[1] || 'png').replace('jpeg', 'jpg')}`, { type: f.type || 'image/png' })));
+});
+async function rbReadPictures() {
+  const msg = document.getElementById('rcMsg'), go = document.getElementById('rbGo');
+  if (!rbPics.length) { msg.textContent = 'Add a screenshot or photo first: drop it, choose it, or press Ctrl+V to paste it.'; return; }
+  if (rbBusy) return; rbBusy = true; if (go) go.disabled = true;
+  const st = t => { const m = document.getElementById('rcMsg'); if (m) m.textContent = t; };
+  try { const files = rbPics.map(p => p.file), out = await ocrReadPictures(files, st);
+    if (out.text.replace(/\s/g, '').length < 8) throw new Error('No text was found in the picture. Try a sharper or closer screenshot.');
+    const name = files.length > 1 ? files.length + ' pictures' : (files[0].name || 'screenshot');
+    rbApplyTarget('receipt'); window.__rcSrc = { kind: 'picture', mime: 'image/jpeg', name: name.replace(/\.[a-z0-9]+$/i, '') + '.jpg', bytes: out.copy };
+    const r = parsePictureReceipt(out.text); rbClearPics(); rbState = { what: '', src: '', user: false }; rbBusy = false; rcOpen(r, name);
+  } catch (e) { window.__rcSrc = null; const m = document.getElementById('rcMsg');
+    if (m) m.innerHTML = `<span style="color:var(--bad-text)">Could not read the picture: ${esc(e && e.message || String(e))}</span><br><span>Other ways: save the order page as a PDF (Print → Save as PDF), or copy its text (Ctrl+A, Ctrl+C) and paste it here with “What do you have?” → Copied page text.</span>`; }
+  finally { rbBusy = false; const g = document.getElementById('rbGo'); if (g) g.disabled = false; }
+}
+function rbApplyTarget(kind) { const tg = rbTarget(); if (tg && (kind === 'receipt' || kind === 'page')) setReadTarget({ kind, type: tg.type, id: tg.id, label: tg.label }); else setReadTarget(null); sessionStorage.removeItem('kbc_rbtarget'); }
+async function rbRead(text) {
+  if (rbState.src === 'picture') return rbReadPictures();   // v0.123.0
+  const msg = document.getElementById('rcMsg'), t = String(text || '').trim(); if (!t) { msg.textContent = 'Drop a PDF or a screenshot, or paste a link or the page text first.'; return; }
+  let { what, src } = rbState; if (!what || !src) { const g = rbGuess(t); what = what || g.what; src = src || g.src; }
+  if (what === 'page') { if (!/^https?:\/\//i.test(t) && !/^[a-z0-9-]+(\.[a-z0-9-]+)+\//i.test(t)) { msg.textContent = 'For a product page, paste its link (https://…).'; return; }
+    rbApplyTarget('page'); sessionStorage.setItem('kbc_link', /^https?:/i.test(t) ? t : 'https://' + t); location.hash = '#/import/link'; return; }
+  if (what === 'gmkshop') { sessionStorage.setItem('kbc_shop', t.replace(/^https?:\/\//i, '').replace(/\/.*$/, '')); sessionStorage.removeItem('kbc_rbtarget'); location.hash = '#/catalog/shop'; return; }
+  if (src === 'link') { const u = /^https?:/i.test(t) ? t : 'https://' + t; msg.textContent = 'Reading the order page through your helper…';
+    try { const r = await rdFetch(u), txt = rdHtmlToText(r.text).replace(/\n{3,}/g, '\n\n');
+      if (/\b(sign ?in|log ?in)\b/i.test(txt.slice(0, 1500)) && !/order (total|number|#)|subtotal/i.test(txt)) throw new Error('The page asks you to sign in, and your helper reads pages without your sign-in.');
+      rbApplyTarget('receipt'); window.__rcSrc = { kind: 'text', mime: 'text/plain', name: u, text: txt, url: u }; rcOpen(parseReceipt([txt]), new URL(u).hostname.replace(/^www\./, ''));
+    } catch (e) { window.__rcSrc = null; msg.innerHTML = `<span style="color:var(--bad-text)">Could not read that page: ${esc(e.message || String(e))}</span><br><span>Open the order page in your browser, press Ctrl+A then Ctrl+C (phone: long-press → Select all → Copy), paste it in the box and press Read. “What do you have?” → Copied page text.</span>`; }
+    return; }
+  try { rbApplyTarget('receipt'); window.__rcSrc = { kind: 'text', mime: 'text/plain', name: 'pasted text', text: t }; rcOpen(parseReceipt([t]), 'pasted text'); }
+  catch (e) { window.__rcSrc = null; msg.textContent = 'Could not read the text: ' + (e.message || e); }
+}
+/* v0.123.0: picture text → lines a receipt reader can use. Tesseract gives words with boxes; they are put back into visual rows
+   (words whose heights overlap), left to right. A screenshot of a wide page often has two columns side by side (eBay: order info on
+   the left, the price summary on the right); when a clear gap runs down the page, a row is split there and the right column's rows
+   follow the left column's, unless the right part is only an amount (a name with its price, "Total $83.15"), which stays on its row. */
+function ocrLayoutText(data, W) {
+  const words = []; (data.blocks || []).forEach(b => (b.paragraphs || []).forEach(p => (p.lines || []).forEach(l => (l.words || []).forEach(w => { const t = String(w.text || '').trim(); if (t) words.push({ t, x0: w.bbox.x0, x1: w.bbox.x1, y0: w.bbox.y0, y1: w.bbox.y1 }); }))));
+  if (!words.length) return String(data.text || '');
+  words.sort((a, b) => (a.y0 + a.y1) - (b.y0 + b.y1));
+  const rows = [];
+  words.forEach(w => { const h = w.y1 - w.y0, c = (w.y0 + w.y1) / 2;   // a word joins a row when its middle is close to the row's middle (the row does not grow, so two lines never merge)
+    const r = rows.find(r => Math.abs(c - r.c) < 0.45 * Math.max(h, r.h) && !r.ws.some(x => x.x0 < w.x1 && w.x0 < x.x1));
+    if (r) { r.ws.push(w); const n = r.ws.length; r.c = (r.c * (n - 1) + c) / n; r.h = Math.max(r.h, h); r.y0 = Math.min(r.y0, w.y0); r.y1 = Math.max(r.y1, w.y1); } else rows.push({ c, h, y0: w.y0, y1: w.y1, ws: [w] }); });
+  rows.sort((a, b) => a.y0 - b.y0); rows.forEach(r => r.ws.sort((a, b) => a.x0 - b.x0));
+  const out = ws => ws.map(w => w.t).join(' '), amt = s => /^(?:[A-Za-z]{3}\s+)?[-−]?\s*[$S]\s?[\d,]+(?:[.,]\d{2})?$|^(?:free|included|n\/a|—|-)$/i.test(s.trim());
+  // the gutter: the widest run of columns (in the middle 25–85 % of the width) that hardly any row crosses, with text on both sides on several rows
+  const bins = 200, hits = new Array(bins).fill(0), lim = Math.max(1, rows.length * .06);
+  rows.forEach(r => { const seen = new Set(); r.ws.forEach(w => { for (let i = Math.max(0, Math.floor(w.x0 / W * bins)); i <= Math.min(bins - 1, Math.floor(w.x1 / W * bins)); i++) seen.add(i); }); seen.forEach(i => hits[i]++); });
+  let best = null;
+  for (let i = Math.floor(bins * .25); i < Math.floor(bins * .85); i++) { if (hits[i] > lim) continue; let j = i; while (j + 1 < bins * .85 && hits[j + 1] <= lim) j++;
+    const xa = i / bins * W, xb = (j + 1) / bins * W, both = rows.filter(r => r.ws.some(w => w.x1 <= xa) && r.ws.some(w => w.x0 >= xb) && !amt(out(r.ws.filter(w => w.x0 >= xb)))).length;
+    let clear = 0, run = 0; for (let k = i; k <= j; k++) { run = hits[k] ? 0 : run + 1; clear = Math.max(clear, run); }   // a real gap between columns: part of it is crossed by no row at all
+    if (j - i + 1 >= 3 && clear >= 4 && both >= 2 && (!best || j - i > best.n)) best = { n: j - i, x: (xa + xb) / 2 }; i = j; }
+  if (!best) return rows.map(r => out(r.ws)).join('\n');
+  const L = [], R = [];
+  rows.forEach(r => { const a = r.ws.filter(w => (w.x0 + w.x1) / 2 < best.x), b = r.ws.filter(w => (w.x0 + w.x1) / 2 >= best.x);
+    if (a.length && b.length && amt(out(b))) { L.push(out(r.ws)); return; } if (a.length) L.push(out(a)); if (b.length) R.push(out(b)); });
+  return L.join('\n') + '\n\n' + R.join('\n');
+}
+
+/* v0.123.0: receipts from screenshots and photos. The picture's text (from ocrLayoutText) is tidied, then read by a reader that
+   looks for labels anywhere on a line ("Subtotal", "Tax", "Order total", "Time placed"…) rather than a fixed page layout, because a
+   picture's text never comes out in quite the same order twice. Picture text has misreads, so every total that appears is collected
+   and checked against items + shipping + tax − discount; the one that adds up is used, and the review says what didn't match. */
+function rcPicClean(text) {
+  return String(text || '').replace(/\r\n?/g, '\n').split('\n').map(l => {
+    let s = l.replace(/[ \t ]+/g, ' ').trim();
+    s = s.replace(/(^|[\s(])[S§]\s?(\d{1,3}(?:,\d{3})*\.\d{2})\b/g, '$1$$$2')   // "S57.00" → "$57.00" (a $ read as S)
+      .replace(/\$\s+(\d)/g, '$$$1').replace(/(\d),(\d{2})\b(?!\d)/g, (m, a, b, i, str) => /\$[\d,]*$/.test(str.slice(0, i + 1)) ? a + '.' + b : m)   // "$ 57" and "$57,00"
+      .replace(/\b[lI1|]\s?(items?)\b/g, '1 $1').replace(/\b(\d+)(items?)\b/g, '$1 $2')   // "litem" → "1 item"
+      .replace(/\b(?:uso|usd|U5D|USO)\b(?=\s*\$)/gi, 'USD').replace(/\b(Tax(?:es)?)\*/gi, '$1')
+      .replace(/(\$[\d,]+\.\d{2})\s+[^\s()$]{1,2}$/, '$1');   // a stray mark read after the amount ("$3.78 2")
+    while (/^\S+ /.test(s)) { const t = s.split(' ')[0];   // leading marks read from icons and pictures: "=a", "_", "0%.", ">]", "Tu", "Ro"
+      if ((t.length <= 3 && (t.match(/[A-Za-z]/g) || []).length <= 1 && !/^\d+$/.test(t) && !/^[$#]/.test(t)) || (t.length === 2 && /^[A-Za-z]{2}$/.test(t) && !/^[A-Z]{2}$/.test(t))) s = s.slice(t.length + 1); else break; }
+    while (/ \S+$/.test(s)) { const t = s.slice(s.lastIndexOf(' ') + 1); if (t.length <= 2 && (!/[A-Za-z0-9$]/.test(t) || /^[\[|{]/.test(t))) s = s.slice(0, s.lastIndexOf(' ')); else break; }   // trailing marks: "[§", "|"
+    if (/^\S{1,3}$/.test(s) && !/^\d+$/.test(s) && (s.match(/[A-Za-z0-9]/g) || []).length < 2) s = '';
+    return s;
+  }).filter(Boolean).join('\n');
+}
+function parsePictureReceipt(raw) {
+  const text = rcPicClean(raw), L = text.split('\n'), MON = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12 };
+  const iso = (y, m, d) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  const AMT = /[-−–]?\$\s?(\d{1,3}(?:,\d{3})+(?:\.\d{2})?|\d+(?:\.\d{2})?)(?![\d.,]*\d)/g;   // whole amounts too: a point can be missed ("$378")
+  const noDollar = !/\$\s?\d/.test(text), AMT0 = /(?:^|\s)[-−–]?(\d{1,3}(?:,\d{3})+\.\d{2}|\d+\.\d{2})(?=\s*$)/g;   // paper receipts often print no $: then an amount is a number with cents at the end of a line
+  const amounts = l => [...String(l).matchAll(noDollar ? AMT0 : AMT)].map(m => parseFloat(m[1].replace(/,/g, '')));
+  const lastAmt = l => { const a = amounts(l); return a.length ? a[a.length - 1] : null; };
+  const r = { kind: 'picture', seller: '', orderNumber: '', date: '', dateNote: '', lines: [], subtotal: null, shipping: 0, tax: 0, discount: 0, total: null, warnings: [], pictureText: text };
+  // seller
+  const KNOWN = [['ebay', 'eBay'], ['novelkeys', 'NovelKeys'], ['kbdfans', 'KBDfans'], ['cannonkeys', 'CannonKeys'], ['divinikey', 'Divinikey'], ['mechanicalkeyboards', 'MechanicalKeyboards.com'], ['keychron', 'Keychron'], ['omnitype', 'Omnitype'], ['milktooth', 'Milktooth'], ['amazon', 'Amazon'], ['oblotzky', 'Oblotzky Industries'], ['kineticlabs', 'Kinetic Labs'], ['keebfront', 'Keebfront'], ['drop', 'Drop'], ['paypal', 'PayPal']];
+  const soldBy = (/\bsold by:? ([^\n]+)/i.exec(text) || /\bthank you for (?:shopping|your order|your purchase) (?:at|with|from) ([^\n!.]+)/i.exec(text) || [])[1] || '', squash = s => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const cleanName = s => s.replace(/\s+(Terms and policies|United States).*$/i, '').replace(/,?\s+(LLC|Inc\.?|Ltd\.?|GmbH|Co\.)$/i, '').replace(/[.!]$/, '').trim();
+  const isEbay = /\bebay\b/i.test(text) || [/\btime\s+(?:\S+\s+)?placed\b/i, /\bsold by\b/i, /\bwatchlist\b/i, /\bbrand outlet\b/i, /\bprinter friendly page\b/i, /\b\d{2}-?\d{5}-\d{5}\b/].filter(re => re.test(text)).length >= 2;   // eBay's logo is often not read
+  const isAmazon = /\bamazon\b/i.test(text) || /\b\d{3}-\d{7}-\d{7}\b/.test(text);
+  if (isEbay) r.seller = 'eBay' + (soldBy ? ' (' + cleanName(soldBy).split(' ')[0] + ')' : '');
+  else if (isAmazon) r.seller = 'Amazon';
+  else { const sb = cleanName(soldBy), hit = KNOWN.find(([k]) => squash(sb) === k) || KNOWN.find(([k]) => k !== 'drop' && k !== 'paypal' && squash(text).includes(k)) || (/\bOrder NK_\d/.test(text) ? ['', 'NovelKeys'] : null);
+    r.seller = hit ? hit[1] : sb.slice(0, 40); }
+  // order number
+  { const m = /\bOrder\s*(?:number|no\.?|#|ID)?\s*[:#]?\s*#?\s*((?:[A-Z]{1,4}[_-]?)?\d[\dA-Z-]{3,})/i.exec(text) || /\b(?:Invoice|Receipt) (?:number|no\.?|#)\s*[:#]?\s*([\w-]{4,})/i.exec(text); if (m) r.orderNumber = m[1]; if (isEbay) r.orderNumber = r.orderNumber.replace(/^(\d{2})-?(\d{5})-?(\d{5})$/, '$1-$2-$3'); }   // eBay order numbers look like 12-34567-89012; a dash is often lost
+  // date: a labelled full date first, then any full date, then a labelled month + day without a year
+  { const full = s => { const re = /\b([A-Za-z]{3})[a-z]*\.? (\d{1,2}),? (\d{4})\b/g; let m; while ((m = re.exec(s || ''))) if (MON[m[1].toLowerCase()]) return iso(+m[3], MON[m[1].toLowerCase()], +m[2]); return ''; };
+    const num = s => { const m = /\b(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})\b/.exec(s || ''); return m ? iso(m[3].length === 2 ? 2000 + +m[3] : +m[3], +m[1], +m[2]) : ''; };
+    const LAB = /time\s+(?:\S+\s+)?placed|placed on|order(?:ed)? (?:date|on|placed)|date (?:placed|purchased|ordered)|purchase date|confirmed|order date|^date\b|issued/i;
+    const lab = L.filter(l => LAB.test(l));
+    r.date = lab.map(l => full(l) || num(l)).find(Boolean) || full(text) || '';
+    if (!r.date) { const md = x => { const re = /\b([A-Za-z]{3})[a-z]*\.? (\d{1,2})\b/g; let q; while ((q = re.exec(x))) if (MON[q[1].toLowerCase()]) return q; return null; }, l = lab.find(l => md(l.replace(LAB, ''))), m = l && md(l.replace(LAB, ''));
+      if (m && MON[m[1].toLowerCase()]) { const now = new Date(); let y = now.getFullYear(); if (iso(y, MON[m[1].toLowerCase()], +m[2]) > iso(y, now.getMonth() + 1, now.getDate())) y--; r.date = iso(y, MON[m[1].toLowerCase()], +m[2]); r.dateNote = 'The picture shows no year; ' + y + ' was assumed.'; } } }
+  // totals
+  const SUB = /\bsub-?\s?total\b|^\d+ items?\b/i, SHIP = /^(?:shipping|delivery|postage|freight)(?! (?:address|info|method|to|details))\b/i, TAX = /^(?:sales |estimated )?(?:tax(?:es)?|vat|gst|hst)\b/i,
+    DISC = /^(?:order )?(?:discount|coupon|promo(?:tion)?|savings|gift card)s?\b/i, TOT = /\b(?:order |grand |estimated )?total\b(?!\s*(?:before|excl|pre)\b)/i, PAY = /\bending in\b|\b(?:visa|mastercard|amex|discover)\b|\bpaid\b|\bcharged\b|\bpayment\b/i;
+  const sl = L.find(l => SUB.test(l) && lastAmt(l) != null); if (sl) r.subtotal = lastAmt(sl);
+  const count = (() => { const m = /\b(\d+) items?\b/i.exec(text); return m ? +m[1] : null; })();
+  const sh = L.find(l => SHIP.test(l) && (lastAmt(l) != null || /\bfree\b/i.test(l))); if (sh) r.shipping = /\bfree\b/i.test(sh) && lastAmt(sh) == null ? 0 : lastAmt(sh) || 0;
+  const tx = L.find(l => TAX.test(l) && lastAmt(l) != null); if (tx) r.tax = lastAmt(tx);
+  const dc = L.find(l => DISC.test(l) && lastAmt(l) != null); if (dc) r.discount = Math.abs(lastAmt(dc));
+  const totals = [];
+  L.forEach(l => { if (TOT.test(l) && !SUB.test(l) && lastAmt(l) != null) totals.push({ v: amounts(l)[0], strong: /order total|grand total|^total\b/i.test(l) });
+    else if (PAY.test(l) && amounts(l).length && !TOT.test(l)) totals.push({ v: lastAmt(l), strong: false }); });
+  // items: a line with a name and an amount that is not a total, shipping, tax, discount or payment line
+  const isMoneyLabel = l => /\btotal\b/i.test(l) || SUB.test(l) || SHIP.test(l) || TAX.test(l) || DISC.test(l) || TOT.test(l) || PAY.test(l) || /\b(?:balance|refund|amount due|change|tip)\b/i.test(l);
+  const NOTE = /^(?:product type|work station|vendor|sku|item (?:number|#|no)|condition|returns?|buy again|track|delivered|shipped|quantity|qty)\b/i;
+  for (let i = 0; i < L.length; i++) { const l = L[i]; if (isMoneyLabel(l)) continue; const a = amounts(l); if (!a.length) continue;
+    if (!/[A-Za-z]{2}/.test(l.replace(/\b(?:USD|US)\b/g, ''))) {   // the price on a line of its own (Amazon): the item is the nearest name line above it
+      let j = i - 1; while (j >= 0 && j >= i - 3 && (NOTE.test(L[j]) || /^sold by\b/i.test(L[j]) || /^[\w ]{1,20}:\s/.test(L[j]))) j--;
+      if (j < 0 || j < i - 3 || amounts(L[j]).length || isMoneyLabel(L[j]) || (L[j].match(/[A-Za-z]/g) || []).length < 3 || r.lines.some(x => x._i === j)) continue;
+      let qty = 1; for (let k = i + 1; k <= i + 2 && k < L.length; k++) { const q = /^(?:quantity|qty):? ?(\d{1,2})\b/i.exec(L[k]); if (q) { qty = +q[1]; break; } }
+      const tot = a[a.length - 1]; r.lines.push({ name: L[j], option: '', qty, unit: Math.round(tot / qty * 100) / 100, total: tot, _i: j }); continue; }
+    let name = (noDollar ? l.replace(/\s+[-−–]?[\d,]+\.\d{2}\s*$/, '') : l.replace(/\s*(?:[A-Z]{3}\s*)?[-−–]?\$\s?[\d,]+(?:\.\d{2})?.*$/, '')).trim(), qty = 1;
+    const q1 = /^(\d{1,2})\s*(?:[x×]\s*)?(?=[A-Za-z])/.exec(name); if (q1 && +q1[1] > 0) { qty = +q1[1]; name = name.slice(q1[0].length).trim(); }
+    const q2 = /\s*(?:[x×]\s?(\d{1,2})|\(\s?[x×]?\s?(\d{1,2})\s?\)|qty:? ?(\d{1,2}))$/i.exec(name); if (q2) { qty = +(q2[1] || q2[2] || q2[3]); name = name.slice(0, q2.index).trim(); }
+    if ((name.match(/[A-Za-z]/g) || []).length < 3) continue;
+    const opt = [];
+    for (let j = i + 1; j < L.length && j <= i + 3; j++) { const n = L[j]; if (amounts(n).length || isMoneyLabel(n)) break;
+      const q3 = /^(?:quantity|qty):? ?(\d{1,2})\b/i.exec(n); if (q3) { qty = +q3[1]; continue; } if (NOTE.test(n) || /^sold by\b/i.test(n)) continue; if (n.length > 70 || opt.length >= 1) break; if (n.length >= 3 && /[A-Za-z].*[A-Za-z0-9]/.test(n) && !/^sold by\b/i.test(n)) opt.push(n); }
+    const tot = a[a.length - 1]; r.lines.push({ name, option: opt.join(' / '), qty, unit: Math.round(tot / qty * 100) / 100, total: tot }); }
+  // a single item whose price is not printed beside its name (eBay order page): use the subtotal, with the most product-like line as its name
+  if (!r.lines.length && (count == null || count === 1) && (r.subtotal != null || totals.length)) {
+    const PROD = /keyboard|keycaps?|switch|\bcase\b|\bkit\b|\bgmk\b|\bpcb\b|plate|stabili|deskmat|desk mat|artisan|cable|foam|\bset\b|\bbase\b|novelt/i;
+    const cands = L.filter(l => !amounts(l).length && !isMoneyLabel(l) && !NOTE.test(l) && /[a-z]/i.test(l) && l.split(' ').length >= 3 && !/\b(?:help|contact|search|sign in|watchlist|deals|categor|account|address|united states|delivery info|order info|order details|printer)\b/i.test(l));
+    const nm = cands.filter(l => PROD.test(l)).sort((a, b) => b.length - a.length)[0] || '';
+    const v = r.subtotal != null ? r.subtotal : null;
+    if (nm && v != null) { r.lines.push({ name: nm, option: '', qty: 1, unit: v, total: v }); r.warnings.push('The item\'s price is not shown beside its name in the picture, so the subtotal was used for it.'); } }
+  r.lines = r.lines.filter(it => it.name && isFinite(it.unit)); r.lines.forEach(it => delete it._i);
+  const sum = Math.round(r.lines.reduce((s, it) => s + it.total, 0) * 100) / 100;
+  if (r.subtotal == null && r.lines.length) r.subtotal = sum;
+  else if (r.lines.length && r.subtotal != null && Math.abs(sum - r.subtotal) > 0.01) r.warnings.push(`The item prices add up to $${sum.toFixed(2)} but the picture's subtotal is $${r.subtotal.toFixed(2)}.`);
+  // a point that was not read ("$378" for $3.78): when nothing adds up, try the amount ÷ 100 for tax, shipping, discount and subtotal
+  { const calc0 = () => r.subtotal != null ? Math.round((r.subtotal + r.shipping + r.tax - r.discount) * 100) / 100 : null, tv = [...new Set(totals.map(t => t.v))];
+    const hit = () => calc0() != null && tv.some(v => Math.abs(v - calc0()) < 0.005), src = { tax: tx, shipping: sh, discount: dc, subtotal: sl };
+    if (!hit()) for (const k of ['tax', 'shipping', 'discount', 'subtotal']) { const l = src[k], v = r[k]; if (!l || v == null || !/\$\s?\d{3,}(?![.,]\d)/.test(l) || v !== Math.round(v)) continue;
+      const was = r[k]; r[k] = Math.round(v) / 100; if (hit()) { r.warnings.push(`${k[0].toUpperCase() + k.slice(1)} was read as $${was} with no decimal point; $${r[k].toFixed(2)} is used because it makes the total add up.`); if (k === 'subtotal' && r.lines.length === 1 && r.lines[0].total === was) { r.lines[0].total = r.lines[0].unit = r[k]; } break; } r[k] = was; } }
+  // the total: the one that adds up, or say which ones disagree
+  const calc = r.subtotal != null ? Math.round((r.subtotal + r.shipping + r.tax - r.discount) * 100) / 100 : null, seen = [...new Set(totals.map(t => t.v))];
+  const good = calc != null ? totals.find(t => Math.abs(t.v - calc) < 0.005) : null;
+  if (good) { r.total = good.v; const odd = seen.filter(v => Math.abs(v - good.v) >= 0.005); if (odd.length) r.warnings.push(`The picture also showed ${odd.map(v => '$' + v.toFixed(2)).join(' and ')} as a total, which looks like a misread; $${good.v.toFixed(2)} is used because it matches subtotal + shipping + tax − discount.`); }
+  else if (totals.length) { r.total = (totals.find(t => t.strong) || totals[0]).v; if (calc != null) r.warnings.push(`Subtotal + shipping + tax − discount is $${calc.toFixed(2)} but the picture's total reads $${r.total.toFixed(2)}${seen.length > 1 ? ' (it also shows ' + seen.filter(v => v !== r.total).map(v => '$' + v.toFixed(2)).join(', ') + ')' : ''}. Check the numbers against the picture.`); }
+  if (!r.lines.length) r.warnings.push('No items could be picked out of the picture. Add them below, or try a sharper or closer screenshot.');
+  if (!r.orderNumber) r.warnings.push('No order number was found in the picture.');
+  if (!r.date) r.warnings.push('No order date was found in the picture.');
+  r.warnings.unshift('Read from a picture: check every name and number against it before saving.');
+  return r;
+}
+
+/* v0.123.0: reading text from screenshots and photos, on this device. The text reader is tesseract.js 5.1.1 (Apache-2.0) with the
+   English model from @tesseract.js-data/eng 1.0.0; it is downloaded from jsDelivr the first time a picture is read (about 7 MB) and
+   the browser keeps it after that. Every code file is checked against a fixed SHA-384 fingerprint before it runs; a file that does not
+   match is not used. The picture never leaves the device for reading. */
+const OCR_CDN = 'https://cdn.jsdelivr.net/npm/', OCR_LANG = OCR_CDN + '@tesseract.js-data/eng@1.0.0/4.0.0_best_int';
+const OCR_FILES = { main: ['tesseract.js@5.1.1/dist/tesseract.min.js', 'sha384-GJqSu7vueQ9qN0E9yLPb3Wtpd7OrgK8KmYzC8T1IysG1bcvxvIO4qtYR/D3A991F'],
+  worker: ['tesseract.js@5.1.1/dist/worker.min.js', 'sha384-zxn+VqofFzXpH99dUb3fa4ywoSBQJPy6/6oEaJHPlblZXr53a0g1Jl6720vgSzB7'],
+  simd: ['tesseract.js-core@5.1.1/tesseract-core-simd-lstm.wasm.js', 'sha384-YM1G+zaWYy9VSRP2C101LCgzh7n3Hqb6OEm9qDoZYgCADsni3nnECskC3WialQB7'],
+  plain: ['tesseract.js-core@5.1.1/tesseract-core-lstm.wasm.js', 'sha384-EKWY5JDwphQoyxhvYU7eaCcyQ0EdV6fZK3L2vzfZcv2ichRdNd6pSnyWPNv6fMuR'] };
+let ocrLog = null;
+function ocrHasSimd() { try { return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 123, 3, 2, 1, 0, 10, 10, 1, 8, 0, 65, 0, 253, 15, 253, 98, 11])); } catch (e) { return false; } }
+async function ocrFetchChecked([path, sri]) {
+  let r; try { r = await fetch(OCR_CDN + path, { mode: 'cors', credentials: 'omit' }); } catch (e) { throw new Error(navigator.onLine === false ? 'You are offline. The text reader needs a connection the first time.' : 'The text reader could not be downloaded. Check the connection and try again.'); }
+  if (!r.ok) throw new Error('The text reader could not be downloaded (' + r.status + ').');
+  const buf = await r.arrayBuffer(), h = 'sha384-' + b64FromBytes(new Uint8Array(await crypto.subtle.digest('SHA-384', buf)));
+  if (h !== sri) throw new Error('The text reader that was downloaded did not match its fingerprint, so it was not used.');
+  return buf;
+}
+function ocrLoadMain() {
+  if (window.Tesseract) return Promise.resolve();
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = OCR_CDN + OCR_FILES.main[0]; s.integrity = OCR_FILES.main[1]; s.crossOrigin = 'anonymous';
+    s.onload = () => res(); s.onerror = () => { s.remove(); rej(new Error('The text reader could not be downloaded. Check the connection and try again.')); }; document.head.appendChild(s); });
+}
+async function ocrWorker(status) {
+  status('Getting the text reader ready… The first time, this downloads about 7 MB; after that it opens from this device.');
+  const [, wk, core] = await Promise.all([ocrLoadMain(), ocrFetchChecked(OCR_FILES.worker), ocrFetchChecked(ocrHasSimd() ? OCR_FILES.simd : OCR_FILES.plain)]);
+  const coreUrl = URL.createObjectURL(new Blob([core], { type: 'text/javascript' }));   // the checked core is loaded first, so the reader never fetches its own copy
+  const wUrl = URL.createObjectURL(new Blob([`importScripts(${JSON.stringify(coreUrl)});\n`, wk], { type: 'text/javascript' }));
+  try { const w = await Tesseract.createWorker('eng', 1, { workerPath: wUrl, workerBlobURL: false, corePath: OCR_CDN + 'tesseract.js-core@5.1.1', langPath: OCR_LANG, logger: m => { if (ocrLog) ocrLog(m); } });
+    await w.setParameters({ tessedit_pageseg_mode: '3', preserve_interword_spaces: '1' }); return w; }
+  finally { setTimeout(() => { URL.revokeObjectURL(wUrl); URL.revokeObjectURL(coreUrl); }, 60000); }
+}
+function ocrDecode(file) {
+  return new Promise((res, rej) => { const u = URL.createObjectURL(file), img = new Image();
+    img.onload = () => { URL.revokeObjectURL(u); res(img); };
+    img.onerror = () => { URL.revokeObjectURL(u); rej(new Error(`${file.name || 'This picture'} could not be opened in this browser.${/heic|heif/i.test(file.type + file.name) ? ' iPhone HEIC photos: take a screenshot of the photo instead, or set Camera → Formats → Most Compatible.' : ''}`)); };
+    img.src = u; });
+}
+async function ocrStack(imgs) {   // the copy that is kept: the pictures one under another in a single JPEG
+  const W0 = Math.min(1400, Math.max(...imgs.map(i => i.naturalWidth))), gap = 16;
+  let hs = imgs.map(i => Math.round(i.naturalHeight * Math.min(1, W0 / i.naturalWidth))), H = hs.reduce((a, b) => a + b, 0) + gap * (imgs.length - 1), k = Math.min(1, Math.sqrt(12e6 / (W0 * H)));
+  const c = document.createElement('canvas'); c.width = Math.round(W0 * k); c.height = Math.round(H * k); const g = c.getContext('2d'); g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
+  let y = 0; imgs.forEach((im, i) => { const s = Math.min(1, W0 / im.naturalWidth) * k, w = im.naturalWidth * s, h = im.naturalHeight * s; g.drawImage(im, (c.width - w) / 2, y, w, h); y += h + gap * k; });
+  const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.85)); return new Uint8Array(await blob.arrayBuffer());
+}
+async function ocrReadPictures(files, status) {
+  const imgs = []; for (const f of files) imgs.push(await ocrDecode(f));
+  const w = await ocrWorker(status), texts = [];
+  try {
+    for (let i = 0; i < imgs.length; i++) { const im = imgs[i], tag = imgs.length > 1 ? `picture ${i + 1} of ${imgs.length}` : 'the picture';
+      let sc = im.naturalWidth <= 2200 ? 2 : Math.max(1, 3200 / im.naturalWidth); if (im.naturalWidth * im.naturalHeight * sc * sc > 32e6) sc = Math.max(0.5, Math.sqrt(32e6 / (im.naturalWidth * im.naturalHeight)));   // screen text is read better at twice the size
+      const c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * sc); c.height = Math.round(im.naturalHeight * sc); const g = c.getContext('2d'); g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height); g.imageSmoothingQuality = 'high'; g.drawImage(im, 0, 0, c.width, c.height);
+      status(`Reading ${tag}…`); ocrLog = m => { if (m && m.status === 'recognizing text') status(`Reading ${tag}… ${Math.round((m.progress || 0) * 100)}%`); };
+      const { data } = await w.recognize(c, {}, { blocks: true, text: true }); texts.push(ocrLayoutText(data, c.width)); }
+  } finally { ocrLog = null; try { await w.terminate(); } catch (e) {} }   // the reader is closed after each read, to free the phone's memory
+  status('Keeping a copy of the picture…');
+  return { text: texts.join('\n\n'), copy: await ocrStack(imgs) };
+}
+
+/* ---- receipt copies ---- */
+function rcptCol() { return rootDoc().collection('receipts'); } function rcptPartCol() { return rootDoc().collection('receiptparts'); }
+function startReceiptsListener() { if (rcptUnsub || !db || isFile) return; rcptUnsub = rcptCol().onSnapshot(snap => { savedReceipts = snap.docs.map(d => Object.assign({}, d.data(), { id: d.id })); rcptLoaded = true; drawReceiptsKept(); drawRcCopies(); }, () => {}); }
+function rcptLabel(r) { return [r.date || '', r.seller || 'Receipt', r.orderNumber || ''].filter(Boolean).join(' · '); }
+function rcptFileName(r) { return zbkSafe(rcptLabel(r).replace(/ · /g, ' ')) + (r.mime === 'application/pdf' ? '.pdf' : r.mime && /^image\//.test(r.mime) ? '.' + r.mime.split('/')[1].replace('jpeg', 'jpg') : '.txt'); }
+function b64FromBytes(u8) { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
+function bytesFromB64(b) { const s = atob(b), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; }
+async function rcKeepCopy(r, done) {
+  const src = r && r.source; if (!src || !done || !done.length) return null;
+  const refs = done.map(d => ({ type: d.type, id: d.id, label: d.label || '' })), keys = [...new Set(refs.map(d => d.type + ':' + d.id))];
+  const same = r.orderNumber ? savedReceipts.find(x => x.orderNumber === r.orderNumber && (x.seller || '') === (r.seller || '')) : null;
+  if (same) {   // same order read again: link the new entries to the copy already kept
+    const k2 = [...new Set((same.refKeys || []).concat(keys))], rf = (same.refs || []).concat(refs.filter(x => !(same.refKeys || []).includes(x.type + ':' + x.id)));
+    await withTimeout(rcptCol().doc(same.id).update({ refs: rf, refKeys: k2, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })); return same.id; }
+  const bytes = src.bytes ? src.bytes : new TextEncoder().encode(src.text || ''), b64 = b64FromBytes(bytes), CH = 700000, parts = Math.max(1, Math.ceil(b64.length / CH));
+  const ref = rcptCol().doc(), meta = { date: r.date || '', seller: r.seller || '', orderNumber: r.orderNumber || '', total: r.total ?? null, kind: src.kind, mime: src.mime || 'application/octet-stream', fileName: src.name || '', url: src.url || '',
+    bytes: bytes.length, parts, refs, refKeys: keys, createdAt: firebase.firestore.FieldValue.serverTimestamp(), appVersion: APP_VERSION };
+  meta.label = rcptLabel(meta);
+  for (let i = 0; i < parts; i++) await withTimeout(rcptPartCol().doc(ref.id + '_' + i).set({ rid: ref.id, i, data: b64.slice(i * CH, (i + 1) * CH) }), 60000);
+  await withTimeout(ref.set(meta)); return ref.id;
+}
+async function rcptBytes(r) { const out = []; for (let i = 0; i < (r.parts || 1); i++) { const d = await withTimeout(rcptPartCol().doc(r.id + '_' + i).get(), 60000); if (!d.exists) throw new Error('Part of this receipt is missing.'); out.push(d.data().data); } return bytesFromB64(out.join('')); }
+async function rcptOpen(id, download) {
+  const r = savedReceipts.find(x => x.id === id); if (!r) return; let u8; try { u8 = await rcptBytes(r); } catch (e) { toast('Could not open the receipt: ' + explain(e)); return; }
+  const blob = new Blob([u8], { type: r.mime || 'application/octet-stream' }), url = URL.createObjectURL(blob);
+  if (download || !/pdf|^text|^image/.test(r.mime || '')) { const a = document.createElement('a'); a.href = url; a.download = rcptFileName(r); document.body.appendChild(a); a.click(); a.remove(); }
+  else if (/^text/.test(r.mime)) { const d = document.createElement('div'); d.className = 'gdlg'; d.innerHTML = `<div class="card kv-card" style="max-width:760px;width:100%"><div class="sec-title"><h3>${esc(r.label || rcptLabel(r))}</h3><button class="btn" type="button" data-x>✕</button></div><pre class="rcpttext">${esc(new TextDecoder().decode(u8))}</pre><div class="btnrow"><button class="btn" type="button" data-dl>⬇ Download</button></div></div>`;
+    document.body.appendChild(d); d.addEventListener('click', e => { if (e.target === d || e.target.closest('[data-x]')) d.remove(); if (e.target.closest('[data-dl]')) rcptOpen(id, true); }); }
+  else window.open(url, '_blank', 'noopener');
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+async function rcptDelete(id) { const r = savedReceipts.find(x => x.id === id); if (!r) return;
+  if (!await askConfirm(`Delete the kept copy of “${r.label || rcptLabel(r)}”? The prices and details already saved on your entries stay; only the copy of the receipt is removed. This can't be undone (a backup file still has it).`, 'Delete copy', true)) return;
+  try { for (let i = 0; i < (r.parts || 1); i++) await withTimeout(rcptPartCol().doc(r.id + '_' + i).delete()); await withTimeout(rcptCol().doc(r.id).delete()); toast('Receipt copy deleted'); } catch (e) { toast('Not deleted: ' + explain(e)); } }
+function rcptLinks(r) { return (r.refs || []).map(x => { const it = itemsOfType(x.type)?.find(y => y.id === x.id); return it ? `<a class="lnk" href="#/${x.type}/${x.id}">${esc(rcLabel(x.type, it) || it.name || x.label)}</a>` : `<span class="sub">${esc(x.label || 'deleted entry')}</span>`; }).join(' · '); }
+function receiptsKeptHtml() { return `<div class="card" id="rcptCard"><h3>Receipts kept <span class="sub" id="rcptN"></span></h3><div id="rcptList" class="sub">${rcptLoaded ? '' : 'Loading…'}</div></div>`; }
+function drawReceiptsKept() {
+  const box = document.getElementById('rcptList'); if (!box) return; const n = document.getElementById('rcptN'); if (n) n.textContent = savedReceipts.length ? '(' + savedReceipts.length + ')' : '';
+  const list = savedReceipts.slice().sort((p, q) => String(q.date || '').localeCompare(String(p.date || '')));
+  box.innerHTML = list.length ? list.map(r => `<div class="rcpt-row"><span class="rcpt-ic">${r.mime === 'application/pdf' ? '📄' : '📝'}</span><span class="rcpt-main"><b>${esc(r.label || rcptLabel(r))}</b>${r.total != null ? ` · ${money(r.total)}` : ''} <span class="sub">· ${Math.max(1, Math.round((r.bytes || 0) / 1024))} KB</span><br><span class="sub">${rcptLinks(r) || 'No entries linked'}</span></span>
+      <span class="rcpt-btns"><button class="btn" type="button" data-rcview="${esc(r.id)}">View</button><button class="btn" type="button" data-rcdl="${esc(r.id)}" title="Download">⬇</button><button class="btn" type="button" data-rcdel="${esc(r.id)}" title="Delete this copy">✕</button></span></div>`).join('')
+    : 'No receipts kept yet. Every receipt you read and save from now on is kept here, labelled with its date, seller and order number.';
+}
+function drawRcCopies() {   // Purchase tab (Kits tab for keycap sets): the kept receipts of this entry
+  const host = document.getElementById('readIntoRcMsg'); if (!host) return; const m = location.hash.match(/^#\/(\w+)\/([^/?]+)/); if (!m) return;
+  let box = document.getElementById('rcCopies'); if (!box) { box = document.createElement('div'); box.id = 'rcCopies'; box.className = 'sub'; host.after(box); }
+  const mine = savedReceipts.filter(r => (r.refKeys || []).includes(m[1] + ':' + m[2]));
+  const html = mine.map(r => `<div class="rcpt-mini">📄 Receipt copy: <b>${esc(r.label || rcptLabel(r))}</b> · <button type="button" class="lnkbtn" data-rcview="${esc(r.id)}">View</button> · <button type="button" class="lnkbtn" data-rcdl="${esc(r.id)}">Download</button></div>`).join('');
+  if (box.innerHTML !== html) box.innerHTML = html;
+}
+document.addEventListener('click', e => { const v = e.target.closest && e.target.closest('[data-rcview],[data-rcdl],[data-rcdel]'); if (!v) return; e.preventDefault();
+  if (v.dataset.rcview) rcptOpen(v.dataset.rcview); else if (v.dataset.rcdl) rcptOpen(v.dataset.rcdl, true); else rcptDelete(v.dataset.rcdel); });
+function rcCoreName(n) { return String(n || '').replace(/\s+(w\/|with|\+|incl\.?|including)\s.*$/i, '').trim() || String(n || ''); }   // "Keyboard Case w/ Foam, …" → "Keyboard Case"
+
 /* ===================== v0.117.0 (Faraz Nov 26, audit item 4): one Pictures window =====================
    Header "Pictures" button on every saved entry. Tabs: Your photos (the Photos card itself), Shop (the From the shop card itself),
    Kits (keycap sets: each kit's picture, Change picture…, main picture) and Frame & side bars (how the display picture shows, Adjust…).
@@ -2135,7 +2527,7 @@ function ckFixes() {   // the Nov 21 fixes still to do, worked out from the data
         return out.join('; '); } }); }
   // v0.86.0: OEM is now Pre-built; one old Layout value goes to Standard or Bottom row
   const now0 = () => firebase.firestore.FieldValue.serverTimestamp(), oem = savedKeyboards.filter(k => k.keyboardType === 'oem');
-  const wantShops = ['keebfront.com', 'omnitype.com', 'qwertykeys.com'], haveShops = rdCfg && rdCfg.sites, missShops = rdCfg ? wantShops.filter(w => !(haveShops || ['divinikey.com']).includes(w)) : [];   // v0.99.0, Faraz Nov 23
+  const wantShops = ['keebfront.com', 'omnitype.com', 'qwertykeys.com', 'kineticlabs.com'], haveShops = rdCfg && rdCfg.sites, missShops = rdCfg ? wantShops.filter(w => !(haveShops || ['divinikey.com']).includes(w)) : [];   // v0.99.0, Faraz Nov 23; v0.123.0: Kinetic Labs (Faraz Nov 27)
   if (missShops.length) F.push({ id: 'shops', group: 'Product page reader', title: `Add ${missShops.join(', ')} to the approved shops`, detail: 'Settings → Product page reader → Approved shops gets these added; the others stay.', recs: [],
     run: async () => { const c = await rdLoadCfg(true), list = (c.sites || ['divinikey.com']).slice(); missShops.forEach(w => { if (!list.includes(w)) list.push(w); }); await settingsRef().set({ readerSites: list }, { merge: true }); rdCfg = Object.assign({}, c, { sites: list }); return missShops.length + ' added'; } });
   if (oem.length) F.push({ id: 'oem', group: 'Keyboard type and layout', title: `${oem.length} keyboard${oem.length === 1 ? '' : 's'}: OEM → Pre-built`, detail: oem.map(k => [k.brand, k.name].filter(Boolean).join(' ')).join(', '), recs: oem.map(k => ['keyboards', k.id]), run: async () => { for (const k of oem) await kbCol().doc(k.id).update({ keyboardType: 'prebuilt', updatedAt: now0() }); return oem.length + ' changed'; } });
@@ -2480,16 +2872,22 @@ const HELP = [
   // ---------- Adding entries ----------
   { id: 'add', t: 'Add an item by hand', g: 'Adding and reading', k: 'add new create item entry manual keyboard switch keycap accessory', ctx: ['keyboards', 'switches', 'keycaps', 'accessories', 'pcbs', 'deskmats', 'artisans', 'switchparts'],
     s: ['Open the list and press the Add button (or N).', 'Fill Overview, then the other tabs (Build, Purchase, Notes; keycap sets have Kits and Colors). Brand, maker and name suggest what you already own after 2 letters.', 'Press Save. An unfinished keyboard is kept as a draft on this device.'], go: '#/keyboards/new' },
+  { id: 'readbox', t: 'The Read box: receipts, product pages and shops in one place', g: 'Adding and reading', ctx: ['import', 'item'], k: 'read box one receipt webpage link pdf paste text copied page text what is it source drop down order page ebay amazon signed in gmk shop screenshot photo picture camera ctrl+v',
+    s: ['Import → "Read a receipt or a webpage" (or "Add or modify existing … ▾" → Read a receipt or webpage, or on an entry Tools ▾ → Read a receipt or webpage into it).', 'Drop a receipt PDF, a screenshot or a photo (Ctrl+V pastes a screenshot), or paste a link or the text of a page. "What is it?" (receipt, product page, GMK sets from a shop) and "What do you have?" (PDF, screenshot or photo, copied page text, web link, shop address) fill themselves in; change them if they are wrong.', 'Press Read: the right reader opens with it (receipt review, product page review, or the GMK shop list).', 'From an entry\'s Tools ▾ the box shows "Reading into …": what you read fills that entry. "Stop reading into it" makes it a normal read.'], go: '#/import' },
+  { id: 'receiptskept', t: 'Receipt copies you keep', g: 'Adding and reading', ctx: ['import', 'item'], k: 'receipt copy kept stored saved view download delete records backup folder label',
+    s: ['Every receipt you read and save is kept: a PDF as it is, pasted page text as a text file, screenshots and photos as one picture (several screenshots are put one under another). It is private to your account.', 'Import → Receipts kept lists them by date with seller, order number, total and the entries they filled: View, ⬇ Download, ✕ Delete (deleting the copy keeps the prices on your entries).', 'An entry\'s Purchase tab (keycap sets: Kits tab) shows "Receipt copy: …" with View and Download.', 'Settings → Back up… (.zip) → "Receipt copies" puts them in a Receipts folder named date · seller · order number; restoring brings them back. Reading the same order again links the new entries to the copy already kept.'], go: '#/import' },
   { id: 'readpage', t: 'Read a product page (shop link)', g: 'Adding and reading', ctx: ['import'], k: 'read page link url website webpage shop product import from a link paste details specs retail picture',
-    s: ['Import → "Read a product page" (or on a list: "Add or modify existing … ▾" → From a webpage link), paste the shop link, press Read page.', 'Pick the options you bought. Each line can be a New entry, "Add to an entry I have" (fills empty fields; tick Replace to refresh) or Wishlist.', 'Check the lines and press Save. Specs, the shop\'s text, retail price, the webpage link and every picture (as links) are saved.', 'Only shops listed in Settings → Product page reader can be read.'], go: '#/import/link' },
+    s: ['Import → "Read a receipt or a webpage" (or on a list: "Add or modify existing … ▾" → Read a receipt or webpage), paste the shop link, press Read. "What is it?" fills in as A product page.', 'Pick the options you bought. Each line can be a New entry, "Add to an entry I have" (fills empty fields; tick Replace to refresh) or Wishlist.', 'Check the lines and press Save. Specs, the shop\'s text, retail price, the webpage link and every picture (as links) are saved.', 'Only shops listed in Settings → Product page reader can be read.'], go: '#/import/link' },
   { id: 'readpageinto', t: 'Read a webpage into one entry', g: 'Adding and reading', ctx: ['item'], k: 'read webpage into this entry link page shop details update refresh pull from entry main section keyboard switch keycap set accessory item existing',
-    s: ['Open the entry and find the "From the shop" card (side column).', 'Press "🔗 Read a webpage into this entry" (or "Read the page again" if it has one) and paste the link.', 'The banner "Reading into …" means the option you pick fills this entry only. Tick Replace to refresh price and pictures.', 'Save takes you back to the entry. "Stop reading into it" turns it into a normal read.'], go: '' },
+    s: ['Open the entry → Tools ▾ → "Read a receipt or webpage into it…" and paste the link in the Read box (or use the "From the shop" card: "🔗 Read a webpage into this entry" / "Read the page again").', 'The banner "Reading into …" means the option you pick fills this entry only. Tick Replace to refresh price and pictures.', 'Save takes you back to the entry. "Stop reading into it" turns it into a normal read.'], go: '' },
+  { id: 'receiptpic', t: 'Read a receipt from a screenshot or photo', g: 'Adding and reading', ctx: ['import'], k: 'screenshot photo picture camera image ocr text recognition paste ctrl+v snip receipt order page ebay misread check numbers tesseract',
+    s: ['Take a screenshot of the order page (Windows: Win+Shift+S; Mac: Cmd+Shift+4; phone: the usual screenshot buttons) or a photo of a paper receipt.', 'Import → Read box: press Ctrl+V to paste it, drop the file, or click the box to choose it (on a phone you can take the photo there). If the order runs over several screenshots, add them all; they are read in order. ✕ removes one.', 'Press "Read the picture". The text is read on this device (the first time the reader downloads about 7 MB, then it opens from the device). It takes a few seconds per picture.', 'The review shows the picture above the lines, and "Text read from the picture". Pictures can be misread, so check every name and number: when a total doesn\'t add up, the review says which one was used and why.', 'Save approved lines as usual; the picture is kept as the receipt copy. Sharp, straight, full-size screenshots read best; a cropped or blurry photo may miss lines.', 'Text reading uses Tesseract (tesseract.js 5.1.1, Apache-2.0) from jsDelivr; its files are checked against fixed fingerprints before they run.'], go: '#/import' },
   { id: 'receipt', t: 'Read a receipt', g: 'Adding and reading', ctx: ['import'], k: 'receipt pdf invoice order paypal ebay drop price tax shipping read import purchase phone android paste text could not read no text',
-    s: ['Save the order page as a PDF (Print → Save as PDF; a photo or scan can\'t be read). On an Android phone: Chrome ⋮ → Share → Print → Save as PDF works too.', 'A price that was only the shop\'s retail price standing in (its note says so) is replaced by the receipt automatically, and the note is removed.', 'If a PDF can\'t be read: "Paste the text of an order page instead" (it opens by itself after the error). Open the order page, long-press a word → Select all → Copy, paste, Read pasted text.', 'Import → drop the PDF on "Read a receipt". It is read on this device only and never uploaded or kept.', 'Each line is matched to an entry you have (or a new one, or Skip). Tax is spread as a rate, shipping and discounts split across the lines, to the cent.', 'Save approved lines: price, tax, shipping, discounts, date, seller and order number are filled; existing prices stay unless you tick replace.'], go: '#/import' },
+    s: ['Save the order page as a PDF (Print → Save as PDF), or take a screenshot or photo of it (see "Read a receipt from a screenshot or photo"). On an Android phone: Chrome ⋮ → Share → Print → Save as PDF works too.', 'A price that was only the shop\'s retail price standing in (its note says so) is replaced by the receipt automatically, and the note is removed.', 'Order pages you must be signed in to see (eBay, Amazon, PayPal…): open the page, press Ctrl+A then Ctrl+C (phone: long-press a word → Select all → Copy), paste it in the Read box and press Read ("What do you have?" fills in as Copied page text). A link to such a page can\'t be read, because your helper reads pages without your sign-in.', 'Import → drop the PDF on "Read a receipt or a webpage" (or paste the text of the order page). It is read on this device; when you save, a copy of the receipt is kept with your records (Import → Receipts kept, the entry\'s Purchase tab, and the Receipts folder of your backups).', 'Each line is matched to an entry you have (or a new one, or Skip). Tax is spread as a rate, shipping and discounts split across the lines, to the cent.', 'Save approved lines: price, tax, shipping, discounts, date, seller and order number are filled; existing prices stay unless you tick replace.'], go: '#/import' },
   { id: 'receiptinto', t: 'Read a receipt into one entry', g: 'Adding and reading', ctx: ['item'], k: 'receipt into this entry pdf purchase tab price paid order pull keyboard switch keycap set accessory pcb item existing',
     s: ['Open the entry → Purchase tab (keycap sets: Kits tab).', 'Press "📄 Read a receipt into this entry" and choose the PDF.', 'The receipt line that matches is pointed at this entry; the other lines start as Skip (change any of them if you want them too).', 'Save takes you back to the entry with its price, tax, shipping, date, seller and order number filled.'], go: '' },
   { id: 'shops', t: 'Add a shop to the product page reader', g: 'Adding and reading', ctx: ['settings'], k: 'approved shops add website domain reader helper cloudflare not allowed settings',
-    s: ['Settings → Product page reader.', 'Type the shop\'s address (e.g. cannonkeys.com) under Approved shops → Add → Save.', 'If a shop reads badly, send Claude the link: each shop gets its own fixes.'], go: '#/settings' },
+    s: ['Settings → Product page reader.', 'Type the shop\'s address (e.g. cannonkeys.com) under Approved shops → Add → Save.', 'If a shop reads badly, send Claude the link: each shop gets its own fixes. Shops with their own fixes include Keebfront and Kinetic Labs (its spec table is read from the shop\'s product data).'], go: '#/settings' },
   { id: 'duplicate', t: 'Duplicate an entry', g: 'Adding and reading', ctx: ['item'], k: 'duplicate copy clone same again another one twice',
     s: ['On the entry: Organize ▾ → Duplicate….', 'Tick what to copy (purchase details, notes, colors, product page, summary rows; photos and market values are off by default).', 'Name the copy and confirm.'], go: '' },
   { id: 'merge', t: 'Merge two entries (duplicates)', g: 'Adding and reading', ctx: ['item'], k: 'merge combine duplicate same twice two entries join keeper sacrifice',
@@ -3278,6 +3676,7 @@ function addReadIntoButtons(view, x, type) {   // Purchase tab (Kits tab for key
   const f = box.querySelector('#readIntoRcFile');
   box.querySelector('#readIntoRc').onclick = () => { if (typeof formDirty !== 'undefined' && formDirty) { toast('Save or discard your changes first'); return; } f.value = ''; f.click(); };
   f.onchange = () => { const file = f.files && f.files[0]; if (!file) return; setReadTarget({ kind: 'receipt', type, id: x.id, label: rcLabel(type, x) || x.name || 'this entry' }); rcReadFile(file, box.querySelector('#readIntoRcMsg')); };
+  setTimeout(drawRcCopies, 0);
 }
 function paidVsRetail(paid, retail) {   // v0.95.0: difference = paid − retail; over retail (red) or under (green)
   const d = Math.round((Number(paid) - Number(retail)) * 100) / 100, pc = Number(retail) ? Math.round(Math.abs(d) / Number(retail) * 100) : 0;
@@ -3682,9 +4081,9 @@ function startMetaListener() {
     const m = snap.exists ? snap.data() : {}; const n = m.photoCount || 0, b = Math.max(0, m.photoBytes || 0), sn = Math.max(0, m.soundCount || 0), sb = Math.max(0, m.soundBytes || 0);
     const size = list => (list || []).reduce((a, x) => a + JSON.stringify(x).length, 0);
     const recs = size(savedKeyboards) + size(savedSwitches) + size(savedKeycaps) + PART_IDS.reduce((a, t2) => a + size(savedParts[t2]), 0) + size(savedWish), cat = gmkSets ? size(gmkSets) : 0;
-    const total = b + sb + recs + cat, GB = 1024 * 1024 * 1024, pctUsed = total / GB * 100, mb = v => (v / 1048576).toFixed(1) + ' MB';
+    const rcb = savedReceipts.reduce((a, r) => a + (r.bytes || 0) * 1.34, 0), total = b + sb + recs + cat + rcb, GB = 1024 * 1024 * 1024, pctUsed = total / GB * 100, mb = v => (v / 1048576).toFixed(1) + ' MB';
     document.getElementById('meterBar').style.width = Math.min(100, Math.max(total ? 0.5 : 0, pctUsed)) + '%';
-    t.innerHTML = `<b>${mb(total)} of 1,024 MB (${pctUsed.toFixed(1)}%)</b><br>Photos: ${n} · ${mb(b)}<br>Sound recordings: ${sn} · ${mb(sb)}<br>Item records (with card and stock pictures): ${mb(recs)}<br>GMK catalog: ${gmkSets ? mb(cat) : 'not counted until the Catalog page has been opened'}`
+    t.innerHTML = `<b>${mb(total)} of 1,024 MB (${pctUsed.toFixed(1)}%)</b><br>Photos: ${n} · ${mb(b)}<br>Sound recordings: ${sn} · ${mb(sb)}<br>Receipt copies: ${savedReceipts.length} · ${mb(rcb)}<br>Item records (with card and stock pictures): ${mb(recs)}<br>GMK catalog: ${gmkSets ? mb(cat) : 'not counted until the Catalog page has been opened'}`
       + (n ? `<br>About ${Math.round(b / n / 1024)} KB per photo · room for roughly ${Math.max(0, Math.floor((GB * 0.9 - total) / Math.max(1, b / n))).toLocaleString()} more photos` : '');
   }, err => { t.textContent = 'Could not read storage: ' + explain(err); });
 }
@@ -5130,7 +5529,7 @@ let savedWish = [], wishLoaded = false, wishFilter = 'open', wishEdit = null;
 function wishCol() { return db.collection(FIRESTORE_COLLECTION).doc(ROOT_DOC).collection('wishlist'); }
 function startWishListener() {
   if (!db || isFile) return;
-  wishCol().onSnapshot(snap => { savedWish = snap.docs.map(d => Object.assign({}, d.data(), { id: d.id, createdIso: isoFromTs(d.data().createdAt) })); wishLoaded = true;
+  startReceiptsListener(); wishCol().onSnapshot(snap => { savedWish = snap.docs.map(d => Object.assign({}, d.data(), { id: d.id, createdIso: isoFromTs(d.data().createdAt) })); wishLoaded = true;
     if (document.getElementById('wishTable') && !document.querySelector('#wishForm.dirty')) drawWishlist(); else if (!location.hash.startsWith('#/wishlist')) refreshIfShowing(); },
     err => toast('Could not load the wishlist: ' + explain(err)));
 }
@@ -5143,7 +5542,7 @@ function renderWishlist() {
       <div class="tools"><div class="seg" role="group" aria-label="Show" id="wishSeg">${[['open', 'Open'], ['bought', 'Bought'], ['all', 'All']].map(([v, t]) => `<button data-wf="${v}" class="${v === wishFilter ? 'on' : ''}">${t}</button>`).join('')}</div>
       <button class="btn primary" id="wishAdd">${I.plus}Add to wishlist</button></div></div>
     <div id="wishFormBox"></div>
-    <div class="search" style="margin-bottom:12px">${I.search}<input type="search" id="wishSearch" placeholder="Search the wishlist by name, kit, maker, category or notes" value="${esc(wishQuery)}" autocomplete="off"></div>
+    <div class="search" style="margin-bottom:12px;min-width:0">${I.search}<input type="search" class="input" id="wishSearch" placeholder="Search the wishlist by name, kit, maker, category or notes" value="${esc(wishQuery)}" autocomplete="off"></div>
     <div id="wishTable"></div>`;
   document.getElementById('wishSearch').oninput = e => { wishQuery = e.target.value; drawWishlist(); };
   document.getElementById('wishSeg').onclick = e => { const b = e.target.closest('[data-wf]'); if (!b) return; wishFilter = b.dataset.wf; renderWishlist(); };
@@ -5359,7 +5758,7 @@ function renderValue() {
   document.getElementById('view').innerHTML = `
     <div class="pagehead"><div><h1>Stats</h1><p>Market value: what your collection is worth today, item by item. Add a value on any item's page; each one keeps its history.</p></div></div>
     <div class="tabs sttabs" role="tablist" style="margin:0 0 16px"><button type="button" role="tab" data-sttab="stats">Spending</button><button type="button" role="tab" data-sttab="value" class="on" aria-selected="true">Market value</button></div>
-    <div class="dash-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="dash-grid" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">
       <div class="card tile" style="--c:var(--kc)"><span class="ic">${I.wallet}</span><div><div class="lbl">Market value</div><div class="big">${money(val)}</div><div class="hint">${valued.length} of ${rows.length} items valued</div></div></div>
       <div class="card tile" style="--c:var(--kb)"><span class="ic">${I.wallet}</span><div><div class="lbl">Paid for those items</div><div class="big">${money(paid)}</div><div class="hint">Price + tax + shipping − discounts</div></div></div>
       <div class="card tile" style="--c:#34d399"><span class="ic">${I.pulse}</span><div><div class="lbl">Gain or loss</div><div class="big">${valued.length ? deltaHtml(paid, val) : '—'}</div><div class="hint">On valued items only</div></div></div>
@@ -5891,9 +6290,10 @@ function isGmkProduct(p) { return /^\s*GMK\b/i.test(p.title || '') || /^gmk$/i.t
 function renderGmkShop() {
   const v = document.getElementById('view');
   v.innerHTML = `<div class="pagehead"><div><h1>Add GMK sets from a shop</h1><p>Reads a shop's GMK keycap sets and adds them to your private GMK catalog, so you can link your sets to them (kit pictures, completion, Kit gallery). Nothing goes into the app file or the repo.</p></div><div class="actions"><a class="btn" href="#/catalog">Back to the catalog</a></div></div>
-    <div class="card"><div class="aadd" style="grid-template-columns:1fr auto"><input class="input" id="gsHost" value="oblotzky.industries" aria-label="Shop address"><button class="btn primary" id="gsRead">Read the shop</button></div>
+    <div class="card"><div class="aadd" style="grid-template-columns:1fr auto"><input class="input" id="gsHost" value="${esc(sessionStorage.getItem('kbc_shop') || 'oblotzky.industries')}" aria-label="Shop address"><button class="btn primary" id="gsRead">Read the shop</button></div>
       <p class="sub" style="margin:8px 0 0">Works with Shopify shops on your approved list (Settings → Product page reader). Oblotzky Industries sells in euros, so its prices are kept in € (shown as such; not used as US prices).</p><div id="gsMsg" class="sub"></div></div><div id="gsList"></div>`;
   const msg = document.getElementById('gsMsg');
+  if (sessionStorage.getItem('kbc_shop')) { sessionStorage.removeItem('kbc_shop'); setTimeout(() => document.getElementById('gsRead')?.click(), 0); }   // v0.122.0: from the Read box
   document.getElementById('gsRead').onclick = async () => {
     const host = document.getElementById('gsHost').value.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '').toLowerCase(); if (!host) return;
     const label = RD_SHOPS[host] || host; msg.textContent = 'Reading ' + host + '…'; let all = [];
@@ -6936,7 +7336,7 @@ async function pdfText(bytes) {
     text = text.normalize('NFKC');   // v0.102.0: ligatures (ﬁ → fi) so words like Confirmed match
     out.push(text.split('\n').map(l => l.replace(/[ \t ]+/g, ' ').trim()).filter(Boolean).join('\n'));
   }
-  // v0.104.0: the PDF's own title and date (Chrome writes the page title, e.g. "Order NK_535933 - NovelKeys LLC - Account", and the save date)
+  // v0.104.0: the PDF's own title and date (Chrome writes the page title, e.g. "Order NK_123456 - NovelKeys LLC - Account", and the save date)
   const info = (() => { const ir = /\/Info\s+(\d+) \d+ R/.exec(raw.slice(-4096)) || /\/Info\s+(\d+) \d+ R/.exec(raw); const o = ir && objs.get(+ir[1]); return o ? o.dict : (/\/Title\s*\(/.exec(raw.slice(0, 4096)) ? raw.slice(0, 4096) : ''); })();
   const lit = k => { const m = new RegExp('/' + k + '\\s*\\(((?:\\\\.|[^\\\\)])*)\\)').exec(info); if (m) { const v = m[1].replace(/\\([()\\])/g, '$1'); return /^\xfe\xff/.test(v) ? Array.from({ length: (v.length - 2) >> 1 }, (_, i) => String.fromCharCode((v.charCodeAt(2 + 2 * i) << 8) | v.charCodeAt(3 + 2 * i))).join('') : v; }
     const h = new RegExp('/' + k + '\\s*<([0-9A-Fa-f]+)>').exec(info); if (!h) return ''; const x = h[1]; if (/^feff/i.test(x)) { let s = ''; for (let i = 4; i + 4 <= x.length; i += 4) s += String.fromCharCode(parseInt(x.slice(i, i + 4), 16)); return s; } let s = ''; for (let i = 0; i + 2 <= x.length; i += 2) s += String.fromCharCode(parseInt(x.slice(i, i + 2), 16)); return s; };
@@ -6956,7 +7356,7 @@ function parseReceipt(pages, meta = {}) {   // meta: { title, created } from the
   const printed = (() => { const m = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/.exec(head); return m ? iso(m[3].length === 2 ? 2000 + +m[3] : +m[3], +m[1], +m[2]) : (meta.created || ''); })();   // phone PDFs: the date the PDF was saved
   const L = rawLines.filter(l => !/^\d{1,2}\/\d{1,2}\/\d{2,4}, \d{1,2}:\d{2} ?(AM|PM)/i.test(l) && !/^https?:\/\/\S+( \d+\/\d+)?$/.test(l) && !/^\d+\/\d+$/.test(l));
   const host = (/^https?:\/\/([^/]+)/.exec(url) || [])[1] || '';
-  const SELLERS = { 'mechanicalkeyboards.com': 'MechanicalKeyboards.com', 'novelkeys.com': 'NovelKeys', 'divinikey.com': 'Divinikey', 'drop.com': 'Drop', 'kbdfans.com': 'KBDfans', 'cannonkeys.com': 'CannonKeys', 'keychron.com': 'Keychron', 'omnitype.com': 'Omnitype', 'milktooth.com': 'Milktooth', 'ebay.com': 'eBay', 'amazon.com': 'Amazon' };
+  const SELLERS = { 'mechanicalkeyboards.com': 'MechanicalKeyboards.com', 'novelkeys.com': 'NovelKeys', 'divinikey.com': 'Divinikey', 'drop.com': 'Drop', 'kbdfans.com': 'KBDfans', 'cannonkeys.com': 'CannonKeys', 'keychron.com': 'Keychron', 'omnitype.com': 'Omnitype', 'milktooth.com': 'Milktooth', 'ebay.com': 'eBay', 'amazon.com': 'Amazon', 'kineticlabs.com': 'Kinetic Labs', 'keebfront.com': 'Keebfront' };
   const sellerFromHost = () => { const h = host.replace(/^(www|account|shop|store|checkout)\./, ''); return SELLERS[h] || (h ? h.replace(/\.(com|net|co|store|shop|io)$/, '').replace(/^./, c => c.toUpperCase()) : ''); };
   const sellerFromText = () => {   // v0.102.0: PDFs saved on a phone have no printed web address; use "Orders sold by NovelKeys LLC" or the page title
     const m = /(?:^|\n)(?:Orders )?sold by (.+)/i.exec(all) || /(?:^|\n)Thank you for (?:shopping|your order) (?:at|with) (.+)/i.exec(all); if (!m) return '';
@@ -7047,6 +7447,8 @@ const RC_STOP = new Set('drop the and for with custom keycap set keyboard mechan
 const RC_GENERIC = new Set('plate aluminum aluminium carbon fiber cf case weight base white black red blue green purple pink grey gray silver steel stainless brass copper pc pcb fr4 pom foam cable hotswap universal mx ansi iso linear tactile clicky gmk dcx dcd dcs sa kat cyl bar novelty alpha extra mod 65 75 80 tkl'.split(' '));
 function rcTok(s) { return [...new Set(String(s || '').toLowerCase().replace(/key\s?kobo/g, 'kkb').replace(/[^a-z0-9]+/g, ' ').split(' ').map(w => w.length > 3 ? w.replace(/ies$/, 'y').replace(/s$/, '') : w).map(w => w === 'spacebar' ? 'bar' : w).filter(w => w && !RC_STOP.has(w)))]; }
 function rcGuessType(name) {
+  name = rcCoreName(name);   // v0.122.0: "Keyboard Case w/ Foam, Hardware, & Accessories" is a case, not a keyboard
+  if (/keyboard|barebones/i.test(name) && !/keyboard kit|barebones|\bkit\b/i.test(name) && /\b(case|plate|pcb|foam|cable|weights?|stabili[sz]ers?|desk ?mat|wrist ?rest|cover|bag|feet|badge)\b/i.test(name)) return PART_TYPES.accessories ? 'accessories' : Object.keys(PART_TYPES)[0];
   if (/keycap|\b(gmk|dcx|dcd|dcs|cyl|kkb|sa|kat|mt3|pbtfans|jtk|epbt)\b|novelt|spacebars? kit/i.test(name)) return 'keycaps';
   if (/keyboard|barebones/i.test(name)) return 'keyboards';
   if (/switch/i.test(name)) return 'switches';
@@ -7081,7 +7483,7 @@ function rcKitGuess(s, row) {
 function rcOpen(r, fileName) {
   rcDone = null;
   rcpt = { fileName, kind: r.kind, seller: r.seller || '', orderNumber: r.orderNumber || '', date: r.date || '', dateNote: r.dateNote || '', shipping: r.shipping || 0, tax: r.tax || 0, discount: r.discount || 0,
-    subtotal: r.subtotal, total: r.total, warnings: r.warnings || [], rows: r.lines.map(rcSuggest) };
+    subtotal: r.subtotal, total: r.total, warnings: r.warnings || [], rows: r.lines.map(rcSuggest), source: window.__rcSrc || null, pictureText: r.pictureText || '' }; window.__rcSrc = null;
   const tg = readTarget('receipt'), tx = tg && itemsOfType(tg.type).find(y => y.id === tg.id);   // v0.96.0: reading into one entry: its best line fills it, the rest start as Skip
   if (tx) { const it = rcTok(rcLabel(tg.type, tx)).filter(w => !/^r\d+$/.test(w)); let bi = 0, bs = -1;
     r.lines.forEach((l, i) => { const src = rcTok(l.name + ' ' + (l.option || '')), sc = it.filter(w => src.includes(w)).length / Math.max(1, it.length) + (rcpt.rows[i].itemId === tx.id ? 1 : 0); if (sc > bs) { bs = sc; bi = i; } });
@@ -7092,7 +7494,8 @@ async function rcReadFile(file, msg) {
   msg.textContent = 'Reading ' + file.name + ' on this device…';
   try {
     if (/^image\//.test(file.type) || /\.(png|jpe?g|heic|webp)$/i.test(file.name)) throw new Error('This is a picture. The reader needs the order page saved as a PDF (Print → Save as PDF), because a picture has no text to read.');
-    const t = await pdfText(new Uint8Array(await file.arrayBuffer()));
+    const u8 = new Uint8Array(await file.arrayBuffer()); window.__rcSrc = { kind: 'pdf', mime: 'application/pdf', name: file.name, bytes: u8.slice() };   // v0.122.0: a copy is kept when the lines are saved
+    const t = await pdfText(u8);
     if (!t.pages.join('').trim()) throw new Error('No text was found in this PDF. It may be a scan or a photo; save the order page with Print → Save as PDF instead.');
     rcOpen(parseReceipt(t.pages, t), file.name);
   } catch (e) { msg.innerHTML = `<span style="color:var(--bad-text)">Could not read ${esc(file.name)}: ${esc(e && e.message || String(e))}</span>${rcPasteHelp()}`;
@@ -7165,14 +7568,16 @@ function rcDrawCalc() {
 }
 function renderReceipt() {
   const view = document.getElementById('view');
-  if (rcDone) { view.innerHTML = `<a class="crumb" href="#/import">${I.back}Import</a><div class="card"><h3>Receipt saved</h3><p class="sub">${esc(rcDone.title)}. The receipt file itself was not kept anywhere.</p><ul class="rc-done">${rcDone.items.map(x => `<li><a class="lnk" href="#/${x.type}/${esc(x.id)}">${esc(x.label)}</a> <span class="chip">${esc(x.what)}</span></li>`).join('')}</ul><a class="btn primary" href="#/import" style="width:max-content">Read another receipt</a></div>`; return; }
-  if (!rcpt) { view.innerHTML = `<a class="crumb" href="#/import">${I.back}Import</a><div class="card empty"><h2>No receipt open</h2><p>Go to Import and drop a receipt PDF.</p></div>`; return; }
+  if (rcDone) { view.innerHTML = `<a class="crumb" href="#/import">${I.back}Import</a><div class="card"><h3>Receipt saved</h3><p class="sub">${esc(rcDone.title)}. A copy of the receipt is kept with your records (Import → Receipts kept).</p><ul class="rc-done">${rcDone.items.map(x => `<li><a class="lnk" href="#/${x.type}/${esc(x.id)}">${esc(x.label)}</a> <span class="chip">${esc(x.what)}</span></li>`).join('')}</ul><a class="btn primary" href="#/import" style="width:max-content">Read another receipt</a></div>`; return; }
+  if (!rcpt) { view.innerHTML = `<a class="crumb" href="#/import">${I.back}Import</a><div class="card empty"><h2>No receipt open</h2><p>Go to Import and drop a receipt PDF, screenshot or photo.</p></div>`; return; }
   const m = (id, label, v) => `<label class="rc-f"><span>${label}</span><div class="money-in"><span>$</span><input class="input" id="${id}" type="number" step="0.01" min="0" inputmode="decimal" value="${esc(v)}"></div></label>`;
   view.innerHTML = `<a class="crumb" href="#/import">${I.back}Import</a>
-    <div class="pagehead"><div><h1>Review receipt</h1><p>Read from <b>${esc(rcpt.fileName)}</b> on this device. Nothing is saved until you press Save, and the file itself is never kept.</p></div></div>
+    <div class="pagehead"><div><h1>Review receipt</h1><p>Read from <b>${esc(rcpt.fileName)}</b> on this device${rcpt.kind === 'picture' ? ' (text read from the picture)' : ''}. Nothing is saved until you press Save; then a copy of the receipt is kept with your records (Import → Receipts kept).</p></div></div>
     ${rcpt.target && readTarget('receipt') ? targetBannerHtml(rcpt.target) : ''}
     ${rcpt.warnings.length ? `<div class="card" style="border-color:var(--warn,var(--bad))">${rcpt.warnings.map(w => `<p class="sub" style="margin:0 0 4px">⚠ ${esc(w)}</p>`).join('')}</div>` : ''}
-    <div class="card"${rcpt.warnings.length ? ' style="margin-top:16px"' : ''}><h3>Order</h3><div class="rc-head">
+    ${rcpt.source && rcpt.source.kind === 'picture' ? `<details class="card rc-pic" id="rcPic" open${rcpt.warnings.length ? ' style="margin-top:16px"' : ''}><summary><h3 style="display:inline">The picture</h3> <span class="sub">— compare the lines below with it</span></summary>
+      <div class="rc-picbox"><img id="rcPicImg" alt="The receipt picture"></div>${rcpt.pictureText ? `<details style="margin-top:8px"><summary class="sub" style="cursor:pointer">Text read from the picture</summary><pre class="rcpttext">${esc(rcpt.pictureText)}</pre></details>` : ''}</details>` : ''}
+    <div class="card"${rcpt.warnings.length || (rcpt.source && rcpt.source.kind === 'picture') ? ' style="margin-top:16px"' : ''}><h3>Order</h3><div class="rc-head">
       <label class="rc-f"><span>Seller</span><input class="input" id="rcSeller" value="${esc(rcpt.seller)}"></label>
       <label class="rc-f"><span>Order number</span><input class="input" id="rcOrder" value="${esc(rcpt.orderNumber)}"></label>
       <label class="rc-f"><span>Date purchased</span><input class="input" id="rcDate" type="date" value="${esc(rcpt.date)}"></label>
@@ -7183,6 +7588,7 @@ function renderReceipt() {
       <div id="rcRows">${rcpt.rows.map(rcRowHtml).join('')}</div><button class="btn" id="rcAdd" style="margin-top:10px">+ Add a line</button></div>
     <div class="card" style="margin-top:16px"><div id="rcFoot" class="sub" style="margin:0 0 12px"></div><div id="rcErr" class="sub" style="color:var(--bad-text);margin:0 0 10px"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="rcSave" ${db && !isFile ? '' : 'disabled'}>Save approved lines</button><button class="btn" id="rcClose">Close without saving</button></div></div>`;
+  { const im = document.getElementById('rcPicImg'); if (im && rcpt.source && rcpt.source.bytes) { if (!rcpt._picUrl) rcpt._picUrl = URL.createObjectURL(new Blob([rcpt.source.bytes], { type: rcpt.source.mime || 'image/jpeg' })); im.src = rcpt._picUrl; } }
   [['rcSeller', 'seller'], ['rcOrder', 'orderNumber'], ['rcDate', 'date']].forEach(([id, k]) => document.getElementById(id).oninput = e => { rcpt[k] = e.target.value.trim(); });
   [['rcShip', 'shipping'], ['rcTax', 'tax'], ['rcDisc', 'discount']].forEach(([id, k]) => document.getElementById(id).oninput = e => { rcpt[k] = Number(e.target.value) || 0; rcDrawCalc(); });
   const rows = document.getElementById('rcRows'), redraw = i => { const el = rows.querySelector(`.rc-row[data-i="${i}"]`); if (el) el.outerHTML = rcRowHtml(rcpt.rows[i], i); rcDrawCalc(); };
@@ -7230,11 +7636,12 @@ async function rcSave() {
         done.push({ type: t, id: item.id, label: rcLabel(t, item), what });
       } else { const name = String(r0.newName).trim(); let data;
         if (t === 'keycaps') data = { name, kits: xs.map(newKit) };
-        else { data = Object.assign({ name }, apply({}, sumP(xs), true)); if (t === 'accessories' && typeof rdAccCategory === 'function') data.category = rdAccCategory({ title: name + ' ' + ((xs[0].L && xs[0].L.option) || ''), tags: [] }, null); if (t === 'accessories') foamFill(data, name); if (t === 'switches') { const m = /(\d+)\s*(?:pack|pcs|pieces|ct|count|switches)\b/i.exec(r0.name); if (m) data.totalCount = +m[1] * xs.reduce((a, x) => a + (x.r.qty || 1), 0); } else if ((r0.qty || 1) > 1) data.notes = `Quantity ${r0.qty} on the receipt (${rcpt.seller || 'seller'}${rcpt.orderNumber ? ', ' + rcpt.orderNumber : ''}); the price is for all ${r0.qty}.`; }
+        else { data = Object.assign({ name }, apply({}, sumP(xs), true)); if (t === 'accessories' && typeof rdAccCategory === 'function') data.category = rdAccCategory({ title: rcCoreName(name) + ' ' + ((xs[0].L && xs[0].L.option) || ''), tags: [] }, null); if (t === 'accessories') foamFill(data, rcCoreName(name)); if (t === 'switches') { const m = /(\d+)\s*(?:pack|pcs|pieces|ct|count|switches)\b/i.exec(r0.name); if (m) data.totalCount = +m[1] * xs.reduce((a, x) => a + (x.r.qty || 1), 0); } else if ((r0.qty || 1) > 1) data.notes = `Quantity ${r0.qty} on the receipt (${rcpt.seller || 'seller'}${rcpt.orderNumber ? ', ' + rcpt.orderNumber : ''}); the price is for all ${r0.qty}.`; }
         if (SET_LINK_TYPES.includes(t)) { const g = guessSetFor(data); if (g) data.keycapSetId = g.id; }   // v0.97.0
         const ref = colOfType(t).doc(); await withTimeout(ref.set(Object.assign(data, { createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app', addedFrom: 'receipt' })));
         done.push({ type: t, id: ref.id, label: name, what: 'new ' + (SEC[t].singular || 'entry') });
       } }
+    if (done.length) { try { await rcKeepCopy(rcpt, done); } catch (e) { toast('Saved. The receipt copy could not be kept: ' + explain(e)); } }   // v0.122.0
     rcDone = { title: `${act.length} line${act.length === 1 ? '' : 's'} saved from ${rcpt.seller || 'the receipt'}${rcpt.orderNumber ? ' (' + rcpt.orderNumber + ')' : ''}`, items: done }; const tg = rcpt.target && readTarget('receipt'); rcpt = null; toast('Receipt saved'); setReadTarget(null);
     if (tg && done.length && done.every(d => d.type === tg.type && d.id === tg.id)) { rcDone = null; location.hash = `#/${tg.type}/${tg.id}`; return; }   // v0.96.0: back to the entry
     renderReceipt();
@@ -7683,7 +8090,7 @@ function syncWeightField(k, list) {   // Colorway card -> Build tab: the first W
    Pictures are kept as links; tick "Keep a copy" to store one in Firebase. The shop's own description is saved
    word for word as "From the shop", credited to the shop. The shop's price is saved as Retail price, never as the price you paid. */
 let rdCfg = null, rdState = null, rdDone = null;
-const RD_SHOPS = { 'oblotzky.industries': 'Oblotzky Industries', 'keebfront.com': 'Keebfront', 'divinikey.com': 'Divinikey', 'novelkeys.com': 'NovelKeys', 'cannonkeys.com': 'CannonKeys', 'kbdfans.com': 'KBDfans', 'milktooth.com': 'Milktooth', 'keychron.com': 'Keychron', 'mechanicalkeyboards.com': 'MechanicalKeyboards.com', 'drop.com': 'Drop', 'qwertykeys.com': 'Qwertykeys', 'omnitype.com': 'Omnitype', 'prototypist.net': 'ProtoTypist', 'thockking.com': 'Thockking', 'ebay.com': 'eBay' };
+const RD_SHOPS = { 'oblotzky.industries': 'Oblotzky Industries', 'keebfront.com': 'Keebfront', 'divinikey.com': 'Divinikey', 'novelkeys.com': 'NovelKeys', 'cannonkeys.com': 'CannonKeys', 'kbdfans.com': 'KBDfans', 'milktooth.com': 'Milktooth', 'keychron.com': 'Keychron', 'mechanicalkeyboards.com': 'MechanicalKeyboards.com', 'drop.com': 'Drop', 'qwertykeys.com': 'Qwertykeys', 'omnitype.com': 'Omnitype', 'prototypist.net': 'ProtoTypist', 'thockking.com': 'Thockking', 'kineticlabs.com': 'Kinetic Labs', 'ebay.com': 'eBay' };
 const rdHost = u => { try { return new URL(u).hostname.toLowerCase().replace(/^www\./, ''); } catch (e) { return ''; } };
 const rdShopName = (u, ogSite) => { const h = rdHost(u); return RD_SHOPS[h] || (ogSite && ogSite.length < 40 ? ogSite.trim() : '') || h.replace(/\.(com|net|co|store|shop|io)(\.[a-z]{2})?$/, '').replace(/^./, c => c.toUpperCase()); };
 async function rdLoadCfg(force) {
@@ -7770,6 +8177,14 @@ async function rdFromMatrix(url) {   // Matrix's GMK pages carry no shop data: t
     images: kits.filter(k => k.img).map((k, i) => ({ id: 'mi' + i, src: k.img })), html, variantId: '' };
   out.gmkSet = s; out.text = rdHtmlToText(html); out.spec = rdSpecs(html); out.includes = []; return out;
 }
+async function rdKineticSpecs(out, final, doc) {   // v0.123.0: Kinetic Labs shows its spec table from its own product data, not in the page; read it from there
+  const handle = (new URL(final).pathname.split('/').filter(Boolean).pop() || '').replace(/[^\w-]/g, ''); if (!handle) return;
+  const lines = [];
+  try { const j = JSON.parse((await rdFetch('https://kineticlabs.com/product/page?handle=' + handle, 'application/json')).text);
+    (j.specs || []).slice().sort((a, b) => (b.priority || 0) - (a.priority || 0)).forEach(x => { const v = x && x.value != null ? String(x.value).replace(/\s+/g, ' ').trim() : ''; if (x && x.title && v) lines.push(String(x.title).trim() + ': ' + v); }); } catch (e) {}
+  const pk = /\bpack of\s*(\d{1,4})\b/i.exec((doc.body || {}).textContent || ''); if (pk && !lines.some(l => /^pack size:/i.test(l))) lines.push(`Pack size: ${pk[1]} switches per pack`);
+  if (lines.length) out.html += '<ul>' + lines.map(l => '<li>' + esc(l) + '</li>').join('') + '</ul>';
+}
 async function rdRead(url) {
   url = String(url || '').trim(); const m = /https?:\/\/[^\s"'<>]+/i.exec(url); if (!m) throw new Error('That does not look like a web address.'); url = m[0].replace(/[).,]+$/, '').replace(/^http:\/\//i, 'https://');
   if (/^https:\/\/matrixzj\.github\.io\/docs\/gmk-keycaps\//i.test(url)) return rdFromMatrix(url);
@@ -7802,6 +8217,22 @@ async function rdRead(url) {
     if (cur && cur !== 'USD') { try { cur = curOf((await rdFetch(final + (final.includes('?') ? '&' : '?') + 'currency=USD')).text) || cur; } catch (e) {} }
     out.currency = cur || 'USD';
   }
+  if (out.host === 'keebfront.com' && !out.title) {   // v0.123.0: Keebfront (a Webflow shop, no product data): name, price, options, spec rows and gallery from the page itself
+    const h1 = doc.querySelector('h1'), num = x => { const m2 = /(\d[\d,]*(?:\.\d+)?)/.exec(String(x || '').replace(/\s/g, '')); return m2 ? Number(m2[1].replace(/,/g, '')) : null; };
+    const price = num((doc.querySelector('.product-price') || {}).textContent);
+    const rows = [...doc.querySelectorAll('.additional-info-row')].filter(r => !r.classList.contains('w-condition-invisible')).map(r => [...r.children].map(c => c.textContent.replace(/[\s ‍]+/g, ' ').trim())).filter(c => c.length >= 2 && c[0] && c[1]);
+    const row = k => (rows.find(c => c[0].toLowerCase() === k) || [])[1] || '';
+    const opts = [...doc.querySelectorAll('select[data-node-type="commerce-add-to-cart-option-select"]')].map(sel => ({ name: ((sel.previousElementSibling || {}).textContent || '').trim() || 'Option', values: [...sel.options].filter(o => o.value).map(o => o.textContent.trim()) })).filter(o => o.values.length);
+    let combos = [[]]; opts.forEach(o => { combos = combos.flatMap(c => o.values.map(v => c.concat(v))); }); const useOpts = combos.length <= 60 && opts.length > 0; if (!useOpts) combos = [[]];
+    const plus = vs => vs.reduce((a, v) => a + (Number((/\(\+\s*\$\s*([\d.]+)\)/.exec(v) || [])[1]) || 0), 0);   // "Add engraving (+$5)"
+    const paras = [...new Set([...doc.querySelectorAll('.product-overview p')].map(p => p.textContent.replace(/\s+/g, ' ').trim()).filter(t => t.length > 3))];
+    const has = k => rows.some(c => c[0].toLowerCase() === k);
+    Object.assign(out, { kind: 'keebfront', title: (h1 ? h1.textContent : meta('og:title').replace(/\s*\|.*$/, '')).replace(/\s+/g, ' ').trim(), vendor: row('manufacturer') || row('brand') || '', currency: 'USD',
+      productType: has('top housing') || has('stem') && has('spring') ? 'Switches' : has('typing angle') || has('front height') ? 'Keyboard' : has('profile') ? 'Keycaps' : '',
+      options: useOpts ? opts : [], html: paras.map(t => '<p>' + esc(t) + '</p>').join('') + (rows.length ? '<ul>' + rows.map(c => `<li>${esc(c[0])}: ${esc(c[1])}</li>`).join('') + '</ul>' : ''),
+      variants: combos.map((c, i) => ({ id: 'v' + i, title: c.length ? c.join(' / ') : 'Default Title', price: price == null ? null : Math.round((price + plus(c)) * 100) / 100, opts: c })) });
+    const seen = new Set(); doc.querySelectorAll('script.w-json').forEach(sc => { try { (JSON.parse(sc.textContent).items || []).forEach(it => { if (it && it.type === 'image' && it.url && !seen.has(it.url) && !/logo|icon/i.test(it.url)) { seen.add(it.url); out.images.push({ id: 'i' + out.images.length, src: it.url }); } }); } catch (e) {} });
+  }
   if (!out.title) {   // standard product data (JSON-LD), then the page's social-media tags
     let prod = null;
     doc.querySelectorAll('script[type="application/ld+json"]').forEach(s => { if (prod) return; try { const walk = o => { if (!o || prod) return; if (Array.isArray(o)) return o.forEach(walk); if (/Product/i.test(String(o['@type']))) { prod = o; return; } if (o['@graph']) walk(o['@graph']); }; walk(JSON.parse(s.textContent)); } catch (e) {} });
@@ -7813,6 +8244,7 @@ async function rdRead(url) {
       images: (imgs.length ? imgs : [meta('og:image')].filter(Boolean)).map((s, i) => ({ id: 'i' + i, src: new URL(s, final).toString() })),
       variants: (offers.length ? offers : [{ price: meta('product:price:amount') || meta('og:price:amount') }]).map((o, i) => ({ id: 'v' + i, title: o.name || (offers.length > 1 ? 'Option ' + (i + 1) : 'Default Title'), price: Number(o.price) || null, opts: [] })) });
   }
+  if (out.host === 'kineticlabs.com') await rdKineticSpecs(out, final, doc);   // v0.123.0
   {   // many shops (NovelKeys, Milktooth) show specs in a list on the page that is not in the product data: take "Label: value" lists and rows from the page itself
     const norm = t => t.toLowerCase().replace(/[^a-z0-9]+/g, ''), have = norm(rdHtmlToText(out.html)), extra = [], pg = new DOMParser().parseFromString(page.text, 'text/html');
     pg.querySelectorAll('header, footer, nav, script, style, noscript, form, [class*="recommend"], [class*="related"]').forEach(n => n.remove());
@@ -7822,8 +8254,8 @@ async function rdRead(url) {
       return /vendor|region|shipping|delivery|return|faq|warranty|payment|disclaimer/i.test(head); };
     const group = items => { items = items.map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean); if (items.length < 2 || items.length > 30) return;
       const kv = items.filter(t => kvRe.test(t)); if (kv.length >= 2 && kv.length >= items.length * 0.6) items.forEach(t => { if (kvRe.test(t) || t.length <= 40) add(t); }); };
-    pg.querySelectorAll('ul, ol').forEach(l => { if (!offTopic(l)) group([...l.querySelectorAll(':scope > li')].map(li => li.textContent)); });
-    const parents = new Set(); pg.querySelectorAll('p').forEach(p => parents.add(p.parentElement)); parents.forEach(el => { if (el) group([...el.children].filter(c => c.tagName === 'P').map(c => c.textContent)); });
+    if (out.kind !== 'keebfront') pg.querySelectorAll('ul, ol').forEach(l => { if (!offTopic(l)) group([...l.querySelectorAll(':scope > li')].map(li => li.textContent)); });
+    const parents = new Set(); if (out.kind !== 'keebfront') pg.querySelectorAll('p').forEach(p => parents.add(p.parentElement)); parents.forEach(el => { if (el) group([...el.children].filter(c => c.tagName === 'P').map(c => c.textContent)); });
     pg.querySelectorAll('span, dt, th, div, h3, h4, h5').forEach(el => { if (el.children.length) return; const lab = el.textContent.trim(); if (!/^(descriptors|sound profile|sound)$/i.test(lab)) return;
       const nx = el.nextElementSibling, val = nx && nx.textContent.replace(/\s+/g, ' ').trim(); if (val && val.length < 120 && !/[:$]/.test(val)) add('Sound profile: ' + val); });
     const pack = /(\d{1,4})\s+switch(?:es)?\s+(?:per|in each|in every)\s+(?:order|pack|bag)/i.exec(pg.body ? pg.body.textContent : ''); if (pack) add(`Pack size: ${pack[1]} switches per order`);
@@ -7968,7 +8400,8 @@ function rdFields(p, v, type) {   // fields for a new entry of this type, from t
     if (/\bmx\b/i.test(bare.join(' ')) || /mx/i.test(p.tags.join(' '))) f.mechanism = 'MX';
     const pins = /([35])[- ]?pin/i.exec(bare.join(' ') + ' ' + p.text); if (pins) f.pins = pins[1] + '-pin';
     if (bare.some(b => /^(factory )?(lubed|pre-?lubed|lubed from factory)$/i.test(b.trim()))) f.preLubed = true;
-    if (/^(yes|factory|lubed|true)\b/i.test(pick('factory lube', 'factory lubed', 'factory lubrication', 'pre-lubed', 'prelubed', 'lubed'))) f.preLubed = true;   // v0.94.0: "Factory Lube: Yes"
+    if (/^(yes|factory|lubed|true)\b/i.test(pick('factory lube', 'factory lubed', 'factory lubrication', 'pre-lubed', 'prelubed', 'lubed', 'lubrication'))) f.preLubed = true;   // v0.123.0: Kinetic Labs "Lubrication: Factory lubed"
+    if (!f.mechanism && /\bmx\b/i.test(pick('switch tech', 'mechanism', 'switch style', 'stem type'))) f.mechanism = 'MX';   // Kinetic Labs: Switch Tech: MX Style   // v0.94.0: "Factory Lube: Yes"
     if (/\b(dry|unlubed|no lube|not lubed)\b/i.test(vl)) delete f.preLubed; else if (/\blubed\b/i.test(vl) && !/hand[- ]?lubed/i.test(vl)) f.preLubed = true;   // the option chosen wins ("36 | Dry" / "36 | Lubed")
     { const fs = [pick('spring weight', 'spring force', 'force', 'spring'), p.text || ''].join(' ');   // "50g actuation, 65g bottom out"
       if (!f.actuationForce) { const m = /(\d+(?:\.\d+)?)\s*(?:g|gf|grams?)\s*(?:actuation|operating)/i.exec(fs) || /(?:actuation|operating)(?: force)?\s*(?:of|:|-)?\s*(\d+(?:\.\d+)?)\s*(?:g|gf|grams?)\b/i.exec(fs); if (m) f.actuationForce = m[1] + ' gf'; }
@@ -8229,9 +8662,9 @@ function paidRetailHtml(type, x, retailDl) {
   const has = v => v != null && !isNaN(v), sumP = rows.reduce((a, r) => a + (has(r.paid) ? r.paid : 0), 0), withR = rows.filter(r => has(r.retail)), sumR = withR.reduce((a, r) => a + r.retail, 0), miss = rows.length - withR.length;
   const many = rows.length > 1, diff = sumR - sumP;
   return `<div class="sumsec" id="sumCost"><h4>${type === 'keyboards' ? 'Build cost: paid and retail' : 'Paid and retail'}</h4>${retailDl || ''}
-    <table class="costtbl"><thead><tr>${many ? '<th></th>' : ''}<th>Item</th><th class="num" title="Price − discounts, without tax and shipping">Paid (item price)</th><th class="num">Retail</th><th class="num" title="Paid − retail: red = you paid more than retail, green = less">Difference</th></tr></thead><tbody>
+    <div class="costwrap"><table class="costtbl"><thead><tr>${many ? '<th></th>' : ''}<th>Item</th><th class="num" title="Price − discounts, without tax and shipping">Paid (item price)</th><th class="num">Retail</th><th class="num" title="Paid − retail: red = you paid more than retail, green = less">Difference</th></tr></thead><tbody>
     ${rows.map(r => { const dv = has(r.paid) && has(r.retail) ? paidVsRetail(r.paid, r.retail) : null; return `<tr>${many ? `<td class="sub">${esc(r.k)}</td>` : ''}<td>${r.href ? `<a class="lnk" href="${r.href}">${esc(r.label)}</a>` : esc(r.label)}${r.note ? `<span class="sub"> · ${esc(r.note)}</span>` : ''}</td><td class="num">${has(r.paid) ? money(r.paid) : '—'}</td><td class="num">${has(r.retail) ? money(r.retail) + (r.src ? `<span class="sub"> ${esc(r.src)}</span>` : '') : '—'}</td><td class="num ${dv ? dv.cls : ''}" ${dv ? `title="${esc(dv.txt)}"` : ''}>${dv ? dv.short : '—'}</td></tr>`; }).join('')}</tbody>
-    ${many ? (() => { const pw = withR.filter(r => has(r.paid)).reduce((a, r) => a + r.paid, 0), dt = withR.some(r => has(r.paid)) ? paidVsRetail(pw, withR.filter(r => has(r.paid)).reduce((a, r) => a + r.retail, 0)) : null; return `<tfoot><tr><td></td><td><b>Total</b></td><td class="num"><b>${money(sumP)}</b></td><td class="num"><b>${withR.length ? money(sumR) : '—'}</b></td><td class="num ${dt ? dt.cls : ''}"><b>${dt ? dt.short : '—'}</b></td></tr></tfoot>`; })() : ''}</table>
+    ${many ? (() => { const pw = withR.filter(r => has(r.paid)).reduce((a, r) => a + r.paid, 0), dt = withR.some(r => has(r.paid)) ? paidVsRetail(pw, withR.filter(r => has(r.paid)).reduce((a, r) => a + r.retail, 0)) : null; return `<tfoot><tr><td></td><td><b>Total</b></td><td class="num"><b>${money(sumP)}</b></td><td class="num"><b>${withR.length ? money(sumR) : '—'}</b></td><td class="num ${dt ? dt.cls : ''}"><b>${dt ? dt.short : '—'}</b></td></tr></tfoot>`; })() : ''}</table></div>
     <p class="sub" style="margin:6px 0 0;font-size:11.5px">Paid here = the item price you paid (price − discounts), without tax and shipping, so it compares directly with the shop's price (your total with tax and shipping is on the Purchase tab). Difference = paid − retail: <span class="pr-up">red</span> = you paid more than retail, <span class="pr-dn">green</span> = you paid less.${withR.length && !miss ? (() => { const dd = paidVsRetail(sumP, sumR); return ` In all you paid <span class="${dd.cls}">${esc(dd.txt)}</span>.`; })() : ''}${miss ? ` ${miss} item${miss === 1 ? ' has' : 's have'} no retail price yet (read the product page to add it)${withR.length ? ', so the retail total is only for the rest' : ''}.` : ''}${type === 'keycaps' || type === 'keyboards' ? ' GMK kits without a shop price use the group-buy price.' : ''}</p></div>`;
 }
 function switchRetail(x) {   // the shop's price is for a pack (or several): how many switches it covers, and how that compares with what you paid
@@ -8361,11 +8794,11 @@ async function wireReaderCard() {
 }
 
 function renderImport() {
-  const ready = !!db && !isFile;
+  const ready = !!db && !isFile; if (!rbState.user && !rbTarget()) rbState = { what: '', src: '', user: false }; if (rbState.src !== 'picture' && rbPics.length) rbClearPics();
   document.getElementById('view').innerHTML = `
     <div class="pagehead"><div><h1>Import and export</h1><p>Read a product page or a receipt, export everything to Excel, or bring items in from a workbook. The app is the source of truth; the Excel file is a copy made from it.</p></div></div>
-    ${linkCardHtml()}
-    ${receiptCardHtml()}
+    ${readBoxHtml()}
+    ${receiptsKeptHtml()}
     ${excelCardHtml()}
     <details class="card impold" id="impOld" style="margin-top:16px"${importFile || gmkImport || xlColors ? ' open' : ''}><summary><h3 style="display:inline">Workbook and other files</h3> <span class="sub">— one-time imports (done), GMK catalog, colors, old app photos, and the check against Excel</span></summary>
     <div style="margin-top:12px"><h3>1 · Choose an import file</h3>
@@ -8376,7 +8809,8 @@ function renderImport() {
     <div id="impPreview"></div>
     <div id="reconcile"></div></details>
     <p class="sub" style="margin:14px 2px 0">Tidying up: <a class="lnk" href="#/check">Check my data</a> lists spellings, missing types and categories, and same-name entries.</p>`;
-  lastImportMsg = ''; wireReceiptCard(); wireExcelCard(); wireLinkCard();
+  lastImportMsg = ''; wireReadBox(); drawReceiptsKept(); wireExcelCard();
+  setTimeout(() => { if (sessionStorage.getItem('kbc_rbfocus')) { sessionStorage.removeItem('kbc_rbfocus'); document.getElementById('rbText')?.focus(); } }, 50);
   document.getElementById('impFile').onchange = async e => {
     const f = e.target.files[0]; if (!f) return; const od = document.getElementById('impOld'); if (od) od.open = true;
     const msg = document.getElementById('impMsg');
@@ -8694,6 +9128,10 @@ async function makeZipBackup(opt, say) {
       const path = `recordings/${folderOf[key]}/${String(nth[key]).padStart(2, '0')} ${zbkSafe(p.note || p.keyboardName || 'Sound test')}.${zbkExt(p.mime || b.mime)}`; files.push({ name: path, data: b.bytes });
       const m = Object.assign({}, p); delete m.audio; m.file = path; meta[d.id] = m; counts[p.itemType].recordings++; });
     files.push({ name: 'data/sounds.json', data: JSON.stringify(bkEncode(meta)) }); }
+  if (opt.receipts) { say('Reading your receipt copies…'); const snap = await withTimeout(rcptCol().get(), 300000), meta = {}, used = new Set(); counts.receipts = { records: 0 };   // v0.122.0
+    for (const d of snap.docs) { const r = Object.assign({ id: d.id }, d.data()); let nm = 'receipts/' + rcptFileName(r), k = 2; while (used.has(nm)) nm = 'receipts/' + rcptFileName(r).replace(/(\.\w+)$/, ` (${k++})$1`); used.add(nm);
+      try { files.push({ name: nm, data: await rcptBytes(r) }); const m = Object.assign({}, d.data()); m.file = nm; meta[d.id] = m; counts.receipts.records++; } catch (e) {} }
+    files.push({ name: 'data/receipts.json', data: JSON.stringify(bkEncode(meta)) }); }
   if (opt.linked) {
     if (opt.lists.includes('keycaps') && typeof loadGmk === 'function' && (!gmkSets || !gmkSets.length)) { say('Loading the GMK catalog for its kit pictures (about 30 seconds)…'); try { await loadGmk(); } catch (e) {} }
     const jobs = []; for (const [c] of lists) Object.keys(all[c]).forEach(id => { const x = itemsOfType(c).find(y => y.id === id) || Object.assign({ id }, all[c][id]); zbkLinkedOf(c, x, opt.onlyOwned).forEach((l, i) => jobs.push({ c, id, l, i })); });
@@ -8709,7 +9147,7 @@ async function makeZipBackup(opt, say) {
   const lines = [`Keyboard Collection backup · ${when.toLocaleString()} · ${APP_VERSION}`, '', 'Keep this file on your PC. It holds prices and receipt links: never put it in the public GitHub repo.', '',
     'data/          your records (one file per list) for Settings → Restore from a backup',
     'pictures/      your photos and kept copies, by list and item; "Linked" folders hold the catalog, Keycap Collection app and shop pictures',
-    'recordings/    switch sound tests', '', 'Contents:', ...Object.entries(counts).map(([c, v]) => `  ${(ZBK_LISTS.concat(ZBK_EXTRA).find(x => x[0] === c) || [, c])[1]}: ${v.records} record${v.records === 1 ? '' : 's'}${v.photos ? `, ${v.photos} photo${v.photos === 1 ? '' : 's'}` : ''}${v.linked ? `, ${v.linked} linked picture${v.linked === 1 ? '' : 's'}` : ''}${v.recordings ? `, ${v.recordings} recording${v.recordings === 1 ? '' : 's'}` : ''}`),
+    'recordings/    switch sound tests', 'receipts/      receipt copies (date · seller · order number)', '', 'Contents:', ...Object.entries(counts).map(([c, v]) => `  ${(ZBK_LISTS.concat(ZBK_EXTRA).find(x => x[0] === c) || [, c])[1]}: ${v.records} record${v.records === 1 ? '' : 's'}${v.photos ? `, ${v.photos} photo${v.photos === 1 ? '' : 's'}` : ''}${v.linked ? `, ${v.linked} linked picture${v.linked === 1 ? '' : 's'}` : ''}${v.recordings ? `, ${v.recordings} recording${v.recordings === 1 ? '' : 's'}` : ''}`),
     ...(missing.length ? ['', `${missing.length} linked picture${missing.length === 1 ? '' : 's'} could not be saved (the website doesn't allow it or is offline); they stay as links in the records:`, ...missing.map(m => `  ${m.item} · ${m.label}: ${m.url}`)] : [])];
   files.unshift({ name: 'manifest.json', data: JSON.stringify(manifest, null, 1) }, { name: 'README.txt', data: lines.join('\r\n') });
   say('Packing the file…'); const blob = zbkZip(files), a = document.createElement('a');
@@ -8732,6 +9170,7 @@ function zipBackupDialog() {
       <label class="check"><input type="checkbox" id="zbkPhotos"${pre.photos ? ' checked' : ''}> My photos and kept copies</label>
       <label class="check"><input type="checkbox" id="zbkLinked"${pre.linked ? ' checked' : ''}> Linked pictures: GMK catalog, Keycap Collection app and shop pictures (slower; bigger file)</label>
       <label class="check"><input type="checkbox" id="zbkSounds"${pre.sounds ? ' checked' : ''}> Switch sound recordings</label>
+      <label class="check"><input type="checkbox" id="zbkRcpt"${pre.receipts !== false ? ' checked' : ''}> Receipt copies (a Receipts folder, named date · seller · order number)</label>
       <label class="check"><input type="checkbox" id="zbkOwned"${pre.onlyOwned ? ' checked' : ''}> Only what I own: leave out the wishlist and pictures of kits I don't own (records keep every kit)</label></div></div>
     <p class="sub" id="zbkMsg" style="margin:8px 0 0">It holds prices and receipt links: keep it on your PC, never in the public GitHub repo.</p>
     <div class="btnrow" style="margin-top:12px"><button class="btn primary" id="zbkGo">Make the backup</button><button class="btn" id="zbkStop" hidden>Stop</button></div></div>`;
@@ -8742,7 +9181,7 @@ function zipBackupDialog() {
     if (e.target.id === 'zbkStop') { zbkCancel = true; msg.textContent = 'Stopping…'; return; }
     if (e.target.id !== 'zbkGo') return;
     if (kind() !== 'zip') { d.remove(); makeBackup(kind() === 'jsonfull'); return; }
-    const opt = { lists: [...d.querySelectorAll('[data-zl]:checked')].map(c => c.dataset.zl), photos: $('#zbkPhotos').checked, linked: $('#zbkLinked').checked, sounds: $('#zbkSounds').checked, onlyOwned: $('#zbkOwned').checked };
+    const opt = { lists: [...d.querySelectorAll('[data-zl]:checked')].map(c => c.dataset.zl), photos: $('#zbkPhotos').checked, linked: $('#zbkLinked').checked, sounds: $('#zbkSounds').checked, receipts: !!$('#zbkRcpt')?.checked, onlyOwned: $('#zbkOwned').checked };
     if (opt.onlyOwned) opt.lists = opt.lists.filter(c => c !== 'wishlist');
     if (!opt.lists.length) { msg.textContent = 'Tick at least one list.'; return; } lsSet('kbc_zbk_opt', opt);
     $('#zbkGo').disabled = true; $('#zbkStop').hidden = false;
@@ -8757,8 +9196,8 @@ let zrs = null;
 async function readZipRestore(f) {
   const z = await zbkOpen(f), man = JSON.parse(await z.text('manifest.json') || 'null'); if (!man || man.kind !== 'kbc_backup_zip') throw new Error('This is not a Keyboard Collection backup file.');
   const data = {}; for (const [c] of ZBK_LISTS.concat(ZBK_EXTRA)) { const t = await z.text(`data/${c}.json`); if (t) data[c] = JSON.parse(t); }
-  const photos = JSON.parse(await z.text('data/photos.json') || '{}'), sounds = JSON.parse(await z.text('data/sounds.json') || '{}');
-  zrs = { z, man, data, photos, sounds }; drawZipRestore();
+  const photos = JSON.parse(await z.text('data/photos.json') || '{}'), sounds = JSON.parse(await z.text('data/sounds.json') || '{}'), receipts = JSON.parse(await z.text('data/receipts.json') || '{}');
+  zrs = { z, man, data, photos, sounds, receipts }; drawZipRestore();
 }
 function drawZipRestore(note) {
   const box = document.getElementById('restorePreview'); if (!box || !zrs) return; const { man, data, photos, sounds } = zrs;
@@ -8766,7 +9205,7 @@ function drawZipRestore(note) {
   const rows = ZBK_LISTS.concat(ZBK_EXTRA).filter(([c]) => data[c]).map(([c, t]) => { const n = c === 'settings' ? 1 : Object.keys(data[c]).length, p = pc(c), s = sc(c);
     return `<tr><td>${esc(t)}</td><td><label class="check"><input type="checkbox" data-zr="${c}"${c === 'settings' ? '' : ' checked'}> ${c === 'settings' ? 'settings' : n + ' record' + (n === 1 ? '' : 's')}</label></td><td>${p ? `<label class="check"><input type="checkbox" data-zp="${c}" checked> ${p} photo${p === 1 ? '' : 's'}</label>` : '<span class="sub">—</span>'}</td><td>${s ? `<label class="check"><input type="checkbox" data-zs="${c}" checked> ${s}</label>` : '<span class="sub">—</span>'}</td></tr>`; }).join('');
   box.innerHTML = `<p class="sub" style="margin:0 0 6px">Backup file from <b>${esc(fmtDate(String(man.createdAt).slice(0, 10)))}</b> (${esc(man.app || '')}). Tick what to put back:</p>
-    <table class="list" style="font-size:13px"><thead><tr><th>List</th><th>Records</th><th>Photos</th><th>Recordings</th></tr></thead><tbody>${rows}</tbody></table>
+    <table class="list" style="font-size:13px"><thead><tr><th>List</th><th>Records</th><th>Photos</th><th>Recordings</th></tr></thead><tbody>${rows}${Object.keys(zrs.receipts || {}).length ? `<tr><td>Receipt copies</td><td><label class="check"><input type="checkbox" id="zrRcpt" checked> ${Object.keys(zrs.receipts).length} receipt${Object.keys(zrs.receipts).length === 1 ? '' : 's'}</label></td><td></td><td></td></tr>` : ''}</tbody></table>
     <p class="sub" style="margin:6px 0 0">Records you tick replace the same records here; nothing else is changed or deleted. Photos and recordings come back for the items they belong to. Linked pictures in the file are only for you (they are links in the records). Settings is unticked so your current theme stays.</p>
     <div class="btnrow" style="margin-top:10px"><button class="btn primary" id="btnZrGo">Restore what is ticked</button><button class="btn" id="btnZrCancel">Cancel</button></div><p class="sub" id="restoreMsg" style="margin:6px 0 0">${esc(note || '')}</p>`;
   document.getElementById('btnZrCancel').onclick = () => { zrs = null; box.innerHTML = ''; };
@@ -8776,7 +9215,8 @@ async function runZipRestore() {
   const box = document.getElementById('restorePreview'), msg = document.getElementById('restoreMsg'), btn = document.getElementById('btnZrGo'), { z, data, photos, sounds, man } = zrs;
   const R = [...box.querySelectorAll('[data-zr]:checked')].map(c => c.dataset.zr), P = [...box.querySelectorAll('[data-zp]:checked')].map(c => c.dataset.zp), S = [...box.querySelectorAll('[data-zs]:checked')].map(c => c.dataset.zs);
   const nRec = R.reduce((a, c) => a + (c === 'settings' ? 1 : Object.keys(data[c]).length), 0), ph = Object.entries(photos).filter(([, p]) => P.includes(p.itemType)), so = Object.entries(sounds).filter(([, p]) => S.includes(p.itemType));
-  if (!nRec && !ph.length && !so.length) { msg.textContent = 'Nothing is ticked.'; return; }
+  const rc = document.getElementById('zrRcpt')?.checked ? Object.entries(zrs.receipts || {}) : [];
+  if (!nRec && !ph.length && !so.length && !rc.length) { msg.textContent = 'Nothing is ticked.'; return; }
   if (!await askConfirm(`Restore from the backup of ${fmtDate(String(man.createdAt).slice(0, 10))}: ${nRec} records, ${ph.length} photos, ${so.length} recordings?\n\nEach one replaces the same record here (changes made since the backup are lost). Nothing else is deleted.`, { ok: 'Restore' })) return;
   btn.disabled = true; let done = 0; const tot = nRec + ph.length + so.length;
   try {
@@ -8784,6 +9224,9 @@ async function runZipRestore() {
       const ids = Object.keys(data[c]); for (let i = 0; i < ids.length; i += 50) { const b = db.batch(); ids.slice(i, i + 50).forEach(id => b.set(rootDoc().collection(c).doc(id), bkDecode(data[c][id]))); await withTimeout(b.commit(), 60000); done += Math.min(50, ids.length - i); msg.textContent = `Restoring… ${done} of ${tot}`; } }
     for (const [id, p] of ph) { const bytes = await z.get(p.file); if (bytes) { const m = Object.assign({}, p); delete m.file; m.full = zbkBytesDataUrl(bytes, 'image/' + (/\.(\w+)$/.exec(p.file) || [, 'webp'])[1].replace('jpg', 'jpeg')); await withTimeout(rootDoc().collection('photos').doc(id).set(bkDecode(m)), 60000); } done++; msg.textContent = `Restoring… ${done} of ${tot}`; }
     for (const [id, p] of so) { const bytes = await z.get(p.file); if (bytes) { const m = Object.assign({}, p); delete m.file; m.audio = zbkBytesDataUrl(bytes, p.mime || 'audio/webm'); await withTimeout(rootDoc().collection('sounds').doc(id).set(bkDecode(m)), 60000); } done++; msg.textContent = `Restoring… ${done} of ${tot}`; }
+    for (const [id, r] of rc) { const bytes = await z.get(r.file); if (!bytes) continue; const b64 = b64FromBytes(bytes), CH = 700000, parts = Math.max(1, Math.ceil(b64.length / CH));   // v0.122.0
+      for (let i = 0; i < parts; i++) await withTimeout(rcptPartCol().doc(id + '_' + i).set({ rid: id, i, data: b64.slice(i * CH, (i + 1) * CH) }), 60000);
+      const m = Object.assign({}, r); delete m.file; m.parts = parts; m.bytes = bytes.length; await withTimeout(rcptCol().doc(id).set(bkDecode(m)), 60000); }
     if (ph.length || so.length) { msg.textContent = 'Counting photos and recordings…'; await recountStorage(); }
     zrs = null; box.innerHTML = `<p class="sub" style="margin:0;color:var(--ok-text)">Restored ${nRec} record${nRec === 1 ? '' : 's'}, ${ph.length} photo${ph.length === 1 ? '' : 's'} and ${so.length} recording${so.length === 1 ? '' : 's'}.</p>`; toast('Backup restored');
   } catch (e) { msg.textContent = `Stopped after ${done} of ${tot}: ${explain(e)} Running it again is safe.`; btn.disabled = false; }
