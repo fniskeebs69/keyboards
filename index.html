@@ -176,6 +176,8 @@
     .pagehead .tools:has([data-addmenu]) > #btnSelect, .pagehead .tools:has([data-addmenu]) > .hmenu { flex: 1 1 0; } .pagehead .tools:has([data-addmenu]) > .hmenu > .hmb { width: 100%; justify-content: center; } .pagehead .tools:has([data-addmenu]) > #btnSelect { justify-content: center; }
   }
   #rbCard [hidden] { display: none !important; }
+  .rc-share { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-top: 10px; padding: 10px 12px; border: var(--bw) var(--bs) var(--line-2); border-radius: var(--radius-s); font-size: 13px; }
+  .rc-share[hidden] { display: none; }
   .rb-pics { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
   .rb-pic { position: relative; margin: 0; width: 96px; height: 96px; border: var(--bw) var(--bs) var(--line-2); border-radius: var(--radius-s); overflow: hidden; background: var(--bg-2); }
   .rb-pic img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
@@ -757,7 +759,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
 </script>
 <script>
 /* ===================== App constants ===================== */
-const APP_VERSION = 'v0.123.0';
+const APP_VERSION = 'v0.124.0';
 (function takeSharedLink() {   // a page shared to the app from the phone's share sheet arrives as ?url= / ?text=
   try { const q = new URLSearchParams(location.search), raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' '), m = /https?:\/\/[^\s"'<>]+/i.exec(raw);
     if (m) { sessionStorage.setItem('kbc_link', m[0]); history.replaceState(null, '', location.pathname + '#/import/link'); } } catch (e) {}
@@ -1859,7 +1861,8 @@ function ocrLayoutText(data, W) {
   const out = ws => ws.map(w => w.t).join(' '), amt = s => /^(?:[A-Za-z]{3}\s+)?[-−]?\s*[$S]\s?[\d,]+(?:[.,]\d{2})?$|^(?:free|included|n\/a|—|-)$/i.test(s.trim());
   // the gutter: the widest run of columns (in the middle 25–85 % of the width) that hardly any row crosses, with text on both sides on several rows
   const bins = 200, hits = new Array(bins).fill(0), lim = Math.max(1, rows.length * .06);
-  rows.forEach(r => { const seen = new Set(); r.ws.forEach(w => { for (let i = Math.max(0, Math.floor(w.x0 / W * bins)); i <= Math.min(bins - 1, Math.floor(w.x1 / W * bins)); i++) seen.add(i); }); seen.forEach(i => hits[i]++); });
+  const wide = r => { const ws = r.ws.slice().sort((p, q) => p.x0 - q.x0), a = ws[0].x0, b = Math.max(...ws.map(w => w.x1)); return a < W * .25 && b > W * .75 && ws.every((w, i) => !i || w.x0 - ws[i - 1].x1 < W * .03); };   // a line across the whole page (a footer sentence, a link) doesn't count against a gap
+  rows.forEach(r => { if (wide(r)) return; const seen = new Set(); r.ws.forEach(w => { for (let i = Math.max(0, Math.floor(w.x0 / W * bins)); i <= Math.min(bins - 1, Math.floor(w.x1 / W * bins)); i++) seen.add(i); }); seen.forEach(i => hits[i]++); });
   let best = null;
   for (let i = Math.floor(bins * .25); i < Math.floor(bins * .85); i++) { if (hits[i] > lim) continue; let j = i; while (j + 1 < bins * .85 && hits[j + 1] <= lim) j++;
     const xa = i / bins * W, xb = (j + 1) / bins * W, both = rows.filter(r => r.ws.some(w => w.x1 <= xa) && r.ws.some(w => w.x0 >= xb) && !amt(out(r.ws.filter(w => w.x0 >= xb)))).length;
@@ -1867,7 +1870,7 @@ function ocrLayoutText(data, W) {
     if (j - i + 1 >= 3 && clear >= 4 && both >= 2 && (!best || j - i > best.n)) best = { n: j - i, x: (xa + xb) / 2 }; i = j; }
   if (!best) return rows.map(r => out(r.ws)).join('\n');
   const L = [], R = [];
-  rows.forEach(r => { const a = r.ws.filter(w => (w.x0 + w.x1) / 2 < best.x), b = r.ws.filter(w => (w.x0 + w.x1) / 2 >= best.x);
+  rows.forEach(r => { if (wide(r)) { L.push(out(r.ws)); return; } const a = r.ws.filter(w => (w.x0 + w.x1) / 2 < best.x), b = r.ws.filter(w => (w.x0 + w.x1) / 2 >= best.x);
     if (a.length && b.length && amt(out(b))) { L.push(out(r.ws)); return; } if (a.length) L.push(out(a)); if (b.length) R.push(out(b)); });
   return L.join('\n') + '\n\n' + R.join('\n');
 }
@@ -1881,17 +1884,19 @@ function rcPicClean(text) {
     let s = l.replace(/[ \t ]+/g, ' ').trim();
     s = s.replace(/(^|[\s(])[S§]\s?(\d{1,3}(?:,\d{3})*\.\d{2})\b/g, '$1$$$2')   // "S57.00" → "$57.00" (a $ read as S)
       .replace(/\$\s+(\d)/g, '$$$1').replace(/(\d),(\d{2})\b(?!\d)/g, (m, a, b, i, str) => /\$[\d,]*$/.test(str.slice(0, i + 1)) ? a + '.' + b : m)   // "$ 57" and "$57,00"
+      .replace(/([A-Za-z])[éè](\d)/g, '$16$2')   // "Margoé5", "Tofué5": a 6 read as é
       .replace(/\b[lI1|]\s?(items?)\b/g, '1 $1').replace(/\b(\d+)(items?)\b/g, '$1 $2')   // "litem" → "1 item"
       .replace(/\b(?:uso|usd|U5D|USO)\b(?=\s*\$)/gi, 'USD').replace(/\b(Tax(?:es)?)\*/gi, '$1')
       .replace(/(\$[\d,]+\.\d{2})\s+[^\s()$]{1,2}$/, '$1');   // a stray mark read after the amount ("$3.78 2")
     while (/^\S+ /.test(s)) { const t = s.split(' ')[0];   // leading marks read from icons and pictures: "=a", "_", "0%.", ">]", "Tu", "Ro"
-      if ((t.length <= 3 && (t.match(/[A-Za-z]/g) || []).length <= 1 && !/^\d+$/.test(t) && !/^[$#]/.test(t)) || (t.length === 2 && /^[A-Za-z]{2}$/.test(t) && !/^[A-Z]{2}$/.test(t))) s = s.slice(t.length + 1); else break; }
+      if ((t.length <= 3 && (t.match(/[A-Za-z]/g) || []).length <= 1 && !/^\d+$/.test(t) && !/^[$#]/.test(t) && !/^[x×]\d+$|^\d+[x×]$/i.test(t)) || (t.length === 2 && /^[A-Za-z]{2}$/.test(t) && !/^[A-Z]{2}$/.test(t))) s = s.slice(t.length + 1); else break; }
     while (/ \S+$/.test(s)) { const t = s.slice(s.lastIndexOf(' ') + 1); if (t.length <= 2 && (!/[A-Za-z0-9$]/.test(t) || /^[\[|{]/.test(t))) s = s.slice(0, s.lastIndexOf(' ')); else break; }   // trailing marks: "[§", "|"
     if (/^\S{1,3}$/.test(s) && !/^\d+$/.test(s) && (s.match(/[A-Za-z0-9]/g) || []).length < 2) s = '';
     return s;
   }).filter(Boolean).join('\n');
 }
 function parsePictureReceipt(raw) {
+  { const t0 = rcPicClean(raw), pp = rcPaypalActivity(t0); if (pp) { pp.kind = 'picture'; pp.pictureText = t0; pp.warnings.unshift('Read from a picture: check every name and number against it before saving.'); return pp; } }   // v0.124.0
   const text = rcPicClean(raw), L = text.split('\n'), MON = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12 };
   const iso = (y, m, d) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
   const AMT = /[-−–]?\$\s?(\d{1,3}(?:,\d{3})+(?:\.\d{2})?|\d+(?:\.\d{2})?)(?![\d.,]*\d)/g;   // whole amounts too: a point can be missed ("$378")
@@ -2882,6 +2887,8 @@ const HELP = [
     s: ['Open the entry → Tools ▾ → "Read a receipt or webpage into it…" and paste the link in the Read box (or use the "From the shop" card: "🔗 Read a webpage into this entry" / "Read the page again").', 'The banner "Reading into …" means the option you pick fills this entry only. Tick Replace to refresh price and pictures.', 'Save takes you back to the entry. "Stop reading into it" turns it into a normal read.'], go: '' },
   { id: 'receiptpic', t: 'Read a receipt from a screenshot or photo', g: 'Adding and reading', ctx: ['import'], k: 'screenshot photo picture camera image ocr text recognition paste ctrl+v snip receipt order page ebay misread check numbers tesseract',
     s: ['Take a screenshot of the order page (Windows: Win+Shift+S; Mac: Cmd+Shift+4; phone: the usual screenshot buttons) or a photo of a paper receipt.', 'Import → Read box: press Ctrl+V to paste it, drop the file, or click the box to choose it (on a phone you can take the photo there). If the order runs over several screenshots, add them all; they are read in order. ✕ removes one.', 'Press "Read the picture". The text is read on this device (the first time the reader downloads about 7 MB, then it opens from the device). It takes a few seconds per picture.', 'The review shows the picture above the lines, and "Text read from the picture". Pictures can be misread, so check every name and number: when a total doesn\'t add up, the review says which one was used and why.', 'Save approved lines as usual; the picture is kept as the receipt copy. Sharp, straight, full-size screenshots read best; a cropped or blurry photo may miss lines.', 'Text reading uses Tesseract (tesseract.js 5.1.1, Apache-2.0) from jsDelivr; its files are checked against fixed fingerprints before they run.'], go: '#/import' },
+  { id: 'receiptpaypal', t: 'Read a PayPal payment (Mechmarket)', g: 'Adding and reading', ctx: ['import'], k: 'paypal mechmarket reddit person seller money sent transaction id note friends family goods services p2p activity payment share total price each item',
+    s: ['In PayPal, open the payment (Activity → the payment), then save it: Print → Save as PDF, or take a screenshot of it. Make sure the Note is visible.', 'Import → Read box: drop the PDF or paste the screenshot (Ctrl+V), then Read.', 'Seller becomes "PayPal P2P (the person paid)", the order number the transaction ID, and the date and total are filled.', 'The items come from the note you wrote on the payment: "Tofu65 Barebones Gateron Oil King x70 HMX Cloud x90" gives three lines (x70 / x90 = how many switches). Check them: edit, remove (✕) or add lines.', 'PayPal shows no price per item: type what each one cost, or press "Share the total" (equally, or the rest over the lines you left empty). The box shows what is left.', 'Save as usual; switches get their count (70, 90) and their maker (Gateron, HMX) from the line. A PayPal invoice (not a payment) is read by the invoice reader, with its own prices.'], go: '#/import' },
   { id: 'receipt', t: 'Read a receipt', g: 'Adding and reading', ctx: ['import'], k: 'receipt pdf invoice order paypal ebay drop price tax shipping read import purchase phone android paste text could not read no text',
     s: ['Save the order page as a PDF (Print → Save as PDF), or take a screenshot or photo of it (see "Read a receipt from a screenshot or photo"). On an Android phone: Chrome ⋮ → Share → Print → Save as PDF works too.', 'A price that was only the shop\'s retail price standing in (its note says so) is replaced by the receipt automatically, and the note is removed.', 'Order pages you must be signed in to see (eBay, Amazon, PayPal…): open the page, press Ctrl+A then Ctrl+C (phone: long-press a word → Select all → Copy), paste it in the Read box and press Read ("What do you have?" fills in as Copied page text). A link to such a page can\'t be read, because your helper reads pages without your sign-in.', 'Import → drop the PDF on "Read a receipt or a webpage" (or paste the text of the order page). It is read on this device; when you save, a copy of the receipt is kept with your records (Import → Receipts kept, the entry\'s Purchase tab, and the Receipts folder of your backups).', 'Each line is matched to an entry you have (or a new one, or Skip). Tax is spread as a rate, shipping and discounts split across the lines, to the cent.', 'Save approved lines: price, tax, shipping, discounts, date, seller and order number are filled; existing prices stay unless you tick replace.'], go: '#/import' },
   { id: 'receiptinto', t: 'Read a receipt into one entry', g: 'Adding and reading', ctx: ['item'], k: 'receipt into this entry pdf purchase tab price paid order pull keyboard switch keycap set accessory pcb item existing',
@@ -7343,6 +7350,67 @@ async function pdfText(bytes) {
   const cd = /D:(\d{4})(\d{2})(\d{2})/.exec(lit('CreationDate') || '');
   return { pages: out, title: lit('Title').normalize('NFKC').trim(), created: cd ? `${cd[1]}-${cd[2]}-${cd[3]}` : '' };
 }
+/* v0.124.0: PayPal payments (Mechmarket and other person-to-person sales). PayPal's activity page ("Money Sent", PDF or screenshot)
+   has no list of items: there is the person paid, the date, the transaction ID, the amount, and the note the buyer typed. The items
+   are read from that note ("Tofu65 Barebones Gateron Oil King x70 HMX Cloud x90"); their prices are not on the page, so the
+   review asks for them and offers to share the total. */
+function rcNoteItems(note) {
+  const makers = [...new Set([].concat(typeof PRELOADED_SW_MAKERS !== 'undefined' ? PRELOADED_SW_MAKERS : [], typeof PRELOADED_KC_MAKERS !== 'undefined' ? PRELOADED_KC_MAKERS : [], typeof PRELOADED_BRANDS !== 'undefined' ? PRELOADED_BRANDS : []))]
+    .filter(m => m && m.length >= 3 && !/[+×]/.test(m)).map(m => m.toLowerCase().split(/\s+/)).sort((a, b) => b.length - a.length);
+  const swMakers = new Set((typeof PRELOADED_SW_MAKERS !== 'undefined' ? PRELOADED_SW_MAKERS : []).map(m => m.toLowerCase()));
+  const QSUF = /^[x×]\d{1,4}$/i, QPRE = /^\d{1,4}[x×]$/i, NOISE = /^(?:u\/\S+|r\/\S+|mechmarket|reddit|thanks!?|thank|you!?|ty|paypal|g&s|f&f|order|for)$/i;
+  const text = String(note || '').replace(/[“”"]/g, ' ').replace(/\b([x×])\s+(\d{1,4})\b/gi, '$1$2').replace(/\b(\d{1,4})\s+([x×])(?=\s|$)/gi, '$1$2');
+  const out = [];
+  text.split(/\s*(?:,|;|\||\s\+\s|\s&\s|\band\b|\bplus\b|\n{2,})\s*/i).forEach(piece => {
+    const toks = piece.split(/\s+/).filter(Boolean); let cur = [];
+    const push = () => { const s = cur.filter(t => !NOISE.test(t)).join(' ').replace(/^[-–:•·]+\s*|\s*[-–:]+$/g, '').replace(/\s+(?:with|w\/|plus|incl\.?|including)$/i, '').trim(); if (/[A-Za-z]{2}/.test(s)) out.push(s); cur = []; };
+    for (let i = 0; i < toks.length; i++) { const t = toks[i];
+      if (QPRE.test(t) && cur.length) { push(); cur.push(t); continue; }
+      const mk = cur.length && !QPRE.test(cur[cur.length - 1]) ? makers.find(m => m.every((w, k) => (toks[i + k] || '').toLowerCase().replace(/[^a-z0-9.-]/g, '') === w)) : null;
+      if (mk && !(mk[0] === 'cherry' && /^profile$/i.test(toks[i + 1] || ''))) push();
+      cur.push(t); if (QSUF.test(t) || /^\(\d{1,4}\)$/.test(t)) push(); }
+    push(); });
+  return out.map(s => {
+    const m = /(?:^|\s)[x×](\d{1,4})(?=\s|$)|(?:^|\s)(\d{1,4})[x×](?=\s|$)|\((\d{1,4})\)|(?:^|\s)(\d{1,4})\s?(?:pcs|pieces|ct|switches)\b/i.exec(s);
+    const n = m ? +(m[1] || m[2] || m[3] || m[4]) : null, name = (m ? s.replace(m[0], ' ') : s).replace(/\s+/g, ' ').trim();
+    const first = name.split(' ')[0].toLowerCase(), kbOrKc = /keyboard|barebones|keycaps?|\bkit\b|\bgmk\b|deskmat|\bpcb\b|\bplate\b|\bcase\b/i.test(name);
+    const notSw = kbOrKc || /stab|spring|film|lube|puller|opener|tester|cable|foam|artisan/i.test(name);
+    const sw = !notSw && (n != null && n >= 10 || /\bswitch(es)?\b/i.test(name)) || (!notSw && n == null && (/^(?:hmx|haimu|gateron|kailh|jwk|ktt|ttc|outemu|gazzew|bsun|keygeek|sp-star|swk|tecsee|huano|leobog)$/.test(first) || swMakers.has(first) && /\bswitch/i.test(name)));
+    return sw ? { name, option: n ? n + ' switches' : '', qty: 1, count: n, typeHint: 'switches' } : { name, option: '', qty: n && n < 10 ? n : 1, count: null, typeHint: '' };
+  });
+}
+function rcPaypalActivity(text) {
+  const T = String(text || '').replace(/\r\n?/g, '\n'), L = T.split('\n').map(l => l.replace(/[ \t ]+/g, ' ').trim()).filter(Boolean);
+  if (!/\bTransaction ID\b/i.test(T) || !/\bMoney Sent\b|\bSent to\b|\bPaid with\b|\bYou sent\b|\bPayment (?:sent|to)\b/i.test(T)) return null;
+  if (/\bINVOICE\b/.test(T) && /Invoice #:/.test(T)) return null;   // PayPal invoices have their own reader
+  const MON = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 }, iso = (y, m, d) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  const amt = l => { const m = /[-−–]?\$\s?([\d,]+\.\d{2})/.exec(l || ''); return m ? parseFloat(m[1].replace(/,/g, '')) : null; };
+  const r = { kind: 'paypal-payment', seller: '', orderNumber: '', date: '', dateNote: '', lines: [], subtotal: null, shipping: 0, tax: 0, discount: 0, total: null, warnings: [], noItemPrices: true };
+  // who was paid
+  let payee = ''; { const s = L.find(l => /^Sent to\b/i.test(l)), y = /\bYou sent \$?[\d,.]+(?: USD)? to (.+)$/i.exec(T), p = /^(?:Money sent to|Payment to|Paid to)\s+(.+)$/im.exec(T);
+    if (s) payee = s.replace(/^Sent to\s*/i, '').replace(/\s*[-−–]?\$[\d,.]+.*$/, '');
+    else if (y) payee = y[1]; else if (p) payee = p[1].replace(/\s*[-−–]?\$[\d,.]+.*$/, '');
+    else { const h = L.find(l => /^[A-Z][\w'.-]+(?: [A-Z][\w'.-]+){0,3} [-−–]\$[\d,.]+$/.test(l)); if (h) payee = h.replace(/\s*[-−–]\$.*$/, ''); }
+    payee = payee.replace(/[.,:]+$/, '').trim().slice(0, 40); }
+  r.seller = 'PayPal P2P' + (payee ? ' (' + payee + ')' : '');
+  { const re = /\b([A-Za-z]{3})[a-z]*\.? (\d{1,2}),? (\d{4})\b/g; let m; while ((m = re.exec(T))) if (MON[m[1].toLowerCase()]) { r.date = iso(+m[3], MON[m[1].toLowerCase()], +m[2]); break; } }
+  { const i = L.findIndex(l => /\bTransaction ID\b/i.test(l)), here = i >= 0 ? /Transaction ID:?\s*([A-Z0-9]{10,20})\b/i.exec(L[i]) : null, nx = i >= 0 ? /^([A-Z0-9]{10,20})$/.exec((L[i + 1] || '').replace(/\s/g, '')) : null;
+    if (here || nx) r.orderNumber = 'Transaction ' + (here ? here[1] : nx[1]).toUpperCase(); }
+  { const tl = L.find(l => /^Total\b/i.test(l) && amt(l) != null), st = L.find(l => /^Sent to\b/i.test(l) && amt(l) != null), hd = L.find(l => /[-−–]\$[\d,]+\.\d{2}\s*(?:USD)?$/.test(l)), pw = L.find(l => /^\$[\d,]+\.\d{2}$/.test(l));
+    r.total = amt(tl) ?? amt(st) ?? amt(hd) ?? amt(pw); }
+  const sh = L.find(l => /^Shipping(?: amount| & handling)?\b/i.test(l) && amt(l) != null); if (sh) r.shipping = amt(sh);
+  const tx = L.find(l => /^(?:Sales )?Tax\b/i.test(l) && amt(l) != null); if (tx) r.tax = amt(tx);
+  // the buyer's note
+  const STOP = /^(?:Details|Ship to|Shipping address|Transaction ID|Paid with|Contact info|How can we help\??|Sent to\b|Total\b|Purchase details|Payment details|Funding|Payment method|Invoice ID|Seller info|Message\b|Request a Refund|Get Answers|Report a problem)/i;
+  const ni = L.findIndex(l => /^(?:Note|Notes|Note to seller|Your note|Message to seller)$/i.test(l)); let note = '';
+  if (ni >= 0) { const b = []; for (let j = ni + 1; j < L.length && b.length < 8; j++) { if (STOP.test(L[j])) break; b.push(L[j]); } note = b.join(' ').replace(/\s+/g, ' ').trim(); }
+  else { const q = /^(?:Note|Notes):\s*(.+)$/im.exec(T); if (q) note = q[1].trim(); }
+  r.note = note;
+  r.lines = note ? rcNoteItems(note).map(it => Object.assign(it, { unit: 0, total: 0 })) : [];
+  if (r.total != null) r.subtotal = Math.round((r.total - r.shipping - r.tax) * 100) / 100;
+  r.warnings.push(note ? `PayPal payment to ${payee || 'a person'}: the items come from the note on the payment ("${note.slice(0, 160)}"), which has no prices. Type what each one cost (together ${'$' + (r.subtotal != null ? r.subtotal.toFixed(2) : '?')}), or use "Share the total" below.` : `PayPal payment to ${payee || 'a person'}: the payment has no note listing the items. Add a line for each item with "+ Add a line" and type its price.`);
+  return r;
+}
 /* Reads the text of an order page saved as PDF and returns what was bought. Runs on the device; nothing is uploaded.
    Known layouts: Drop, eBay, PayPal invoice, Shopify order pages (new account pages such as MechanicalKeyboards.com and
    NovelKeys; classic order pages such as Divinikey). Anything else gets a best-effort read of the totals. */
@@ -7367,6 +7435,7 @@ function parseReceipt(pages, meta = {}) {   // meta: { title, created } from the
   const after = (re, n = 1) => { const i = L.findIndex(l => re.test(l)); return i >= 0 ? L[i + n] || '' : ''; };
   const findNum = re => { for (const l of L) { const m = re.exec(l); if (m) return num(m[1]); } return null; };
   const freeOr = s => /free/i.test(s) ? 0 : num(s);
+  { const pp = rcPaypalActivity(L.join('\n')); if (pp) return pp; }   // v0.124.0: PayPal payment (Mechmarket): items from the note
   const headT = head || meta.title || '';   // v0.104.0: phone PDFs print no header line; the PDF title has the same text
   if (/Transaction Receipt \| Drop|drop\.com\/transactions/i.test(all + '\n' + headT)) {
     r.kind = 'drop'; r.seller = 'Drop'; r.date = fullDate(after(/^DATE PURCHASED$/)); r.orderNumber = after(/^ORDER #$/);
@@ -7459,7 +7528,7 @@ function rcGuessType(name) {
   return PART_TYPES.accessories ? 'accessories' : Object.keys(PART_TYPES)[0];
 }
 function rcSuggest(line) {   // the saved entry this line most likely belongs to, or a new entry of a guessed type
-  const guess = rcGuessType(line.name), ln = rcTok(line.name), lnAll = rcTok(line.name + ' ' + line.option); let best = null;
+  const guess = line.typeHint || rcGuessType(line.name), ln = rcTok(line.name), lnAll = rcTok(line.name + ' ' + line.option); let best = null;
   rcTypes().forEach(t => itemsOfType(t).forEach(x => {
     let it = rcTok(rcLabel(t, x)); const core = it.filter(w => !/^r\d+$/.test(w)); if (core.length) it = core; if (!it.length) return; const src = t === 'keycaps' ? ln : lnAll, hit = it.filter(w => src.includes(w)).length;
     if (hit < 2 && !(it.length === 1 && hit === 1 && it[0].length >= 5)) return;
@@ -7468,7 +7537,7 @@ function rcSuggest(line) {   // the saved entry this line most likely belongs to
     if (!best || score > best.score) best = { score, type: t, id: x.id, item: x };
   }));
   const row = { name: line.name, option: line.option || '', qty: line.qty || 1, total: rcRound(line.total), mode: 'new', type: guess, itemId: '', kitId: '', replace: false,
-    newName: guess === 'keycaps' ? line.name.replace(/^Drop (\+ \S+ )?/, '').replace(/ (Custom )?Keycap Sets?.*$/i, '').trim() : line.name + (line.option ? ' - ' + line.option : ''), kitName: line.option || 'Base' };
+    newName: guess === 'keycaps' ? line.name.replace(/^Drop (\+ \S+ )?/, '').replace(/ (Custom )?Keycap Sets?.*$/i, '').trim() : line.name + (line.option && !line.count ? ' - ' + line.option : ''), kitName: line.option || 'Base', count: line.count || null };
   if (best && best.score >= 0.6) { row.mode = 'existing'; row.type = best.type; row.itemId = best.id; if (best.type === 'keycaps') row.kitId = rcKitGuess(best.item, row);
     const tgt = best.type === 'keycaps' ? kitsOf(best.item).find(k => k.id === row.kitId) : best.item; if (rcIsPH(tgt)) row.replace = true; }   // v0.104.0: a stand-in retail price is replaced by the receipt
   return row;
@@ -7483,7 +7552,8 @@ function rcKitGuess(s, row) {
 function rcOpen(r, fileName) {
   rcDone = null;
   rcpt = { fileName, kind: r.kind, seller: r.seller || '', orderNumber: r.orderNumber || '', date: r.date || '', dateNote: r.dateNote || '', shipping: r.shipping || 0, tax: r.tax || 0, discount: r.discount || 0,
-    subtotal: r.subtotal, total: r.total, warnings: r.warnings || [], rows: r.lines.map(rcSuggest), source: window.__rcSrc || null, pictureText: r.pictureText || '' }; window.__rcSrc = null;
+    subtotal: r.subtotal, total: r.total, warnings: r.warnings || [], rows: r.lines.map(rcSuggest), source: window.__rcSrc || null, pictureText: r.pictureText || '', noItemPrices: !!r.noItemPrices, note: r.note || '' }; window.__rcSrc = null;
+  if (rcpt.noItemPrices) rcpt.rows.forEach(x => { x.total = ''; });   // v0.124.0: a PayPal payment has no item prices; they are typed or shared
   const tg = readTarget('receipt'), tx = tg && itemsOfType(tg.type).find(y => y.id === tg.id);   // v0.96.0: reading into one entry: its best line fills it, the rest start as Skip
   if (tx) { const it = rcTok(rcLabel(tg.type, tx)).filter(w => !/^r\d+$/.test(w)); let bi = 0, bs = -1;
     r.lines.forEach((l, i) => { const src = rcTok(l.name + ' ' + (l.option || '')), sc = it.filter(w => src.includes(w)).length / Math.max(1, it.length) + (rcpt.rows[i].itemId === tx.id ? 1 : 0); if (sc > bs) { bs = sc; bi = i; } });
@@ -7562,6 +7632,12 @@ function rcDrawCalc() {
     else if (r.mode === 'new') h += ' · saved as its own entry';
     box.innerHTML = h; });
   const act = rcpt.rows.map((r, i) => r.mode === 'skip' ? 0 : c.lines[i].total).reduce((a, b) => a + b, 0), calcTotal = rcRound(c.sum + (Number(rcpt.shipping) || 0) + (Number(rcpt.tax) || 0) - (Number(rcpt.discount) || 0));
+  { const sb = document.getElementById('rcShare'), tgt = rcItemsTarget(), act2 = rcpt.rows.filter(r => r.mode !== 'skip');   // v0.124.0
+    const empty = act2.filter(r => r.total === '' || !isFinite(Number(r.total))), typed = rcRound(act2.filter(r => !empty.includes(r)).reduce((a, r) => a + Number(r.total), 0));
+    if (sb) { const show = tgt != null && act2.length > 0 && (rcpt.noItemPrices || empty.length > 0); sb.hidden = !show;
+      if (show) { const left = rcRound(tgt - typed), can = empty.length ? left >= 0 : true;
+        sb.innerHTML = `<span>Items together: <b>${money(tgt)}</b> · typed ${money(typed)} · ${left >= 0 ? 'left ' + money(left) : '<span style="color:var(--bad-text)">' + money(-left) + ' too much</span>'}${empty.length ? ` · ${empty.length} line${empty.length === 1 ? '' : 's'} without a price` : ''}</span>`
+          + (can ? `<button class="btn" type="button" data-rcshare>${empty.length && empty.length < act2.length ? `Share the total: put ${money(left)} on the ${empty.length} empty line${empty.length === 1 ? '' : 's'}` : `Share the total: ${money(tgt)} equally over ${act2.length} line${act2.length === 1 ? '' : 's'}`}</button>` : ''); } } }
   const f = document.getElementById('rcFoot'); if (!f) return; const n = rcpt.rows.filter(r => r.mode !== 'skip').length, warn = [];
   if (rcpt.total != null && Math.abs(calcTotal - rcpt.total) > 0.01) warn.push(`The lines, shipping, tax and discount add up to ${money(calcTotal)}, but the receipt's total is ${money(rcpt.total)}. Check the numbers before saving.`);
   f.innerHTML = `<div><b>${n}</b> of ${rcpt.rows.length} lines will be saved · together <b>${money(act)}</b>${rcpt.total != null ? ` · receipt total ${money(rcpt.total)}` : ''} · items ${money(c.sum)} · tax rate ${pctTxt}</div>${warn.map(w => `<div style="color:var(--warn-text,var(--bad-text))">⚠ ${esc(w)}</div>`).join('')}`;
@@ -7585,7 +7661,7 @@ function renderReceipt() {
       ${rcpt.dateNote ? `<p class="sub" style="margin:10px 0 0">⚠ ${esc(rcpt.dateNote)} Check the date.</p>` : ''}
       <p class="sub" style="margin:10px 0 0">Tax is saved as a rate (tax ÷ items). Shipping and discount are shared across the lines by price, so the lines add up to the receipt's total.</p></div>
     <div class="card" style="margin-top:16px"><h3>Lines</h3><p class="sub">Each line was matched to an entry where the names agree; check every one. Lines that match nothing are set to become new entries.</p>
-      <div id="rcRows">${rcpt.rows.map(rcRowHtml).join('')}</div><button class="btn" id="rcAdd" style="margin-top:10px">+ Add a line</button></div>
+      <div id="rcRows">${rcpt.rows.map(rcRowHtml).join('')}</div><div id="rcShare" class="rc-share" hidden></div><button class="btn" id="rcAdd" style="margin-top:10px">+ Add a line</button></div>
     <div class="card" style="margin-top:16px"><div id="rcFoot" class="sub" style="margin:0 0 12px"></div><div id="rcErr" class="sub" style="color:var(--bad-text);margin:0 0 10px"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="rcSave" ${db && !isFile ? '' : 'disabled'}>Save approved lines</button><button class="btn" id="rcClose">Close without saving</button></div></div>`;
   { const im = document.getElementById('rcPicImg'); if (im && rcpt.source && rcpt.source.bytes) { if (!rcpt._picUrl) rcpt._picUrl = URL.createObjectURL(new Blob([rcpt.source.bytes], { type: rcpt.source.mime || 'image/jpeg' })); im.src = rcpt._picUrl; } }
@@ -7602,7 +7678,15 @@ function renderReceipt() {
   document.getElementById('rcAdd').onclick = () => { rcpt.rows.push({ name: '', option: '', qty: 1, total: '', mode: 'new', type: 'accessories', itemId: '', kitId: '', replace: false, newName: '', kitName: 'Base' }); rows.insertAdjacentHTML('beforeend', rcRowHtml(rcpt.rows[rcpt.rows.length - 1], rcpt.rows.length - 1)); rcDrawCalc(); rows.lastElementChild.querySelector('.rc-total').focus(); };
   document.getElementById('rcClose').onclick = async () => { if (!(await askConfirm('Close this receipt without saving anything?', { ok: 'Close', cancel: 'Keep reviewing' }))) return; rcpt = null; location.hash = '#/import'; };
   document.getElementById('rcSave').onclick = rcSave;
+  document.getElementById('rcShare').onclick = e => { const b = e.target.closest('[data-rcshare]'); if (!b) return; rcShareTotal(); rows.innerHTML = rcpt.rows.map(rcRowHtml).join(''); rcDrawCalc(); };
   rcDrawCalc();
+}
+function rcItemsTarget() { return rcpt && rcpt.total != null ? rcRound(rcpt.total - (Number(rcpt.shipping) || 0) - (Number(rcpt.tax) || 0) + (Number(rcpt.discount) || 0)) : null; }
+function rcShareTotal() {   // v0.124.0: share what the items cost (total − shipping − tax + discount) over the lines with no price yet; with none typed, equally over all
+  const tgt = rcItemsTarget(); if (tgt == null) return; const act = rcpt.rows.filter(r => r.mode !== 'skip'); if (!act.length) return;
+  const typed = act.filter(r => r.total !== '' && isFinite(Number(r.total))), empty = act.filter(r => r.total === '' || !isFinite(Number(r.total)));
+  const to = empty.length ? empty : act, left = empty.length ? rcRound(tgt - typed.reduce((a, r) => a + Number(r.total), 0)) : tgt; if (left < 0) return;
+  const each = Math.floor(left / to.length * 100) / 100; to.forEach((r, i) => { r.total = i === to.length - 1 ? rcRound(left - each * (to.length - 1)) : each; });
 }
 async function rcSave() {
   const err = document.getElementById('rcErr'), btn = document.getElementById('rcSave'), c = rcCalc(), bad = []; err.textContent = '';
@@ -7616,7 +7700,7 @@ async function rcSave() {
     if (r.type === 'keycaps' && (r.mode === 'new' || !r.kitId) && !String(r.kitName).trim()) bad.push(n + ': enter a kit name.'); });
   if (rcpt.date && !/^\d{4}-\d{2}-\d{2}$/.test(rcpt.date)) bad.push('The date is not valid.');
   if (bad.length) { err.innerHTML = bad.map(esc).join('<br>'); return; }
-  const T = {}; if (rcpt.date) T.datePurchased = rcpt.date; if (rcpt.seller) T.purchasedFrom = rcpt.seller; if (rcpt.orderNumber) T.receipt = /^(order|invoice)/i.test(rcpt.orderNumber) ? rcpt.orderNumber : 'Order ' + rcpt.orderNumber;
+  const T = {}; if (rcpt.date) T.datePurchased = rcpt.date; if (rcpt.seller) T.purchasedFrom = rcpt.seller; if (rcpt.orderNumber) T.receipt = /^(order|invoice|transaction)/i.test(rcpt.orderNumber) ? rcpt.orderNumber : 'Order ' + rcpt.orderNumber;
   const apply = (o, P, replace) => { const u = {}; if (blank(o.price) || replace || rcIsPH(o)) { Object.assign(u, P, P.discounts ? {} : { discounts: undefined }); ['kitNotes', 'notes'].forEach(f => { if (RC_PH.test(o[f] || '')) u[f] = o[f].replace(RC_PH, '').trim(); }); } Object.keys(T).forEach(f => { if (blank(o[f])) u[f] = T[f]; }); Object.keys(u).forEach(k => u[k] === undefined && delete u[k]); return u; };
   const groups = new Map();   // one write per entry, even when several lines go to it
   act.forEach(x => { const r = x.r, key = r.mode === 'existing' ? 'e|' + r.type + '|' + r.itemId : r.type === 'keycaps' ? 'n|keycaps|' + String(r.newName).trim().toLowerCase() : 'n|' + r.type + '|line' + x.i; if (!groups.has(key)) groups.set(key, []); groups.get(key).push(x); });
@@ -7636,7 +7720,8 @@ async function rcSave() {
         done.push({ type: t, id: item.id, label: rcLabel(t, item), what });
       } else { const name = String(r0.newName).trim(); let data;
         if (t === 'keycaps') data = { name, kits: xs.map(newKit) };
-        else { data = Object.assign({ name }, apply({}, sumP(xs), true)); if (t === 'accessories' && typeof rdAccCategory === 'function') data.category = rdAccCategory({ title: rcCoreName(name) + ' ' + ((xs[0].L && xs[0].L.option) || ''), tags: [] }, null); if (t === 'accessories') foamFill(data, rcCoreName(name)); if (t === 'switches') { const m = /(\d+)\s*(?:pack|pcs|pieces|ct|count|switches)\b/i.exec(r0.name); if (m) data.totalCount = +m[1] * xs.reduce((a, x) => a + (x.r.qty || 1), 0); } else if ((r0.qty || 1) > 1) data.notes = `Quantity ${r0.qty} on the receipt (${rcpt.seller || 'seller'}${rcpt.orderNumber ? ', ' + rcpt.orderNumber : ''}); the price is for all ${r0.qty}.`; }
+        else { data = Object.assign({ name }, apply({}, sumP(xs), true)); if (t === 'accessories' && typeof rdAccCategory === 'function') data.category = rdAccCategory({ title: rcCoreName(name) + ' ' + ((xs[0].L && xs[0].L.option) || ''), tags: [] }, null); if (t === 'accessories') foamFill(data, rcCoreName(name)); if (t === 'switches') { const m = /(\d+)\s*(?:pack|pcs|pieces|ct|count|switches)\b/i.exec(r0.name); if (r0.count) data.totalCount = r0.count * xs.reduce((a, x) => a + (x.r.qty || 1), 0); else if (m) data.totalCount = +m[1] * xs.reduce((a, x) => a + (x.r.qty || 1), 0);
+          const mk = (typeof PRELOADED_SW_MAKERS !== 'undefined' ? PRELOADED_SW_MAKERS : []).find(k => new RegExp('^' + k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s+\\S', 'i').test(data.name || '')); if (mk && !data.manufacturer) { data.manufacturer = mk; data.name = data.name.slice(mk.length).trim(); } } else if ((r0.qty || 1) > 1) data.notes = `Quantity ${r0.qty} on the receipt (${rcpt.seller || 'seller'}${rcpt.orderNumber ? ', ' + rcpt.orderNumber : ''}); the price is for all ${r0.qty}.`; }
         if (SET_LINK_TYPES.includes(t)) { const g = guessSetFor(data); if (g) data.keycapSetId = g.id; }   // v0.97.0
         const ref = colOfType(t).doc(); await withTimeout(ref.set(Object.assign(data, { createdAt: now, updatedAt: now, appVersion: APP_VERSION, source: 'app', addedFrom: 'receipt' })));
         done.push({ type: t, id: ref.id, label: name, what: 'new ' + (SEC[t].singular || 'entry') });
